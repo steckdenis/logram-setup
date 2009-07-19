@@ -1,0 +1,37 @@
+<page title="Légende du document" copyright="2009 Denis Steckelmacher">
+    <title>Légende du document</title>
+    
+    <para>
+        Bravo, vous avez compris la première page. C'était la plus difficile à comprendre, car elle doit expliquer simplement
+        et le plus clairement possible la navigation. Passons tout de suite à la légende du document.
+    </para>
+    
+    <list>
+        <element>
+            <italic>Italique</italic> : Élément dont nous parlerons plus tard. Il y en avait quelques-uns sur la
+            <italic>page d'accueil</italic>.
+        </element>
+        <element>
+            <path>Chemin</path> : Vous l'apprendrez plus tard, mais chaque <italic>fichier</italic> dispose de son propre
+            chemin. Pour plus de clarté, ils sont mis en évidence.
+        </element>
+        <element>
+            <menu>Menu</menu> : Les actions que vous pouvez faire avec un <italic>Programme</italic> sont accessibles depuis
+            des menus. Ces menus sont donnés comme ceci : <menu>Un menu/Un autre menu/Encore un</menu>
+        </element>
+        <element>
+            <key>Touche</key> : Dans le chapitre suivant, nous parleront du clavier (vous savez normalement vous servir de la
+            souris vu que vous êtes arrivé jusqu'ici en cliquant). Dans certains <italic>Programmes</italic>, des actions
+            sont possibles quand vous appuyez sur une ou plusieurs <italic>touches</italic>. C'est plus rapide qu'en passant
+            par les menus, et ces touches sont <italic>configurables</italic>.
+        </element>
+        <element>
+            <e>Emphase</e> : Les mots mis en évidence ainsi sont là pour définir un objet de l'<italic>interface</italic>. Par
+            exemple, dans le coin en bas à gauche de votre écran, vous avez le <e>Menu K</e>.
+        </element>
+    </list>
+    
+    <para>
+        Maintenant, cliquez simplement sur le bouton «Le clavier &gt;» en bas de la page.
+    </para>
+</page>

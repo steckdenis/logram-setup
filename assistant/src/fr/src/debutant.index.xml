@@ -1,0 +1,36 @@
+<page title="Découverte de l'ordinateur" copyright="2009 Denis Steckelmacher">
+    <title>Maîtrisez un ordinateur</title>
+    
+    <para>
+        Bienvenue sur ce premier pas dans Logram ! Et oui, votre apprentissage commence ici, et nous feront tout
+        pour que vous appréciez le voyage.Vous apprendrez ici les rudiments de l'utilisation d'un ordinateur, 
+        indépendemment de tout <italic>Système d'exploitation</italic>.
+    </para>
+    
+    <para>
+        Ceci est la <italic>page d'accueil</italic> de la première partie de ce document (la découverte de l'ordinateur). Nous
+        allons directement commencer par la légende utilisée dans ce document. Pour cela, cliquez sur le bouton marqué
+        «Légende du document» en bas de la page, après avoir lu les instructions suivantes.
+    </para>
+    
+    <para>
+        Pour naviguer de page en page une fois que vous aurez cliqué sur ce bouton, utilisez les boutons en bas de la page, dont
+        voici un exemple :
+    </para>
+    
+    <para align="center">
+        <button type="left" to="#" label="Lien vers la page précédante" />
+        <button type="middle" to="#" label="Lien vers la page parente (celle-ci)" />
+        <button type="right" to="#" label="Lien vers la page suivante" />
+    </para>
+    
+    <para>
+        C'est le bouton le plus à droite sur lequel vous devrez cliquer. Chaque bouton contient le titre de la page vers
+        laquelle il va vous emmener, pour que vous sachiez mieux vous repérer dans le document. Maintenant, le bouton dont
+        nous parlions plus haut :
+    </para>
+    
+    <para align="center">
+        <button type="normal" to="debutant.legende" label="Légende du document" />
+    </para>
+</page>

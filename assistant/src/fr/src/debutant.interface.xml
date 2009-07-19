@@ -1,0 +1,125 @@
+<page title="l'interface" copyright="2009 Denis Steckelmacher">
+    <title>L'interface</title>
+    
+    <para>
+        Vous savez maintenant comment fonctionne un ordinateur. Partons à la découverte de son interface graphique. Au démarrage
+        de l'ordinateur, l'écran est dépouillé de la majorité de son contenu.
+    </para>
+    
+    <subtitle>L'interface générale</subtitle>
+    
+    <para>
+        L'écran est divisé en deux zones : une très grande et une très petite. La grande partie est votre espace de travail, 
+        appelée «bureau». C'est dans cette zone que vous travaillez, où les fenêtres sont affichées.
+    </para>
+    
+    <para>
+        La petite zone, appelée <e>dock</e> peut sembler moins importante, mais vous ne savez pas utiliser votre ordinateur sans elle. Elle contient 
+        tout un tas d'éléments très importants, illustrés par l'image suivante.
+    </para>
+    
+    <subtitle>Le dock : le centre de contrôle</subtitle>
+    
+    <para>
+        Le dock vous permet d'intéragir avec votre ordinateur même quand aucune application n'est
+        lancée. Il vous permet également de lancer des applications
+    </para>
+    
+    <para align="center">
+        <image url="img/dock.png" description="Le dock de KDE" />
+    </para>
+    
+    <para>
+        Décrivons de gauche à droite les éléments que vous voyez (et que vous pouvez retrouver tout
+        en bas de votre écran) :
+        
+        <list>
+            <element>
+                Le <e>Menu K</e>. Quand vous cliquez dessus, un menu assez consistant s'ouvre. Il
+                vous permet de lancer facilement toutes les applications disponibles (traitement
+                de texte, calculatrice, etc)
+            </element>
+            <element>
+                L'icône <e>Favoris</e>. Quand vous cliquez dessus, vous pouvez voir tous vos favoris,
+                c'est à dire vos documents, applications et <italic>adresses internet</italic> préférées.
+            </element>
+            <element>
+                La <e>Barre des tâches</e>. Cette zone affiche un gros bouton par fenêtre affichée à
+                l'écran. Si vous travaillez sur un texte, et que vous devez faire un calcul, vous allez
+                lancer la calculatrice. Une fois le calcul fini, il vous faut retrourner sur votre
+                texte. Pour cela, vous n'aurez qu'à cliquer sur le bouton sur lequel «Mon beau document
+                - Éditeur de texte» est marqué. La fenêtre de votre traitement de texte passera au dessus
+                de celle de la calculatrice.
+            </element>
+            <element>
+                La <e>zone de bureaux multiples</e>. Cette zone vous permet de passer d'un <italic>bureau
+                virtuel</italic> à un autre. C'est en fait comme si vous disposez de plusieurs écrans. Vous
+                pouvez facilement rassembler sur le premier bureau tout ce qui touche à vos textes, sur un autre
+                votre programme de gestion de photos, etc.
+            </element>
+            <element>
+                L'<e>affichage du bureau</e>. Quand vous travaillez, les fenêtres s'accumulent. Si vous
+                avez besoin de cliquer sur une des icônes de votre bureau, fermer ou réduire les fenêtres
+                (appuyer sur leur bouton dans la barre des tâches) peut prendre beaucoup de temps. En
+                cliquant sur ce bouton, vous masquez toutes les fenêtres en un clic !
+            </element>
+            <element>
+                La <e>zone de notification</e>. Elle affiche de jolies petites icônes, vous montrant tous
+                les programmes qui fonctionnent actuellement, mais qui n'affichent pas de fenêtre (parce que
+                ce serait une perte de place). Si vous faites un clic droit dessus, vous arrivez à un menu
+                vous permettant d'interagir avec le programme.
+            </element>
+            <element>
+                Les <e>médias récemment insérés</e>. Cette icône n'est pas très active, mais c'est elle qui
+                vous permet, lorsque vous branchez votre appareil photo sur votre ordinateur, d'importer toutes
+                les photos qu'il contient. Très utile.
+            </element>
+            <element>
+                La <e>batterie</e>. Sur les ordinateurs portables, indique le niveau de charge de la batterie,
+                et si le courant est mis.
+            </element>
+            <element>
+                L'<e>indicateur de réseau</e>. Vous permet de savoir si un <italic>réseau</italic> est disponible,
+                et si vous pouvez aller sur <italic>Internet</italic>.
+            </element>
+            <element>
+                La date et l'heure, toujours à portée de main.
+            </element>
+            <element>
+                La «<e>noix de pécan</e>». Cet élément n'a pas vraiment de nom. Il permet de configurer le dock
+                (ajouter ou retirer des éléments, les déplacer, tout est configurable !)
+            </element>
+        </list>
+    </para>
+    
+    <subtitle>Le bureau : votre espace de travail</subtitle>
+    
+    <para>
+        Le bureau correspond à plusieurs éléments. Tout d'abord, c'est là que les fenêtres se placent.
+        Ensuite, c'est également un «remplissage». Quand il n'y a aucune fenêtre, ou que les fenêtres
+        présentes n'occupent pas tout le bureau, il affiche le «papier peint», une image de votre choix,
+        et bien plus encore.
+    </para>
+    
+    <para>
+        En effet, vous pouvez afficher une image, un diaporama, une vidéo, une animation 3D, une carte, 
+        un globe terrestre, la météo, des fractales (dessins mathématiques), et des annimations diverse.
+    </para>
+    
+    <para>
+        Sur le papier peint, vous pouvez placer des icônes (petits dessins qui représentent la fonction
+        d'un programme, et qui lance le programme quand on clique dessus), et des widgets, c'est à
+        dire de petits élements qui accomplissent une tâche simple (notes, météo, musiques, etc).
+    </para>
+    
+    <para align="center">
+        <image url="img/widgets.png" description="Widgets de bureau" /><break />
+        Widgets (horloge et notes) et une icône
+    </para>
+    
+    <para>
+        Le bureau dispose également de sa «noix de pécan», qui permet de changer le papier peint,
+        et de gérer les widgets (ajouter et supprimer). Pour les déplacer, il suffit d'approcher la
+        souris et de cliquer-glisser sur la barre noire (ou blanche) sur leur bord.
+    </para>
+</page>

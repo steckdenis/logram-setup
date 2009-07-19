@@ -1,0 +1,59 @@
+<page title="Les logiciels" copyright="2009 Denis Steckelmacher">
+    <title>Les logiciels ou programmes</title>
+    
+    <para>
+        Maintenant que vous avez la partie «matérielle» de votre ordinateur bien en main, nous allons pouvoir explorer son fonctionnement.
+    </para>
+    
+    <para>
+        Un ordinateur est un ensemble très complexe de circuits électroniques, qui travaillent ensemble pour vous fournir ce que
+        vous voyez à l'écran. Malheureusement, un ordinateur tout seul ne sait absolument rien faire, même pas allumer votre écran
+        et y afficher quelque chose
+    </para>
+    
+    <subtitle>Le chef d'orchestre : le système d'exploitation</subtitle>
+    
+    <para>
+        Il faut donc expliquer patiemment à l'ordinateur comment il fonctionne (il ne sait lui-même pas de quoi il est fait !).
+        C'est là le rôle du Système d'exploitation, qui s'occupe de vraiment plein de choses. En outre, il dit à tous les
+        composants de l'ordinateur comment ils doivent marcher et intéragir. C'est lui qui dit à votre ordinateur que quand
+        vous déplacez la souris, le curseur (la petite flèche) à l'écran doit bouger. L'ordinateur ne le devine pas.
+    </para>
+    
+    <para>
+        Il s'occupe également de choses bien plus complexe, comme la gestion des programmes, que nous verront dans le prochain point.
+        Il s'occupe de tellement de choses que vous connaissez certainement le nom de certains systèmes d'exploitations, comme, le
+        plus connu, Microsoft® Windows©, Apple® MacOS® et Linux®. Sachez, pour information, que vous utilisez en ce moment-même
+        Linux, et donc que c'est lui qui gère tout votre ordinateur de ses mains de maître.
+    </para>
+    
+    <subtitle>Ce que vous voyez : les programmes</subtitle>
+    
+    <para>
+        Le système d'exploitation fait énormément de chose, mais il n'est pas utilisable tout seul. Si vous voulez voir à quoi
+        ressemble le système d'exploitation tout seul, c'est simple : éteignez votre écran. Voilà.
+    </para>
+    
+    <para>
+        Le système d'exploitation sait presque tout faire, mais tout ce qu'il sait faire sont des tâches simples, très simples.
+        Par exemple, quand vous déplacez la souris, il y a un programme qui lui dit exactement comment il faut afficher le curseur
+        (il peut être en flèche, en ligne, en rond, etc), où l'afficher, et il se charge du reste.
+    </para>
+    
+    <para>
+        C'est là qu'interviennent les programmes. Il y en a des complexes (celui qui se charge d'afficher le curseur et tout ce qui
+        est graphique, le <e>Serveur X</e> pour information), et des tout simples, comme la calculatrice.
+    </para>
+    
+    <para>
+        Un programme est facilement reconnaissable. L'immsense majorité d'entre eux est affiché dans une fenêtre, c'est à dire un 
+        rectangle dans lequel tout ce que peut faire le programme est dessiné. Par exemple, la page que vous êtes en train de
+        lire est gérée par un programme (qui dit au système d'exploitation comment afficher la page), et contenue dans une
+        fenêtre (le rectangle blanc avec de discrètes lignes bleues, et de petits boutons à droite).
+    </para>
+    
+    <para>
+        Une fenêtre peut être déplacée. Pour cela, cliquez sur la «barre de titre» (la partie blanche dont je parlais plus haut, avec
+        les lignes bleues), maintenez le bouton de la souris enfoncé, et déplacez-la. La fenêtre suit votre souris !
+    </para>
+</page>

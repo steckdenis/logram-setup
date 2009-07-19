@@ -1,0 +1,16 @@
+<page src="index.xml">
+    <page src="debutant.index.xml">
+        <page src="debutant.legende.xml" />
+        <page src="debutant.clavier.xml" />
+        <page src="debutant.souris.xml" />
+        <page src="debutant.logiciel.xml" />
+        <page src="debutant.interface.xml" />
+        <page src="debutant.menuk.xml" />
+        <page src="debutant.fichiers.xml" />
+        <page src="debutant.reseau.xml" />
+        <page src="debutant.internet.xml" />
+    </page>
+    
+    <page src="windows.index.xml" />
+    <page src="linux.index.xml" />
+</page>

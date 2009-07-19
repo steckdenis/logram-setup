@@ -1,0 +1,67 @@
+<page title="Découverte du réseau" copyright="2009 Denis Steckelmacher">
+    <title>Découverte du réseau</title>
+    
+    <para>
+        Sur votre ordinateur, vous pouvez faire plein de choses : créer des textes, des images, manipuler des données
+        complexes, etc. Malheureusement, sans pouvoir partager ce que vous faites avec les autres, c'est déjà moins
+        utile.
+    </para>
+    
+    <para>
+        C'est ici qu'intervient la notion de réseau, qui conciste à relier entre eux plusieurs ordinateurs, pour
+        partager des fichiers facilement. Relier des ordinateurs entre eux est une tâche complexe, possible de
+        maintes manières, et qui ne sera pas expliquée ici. Essayez de trouver quelqu'un pour vous le faire ou
+        vous l'expliquer, car il faudrait un livre complet pour traiter de tous les cas possibles.
+    </para>
+    
+    <subtitle>Se connecter à un réseau</subtitle>
+    
+    <para>
+        Une fois les ordinateurs réliés entre eux physiquement (par des cables ou par un réseau WiFi), il devient
+        très simple de les relier de manière «logicielle». Pour cela, vous remarquerez une icône en forme de
+        prise électrique en bas à droite de votre écran. Il vous suffit de cliquer dessus pour activer le réseau
+    </para>
+    
+    <info>Si vous utilisez un réseau cablé, il n'y a rien à faire, tout marche d'origine (sauf cas complexes non-expliqués
+    ici)</info>
+    
+    <para align="center">
+        <image url="img/reseau_activer.png" description="Activation du réseua" />
+    </para>
+    
+    <para>
+        Si vous êtes connecté avec des fils, la première zone, tout en haut, devrait afficher une prise branchées. Dans
+        ce cas, tout est bon et le réseau est prêt à être utilisé. Si vous êtes connecté en wifi, c'est à peine plus complexe.
+        Il faut sélectionner dans la deuxième zone le réseau qui vous appartient (et dont le nom vous a normalement été
+        communiqué). Ensuite, cliquez dessus, et entrez le mot de passe nécessaire à la connexion :
+    </para>
+    
+    <para align="center">
+        <image url="img/reseau_mdp.png" description="Mot de passe du réseau" />
+    </para>
+    
+    <para>
+        Appuyez sur <e>Ok</e>, et attendez quelques instants. Vous êtes connecté au réseau !
+    </para>
+    
+    <subtitle>Accéder aux fichiers d'un autre ordinateur</subtitle>
+    
+    <para>
+        Une fois que vous avez deux ou plusieurs ordinateurs reliés entre eux, ils devraient se voir automatiquement.
+        Pour vérifier, allez dans <menu>Menu K/Poste de travail/Réseau</menu>. Vous devriez voir une nouvelle fenêtre
+        qui vous montre quelques icônes :
+    </para>
+    
+    <para align="center">
+        <image url="img/reseau.png" description="Le réseau" />
+    </para>
+    
+    <para>
+        Cliquez sur la première icône («Partages Samba»). Vous accédez alors aux <italic>dossiers partagés</italic>
+        des ordinateurs connectés, regroupés en groupes. Par exemple, si vous avez un ordinateur Windows connecté
+        au vôtre, vous verrez «MSHome» ou «Workgroup» quand vous aurez cliqué sur «Partages Samba». Si vous cliquez
+        sur le nom que vous voyez, vous verrez alors le nom des ordinateurs connectés au vôtre. Si vous cliquez
+        sur le nom d'un ordinateur, vous accédez à ses dossiers partagés, dans lesquels vous pouvez naviguer comme pour les
+        dossiers "normaux" (appelés dossiers locaux à l'ordinateur).
+    </para>
+</page>

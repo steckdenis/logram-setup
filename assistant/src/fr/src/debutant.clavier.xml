@@ -1,0 +1,45 @@
+<page title="Le clavier" copyright="2009 Denis Steckelmacher">
+    <title>Le clavier</title>
+    
+    <para>
+        Le clavier est l'élément le plus important de l'ordinateur, au même titre que la souris et que l'écran. C'est grâce à lui
+        que vous pouvez entrer du texte.
+    </para>
+    
+    <para>
+        Même si pour une utilisation très très basique, il n'est pas nécessaire (à des fins de démonstration par exemple), taper
+        au clavier est obligatoire si vous voulez utiliser correctement votre ordinateur.
+    </para>
+    
+    <para>
+        Le clavier est composé de touches. Sans compter les touches spéciales (celles qui vous permettent de lire votre musique
+        préférée, ou de faire une recherche), il y en a 102. L'utilisation des touches est très variée. Par exemple, les touches
+        avec une lettre dessus permettent de taper cette lettre. Une pression sur la touche <bold>A</bold> afficher "a" dans une
+        <italic>zone de texte</italic>.
+    </para>
+    
+    <para>
+        Il y a aussi les touches dites «spéciales». Elles se trouvent tout autour des lettres. La touche <bold>Majuscule</bold>
+        ( ↑ , à gauche du clavier, au dessus de «Ctrl») permet de taper des lettres en majuscule. Pour taper une lettre
+        majuscule, appuyez sur <bold>Majuscule</bold>, laissez-la enfoncée, et appuyez sur la lettre désirée. Une fois
+        que vous avez tapé votre lettre majuscule, vous pouvez relâcher la touche majuscule. Si vous la maintenez, les autres
+        lettres seront aussi en majuscule. On nomme cette manipulation <bold>combinaison de touches</bold>, et on les notera
+        <key>Maj+une touche</key> dans ce document. De même, <key>Ctrl+S</key> conciste à maintenir <bold>Ctrl</bold> enfoncée pendant
+        qu'on appuie sur <bold>S</bold>.
+    </para>
+    <para>
+        Les autres touches ont des fonctions
+        variant avec le programme, mais deux touches sortent encore du lot : <bold>Enter</bold> (une flèche qui descend puis qui va à
+        gauche) et <bold>Retour arrière</bold> ( ← ), qui efface le dernier caractère que vous avez tapé.
+    </para>
+    
+    <para>
+        Une dernière touche doit attirer votre attention : une grande touche, sans rien d'écrit dessus, en bas du clavier. C'est
+        la touche <bold>Espace</bold>, qui insère un espace entre deux mots.
+    </para>
+    
+    <para>
+        Les autres touches sont d'une moindre importance, et vous ne les utiliserez pas pour taper du texte. De plus, la souris
+        peut facilement les remplacer (mais c'est plus lent).
+    </para>
+</page>
