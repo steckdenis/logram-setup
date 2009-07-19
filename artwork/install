@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir -p /usr/share/kde4/apps/kdm/themes/Logram
+cp -r kdmtheme/* /usr/share/kde4/apps/kdm/themes/Logram/
+mkdir -p /usr/share/kde4/apps/ksplash/Themes/Logram
+cp -r ksplashtheme/* /usr/share/kde4/apps/ksplash/Themes/Logram/
+
+echo "Logram's theme installed"
+
