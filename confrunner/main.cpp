@@ -20,27 +20,31 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <QApplication>
+#include <kapplication.h>
+#include <kaboutdata.h>
+#include <kcmdlineargs.h>
 
 #include "window.h"
 
-#include <iostream>
-using namespace std;
-
 int main(int argc, char **argv)
 {
-    QApplication app(argc, argv);
+    KAboutData aboutData("confrunner", "confrunner",
+                         ki18n("Logram Configuration Runner"), "0.2",
+                         ki18n("Builds and displays a configuration window based on a project file"),
+                         KAboutData::License_GPL,
+                         ki18n("Copyright (c) 2009 Denis Steckelmacher"));
     
-    if (app.arguments().count() < 2)
-    {
-        cout << "Usage : confrunner specfile" << endl;
-        cout << endl;
-        cout << "The file name can contains the token _LANG_ wich will be replaced by the"
-        " ISO code of the system locale" << endl;
-        return 1;
-    }
+    KCmdLineArgs::init(argc, argv, &aboutData);
     
-    Window *win = new Window(app.arguments().at(1));
+    KCmdLineOptions options;
+    options.add("+project", ki18n("Project file (XML). \"_LANG_\" is replaced by the ISO code of the current system locale"));
+    KCmdLineArgs::addCmdLineOptions(options);
+    
+    KApplication app;
+    
+    KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
+    
+    Window *win = new Window(args->arg(0));
     win->show();
     
     return app.exec();

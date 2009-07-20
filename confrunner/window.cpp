@@ -24,9 +24,23 @@
 
 #include <QtDebug>
 
-#define FILENAME "/etc/laptop-mode/laptop-mode.conf"
+//KDE
+#include <kicon.h>
+#include <klineedit.h>
+#include <ktextedit.h>
+#include <kcombobox.h>
 
-Window::Window(const QString &_specFile)
+//Qt
+#include <QSlider>
+#include <QCheckBox>
+#include <QFrame>
+#include <QSpinBox>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QFormLayout>
+
+Window::Window(const QString &_specFile) : KPageDialog(0)
 {
     QString locale = QLocale::system().name().section("_", 0, 0);
     specFile = _specFile;
@@ -53,34 +67,15 @@ Window::~Window()
 
 void Window::initInterface()
 {
-    //Layout principal
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    this->setLayout(mainLayout);
+    //Activation des boutons nécessaires et type de dialogue
+    setButtons(KDialog::Ok | KDialog::Apply | KDialog::Cancel | KDialog::Reset);
+    setFaceType(KPageDialog::List);
     
-    tb = new QTabWidget(this);
-    mainLayout->addWidget(tb);
-    
-    //Boutons
-    QHBoxLayout *btnLayout = new QHBoxLayout();
-    QPushButton *btnOk, *btnApply, *btnCancel, *btnReset;
-    
-    btnOk = new QPushButton(tr("&Ok"), this);
-    btnApply = new QPushButton(tr("&Apply"), this);
-    btnCancel = new QPushButton(tr("&Cancel"), this);
-    btnReset = new QPushButton(tr("&Reset"), this);
-    
-    connect(btnOk, SIGNAL(clicked(bool)), this, SLOT(okData()));
-    connect(btnApply, SIGNAL(clicked(bool)), this, SLOT(applyData()));
-    connect(btnCancel, SIGNAL(clicked(bool)), qApp, SLOT(quit()));
-    connect(btnReset, SIGNAL(clicked(bool)), this, SLOT(resetData()));
-    
-    btnLayout->addWidget(btnReset);
-    btnLayout->addStretch();
-    btnLayout->addWidget(btnOk);
-    btnLayout->addWidget(btnApply);
-    btnLayout->addWidget(btnCancel);
-    
-    mainLayout->addLayout(btnLayout);
+    //Connection des slots
+    connect(this, SIGNAL(okClicked()), this, SLOT(okData()));
+    connect(this, SIGNAL(applyClicked()), this, SLOT(applyData()));
+    connect(this, SIGNAL(cancelClicked()), qApp, SLOT(quit()));
+    connect(this, SIGNAL(resetClicked()), this, SLOT(resetData()));
     
     //Fichier de spécifications
     QFile *sfl = new QFile(specFile);
@@ -90,6 +85,7 @@ void Window::initInterface()
     doc->setContent(sfl);
     QDomElement el = doc->documentElement();
     this->setWindowTitle(el.attribute("title", el.attribute("configfile")));
+    this->setWindowIcon(KIcon(el.attribute("icon")));
     
     //Fichier
     fl = new QFile(el.attribute("configfile"));
@@ -100,17 +96,21 @@ void Window::initInterface()
     }
     
     //Explorer les onglets
-    QDomElement tab = el.firstChildElement("tab");
+    QDomElement tab = el.firstChildElement("page");
     
     while (!tab.isNull())
-    {
+    {  
         QWidget *mtab = new QWidget(this);
         
-        tb->addTab(mtab, tab.attribute("title"));
+        KPageWidgetItem *page = addPage(mtab, tab.attribute("title"));
+        
+        //Icône et titre de la page
+        page->setHeader(tab.attribute("header"));
+        page->setIcon(KIcon(tab.attribute("icon")));
         
         initWidget(mtab, tab);
         
-        tab = tab.nextSiblingElement("tab");
+        tab = tab.nextSiblingElement("page");
     }
 }
 
@@ -169,7 +169,7 @@ void Window::initWidget(QWidget *wg, const QDomElement &el)
         }
         else if (type == "line")
         {
-            QLineEdit *ln = new QLineEdit(wg);
+            KLineEdit *ln = new KLineEdit(wg);
             
             if (!limit.isEmpty()) ln->setMaxLength(limit.toInt());
             
@@ -178,7 +178,7 @@ void Window::initWidget(QWidget *wg, const QDomElement &el)
         }
         else if (type == "text")
         {
-            QTextEdit *txt = new QTextEdit(wg);
+            KTextEdit *txt = new KTextEdit(wg);
             
             widget = txt;
             rdProp = "plainText";
@@ -206,20 +206,26 @@ void Window::initWidget(QWidget *wg, const QDomElement &el)
         }
         else if (type == "combo")
         {
-            QComboBox *cbo = new QComboBox(wg);
+            KComboBox *cbo = new KComboBox(wg);
             
             cbo->setEditable(false);
             
-            //Pas de limite, mais une suite de valeurs
-            QStringList values = w.attribute("values").split(';', QString::SkipEmptyParts);
+            //Explorer les <entry>
+            QDomElement entry = w.firstChildElement("entry");
             
-            foreach (const QString &value, values)
+            while (!entry.isNull())
             {
-                cbo->addItem(value);
+                QString label = entry.attribute("label");
+                QString value = entry.attribute("value", label);
+                
+                cbo->addItem(label, QVariant(value));
+                
+                entry = entry.nextSiblingElement("entry");
             }
             
             widget = cbo;
-            rdProp = "currentText";
+            widget->setProperty("isComboBox", true);
+            rdProp = "cboProperty";
         }
         else if (type == "separator")
         {
@@ -345,7 +351,25 @@ void Window::resetData()
         
         QString value = configValue(confProp);
         
-        wg->setProperty(qPrintable(rdProp), value);
+        //Si c'est un ComboBox, on doit prendre la donnée de l'élément sélectionné
+        if (wg->property("isComboBox").toBool())
+        {
+            QComboBox *cbo = qobject_cast<QComboBox *>(wg);
+            
+            for (int i=0; i<cbo->count(); ++i)
+            {
+                if (cbo->itemData(i).toString() == value)
+                {
+                    cbo->setCurrentIndex(i);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            //Widget normal
+            wg->setProperty(qPrintable(rdProp), value);
+        }
     }
 }
 
@@ -357,6 +381,14 @@ void Window::applyData()
         QString rdProp = wg->property("ReadProperty").toString();
         
         QString value = wg->property(qPrintable(rdProp)).toString();
+        
+        //Si c'est un ComboBox, on doit prendre la donnée de l'élément sélectionné
+        if (wg->property("isComboBox").toBool())
+        {
+            QComboBox *cbo = qobject_cast<QComboBox *>(wg);
+            
+            value = cbo->itemData(cbo->currentIndex()).toString();
+        }
         
         setConfigValue(confProp, value);
     }

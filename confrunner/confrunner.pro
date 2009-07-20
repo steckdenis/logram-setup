@@ -8,6 +8,7 @@ TARGET =
 DEPENDPATH += .
 INCLUDEPATH += .
 QT += xml
+LIBS += -lkdecore -lkdeui
 
 # Input
 HEADERS += window.h
@@ -15,4 +16,7 @@ SOURCES += main.cpp window.cpp
 
 target.path=/usr/bin
 
-INSTALLS += target
+scripts.files=scripts/*
+scripts.path=/usr/share/confrunner/scripts
+
+INSTALLS += target scripts

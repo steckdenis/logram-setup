@@ -23,10 +23,15 @@
 #ifndef __WINDOW_H__
 #define __WINDOW_H__
 
-#include <QtGui>
-#include <QtXml>
+//KDE
+#include <kpagedialog.h>
 
-class Window : public QWidget
+//Qt
+#include <QtXml>
+#include <QFile>
+#include <QList>
+
+class Window : public KPageDialog
 {
     Q_OBJECT
     
@@ -48,8 +53,6 @@ class Window : public QWidget
         
     private:
         //Général
-        QComboBox *cboMode;
-        QTabWidget *tb;
         QFile *fl;
         QString specFile;
         QDomDocument *doc;

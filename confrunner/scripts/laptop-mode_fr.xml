@@ -1,5 +1,5 @@
-<config configfile="/etc/laptop-mode/laptop-mode.conf" title="Configuration du mode Laptop">
-    <tab title="Général">
+<config configfile="/etc/laptop-mode/laptop-mode.conf" title="Configuration du mode Laptop" icon="computer-laptop">
+    <page title="Général" icon="battery-charging">
         <widget type="group" label="Activation du mode Laptop" layout="horizontal">
             <widget type="check" label="Sur batterie" config="ENABLE_LAPTOP_MODE_ON_BATTERY" />
             <widget type="check" label="Sur le secteur" config="ENABLE_LAPTOP_MODE_ON_AC" />
@@ -25,9 +25,9 @@
             <widget type="check" label="Contrôler la gestion de l'énergie des disques" config="CONTROL_HD_POWERMGMT" />
             <widget type="check" label="Contrôler le cache en écriture" config="CONTROL_HD_WRITECACHE" />
         </widget>
-    </tab>
+    </page>
     
-    <tab title="Spécifique au mode">
+    <page title="Spécifique au mode" icon="preferences-system">
         <widget type="group" label="Sur batterie">
             <widget type="spin" label="Temps maximum de travail que vous pouvez perdre (sec)" config="LM_BATT_MAX_LOST_WORK_SECONDS" limit="100000" />
             <widget type="spin" label="Temps d'inactivité avant l'extinction des disques (sec)" config="LM_BATT_HD_IDLE_TIMEOUT_SECONDS" limit="100000" />
@@ -52,7 +52,7 @@
             <widget type="spin" label="Durée d'innocupation avant d'éteindre les disques (sec)" config="NOLM_HD_IDLE_TIMEOUT_SECONDS" limit="10000" />
             <widget type="spin" label="Mode de gestion de l'énergie (255 = désactivé)" config="NOLM_AC_HD_POWERMGMT" limit="255" />
         </widget>
-    </tab>
+    </page>
 </config>
 
 
