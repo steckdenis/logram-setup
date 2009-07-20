@@ -1,9 +1,13 @@
 #!/bin/bash
 
+echo "Installing KDM theme..."
 mkdir -p /usr/share/kde4/apps/kdm/themes/Logram
 cp -r kdmtheme/* /usr/share/kde4/apps/kdm/themes/Logram/
+
+echo "Installing KSplash theme..."
 mkdir -p /usr/share/kde4/apps/ksplash/Themes/Logram
 cp -r ksplashtheme/* /usr/share/kde4/apps/ksplash/Themes/Logram/
 
-echo "Logram's theme installed"
-
+echo "Installing wallpaper..."
+mkdir -p /usr/share/wallpapers/Logram
+cp -r wallpaper/* /usr/share/wallpapers/Logram
