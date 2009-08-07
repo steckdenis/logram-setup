@@ -23,6 +23,9 @@
 //Own
 #include "myclass.h"
 
+//Qt
+#include <QLocale>
+
 int main(int argc, char **argv)
 {
     KAboutData about("presentation", "presentation", ki18n("Presentation"), "0.1",
@@ -34,7 +37,7 @@ int main(int argc, char **argv)
     
     KCmdLineOptions options;
     
-    options.add("+url", ki18n("Url of the presentation to open"));
+    options.add("+[url]", ki18n("Url of the presentation to open, default to /usr/share/doc/logram/[locale]/index.html"));
     
     KCmdLineArgs::addCmdLineOptions(options);
  
@@ -51,7 +54,16 @@ int main(int argc, char **argv)
     layout->setContentsMargins(0, 0, 0, 0);
     win->setLayout(layout);
     
-    KUrl url = args->url(0);
+    // Récupérer l'url
+    KUrl url;
+    if (args->count() == 0)
+    {
+	url = KUrl(QString("/usr/share/doc/logram/LOCALE/index.html").replace("LOCALE", QLocale::system().name().section('_', 0, 0)));
+    }
+    else
+    {
+	url = args->url(0);
+    }
     KHTMLPart *w = new KHTMLPart(win);
     w->openUrl(url);
     w->view()->resize(800, 600);
