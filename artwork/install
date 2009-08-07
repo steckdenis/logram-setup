@@ -1,13 +1,15 @@
 #!/bin/bash
 
+DESTDIR=
+
 echo "Installing KDM theme..."
-mkdir -p /usr/share/kde4/apps/kdm/themes/Logram
-cp -r kdmtheme/* /usr/share/kde4/apps/kdm/themes/Logram/
+mkdir -p $DESTDIR/usr/share/kde4/apps/kdm/themes/Logram
+cp -r kdmtheme/* $DESTDIR/usr/share/kde4/apps/kdm/themes/Logram/
 
 echo "Installing KSplash theme..."
-mkdir -p /usr/share/kde4/apps/ksplash/Themes/Logram
-cp -r ksplashtheme/* /usr/share/kde4/apps/ksplash/Themes/Logram/
+mkdir -p $DESTDIR/usr/share/kde4/apps/ksplash/Themes/Logram
+cp -r ksplashtheme/* $DESTDIR/usr/share/kde4/apps/ksplash/Themes/Logram/
 
 echo "Installing wallpaper..."
-mkdir -p /usr/share/wallpapers/Logram
-cp -r wallpaper/* /usr/share/wallpapers/Logram
+mkdir -p $DESTDIR/usr/share/wallpapers/Logram
+cp -r wallpaper/* $DESTDIR/usr/share/wallpapers/Logram
