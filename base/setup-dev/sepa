@@ -163,7 +163,7 @@ Conflicts=$CONFLICTS" > tmp/__LOGRAM/control
         tar --lzma -cf $binary.$machine.tlz tmp/*
         
         # Effacer le dossier temporaire
-        #rm -rf tmp
+        rm -rf tmp
     done
 }
 
