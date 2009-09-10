@@ -1,0 +1,197 @@
+#!/bin/bash
+# sepa <action> fichier.sh
+action=$1
+shfile=$2
+shname=${shfile%.sh}
+
+# Charger le fichier .sh
+if [ "$action" != "unpacksrc" ]; then
+    source $2
+fi
+
+# Aide
+usage()
+{
+    echo "Logram Setup Packager - Helper tool to create packages"
+    echo
+    echo "Usage : $0 <action> <script.h>"
+    echo "    - action    : one of the following actions"
+    echo "    - script.sh : The script bundled with the package, or a .tlz file"
+    echo
+    echo "Actions :"
+    echo "    - getsource    : Download the sourcecode of a package"
+    echo "    - preparepatch : Prepare the package to create a new Logram patch"
+    echo "    - genpatch     : Create the .diff.lzma itself"
+    echo "    - createsource : Create the .tlz of the package"
+    echo "    - unpacksrc    : Unpack the source .tlz"
+    echo "    - build        : Build a source package"
+    echo "    - binaries     : Build binaries from a source package"
+}
+
+# Récupérer la source d'un pkgbuild
+getsource()
+{
+    download
+}
+
+# Préparer le paquet pour la création d'un nouveau patch Logram
+preparepatch()
+{
+    if [ ! -d src ]; then
+        getsource
+    fi
+
+    cp -r src src.orig
+}
+
+# Créer le diff.lzma du paquet
+genpatch()
+{
+    diff -ur src.orig src | lzma > $shname.diff.lzma
+}
+
+# Créer l'archive source prête à l'envoi
+createsource()
+{
+    files="$shfile translate"
+
+    # Si on n'a pas les sources, on les récupère
+    if [ ! -d src ]; then
+        getsource
+    fi
+
+    # Si on a un diff, on l'inclus
+    if [ -f $shname.diff.lzma ]; then
+        files="$files $shname.diff.lzma"
+    fi
+
+    # Explorer les fichiers qu'on veut inclure
+    for f in ${FILES[*]}; do
+        files="$files $f"
+    done
+
+    for b in ${BINARIES[*]}; do
+        files="$files $b.files"
+    done
+
+    # Lancer la commande
+    tar --lzma -cf $shname.src.tlz $files
+}
+
+# Décompresser un paquet source
+unpacksrc()
+{
+    tar --lzma -xf $shfile
+}
+
+# Patcher la source avec son patch
+patchsource()
+{
+    # Vérifier qu'on a la source
+    if [ ! -d src ]; then
+        getsource
+    fi
+    
+    lzma -dc $shname.diff.lzma | patch -p0
+}
+
+# Compiler
+_build()
+{
+    if [ ! -d src ]; then
+        patchsource
+    fi
+
+    # Dossier temporaire
+    mkdir -p build
+
+    builddir="$PWD/build"
+
+    (cd src && build $builddir)
+}
+
+# Créer les paquets
+binaries()
+{
+    if [ ! -d src ]; then
+        _build
+    fi
+
+    # Explorer les binaires
+    for binary in ${BINARIES[*]}; do
+        # Créer un dossier temporaire
+        mkdir -p tmp
+
+        # Y copier tous les fichiers que le paquet veux
+        while read f; do
+            for fl in build$f; do
+                mkdir -p $(dirname tmp/${fl:6})
+                cp -rf $fl tmp/${fl:6}
+            done
+        done < $binary.files
+
+        # Créer un dossier pour les métadonnées
+        mkdir -p tmp/__LOGRAM
+
+        # Y copier les traductions
+        cp translate/$binary.* tmp/__LOGRAM
+
+        # Ainsi que le pkgbuild (pour postinst, etc)
+        cp $shfile tmp/__LOGRAM/pkgbuild.sh
+
+        # Trouver la version
+        mv=$(cd src && version)
+        v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
+
+        # Obtenir les dépendances
+        d_$binary
+
+        # Générer le fichier de contrôle pour Setup
+        echo "[Binary]
+Name=$binary
+Version=$v
+Licence=$LICENCE
+Depends=$DEPENDS
+Provides=$PROVIDES
+Replaces=$REPLACES
+Suggest=$SUGGESTS
+Conflicts=$CONFLICTS" > tmp/__LOGRAM/control
+
+        # Compresser le tout dans un .tlz
+        machine=$(uname -m)
+
+        tar --lzma -cf $binary.$machine.tlz tmp/*
+        
+        # Effacer le dossier temporaire
+        #rm -rf tmp
+    done
+}
+
+case $action in
+    getsource)
+        getsource
+        ;;
+    preparepatch)
+        preparepatch
+        ;;
+    genpatch)
+        genpatch
+        ;;
+    createsource)
+        createsource
+        ;;
+    unpacksrc)
+        unpacksrc
+        ;;
+    patchsource)
+        patchsource
+        ;;
+    build)
+        _build
+        ;;
+    binaries)
+        binaries
+        ;;
+    *)
+        usage
+esac
