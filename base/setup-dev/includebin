@@ -1,0 +1,17 @@
+#!/bin/bash
+
+filename=$1
+name=$(echo $filename | cut -d '.' -f 1)
+
+# Créer l'architecture de dossiers
+dir=pool/${name:0:1}/$name
+mkdir -p $dir
+
+# Copier le fichier .tlz dedans
+cp incoming/$filename $dir
+
+# Copier le fichier .control également
+cp incoming/$name.control $dir
+
+# Générer la liste des fichiers
+tar --lzma --list -f incoming/$filename > $dir/$filename.files

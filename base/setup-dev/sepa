@@ -150,10 +150,12 @@ binaries()
         echo "[Binary]
 Name=$binary
 Version=$v
+Maintainer=$MAINTAINER
 Section=$SECTION
 Architectures=$ARCHS
 Distribution=$DISTRIBUTION
 Licence=$LICENCE
+PrimaryLang=$PRIMARYLANG
 Depends=$DEPENDS
 Provides=$PROVIDES
 Replaces=$REPLACES
@@ -163,9 +165,6 @@ Conflicts=$CONFLICTS" > tmp/__LOGRAM/control
         # Compresser le tout dans un .tlz
         machine=$(uname -m)
         (cd tmp && tar --lzma -cf ../$binary.$machine.tlz *)
-
-        # Egalement fournir le fichier control séparément
-        cp tmp/__LOGRAM/control $binary.control
         
         # Effacer le dossier temporaire
         rm -rf tmp
