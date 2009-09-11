@@ -150,6 +150,7 @@ binaries()
         echo "[Binary]
 Name=$binary
 Version=$v
+Section=$SECTION
 Architectures=$ARCHS
 Distribution=$DISTRIBUTION
 Licence=$LICENCE
