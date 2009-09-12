@@ -166,6 +166,7 @@ binaries()
         echo "[Binary]
 Name=$binary
 Version=$v
+Source=$SOURCE
 Maintainer=$MAINTAINER
 Section=$SECTION
 Distribution=$DISTRIBUTION
