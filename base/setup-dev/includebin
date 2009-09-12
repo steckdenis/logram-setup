@@ -1,10 +1,16 @@
 #!/bin/bash
 
 filename=$1
-name=$(echo $filename | cut -d '.' -f 1)
+name=$(echo $filename | cut -d '~' -f 1)
 
 # Créer l'architecture de dossiers
-dir=pool/${name:0:1}/$name
+if [ "${name:0:3}" = "lib" ]; then
+    d=${name:0:4}
+else
+    d=${name:0:1}
+fi
+
+dir=pool/$d/$name
 mkdir -p $dir
 
 # Copier le fichier .tlz dedans

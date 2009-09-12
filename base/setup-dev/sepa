@@ -4,6 +4,17 @@ action=$1
 shfile=$2
 shname=${shfile%.sh}
 
+### Fonctions accessibles par le pkgbuild
+gitco()
+{
+    git clone --depth 1 $1 src
+}
+
+gitversion()
+{
+    git log --raw -1 | grep 'Date:' | cut -d ' ' -f 5,6,8 | sed -e 's/ //g'
+}
+
 # Charger le fichier .sh
 if [ "$action" != "unpacksrc" ]; then
     source $2
@@ -108,17 +119,22 @@ _build()
     builddir="$PWD/build"
 
     (cd src && build $builddir)
+
+    # Stripper
+    find build -exec strip --strip-unneeded {} \; > /dev/null 2>&1
 }
 
 # Créer les paquets
 binaries()
 {
-    if [ ! -d src ]; then
+    if [ ! -d build ]; then
         _build
     fi
 
     # Explorer les binaires
     for binary in ${BINARIES[*]}; do
+        echo -n ">> $binary..."
+        
         # Créer un dossier temporaire
         mkdir -p tmp
 
@@ -141,7 +157,7 @@ binaries()
 
         # Trouver la version
         mv=$(cd src && version)
-        v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
+        export v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
 
         # Obtenir les dépendances
         d_$binary
@@ -152,7 +168,6 @@ Name=$binary
 Version=$v
 Maintainer=$MAINTAINER
 Section=$SECTION
-Architectures=$ARCHS
 Distribution=$DISTRIBUTION
 Licence=$LICENCE
 PrimaryLang=$PRIMARYLANG
@@ -163,11 +178,18 @@ Suggest=$SUGGESTS
 Conflicts=$CONFLICTS" > tmp/__LOGRAM/control
 
         # Compresser le tout dans un .tlz
-        machine=$(uname -m)
-        (cd tmp && tar --lzma -cf ../$binary.$machine.tlz *)
+        if [ "$ARCH" = "all" ]; then
+            machine="all"
+        else
+            machine=$(uname -m)
+        fi
+        
+        (cd tmp && tar --lzma -cf ../$binary~$v.$machine.tlz *)
         
         # Effacer le dossier temporaire
         rm -rf tmp
+
+        echo " done"
     done
 }
 

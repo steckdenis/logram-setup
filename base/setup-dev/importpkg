@@ -2,7 +2,7 @@
 
 # Importer le contenu d'un .tlz dans la dépôt, phase de préparation
 file=$1
-name=$(echo $file | cut -d '.' -f 1)
+name=$(echo $file | cut -d '~' -f 1)
 
 echo ">> Importing $name..."
 
