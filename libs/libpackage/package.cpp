@@ -145,22 +145,6 @@ QString Depend::version()
     return d->psd->string(0, d->dep->pkgver);
 }
 
-Depend *Depend::otherdep()
-{
-    _Depend *dep = d->psd->depend(d->dep->otherdep);
-
-    if (dep == 0)
-    {
-        return 0;
-    }
-
-    // Créer une dépendance
-    Depend *nd = new Depend(dep, d->psd);
-    d->subdeps.append(nd);
-
-    return nd;
-}
-
 int8_t Depend::type()
 {
     return d->dep->type;
@@ -169,9 +153,4 @@ int8_t Depend::type()
 int8_t Depend::op()
 {
     return d->dep->op;
-}
-
-int16_t Depend::flags()
-{
-    return d->dep->flags;
 }

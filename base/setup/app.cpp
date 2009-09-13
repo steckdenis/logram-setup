@@ -41,8 +41,6 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 
     connect(ps, SIGNAL(message(const QString &)), this, SLOT(message(const QString &)));
     connect(ps, SIGNAL(error(PackageSystem::Error, const QString &)), this, SLOT(error(PackageSystem::Error, const QString &)));
-
-    ps->init();
     
     //Parser les arguments
     QStringList args = arguments();
@@ -54,6 +52,12 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     }
 
     QString cmd = args.at(1);
+
+    // Initialiser le système de paquet si on en a besoin
+    if (cmd != "update")
+    {
+        ps->init();
+    }
 
     if (cmd == "--help")
     {
@@ -71,29 +75,9 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     {
         showpkg(args.at(2));
     }
-    else if (cmd == "getsource")
+    else if (cmd == "update")
     {
-        getSource(args.at(2));
-    }
-    else if (cmd == "patchprepare")
-    {
-        preparePatch(args.at(2));
-    }
-    else if (cmd == "genpatch")
-    {
-        genPatch(args.at(2));
-    }
-    else if (cmd == "createsource")
-    {
-        createSource(args.at(2));
-    }
-    else if (cmd == "unpacksrc")
-    {
-        unpackSource(args.at(2));
-    }
-    else if (cmd == "patch")
-    {
-        patchSource(args.at(2));
+        update();
     }
 }
 
@@ -103,19 +87,12 @@ void App::help()
 
     cout << endl;
 
-    cout << "Usage :" << endl;
+    cout << "Usage : setup <action> [arguments]" << endl;
     cout << "    --help             Show help" << endl;
     cout << "    --version          Show version" << endl;
     cout << "    search <pattern>   Show all the packages matching <pattern>" << endl;
     cout << "    showpkg <name>     Show the informations of the package <name>" << endl;
-    cout << endl;
-    cout << "Package creation commands :" << endl;
-    cout << "    getsource <xml>    Read the <xml> PkgBuild and download its sources" << endl;
-    cout << "    patchprepare <xml> Prepare <xml> for patching, only if you want to modify the upstream sources of a package" << endl;
-    cout << "    genpatch <xml>     Create a diff between src and src.orig, to distinguish the 'vanilla' sources and the Logram's modifications" << endl;
-    cout << "    createsource <xml> Create the source package (.src.tlz) of the package <xml>" << endl;
-    cout << "    unpacksrc <src>    Unpack the <src> source package downloaded from the server" << endl;
-    cout << "    patch <xml>        Patch the <xml> source with its *.diff.lzma" << endl;
+    cout << "    update             Update the packages' database" << endl;
 }
 
 void App::version()

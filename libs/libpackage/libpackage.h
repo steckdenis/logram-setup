@@ -42,12 +42,18 @@ class PackageSystem : public QObject
         QList<Package *> packagesByName(const QString &regex);
         Package *package(const QString &name, const QString &version = QString());
 
+        void update();
+
+        static int compareVersions(const QString &v1, const QString &v2);
+        static bool matchVersion(const QString &v1, const QString &v2, int op);
+
         // Gestion des erreurs
         enum Error
         {
             OpenFileError,
             MapFileError,
-            ProcessError
+            ProcessError,
+            DownloadError
         };
 
         void raise(Error err, const QString &info);

@@ -43,14 +43,7 @@ class App : public QCoreApplication
         void version();
         void find(const QString &pattern);
         void showpkg(const QString &name);
-
-        // Construction
-        void getSource(const QString &fileName);
-        void preparePatch(const QString &fileName);
-        void genPatch(const QString &fileName);
-        void createSource(const QString &fileName);
-        void unpackSource(const QString &fileName);
-        void patchSource(const QString &fileName);
+        void update();
 
     public slots:
         void error(PackageSystem::Error err, const QString &info);

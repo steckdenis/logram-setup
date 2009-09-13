@@ -60,10 +60,8 @@ class Depend
 
         QString name();
         QString version();
-        Depend *otherdep();
         int8_t type();
         int8_t op();
-        int16_t flags();
 
     private:
         struct Private;
@@ -87,10 +85,5 @@ class Depend
 #define DEPEND_OP_LOEQ       4   // <=
 #define DEPEND_OP_LO         5   // <
 #define DEPEND_OP_NE         6   // !=
-
-#define DEPEND_FLAGS_NONE    0
-#define DEPEND_FLAGS_OR      1
-#define DEPEND_FLAGS_AND     2
-#define DEPEND_FLAGS_XOR     3
 
 #endif

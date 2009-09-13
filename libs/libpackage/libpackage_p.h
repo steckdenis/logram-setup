@@ -27,8 +27,15 @@ struct _Package
 {
     int32_t name;       // Index de la chaîne du nom
     int32_t version;    // Index de la chaîne de version
+    int32_t title;      // Index de la chaîne de titre
     int32_t short_desc; // Index de la chaîne de description courte
     int32_t long_desc;  // Index de la chaîne de description longue
+    int32_t source;     // Nom du paquet source
+    int32_t repo;       // Nom du mirroir qui fourni le paquet (sources.list)
+    int32_t url;        // Url de téléchargement
+    int32_t section;    // Section
+    int32_t distribution; // Distribution
+    int32_t license;    // Licence
     int32_t deps;       // Index du tableau de dépendances
 };
 
@@ -48,14 +55,12 @@ struct _Depend
 {
     int8_t type;        // DEPEND_TYPE
     int8_t op;          // DEPEND_OP
-    int16_t flags;      // DEPEND_FLAGS
     int32_t pkgname;    // Index de la chaîne du nom du paquet de la dépendance
     int32_t pkgver;     // Index de la chaîne de la version du paquet de la dépendance
-    int32_t otherdep;   // Pointeur sur une autre dépendance à partir du début des données
 };
 
 // Structure qui quand on a un index de string (un nom), et un index de version, permet de retrouver le paquet
-struct StrPackage
+struct _StrPackage
 {
     int32_t version;    // Index de la chaîne de version nécessaire pour qu'on ait le bon paquet
     int32_t package;    // Index du paquet

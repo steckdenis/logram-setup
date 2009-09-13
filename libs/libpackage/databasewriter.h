@@ -1,0 +1,83 @@
+/*
+ * databasewriter.h
+ * This file is part of Logram
+ *
+ * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
+ *
+ * Logram is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Logram is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Logram; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
+#ifndef __DATABASEWRITER_H__
+#define __DATABASEWRITER_H__
+
+#include <QObject>
+#include <QEventLoop>
+#include <QStringList>
+#include <QList>
+#include <QHash>
+#include <QByteArray>
+
+class PackageSystem;
+class QNetworkAccessManager;
+class QNetworkReply;
+class QIODevice;
+
+struct _String;
+struct _Package;
+struct _StrPackage;
+struct _Depend;
+
+class DatabaseWriter : public QObject
+{
+    Q_OBJECT
+    public:
+        DatabaseWriter(PackageSystem *_parent);
+
+        void download(const QString &source, const QString &url, const QString &type, bool isTranslations);
+        void rebuild();
+
+    private slots:
+        void downloadFinished(QNetworkReply *reply);
+
+    private:
+        PackageSystem *parent;
+        QNetworkAccessManager *nmanager;
+
+        QEventLoop loop;
+        bool isTr;
+        QString dlType, dlUrl, dlSource;
+        QStringList cacheFiles;
+
+        QList<_Package *> packages;
+        QHash<QByteArray, int> packagesIndexes;
+        QList<_String *> strings;
+        QList<_String *> translate;
+        QHash<QByteArray, int> stringsIndexes;
+        QHash<QByteArray, int> translateIndexes;
+
+        int strPtr, transPtr;
+
+        QList<QList<_StrPackage *> > strPackages;
+        QList<QList<_Depend *> > depends;
+        QHash<QByteArray, _Package *> knownPackages;
+
+        void handleDl(QIODevice *device);
+        int stringIndex(const QByteArray &str, int pkg, bool isTr, bool create = true);
+        void setDepends(_Package *pkg, const QByteArray &str, int type);
+        void revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op);
+};
+
+#endif

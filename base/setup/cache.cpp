@@ -29,6 +29,13 @@
 #include <iostream>
 using namespace std;
 
+void App::update()
+{
+    // Mettre à jour la base de donnée
+
+    ps->update();
+}
+
 void App::find(const QString &pattern)
 {
     QList<Package *> pkgs = ps->packagesByName("*" + pattern + "*");

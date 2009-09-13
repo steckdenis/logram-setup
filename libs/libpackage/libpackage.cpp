@@ -23,6 +23,10 @@
 #include "libpackage.h"
 #include "libpackage_p.h"
 #include "package.h"
+#include "databasewriter.h"
+
+#include <QSettings>
+#include <QStringList>
 
 PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
 {
@@ -32,6 +36,54 @@ PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
 void PackageSystem::init()
 {
     d = new PackageSystemPrivate(this);
+}
+
+void PackageSystem::update()
+{
+    // Explorer la liste des mirroirs dans /etc/setup/sources.list, format QSettings
+    QSettings set("/etc/setup/sources.list", QSettings::IniFormat);
+    QString lang = set.value("Language", tr("fr", "Langue par défaut pour les paquets")).toString();
+    
+    DatabaseWriter *db = new DatabaseWriter(this);
+
+    foreach (const QString &sourceName, set.childGroups())
+    {
+        set.beginGroup(sourceName);
+        
+        QString type = set.value("Type", "remote").toString();
+        QString url = set.value("Url").toString();
+        QStringList distros = set.value("Distributions").toString().split(' ', QString::SkipEmptyParts);
+        QStringList archs = set.value("Archs").toString().split(' ', QString::SkipEmptyParts);
+
+        // Explorer chaque distribution, et chaque architecture dedans
+        foreach (const QString &distroName, distros)
+        {
+            foreach (const QString &arch, archs)
+            {
+                // Télécharger le fichier <url>/dists/<distroName>/<arch>/packages.lzma
+                QString u = url + "/dists/" + distroName + "/" + arch + "/packages.lzma";
+                
+                sendMessage(tr("Téléchargement de %1...").arg(u));
+                
+                db->download(sourceName, u, type, false);
+
+                // Télécharger les traductions
+                u = url + "/dists/" + distroName + "/" + arch + "/translate." + lang + ".lzma";
+
+                sendMessage(tr("Téléchargement des traductions %1...").arg(u));
+
+                db->download(sourceName, u, type, true);
+            }
+        }
+
+        set.endGroup();
+    }
+
+    sendMessage(tr("Reconstruction de la base de donnée"));
+
+    db->rebuild();
+
+    delete db;
 }
 
 QList<Package *> PackageSystem::packagesByName(const QString &regex)
@@ -59,6 +111,93 @@ Package *PackageSystem::package(const QString &name, const QString &version)
     pkg = new Package(i, this, d);
 
     return pkg;
+}
+
+bool PackageSystem::matchVersion(const QString &v1, const QString &v2, int op)
+{
+    // Comparer les versions
+    int rs = compareVersions(v1, v2);
+
+    // Retourner en fonction de l'opérateur
+    switch (op)
+    {
+        case DEPEND_OP_EQ:
+            return (rs == 0);
+        case DEPEND_OP_GREQ:
+            return ( (rs == 0) || (rs == 1) );
+        case DEPEND_OP_GR:
+            return (rs == 1);
+        case DEPEND_OP_LOEQ:
+            return ( (rs == 0) || (rs == -1) );
+        case DEPEND_OP_LO:
+            return (rs == -1);
+        case DEPEND_OP_NE:
+            return (rs != 0);
+    }
+
+    return true;
+}
+
+int PackageSystem::compareVersions(const QString &v1, const QString &v2)
+{
+    QRegExp regex("[^\\d]");
+    QStringList v1s = v1.split(regex, QString::SkipEmptyParts);
+    QStringList v2s = v2.split(regex, QString::SkipEmptyParts);
+
+    if (v1 == v2) return 0;
+
+    /* Compare Version */
+    /*
+     * We compare character by character. For example :
+     *      0.1.7-2 => 0 1 7 2
+     *      0.1.7   => 0 1 7
+     *
+     * With "maxlength", we know that we must add 0 like this :
+     *      0 1 7 2 => 0 1 7 2
+     *      0 1 7   => 0 1 7 0
+     *
+     * We compare every number with its double. If their are equal
+     *      Continue
+     * If V1 is more recent
+     *      Return true
+     * End bloc
+     */
+
+    int maxlength = v1s.count() > v2s.count() ? v1s.count() : v2s.count();
+
+    int v1num, v2num;
+
+    for (int i = 0; i < maxlength; i++)
+    {
+        if (i >= v1s.count())
+        {
+            v1num = 0;
+        }
+        else
+        {
+            v1num = v1s.at(i).toInt();
+        }
+
+        if (i >= v2s.count())
+        {
+            v2num = 0;
+        }
+        else
+        {
+            v2num = v2s.at(i).toInt();
+        }
+
+        if (v1num > v2num)
+        {
+            return 1;
+        }
+        else if (v1num < v2num)
+        {
+            return -1;
+        }
+    }
+
+    return 0;       //Égal
 }
 
 void PackageSystem::raise(Error err, const QString &info)

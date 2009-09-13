@@ -8,11 +8,11 @@ TARGET = lgrpkg
 DEPENDPATH += .
 INCLUDEPATH += .
 QT -= gui
-QT += xml
+QT += xml network
 
 # Input
-HEADERS += libpackage.h libpackage_p.h package.h buildpkg.h
-SOURCES += libpackage.cpp libpackage_p.cpp package.cpp buildpkg.cpp
+HEADERS += libpackage.h libpackage_p.h package.h databasewriter.h
+SOURCES += libpackage.cpp libpackage_p.cpp package.cpp databasewriter.cpp
 
 includes.files = *.h
 includes.path = /usr/include/logram

@@ -96,7 +96,7 @@ include()
         mkdir -p $cdir
 
         echo "[$name]" > $cdir/$name.control
-        echo "Url=$MIRROR_ROOT/pool/$d/$name/$bname" >> $cdir/$name.control
+        echo "Url=pool/$d/$name/$bname" >> $cdir/$name.control
         echo -e "$content" >> $cdir/$name.control
 
         # Copier et adapter tous les fichiers langue du paquet (<name>.*)
