@@ -172,6 +172,69 @@ QString PackageSystemPrivate::packageShortDesc(int index)
     return QString(string(m_translate, pkg->short_desc));
 }
 
+QString PackageSystemPrivate::packageTitle(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_translate, pkg->title));
+}
+
+QString PackageSystemPrivate::packageSource(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->source));
+}
+
+QString PackageSystemPrivate::packageRepo(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->repo));
+}
+
+QString PackageSystemPrivate::packageSection(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->section));
+}
+
+QString PackageSystemPrivate::packageDistribution(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->distribution));
+}
+
+QString PackageSystemPrivate::packageLicense(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->license));
+}
+
+QString PackageSystemPrivate::packageUrl(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->url));
+}
+
 _Package *PackageSystemPrivate::package(int index)
 {
     // Trouver l'adresse du paquet

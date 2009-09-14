@@ -42,7 +42,7 @@ struct _Package
 struct _String
 {
     int32_t ptr;        // Pointeur à partir du début de la table des données
-    int32_t strpkg;     // Index d'un StrPackage dans strpackages
+    int32_t strpkg;     // Index d'un StrPackagePtr dans strpackages
 };
 
 struct _DependPtr
@@ -64,6 +64,12 @@ struct _StrPackage
 {
     int32_t version;    // Index de la chaîne de version nécessaire pour qu'on ait le bon paquet
     int32_t package;    // Index du paquet
+};
+
+struct _StrPackagePtr
+{
+    int32_t ptr;        // Pointeur sur un StrPackage dans la zone de données
+    int32_t count;      // Nombre de StrPackages dedans
 };
 
 /**********************************************
@@ -89,6 +95,13 @@ class PackageSystemPrivate
         QString packageVersion(int index);
         QString packageLongDesc(int index);
         QString packageShortDesc(int index);
+        QString packageTitle(int index);
+        QString packageSource(int index);
+        QString packageRepo(int index);
+        QString packageSection(int index);
+        QString packageDistribution(int index);
+        QString packageLicense(int index);
+        QString packageUrl(int index);
 
         const char *string(uchar *map, int index);
         _Package *package(int index);

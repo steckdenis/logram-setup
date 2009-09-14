@@ -426,7 +426,7 @@ void DatabaseWriter::rebuild()
                     else if (key == "Version")
                     {
                         pkgver = value;
-                        pkg->name = stringIndex(value, index, false);
+                        pkg->version = stringIndex(value, index, false);
 
                         // Si le nom est aussi ok, ajouter le couple clef/valeur
                         if (!pkgname.isEmpty())
@@ -570,6 +570,155 @@ void DatabaseWriter::rebuild()
     //qDebug() << strPackages;
     qDebug() << knownPackages;
     qDebug() << depends;
+
+    /*** Écrire les listes dans les fichiers ***/
+    int32_t length;
+    
+    // Liste des paquets
+    QFile fl("/var/cache/lgrpkg/packages");
+
+    if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+    }
+
+    length = packages.count();
+    fl.write((const char *)&length, sizeof(int32_t));
+
+    foreach (_Package *pkg, packages)
+    {
+        // Écrire le paquet
+        fl.write((const char *)pkg, sizeof(_Package));
+    }
+
+    // Chaînes de caractères
+    fl.close();
+    fl.setFileName("/var/cache/lgrpkg/strings");
+
+    if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+    }
+
+    length = strings.count();
+    fl.write((const char *)&length, sizeof(int32_t));
+
+    foreach (_String *str, strings)
+    {
+        // Ecrire la chaine
+        fl.write((const char *)str, sizeof(_String));
+    }
+
+    for (int i=0; i<strings.count(); ++i)
+    {
+        // On écrit maintenant les valeurs
+        QByteArray str = stringsIndexes.key(i);
+        fl.write(str.constData(), str.length()+1); // +1 : nous avons besoin du \0 à la fin
+    }
+
+    // Chaînes traduites
+    fl.close();
+    fl.setFileName("/var/cache/lgrpkg/translate");
+
+    if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+    }
+
+    length = translate.count();
+    fl.write((const char *)&length, sizeof(int32_t));
+
+    foreach (_String *str, translate)
+    {
+        // Ecrire la chaine
+        fl.write((const char *)str, sizeof(_String));
+    }
+
+    for (int i=0; i<translate.count(); ++i)
+    {
+        // On écrit maintenant les valeurs
+        QByteArray str = translateIndexes.key(i);
+        fl.write(str.constData(), str.length()+1); // +1 : nous avons besoin du \0 à la fin
+    }
+
+    // Dépendances
+    fl.close();
+    fl.setFileName("/var/cache/lgrpkg/depends");
+
+    if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+    }
+
+    length = depends.count();
+    fl.write((const char *)&length, sizeof(int32_t));
+
+    _DependPtr dp;
+    int dptr = 0;
+
+    QList<_Depend *> alldeps;
+
+    foreach (const QList<_Depend *> &l, depends)
+    {
+        // Ecrire le tableau des dépendances
+        dp.count = l.count();
+        dp.ptr = dptr;
+
+        fl.write((const char *)&dp, sizeof(_DependPtr));
+
+        // Adapter le pointeur
+        dptr += l.count() * sizeof(_Depend);
+
+        // Pour aller plus vite, déjà ajouter cette dépendance
+        alldeps << l;
+    }
+
+    foreach(_Depend *dep, alldeps)
+    {
+        fl.write((const char *)dep, sizeof(_Depend));
+    }
+
+    // StrPackages
+    fl.close();
+    fl.setFileName("/var/cache/lgrpkg/strpackages");
+
+    if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+    }
+
+    length = strPackages.count();
+    fl.write((const char *)&length, sizeof(int32_t));
+
+    _StrPackagePtr spp;
+    int spptr = 0;
+
+    QList<_StrPackage *> allsp;
+
+    foreach (const QList<_StrPackage *> &l, strPackages)
+    {
+        // Ecrire le tableau des dépendances
+        spp.count = l.count();
+        spp.ptr = spptr;
+
+        fl.write((const char *)&spp, sizeof(_StrPackagePtr));
+
+        // Adapter le pointeur
+        spptr += l.count() * sizeof(_StrPackage);
+
+        // Pour aller plus vite, déjà ajouter cette dépendance
+        allsp << l;
+    }
+
+    foreach(_StrPackage *sp, allsp)
+    {
+        fl.write((const char *)sp, sizeof(_StrPackage));
+    }
+
+    // Fermer le fichier
+    fl.close();
+
+    // On a fini ! :-)
 }
 
 void DatabaseWriter::downloadFinished(QNetworkReply *reply)

@@ -44,6 +44,12 @@ class Package : public QObject
         QString version();
         QString shortDesc();
         QString longDesc();
+        QString title();
+        QString source();
+        QString repo();
+        QString section();
+        QString distribution();
+        QString license();
 
         QList<Depend *> depends();
 

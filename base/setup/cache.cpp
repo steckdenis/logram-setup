@@ -77,9 +77,16 @@ void App::showpkg(const QString &name)
     // Afficher les informations
     cout << COLOR(tr("Nom                : "), "33") << COLOR(pkg->name(), "34") << endl;
     cout << COLOR(tr("Version            : "), "33") << qPrintable(pkg->version()) << endl;
+    cout << COLOR(tr("Titre              : "), "33") << qPrintable(pkg->title()) << endl;
+    cout << COLOR(tr("Section            : "), "33") << qPrintable(pkg->section()) << endl;
+    cout << COLOR(tr("Distribution       : "), "33") << qPrintable(pkg->distribution()) << endl;
+    cout << COLOR(tr("Dépôt d'origine    : "), "33") << qPrintable(pkg->repo()) << endl;
+    cout << COLOR(tr("Paquet source      : "), "33") << qPrintable(pkg->source()) << endl;
+    cout << COLOR(tr("Licence            : "), "33") << qPrintable(pkg->license()) << endl;
     cout << COLOR(tr("Description courte : "), "33") << qPrintable(pkg->shortDesc()) << endl;
-    cout << COLOR(tr("Description longue : "), "33") << endl << endl;
-    cout << qPrintable(pkg->longDesc()) << endl;
+    
+    cout << endl << COLOR(tr("Description longue : "), "35") << endl << endl;
+    cout << qPrintable(pkg->longDesc());
 
     // Afficher les dépendances
     QList<Depend *> deps = pkg->depends();
@@ -127,7 +134,7 @@ void App::showpkg(const QString &name)
 
             if (dep->op() != DEPEND_OP_NOVERSION)
             {
-                switch (dep->type())
+                switch (dep->op())
                 {
                     case DEPEND_OP_EQ:
                         cout << " ( = ";

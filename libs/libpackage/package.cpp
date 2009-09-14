@@ -118,6 +118,36 @@ QString Package::longDesc()
     return d->psd->packageLongDesc(d->index);
 }
 
+QString Package::title()
+{
+    return d->psd->packageTitle(d->index);
+}
+
+QString Package::source()
+{
+    return d->psd->packageSource(d->index);
+}
+
+QString Package::repo()
+{
+    return d->psd->packageRepo(d->index);
+}
+
+QString Package::section()
+{
+    return d->psd->packageSection(d->index);
+}
+
+QString Package::distribution()
+{
+    return d->psd->packageDistribution(d->index);
+}
+
+QString Package::license()
+{
+    return d->psd->packageLicense(d->index);
+}
+
 /*************************************
 ******* Depend ***********************
 *************************************/
