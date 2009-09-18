@@ -46,6 +46,7 @@ struct Solver::Private
     // Liste pour la résolution des dépendances
     QList<QVector<Pkg> > packages;
     QHash<QString, Solver::Action> wantedPackages;
+    QList<int> wrongLists;
 
     // Fonctions
     bool addPkg(int packageIndex, int listIndex, Solver::Action action);
@@ -123,6 +124,29 @@ bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
     // Première liste
     lists.append(listIndex);
 
+    // Explorer la liste actuelle pour voir si le paquet demandé n'est pas déjà dedans
+    QVector<Pkg> &list = packages[listIndex];
+
+    for(int i=0; i<list.count(); ++i)
+    {
+        Pkg pk = list.at(i);
+
+        if (pk.index == packageIndex)
+        {
+            if (pk.action == action)
+            {
+                // On a déjà demandé ce paquet pour installation/suppression, donc on retourne
+                return true;
+            }
+            else
+            {
+                // On a un conflit dans cette liste, donc elle n'est pas bonne. On retourne false
+                wrongLists.append(listIndex);
+                return false;
+            }
+        }
+    }
+
     // Ajouter le paquet dans la liste
     Pkg pkg;
     pkg.index = packageIndex;
@@ -161,7 +185,7 @@ bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
         {
             int lindex = lists.at(i);
 
-            addPkgs(psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op), lists, lindex, act);
+            if (!addPkgs(psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op), lists, lindex, act)) return false;
         }
     }
 
@@ -182,12 +206,12 @@ bool Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, in
         {
             first = false;
 
-            addPkg(pindex, lindex, act);
+            if (!addPkg(pindex, lindex, act)) return false;
         }
         else
         {
-            // On a une variante, créer une copier de la liste lindex, supprimer son
-            // dernier élément (celui qu'on a ajouté dans first), et traitement normal
+            // On a une variante, créer une nouvelle liste, et y copier <lcount> éléments dedans
+            // (pour en faire une copie de la liste originelle)
             const QVector<Pkg> &pkgs = packages.at(lindex);
 
             packages.append(QVector<Pkg>());
@@ -201,7 +225,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, in
                 mpkgs.append(pkgs.at(k));
             }
 
-            addPkg(pindex, lindex, act);
+            if (!addPkg(pindex, lindex, act)) return false;
         }
     }
 
