@@ -49,6 +49,7 @@ struct Solver::Private
 
     // Fonctions
     bool addPkg(int packageIndex, int listIndex, Solver::Action action);
+    bool addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, int lindex, Solver::Action act);
 };
 
 Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
@@ -97,40 +98,8 @@ void Solver::solve()
         for (int i=0; i<count; ++i)
         {
             int lindex = lists.at(i);
-            int lcount = d->packages[lindex].count();
-            bool first = true;
 
-            // Si on a plusieurs choix, créer les sous-listes nécessaires
-            for (int j=0; j<pkgsToAdd.count(); ++j)
-            {
-                int pindex = pkgsToAdd.at(j);
-                
-                if (first)
-                {
-                    first = false;
-
-                    d->addPkg(pindex, lindex, act);
-                }
-                else
-                {
-                    // On a une variante, créer une copier de la liste lindex, supprimer son
-                    // dernier élément (celui qu'on a ajouté dans first), et traitement normal
-                    const QVector<Pkg> &pkgs = d->packages.at(lindex);
-
-                    d->packages.append(QVector<Pkg>());
-                    lindex = d->packages.count()-1;
-                    lists.append(lindex);
-
-                    QVector<Pkg> &mpkgs = d->packages[lindex];
-
-                    for (int k=0; k<lcount; ++k)
-                    {
-                        mpkgs.append(pkgs.at(k));
-                    }
-
-                    d->addPkg(pindex, lindex, act);
-                }
-            }
+            d->addPkgs(pkgsToAdd, lists, lindex, act);
         }
     }
 
@@ -192,42 +161,48 @@ bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
         for (int i=0; i<count; ++i)
         {
             int lindex = lists.at(i);
-            int lcount = packages[lindex].count();
-            bool first = true;
 
-            QList<int> pkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+            addPkgs(psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op), lists, lindex, act);
+        }
+    }
 
-            // Si on a plusieurs choix, créer les sous-listes nécessaires
-            for (int j=0; j<pkgsToAdd.count(); ++j)
+    return true;
+}
+
+bool Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, int lindex, Solver::Action act)
+{
+    int lcount = packages[lindex].count();
+    bool first = true;
+
+    // Si on a plusieurs choix, créer les sous-listes nécessaires
+    for (int j=0; j<pkgsToAdd.count(); ++j)
+    {
+        int pindex = pkgsToAdd.at(j);
+
+        if (first)
+        {
+            first = false;
+
+            addPkg(pindex, lindex, act);
+        }
+        else
+        {
+            // On a une variante, créer une copier de la liste lindex, supprimer son
+            // dernier élément (celui qu'on a ajouté dans first), et traitement normal
+            const QVector<Pkg> &pkgs = packages.at(lindex);
+
+            packages.append(QVector<Pkg>());
+            lindex = packages.count()-1;
+            lists.append(lindex);
+
+            QVector<Pkg> &mpkgs = packages[lindex];
+
+            for (int k=0; k<lcount; ++k)
             {
-                int pindex = pkgsToAdd.at(j);
-
-                if (first)
-                {
-                    first = false;
-
-                    addPkg(pindex, lindex, act);
-                }
-                else
-                {
-                    // On a une variante, créer une copier de la liste lindex, supprimer son
-                    // dernier élément (celui qu'on a ajouté dans first), et traitement normal
-                    const QVector<Pkg> &pkgs = packages.at(lindex);
-                    
-                    packages.append(QVector<Pkg>());
-                    lindex = packages.count()-1;
-                    lists.append(lindex);
-
-                    QVector<Pkg> &mpkgs = packages[lindex];
-                    
-                    for (int k=0; k<lcount; ++k)
-                    {
-                        mpkgs.append(pkgs.at(k));
-                    }
-
-                    addPkg(pindex, lindex, act);
-                }
+                mpkgs.append(pkgs.at(k));
             }
+
+            addPkg(pindex, lindex, act);
         }
     }
 
