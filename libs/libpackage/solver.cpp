@@ -119,7 +119,6 @@ void Solver::solve()
 bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action action)
 {
     QList<int> lists;
-    QList<int> pkgsToAdd;
 
     // Première liste
     lists.append(listIndex);
