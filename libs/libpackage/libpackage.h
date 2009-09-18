@@ -28,6 +28,7 @@
 #include <QList>
 
 class Package;
+class Solver;
 class PackageSystemPrivate;
 
 class PackageSystem : public QObject
@@ -43,9 +44,11 @@ class PackageSystem : public QObject
         Package *package(const QString &name, const QString &version = QString());
 
         void update();
+        Solver *newSolver();
 
         static int compareVersions(const QString &v1, const QString &v2);
         static bool matchVersion(const QString &v1, const QString &v2, int op);
+        static int parseVersion(const QString &verStr, QString &name, QString &version);
 
         // Gestion des erreurs
         enum Error

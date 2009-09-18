@@ -79,6 +79,17 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     {
         update();
     }
+    else if (cmd == "add")
+    {
+        QStringList packages;
+
+        for (int i=2; i<args.count(); ++i)
+        {
+            packages.append(args.at(i));
+        }
+
+        add(packages);
+    }
 }
 
 void App::help()
@@ -93,6 +104,7 @@ void App::help()
     cout << "    search <pattern>   Show all the packages matching <pattern>" << endl;
     cout << "    showpkg <name>     Show the informations of the package <name>" << endl;
     cout << "    update             Update the packages' database" << endl;
+    cout << "    add <packages>     Add packages (prepend them with \"-\" to remove)" << endl;
 }
 
 void App::version()
@@ -119,6 +131,9 @@ void App::error(PackageSystem::Error err, const QString &info)
             break;
         case PackageSystem::ProcessError:
             cout << "Error when executing command ";
+            break;
+        case PackageSystem::DownloadError:
+            cout << "Error when downloading file ";
             break;
     }
     

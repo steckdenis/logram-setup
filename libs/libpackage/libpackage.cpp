@@ -24,6 +24,7 @@
 #include "libpackage_p.h"
 #include "package.h"
 #include "databasewriter.h"
+#include "solver.h"
 
 #include <QSettings>
 #include <QStringList>
@@ -111,6 +112,59 @@ Package *PackageSystem::package(const QString &name, const QString &version)
     pkg = new Package(i, this, d);
 
     return pkg;
+}
+
+Solver *PackageSystem::newSolver()
+{
+    return new Solver(this, d);
+}
+
+int PackageSystem::parseVersion(const QString &verStr, QString &name, QString &version)
+{
+    QStringList parts;
+    int rs;
+    
+    if (verStr.contains(">="))
+    {
+        parts = verStr.split(">=");
+        rs = DEPEND_OP_GREQ;
+    }
+    else if (verStr.contains("<="))
+    {
+        parts = verStr.split("<=");
+        rs = DEPEND_OP_LOEQ;
+    }
+    else if (verStr.contains("!="))
+    {
+        parts = verStr.split("!=");
+        rs = DEPEND_OP_NE;
+    }
+    else if (verStr.contains('<'))
+    {
+        parts = verStr.split('<');
+        rs = DEPEND_OP_LO;
+    }
+    else if (verStr.contains('>'))
+    {
+        parts = verStr.split('>');
+        rs = DEPEND_OP_GR;
+    }
+    else if (verStr.contains('='))
+    {
+        parts = verStr.split('=');
+        rs = DEPEND_OP_EQ;
+    }
+    else
+    {
+        name = verStr;
+        version = QString();
+        return DEPEND_OP_NOVERSION;
+    }
+
+    name = parts.at(0);
+    version = parts.at(1);
+
+    return rs;
 }
 
 bool PackageSystem::matchVersion(const QString &v1, const QString &v2, int op)

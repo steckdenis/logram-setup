@@ -1,5 +1,5 @@
 /*
- * app.h
+ * solver.h
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,39 +20,36 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __APP_H__
-#define __APP_H__
+#ifndef __SOLVER_H__
+#define __SOLVER_H__
 
-#include <QCoreApplication>
-#include <QStringList>
-#include <QtDebug>
+#include <QObject>
 
-#include <logram/libpackage.h>
+class Package;
+class PackageSystem;
+class PackageSystemPrivate;
 
-#define VERSION "0.0.1"
-#define COLOR(text, color) qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m")
-
-class App : public QCoreApplication
+class Solver : public QObject
 {
-    Q_OBJECT
-    
     public:
-        App(int &argc, char **argv);
+        Solver(PackageSystem *ps, PackageSystemPrivate *psd);
+        ~Solver();
 
-        // Actions
-        void help();
-        void version();
-        void find(const QString &pattern);
-        void showpkg(const QString &name);
-        void update();
-        void add(const QStringList &packages);
+        enum Action
+        {
+            None,
+            Install,
+            Remove,
+            Purge,
+            Update
+        };
 
-    public slots:
-        void error(PackageSystem::Error err, const QString &info);
-        void message(const QString &msg);
+        void addPackage(const QString &nameStr, Action action);
+        void solve();
 
     private:
-        PackageSystem *ps;
+        struct Private;
+        Private *d;
 };
 
 #endif

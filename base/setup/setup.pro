@@ -11,4 +11,4 @@ LIBS += -llgrpkg
 
 # Input
 HEADERS += app.h
-SOURCES += cache.cpp main.cpp app.cpp util.cpp
+SOURCES += cache.cpp main.cpp app.cpp util.cpp package.cpp

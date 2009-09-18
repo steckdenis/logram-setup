@@ -22,9 +22,11 @@
 
 #include "libpackage.h"
 #include "libpackage_p.h"
+#include "package.h"
 
 #include <QFile>
 #include <QRegExp>
+#include <QDebug>
 
 PackageSystemPrivate::PackageSystemPrivate(PackageSystem *_ps)
 {
@@ -57,6 +59,43 @@ QList<int> PackageSystemPrivate::packagesByName(const QString &regex)
         {
             // On ajoute le paquet comme résultat
             rs.append(i);
+        }
+    }
+
+    return rs;
+}
+
+QList<int> PackageSystemPrivate::packagesByVString(const QString &verStr)
+{
+    QList<int> rs;
+    int32_t count = *(int32_t *)m_packages;
+
+    // Parser la version
+    QString name, version, pver, pname;
+    int op;
+
+    op = PackageSystem::parseVersion(verStr, name, version);
+
+    for (int i=0; i<count; ++i)
+    {
+        _Package *pkg = package(i);
+        pname = QString(string(0, pkg->name));
+
+        if (pname != name) continue;
+
+        if (version.isNull())
+        {
+            rs.append(i);
+        }
+        else
+        {
+            pver = QString(string(0, pkg->version));
+
+            // Voir si la version correspond
+            if (PackageSystem::matchVersion(pver, version, op))
+            {
+                rs.append(i);
+            }
         }
     }
 
@@ -124,7 +163,69 @@ QList<_Depend *> PackageSystemPrivate::depends(int pkgIndex)
     return rs;
 }
 
-_Depend *PackageSystemPrivate::depend(int ptr)
+QList<int> PackageSystemPrivate::packagesOfString(int stringIndex, int nameIndex, int op)
+{
+    QList<int> rs;
+    QString cmpVersion = QString(string(0, stringIndex));
+    
+    // Vérifier l'index
+    if (stringIndex >= *(int *)m_strings)
+    {
+        return rs;
+    }
+
+    // Trouver la chaîne à l'index spécifié
+    uchar *str = m_strings;
+
+    str += 4;                   // Sauter count
+
+    // Index
+    str += (nameIndex * sizeof(_String));
+
+    // Trouver le StringPackagePtr
+    int32_t spptr = ((_String *)(str))->strpkg;
+    uchar *strpkg = m_strpackages;
+    int32_t numptrs = *(int32_t *)strpkg;
+
+    strpkg += 4;
+    strpkg += spptr * sizeof(_StrPackagePtr);
+
+    // Explorer les StrPackage
+    int32_t count = ((_StrPackagePtr *)(strpkg))->count;
+    uchar *sptr = m_strpackages;
+
+    sptr += 4;      // Count
+    sptr += numptrs * sizeof(_StrPackagePtr);
+    sptr += ((_StrPackagePtr *)(strpkg))->ptr;
+
+    for (int i=0; i<count; ++i)
+    {
+        // Voir si c'est le bon paquet
+        _Package *pkg = package(((_StrPackage *)(sptr))->package);
+
+        if (pkg->name != nameIndex)
+        {
+            sptr += sizeof(_StrPackage);
+            continue;
+        }
+        
+        // Si on n'a pas précisé de version, c'est ok
+        if (op == DEPEND_OP_NOVERSION)
+        {
+            rs.append( ((_StrPackage *)(sptr))->package );
+        }
+        else if (PackageSystem::matchVersion(QString(string(0, ((_StrPackage *)(sptr))->version)), cmpVersion, op))
+        {
+            rs.append( ((_StrPackage *)(sptr))->package );
+        }
+
+        sptr += sizeof(_StrPackage);
+    }
+
+    return rs;
+}
+
+_Depend *PackageSystemPrivate::depend(int32_t ptr)
 {
     int numdepsptr = *(int *)m_depends;
     

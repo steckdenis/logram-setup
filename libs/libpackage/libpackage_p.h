@@ -89,7 +89,9 @@ class PackageSystemPrivate
 
         int package(const QString &name, const QString &version);
         QList<int> packagesByName(const QString &regex);
+        QList<int> packagesByVString(const QString &verStr);
         QList<_Depend *> depends(int pkgIndex);
+        QList<int> packagesOfString(int stringIndex, int nameIndex, int op);
 
         QString packageName(int index);
         QString packageVersion(int index);
@@ -105,7 +107,7 @@ class PackageSystemPrivate
 
         const char *string(uchar *map, int index);
         _Package *package(int index);
-        _Depend *depend(int ptr);
+        _Depend *depend(int32_t ptr);
         
     private:
         void mapFile(const QString &file, QFile **ptr, uchar **map);

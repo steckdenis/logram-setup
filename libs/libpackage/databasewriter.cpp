@@ -221,8 +221,6 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
             QByteArray _op = parts.at(1);
             QByteArray version = parts.at(2);
 
-            qDebug() << name << _op << version;
-
             // Trouver le bon opérateur
             int8_t op = 0;
 
@@ -355,7 +353,7 @@ void DatabaseWriter::rebuild()
                 parent->raise(PackageSystem::OpenFileError, fname);
             }
 
-            QByteArray line, name, long_desc, pkgname, pkgver;
+            QByteArray line, name, long_desc, pkgname;
             _Package *pkg = 0;
             int number = 0;
             int index;
@@ -388,12 +386,11 @@ void DatabaseWriter::rebuild()
                         packagesIndexes.insert(key, index);
 
                         // Clef utiles
-                        pkg->distribution = stringIndex(distroname.toUtf8(), index, false);
-                        pkg->repo = stringIndex(reponame.toUtf8(), index, false);
+                        pkg->distribution = stringIndex(distroname.toUtf8(), index, false, false);
+                        pkg->repo = stringIndex(reponame.toUtf8(), index, false, false);
 
                         // Initialisations
                         pkgname.clear();
-                        pkgver.clear();
                     }
 
                     // Si la ligne ne contient pas un égal, on passe à la suivante (marche aussi quand la ligne commence par [)
@@ -415,40 +412,33 @@ void DatabaseWriter::rebuild()
                     if (key == "Name")
                     {
                         pkgname = value;
-                        pkg->name = stringIndex(value, index, false);
-
-                        // Si la version est aussi ok, ajouter le couple clef/valeur
-                        if (!pkgver.isEmpty())
-                        {
-                            knownPackages.insert(pkgname + "=" + pkgver, pkg);
-                        }
                     }
                     else if (key == "Version")
                     {
-                        pkgver = value;
-                        pkg->version = stringIndex(value, index, false);
+                        pkg->version = stringIndex(value, index, false, false);
+                        pkg->name = stringIndex(pkgname, index, false, true);
 
                         // Si le nom est aussi ok, ajouter le couple clef/valeur
                         if (!pkgname.isEmpty())
                         {
-                            knownPackages.insert(pkgname + "=" + pkgver, pkg);
+                            knownPackages.insert(pkgname + "=" + value, pkg);
                         }
                     }
                     else if (key == "Source")
                     {
-                        pkg->source = stringIndex(value, index, false);
+                        pkg->source = stringIndex(value, index, false, false);
                     }
                     else if (key == "Section")
                     {
-                        pkg->section = stringIndex(value, index, false);
+                        pkg->section = stringIndex(value, index, false, false);
                     }
                     else if (key == "Licence")
                     {
-                        pkg->license = stringIndex(value, index, false);
+                        pkg->license = stringIndex(value, index, false, false);
                     }
                     else if (key == "Url")
                     {
-                        pkg->url = stringIndex(value, index, false);
+                        pkg->url = stringIndex(value, index, false, false);
                     }
                 }
                 else if (pass == 1)
@@ -568,8 +558,8 @@ void DatabaseWriter::rebuild()
     //qDebug() << stringsIndexes;
     //qDebug() << translateIndexes;
     //qDebug() << strPackages;
-    qDebug() << knownPackages;
-    qDebug() << depends;
+    //qDebug() << knownPackages;
+    //qDebug() << depends;
 
     /*** Écrire les listes dans les fichiers ***/
     int32_t length;
