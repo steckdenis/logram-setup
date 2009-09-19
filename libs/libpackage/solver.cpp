@@ -184,7 +184,7 @@ bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
         for (int i=0; i<count; ++i)
         {
             int lindex = lists.at(i);
-
+            
             if (!addPkgs(psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op), lists, lindex, act)) return false;
         }
     }

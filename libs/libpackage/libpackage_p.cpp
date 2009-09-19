@@ -202,12 +202,6 @@ QList<int> PackageSystemPrivate::packagesOfString(int stringIndex, int nameIndex
     {
         // Voir si c'est le bon paquet
         _Package *pkg = package(((_StrPackage *)(sptr))->package);
-
-        if (pkg->name != nameIndex)
-        {
-            sptr += sizeof(_StrPackage);
-            continue;
-        }
         
         // Si on n'a pas précisé de version, c'est ok
         if (op == DEPEND_OP_NOVERSION)

@@ -353,7 +353,7 @@ void DatabaseWriter::rebuild()
                 parent->raise(PackageSystem::OpenFileError, fname);
             }
 
-            QByteArray line, name, long_desc, pkgname;
+            QByteArray line, name, long_desc, pkgname, pkgver;
             _Package *pkg = 0;
             int number = 0;
             int index;
@@ -391,6 +391,7 @@ void DatabaseWriter::rebuild()
 
                         // Initialisations
                         pkgname.clear();
+                        pkgver.clear();
                     }
 
                     // Si la ligne ne contient pas un égal, on passe à la suivante (marche aussi quand la ligne commence par [)
@@ -415,13 +416,14 @@ void DatabaseWriter::rebuild()
                     }
                     else if (key == "Version")
                     {
+                        pkgver = value;
                         pkg->version = stringIndex(value, index, false, false);
                         pkg->name = stringIndex(pkgname, index, false, true);
 
                         // Si le nom est aussi ok, ajouter le couple clef/valeur
                         if (!pkgname.isEmpty())
                         {
-                            knownPackages.insert(pkgname + "=" + value, pkg);
+                            knownPackages.insertMulti(pkgname + "=" + value, pkg);
                         }
                     }
                     else if (key == "Source")
@@ -439,6 +441,43 @@ void DatabaseWriter::rebuild()
                     else if (key == "Url")
                     {
                         pkg->url = stringIndex(value, index, false, false);
+                    }
+                    else if (key == "Provides")
+                    {
+                        // Insérer des knownPackages pour chaque provide
+                        if (value.isEmpty())
+                        {
+                            continue;
+                        }
+
+                        // Parser la chaîne
+                        QList<QByteArray> deps = value.split(';');
+                        QByteArray dep;
+                        QByteArray version(pkgver);
+                        
+
+                        foreach (const QByteArray &_dep, deps)
+                        {
+                            dep = _dep.trimmed();
+
+                            bool pa = dep.contains('(');
+
+                            if (pa)
+                            {
+                                // Provide avec version
+                                // Parser la chaîne "nom (= version)"
+                                dep.replace('(', "");           // machin >= version)
+                                dep.replace(')', "");           // machin >= version
+
+                                // Splitter avec les espaces
+                                QList<QByteArray> parts = dep.split(' ');
+                                dep = parts.at(0);
+                                version = parts.at(2);
+                            }
+
+                            // Ajouter <dep>=<version> dans knownPackages
+                            knownPackages.insertMulti(dep + "=" + version, pkg);
+                        }
                     }
                 }
                 else if (pass == 1)
@@ -527,10 +566,6 @@ void DatabaseWriter::rebuild()
                         {
                             setDepends(pkg, value, DEPEND_TYPE_DEPEND);
                         }
-                        else if (key == "Provides")
-                        {
-                            setDepends(pkg, value, DEPEND_TYPE_PROVIDE);
-                        }
                         else if (key == "Replaces")
                         {
                             setDepends(pkg, value, DEPEND_TYPE_REPLACE);
@@ -542,6 +577,53 @@ void DatabaseWriter::rebuild()
                         else if (key == "Conflicts")
                         {
                             setDepends(pkg, value, DEPEND_TYPE_CONFLICT);
+                        }
+                        else if (key == "Provides")
+                        {
+                            setDepends(pkg, value, DEPEND_TYPE_PROVIDE);
+                            
+                            if (value.isEmpty())
+                            {
+                                continue;
+                            }
+
+                            // Parser la chaîne
+                            QList<QByteArray> deps = value.split(';');
+                            QByteArray dep;
+
+                            foreach (const QByteArray &_dep, deps)
+                            {
+                                dep = _dep.trimmed();
+                                
+                                bool pa = dep.contains('(');
+                                int32_t oldver;
+                                QByteArray version;
+
+                                if (pa)
+                                {
+                                    // Provide avec version
+                                    oldver = pkg->version;
+
+                                    // Parser la chaîne "nom (= version)"
+                                    dep.replace('(', "");           // machin >= version)
+                                    dep.replace(')', "");           // machin >= version
+
+                                    // Splitter avec les espaces
+                                    QList<QByteArray> parts = dep.split(' ');
+                                    dep = parts.at(0);
+                                    version = parts.at(2);
+
+                                    pkg->version = stringIndex(version, index, false, false);
+                                }
+                                
+                                // Simplement créer une chaîne
+                                stringIndex(dep, index, false, true);
+
+                                if (pa)
+                                {
+                                    pkg->version = oldver;
+                                }
+                            }
                         }
                     }
                 }
