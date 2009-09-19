@@ -108,7 +108,7 @@ void Solver::solve()
     for (int i=0; i<d->packages.count(); ++i)
     {
         const QVector<Pkg> &pkgs = d->packages.at(i);
-        qDebug() << "{";
+        qDebug() << "{" << d->wrongLists.contains(i);
         foreach(const Pkg &pkg, pkgs)
         {
             qDebug() << "    " << d->psd->packageName(pkg.index) << d->psd->packageVersion(pkg.index);
@@ -184,8 +184,17 @@ bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
         for (int i=0; i<count; ++i)
         {
             int lindex = lists.at(i);
+
+            QList<int> pkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+
+            if (pkgsToAdd.count() == 0)
+            {
+                // Aucun des paquets demandés ne convient, distribution cassée. On quitte la branche
+                wrongLists.append(lindex);
+                return false;
+            }
             
-            if (!addPkgs(psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op), lists, lindex, act)) return false;
+            if (!addPkgs(pkgsToAdd, lists, lindex, act)) return false;
         }
     }
 
