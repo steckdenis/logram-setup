@@ -49,8 +49,8 @@ struct Solver::Private
     QList<int> wrongLists;
 
     // Fonctions
-    bool addPkg(int packageIndex, int listIndex, Solver::Action action);
-    bool addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, int lindex, Solver::Action act);
+    void addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists);
+    void addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, Solver::Action act);
 };
 
 Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
@@ -88,20 +88,7 @@ void Solver::solve()
         Action act = d->wantedPackages.value(pkg);
         pkgsToAdd = d->psd->packagesByVString(pkg);
 
-        /* NOTE: La variable suivante permet de stocker le nombre d'éléments dans lists.
-                 Ainsi, quand on ajoute des éléments dedans, ils ne sont plus re-traités
-                 (puisqu'ils l'ont déjà été). Au prochain tour de foreach(), ils seront
-                 traités comme il faut
-        */
-        int count = lists.count();
-
-        // Ajouter ces paquets dans chaque liste
-        for (int i=0; i<count; ++i)
-        {
-            int lindex = lists.at(i);
-
-            d->addPkgs(pkgsToAdd, lists, lindex, act);
-        }
+        d->addPkgs(pkgsToAdd, lists, act);
     }
 
     //NOTE: Debug
@@ -117,7 +104,7 @@ void Solver::solve()
     }
 }
 
-bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action action)
+void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists)
 {
     QList<int> lists;
 
@@ -126,23 +113,45 @@ bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
 
     // Explorer la liste actuelle pour voir si le paquet demandé n'est pas déjà dedans
     QVector<Pkg> &list = packages[listIndex];
+    _Package *mpkg = psd->package(packageIndex);
 
     for(int i=0; i<list.count(); ++i)
     {
         Pkg pk = list.at(i);
+        _Package *lpkg = psd->package(pk.index);
 
-        if (pk.index == packageIndex)
+        // Voir si on a déjà dans la liste un paquet du même nom que nous
+        if (lpkg->name == mpkg->name)
         {
-            if (pk.action == action)
+            // Si les versions sont les mêmes
+            if (lpkg->version == mpkg->version)
             {
-                // On a déjà demandé ce paquet pour installation/suppression, donc on retourne
-                return true;
+                // Si on veut faire la même action, on retourne true (dépendance en boucle ok)
+                if (pk.action == action)
+                {
+                    return;
+                }
+                else
+                {
+                    // L'action n'est pas la même, c'est une contradiction, on quitte
+                    wrongLists.append(listIndex);
+                    return;
+                }
             }
             else
             {
-                // On a un conflit dans cette liste, donc elle n'est pas bonne. On retourne false
-                wrongLists.append(listIndex);
-                return false;
+                // Les versions ne sont pas les mêmes
+                if (pk.action != action)
+                {
+                    // Par exemple, supprimer foo-1.2 et installer foo-1.3, c'est ok
+                    return;
+                }
+                else
+                {
+                    // Contradiction, on ne peut pas par exemple installer deux versions les mêmes
+                    wrongLists.append(listIndex);
+                    return;
+                }
             }
         }
     }
@@ -177,66 +186,78 @@ bool Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
         }
 
         if (act == Solver::None) continue;
+        
+        QList<int> pkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
 
-        // Explorer les listes
+        if (pkgsToAdd.count() == 0)
+        {
+            // Aucun des paquets demandés ne convient, distribution cassée. On quitte la branche
+            wrongLists << lists;
+            return;
+        }
+            
+        addPkgs(pkgsToAdd, lists, act);
+    }
+
+    // Rajouter les listes nouvellement créées dans plists
+    lists.removeFirst();
+    
+    plists << lists;
+}
+
+void Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, Solver::Action act)
+{
+    bool first = true;
+
+    QList<int> lcounts;
+
+    foreach(int list, lists)
+    {
+        lcounts.append(packages.at(list).count());
+    }
+    
+    // Si on a plusieurs choix, créer les sous-listes nécessaires
+    for (int j=0; j<pkgsToAdd.count(); ++j)
+    {
+        /* NOTE: La variable suivante permet de stocker le nombre d'éléments dans lists.
+                 Ainsi, quand on ajoute des éléments dedans, ils ne sont plus re-traités
+                 (puisqu'ils l'ont déjà été). Au prochain tour de foreach(), ils seront
+                 traités comme il faut
+        */
         int count = lists.count();
-
+        int pindex = pkgsToAdd.at(j);
+        
         for (int i=0; i<count; ++i)
         {
             int lindex = lists.at(i);
 
-            QList<int> pkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
-
-            if (pkgsToAdd.count() == 0)
+            if (first)
             {
-                // Aucun des paquets demandés ne convient, distribution cassée. On quitte la branche
-                wrongLists.append(lindex);
-                return false;
+                addPkg(pindex, lindex, act, lists);
             }
-            
-            if (!addPkgs(pkgsToAdd, lists, lindex, act)) return false;
-        }
-    }
-
-    return true;
-}
-
-bool Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, int lindex, Solver::Action act)
-{
-    int lcount = packages[lindex].count();
-    bool first = true;
-
-    // Si on a plusieurs choix, créer les sous-listes nécessaires
-    for (int j=0; j<pkgsToAdd.count(); ++j)
-    {
-        int pindex = pkgsToAdd.at(j);
-
-        if (first)
-        {
-            first = false;
-
-            if (!addPkg(pindex, lindex, act)) return false;
-        }
-        else
-        {
-            // On a une variante, créer une nouvelle liste, et y copier <lcount> éléments dedans
-            // (pour en faire une copie de la liste originelle)
-            const QVector<Pkg> &pkgs = packages.at(lindex);
-
-            packages.append(QVector<Pkg>());
-            lindex = packages.count()-1;
-            lists.append(lindex);
-
-            QVector<Pkg> &mpkgs = packages[lindex];
-
-            for (int k=0; k<lcount; ++k)
+            else
             {
-                mpkgs.append(pkgs.at(k));
+                // On a une variante, créer une nouvelle liste, et y copier <lcount> éléments dedans
+                // (pour en faire une copie de la liste originelle)
+                const QVector<Pkg> &pkgs = packages.at(lindex);
+
+                packages.append(QVector<Pkg>());
+                lindex = packages.count()-1;
+                lists.append(lindex);
+
+                QVector<Pkg> &mpkgs = packages[lindex];
+
+                int lcount = lcounts.at(i);
+                
+                for (int k=0; k<lcount; ++k)
+                {
+                    mpkgs.append(pkgs.at(k));
+                }
+                
+                addPkg(pindex, lindex, act, lists);
             }
-
-            if (!addPkg(pindex, lindex, act)) return false;
         }
-    }
 
-    return true;
+        if (first) first = false;
+    }
 }
