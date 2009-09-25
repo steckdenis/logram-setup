@@ -51,6 +51,7 @@ class DatabaseWriter : public QObject
 
     private slots:
         void downloadFinished(QNetworkReply *reply);
+        void dlProgress(qint64 done, qint64 total);
 
     private:
         PackageSystem *parent;

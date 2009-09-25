@@ -39,7 +39,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     // Ouvrir le système de paquets
     ps = new PackageSystem(this);
 
-    connect(ps, SIGNAL(message(const QString &)), this, SLOT(message(const QString &)));
+    connect(ps, SIGNAL(progress(int, int, const QString &)), this, SLOT(progress(int, int, const QString &)));
     connect(ps, SIGNAL(error(PackageSystem::Error, const QString &)), this, SLOT(error(PackageSystem::Error, const QString &)));
     
     //Parser les arguments
@@ -140,9 +140,16 @@ void App::error(PackageSystem::Error err, const QString &info)
     cout << COLOR(info, "35") << endl;
 }
 
-void App::message(const QString &msg)
+void App::progress(int done, int total, const QString &msg)
 {
-    cout << COLOR("MESSAGE : ", "36");
+    // Si on affiche de nouveau le même message, revenir à la ligne au dessus
+    if (lastMsg == msg)
+    {
+        cout << "\033M";
+    }
+
+    // Afficher le message
+    cout << COLOR("[" + QString::number(done) + "/" + QString::number(total) + "] ", "33");
     cout << qPrintable(msg);
     cout << endl;
 }

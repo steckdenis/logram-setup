@@ -28,6 +28,7 @@
 
 #include <QSettings>
 #include <QStringList>
+#include <QList>
 
 PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
 {
@@ -39,6 +40,11 @@ void PackageSystem::init()
     d = new PackageSystemPrivate(this);
 }
 
+struct Enrg
+{
+    QString url, distroName, arch, sourceName, type;
+};
+
 void PackageSystem::update()
 {
     // Explorer la liste des mirroirs dans /etc/setup/sources.list, format QSettings
@@ -47,10 +53,12 @@ void PackageSystem::update()
     
     DatabaseWriter *db = new DatabaseWriter(this);
 
+    QList<Enrg *> enrgs;
+
     foreach (const QString &sourceName, set.childGroups())
     {
         set.beginGroup(sourceName);
-        
+
         QString type = set.value("Type", "remote").toString();
         QString url = set.value("Url").toString();
         QStringList distros = set.value("Distributions").toString().split(' ', QString::SkipEmptyParts);
@@ -61,26 +69,38 @@ void PackageSystem::update()
         {
             foreach (const QString &arch, archs)
             {
-                // Télécharger le fichier <url>/dists/<distroName>/<arch>/packages.lzma
-                QString u = url + "/dists/" + distroName + "/" + arch + "/packages.lzma";
-                
-                sendMessage(tr("Téléchargement de %1...").arg(u));
-                
-                db->download(sourceName, u, type, false);
+                Enrg *enrg = new Enrg;
 
-                // Télécharger les traductions
-                u = url + "/dists/" + distroName + "/" + arch + "/translate." + lang + ".lzma";
+                enrg->url = url;
+                enrg->distroName = distroName;
+                enrg->arch = arch;
+                enrg->sourceName = sourceName;
+                enrg->type = type;
 
-                sendMessage(tr("Téléchargement des traductions %1...").arg(u));
-
-                db->download(sourceName, u, type, true);
+                enrgs.append(enrg);
             }
         }
 
         set.endGroup();
     }
 
-    sendMessage(tr("Reconstruction de la base de donnée"));
+    // Explorer les enregistrements et les télécharger
+    int count = enrgs.count();
+    for (int i=0; i<count; ++i)
+    {
+        Enrg *enrg = enrgs.at(i);
+
+        QString u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/packages.lzma";
+        
+        sendProgress((i*2)+1, count*2, tr("Téléchargement de %1...").arg(u));
+        db->download(enrg->sourceName, u, enrg->type, false);
+
+        // Traductions
+        u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/translate." + lang + ".lzma";
+        
+        sendProgress((i*2)+2, count*2, tr("Téléchargement des traductions %1...").arg(u));
+        db->download(enrg->sourceName, u, enrg->type, true);
+    }
 
     db->rebuild();
 
@@ -259,7 +279,7 @@ void PackageSystem::raise(Error err, const QString &info)
     emit error(err, info);
 }
 
-void PackageSystem::sendMessage(const QString &msg)
+void PackageSystem::sendProgress(int num, int tot, const QString &msg)
 {
-    emit message(msg);
+    emit progress(num, tot, msg);
 }

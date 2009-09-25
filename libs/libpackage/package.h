@@ -25,6 +25,8 @@
 
 #include <QObject>
 
+#include "solver.h"
+
 class PackageSystem;
 class PackageSystemPrivate;
 
@@ -35,10 +37,11 @@ class Depend;
 class Package : public QObject
 {
     public:
-        Package(int index, PackageSystem *ps, PackageSystemPrivate *psd);
+        Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver::Action _action = Solver::None);
         ~Package();
 
         bool isValid();
+        Solver::Action action();
 
         QString name();
         QString version();

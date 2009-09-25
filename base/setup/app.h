@@ -32,6 +32,8 @@
 #define VERSION "0.0.1"
 #define COLOR(text, color) qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m")
 
+class Solver;
+
 class App : public QCoreApplication
 {
     Q_OBJECT
@@ -49,10 +51,14 @@ class App : public QCoreApplication
 
     public slots:
         void error(PackageSystem::Error err, const QString &info);
-        void message(const QString &msg);
+        void progress(int done, int total, const QString &msg);
 
     private:
         PackageSystem *ps;
+
+        QString lastMsg;
+
+        void manageResults(Solver *solver);
 };
 
 #endif

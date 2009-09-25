@@ -47,6 +47,9 @@ class Solver : public QObject
         void addPackage(const QString &nameStr, Action action);
         void solve();
 
+        int results() const;
+        QList<Package *> result(int index, int &weight) const;
+
     private:
         struct Private;
         Private *d;

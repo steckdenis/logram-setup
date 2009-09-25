@@ -36,6 +36,8 @@ struct Package::Private
 
     bool depok;
     QList<Depend *> deps;
+
+    Solver::Action action;
 };
 
 struct Depend::Private
@@ -50,19 +52,25 @@ struct Depend::Private
 ******* Package **********************
 *************************************/
 
-Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd) : QObject(ps)
+Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver::Action _action) : QObject(ps)
 {
     d = new Private;
     d->index = index;
     d->ps = ps;
     d->psd = psd;
     d->depok = false;
+    d->action = _action;
 }
 
 Package::~Package()
 {
     qDeleteAll(d->deps);
     delete d;
+}
+
+Solver::Action Package::action()
+{
+    return d->action;
 }
 
 bool Package::isValid()

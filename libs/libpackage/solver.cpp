@@ -28,8 +28,13 @@
 #include <QVector>
 #include <QList>
 #include <QHash>
+#include <QMap>
+#include <QFile>
 
 #include <QtDebug>
+#include <QtScript>
+
+#include <iostream>
 
 struct Pkg
 {
@@ -48,9 +53,16 @@ struct Solver::Private
     QHash<QString, Solver::Action> wantedPackages;
     QList<int> wrongLists;
 
+    // Liste publique (QMap car on trie sur le poid. Il faut ensuite retourner les résultats à l'envers, pour un tri décroissant)
+    QMap<int, QList<Package *> > lists;
+
+    // Programme QtScript
+    QScriptValue weightFunction;
+
     // Fonctions
     void addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists);
     void addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, Solver::Action act);
+    int listWeight(QList<Package *> *list);
 };
 
 Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
@@ -60,17 +72,57 @@ Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
     d->ps = ps;
 
     d->installSuggests = false; // TODO
+
+    // Lire le programme QtScript
+    QFile fl("/etc/setup/scripts/weight.qs");
+
+    if (!fl.open(QIODevice::ReadOnly))
+    {
+        ps->raise(PackageSystem::OpenFileError, fl.fileName());
+    }
+
+    // Parser le script
+    QScriptEngine *engine = new QScriptEngine();
+    engine->evaluate(fl.readAll(), fl.fileName());
+
+    if (engine->hasUncaughtException())
+    {
+        ps->raise(PackageSystem::ScriptException, engine->uncaughtExceptionLineNumber() + ": " + engine->uncaughtException().toString());
+    }
+
+    QScriptValue global = engine->globalObject();
+    d->weightFunction = global.property("weight");
+
+    fl.close();
 }
 
 Solver::~Solver()
 {
+    if (d->weightFunction.engine() != 0)
+    {
+        delete d->weightFunction.engine();
+    }
+
     delete d;
 }
 
 void Solver::addPackage(const QString &nameStr, Action action)
 {
-    // nameStr = nom ou nom=version ou nom>=version, etc.
     d->wantedPackages.insert(nameStr, action);
+}
+
+int Solver::results() const
+{
+    return d->lists.values().count();
+}
+
+QList<Package *> Solver::result(int index, int &weight) const
+{
+    QList<Package *> rs = d->lists.values().at(index);
+
+    weight = d->lists.key(rs);
+
+    return rs;
 }
 
 void Solver::solve()
@@ -92,7 +144,7 @@ void Solver::solve()
     }
 
     //NOTE: Debug
-    for (int i=0; i<d->packages.count(); ++i)
+    /*for (int i=0; i<d->packages.count(); ++i)
     {
         const QVector<Pkg> &pkgs = d->packages.at(i);
         qDebug() << "{" << d->wrongLists.contains(i);
@@ -101,7 +153,38 @@ void Solver::solve()
             qDebug() << "    " << d->psd->packageName(pkg.index) << d->psd->packageVersion(pkg.index);
         }
         qDebug() << "}";
+    }*/
+
+    // Créer les véritables listes de Package pour les listes trouvées, et étant correctes
+    for (int i=0; i<d->packages.count(); ++i)
+    {
+        if (d->wrongLists.contains(i))
+        {
+            continue;
+        }
+
+        // La liste est bonne, créer les paquets
+        const QVector<Pkg> &pkgs = d->packages.at(i);
+        QList<Package *> list;
+
+        foreach(const Pkg &pkg, pkgs)
+        {
+            Package *package = new Package(pkg.index, d->ps, d->psd, pkg.action);
+
+            list.append(package);
+        }
+
+        // Peser la liste
+        int weight = d->listWeight(&list);
+
+        // Ajouter la liste
+        d->lists.insertMulti(weight, list);
     }
+
+    // On peut supprimer les tables temporaires (pas d->lists !)
+    d->wrongLists.clear();
+    d->wantedPackages.clear();
+    d->wrongLists.clear();
 }
 
 void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists)
@@ -260,4 +343,14 @@ void Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, So
 
         if (first) first = false;
     }
+}
+
+int Solver::Private::listWeight(QList<Package *> *list)
+{
+    QScriptValueList args;
+
+    args << qScriptValueFromSequence(weightFunction.engine(), *(QObjectList *)list);
+    args << 0; // TODO: savoir si on installe, supprime, etc
+    
+    return weightFunction.call(QScriptValue(), args).toInt32();
 }

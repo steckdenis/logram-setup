@@ -8,7 +8,7 @@ TARGET = lgrpkg
 DEPENDPATH += .
 INCLUDEPATH += .
 QT -= gui
-QT += xml network
+QT += xml network script
 
 # Input
 HEADERS += libpackage.h libpackage_p.h package.h databasewriter.h solver.h
@@ -19,4 +19,7 @@ includes.path = /usr/include/logram
 
 target.path = /usr/lib
 
-INSTALLS += includes target
+scripts.files = *.qs
+scripts.path = /etc/setup/scripts
+
+INSTALLS += includes target scripts

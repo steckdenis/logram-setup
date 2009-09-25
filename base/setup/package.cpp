@@ -25,6 +25,9 @@
 #include <logram/solver.h>
 #include <logram/package.h>
 
+#include <iostream>
+using namespace std;
+
 void App::add(const QStringList &packages)
 {
     Solver *solver = ps->newSolver();
@@ -53,6 +56,88 @@ void App::add(const QStringList &packages)
     }
 
     solver->solve();
+
+    // Afficher et gérer les résultats
+    manageResults(solver);
     
     delete solver;
+}
+
+void App::manageResults(Solver *solver)
+{
+    cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "32") << endl;
+    cout << qPrintable(tr("    Légende : "))
+         << COLOR(tr("Installer "), "34")
+         << COLOR(tr("Supprimer "), "31")
+         << COLOR(tr("Mettre à jour "), "33")
+         << COLOR(tr("Supprimer totalement "), "35")
+         << endl;
+
+    // Boucle pour demander son avis à l'utilisateur
+    QList<Package *> packages;
+    int index = 0;
+    int tot = solver->results();
+    int weight;
+    char in;
+    
+    while (true)
+    {
+        cout << endl;
+        
+        packages = solver->result(index, weight);
+
+        foreach (Package *pkg, packages)
+        {
+            QString name = pkg->name().leftJustified(15, ' ', true);
+            
+            cout << "  * ";
+
+            if (pkg->action() == Solver::Install)
+            {
+                cout << COLOR(name, "34");
+            }
+            else if (pkg->action() == Solver::Remove)
+            {
+                cout << COLOR(name, "31");
+            }
+            else if (pkg->action() == Solver::Update)
+            {
+                cout << COLOR(name, "33");
+            }
+            else if (pkg->action() == Solver::Purge)
+            {
+                cout << COLOR(name, "35");
+            }
+
+            cout << ' '
+                 << COLOR(pkg->version().leftJustified(15, ' ', true), "32") << ' '
+                 << qPrintable(pkg->shortDesc())
+                 << endl;
+        }
+
+        cout << endl;
+
+        // Demander si c'est bon
+        cout << qPrintable(tr("[%1/%2, poids %3] Accepter (y), Suivante (n), Précédante (p) ou Annuler (c) ? ").arg(QString::number(index+1)).arg(QString::number(tot)).arg(weight));
+        cin >> in;
+
+        if (in == 'y')
+        {
+            break;
+        }
+        else if (in == 'n')
+        {
+            index = qMin(index + 1, tot - 1);
+        }
+        else if (in == 'p')
+        {
+            index = qMax(index - 1, 0);
+        }
+        else if (in == 'c')
+        {
+            return;
+        }
+    }
+
+    // TODO: Installer les paquets
 }

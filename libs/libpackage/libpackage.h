@@ -56,15 +56,16 @@ class PackageSystem : public QObject
             OpenFileError,
             MapFileError,
             ProcessError,
-            DownloadError
+            DownloadError,
+            ScriptException
         };
 
         void raise(Error err, const QString &info);
-        void sendMessage(const QString &msg);
+        void sendProgress(int num, int tot, const QString &msg);
 
     signals:
         void error(PackageSystem::Error err, const QString &info);
-        void message(const QString &message);
+        void progress(int num, int tot, const QString &msg);
 
     protected:
         PackageSystemPrivate *d;
