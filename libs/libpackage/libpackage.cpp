@@ -29,21 +29,51 @@
 #include <QSettings>
 #include <QStringList>
 #include <QList>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QFile>
 
 PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
 {
-    // Rien à faire
+    d = new PackageSystemPrivate(this);
+
+    d->nmanager = new QNetworkAccessManager(this);
+    connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
 
 void PackageSystem::init()
 {
-    d = new PackageSystemPrivate(this);
+    d->init();
 }
 
 struct Enrg
 {
     QString url, distroName, arch, sourceName, type;
 };
+
+QString PackageSystem::repoType(const QString &repoName)
+{
+    QSettings set("/etc/setup/sources.list", QSettings::IniFormat);
+    QString rs;
+    
+    set.beginGroup(repoName);
+    rs = set.value("Type", "remote").toString();
+    set.endGroup();
+
+    return rs;
+}
+
+QString PackageSystem::repoUrl(const QString &repoName)
+{
+    QSettings set("/etc/setup/sources.list", QSettings::IniFormat);
+    QString rs;
+
+    set.beginGroup(repoName);
+    rs = set.value("Url").toString();
+    set.endGroup();
+
+    return rs;
+}
 
 void PackageSystem::update()
 {
@@ -92,15 +122,17 @@ void PackageSystem::update()
 
         QString u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/packages.lzma";
         
-        sendProgress((i*2)+1, count*2, tr("Téléchargement de %1...").arg(u));
+        sendProgress(GlobalDownload, i*2, count*2, u);
         db->download(enrg->sourceName, u, enrg->type, false);
 
         // Traductions
         u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/translate." + lang + ".lzma";
         
-        sendProgress((i*2)+2, count*2, tr("Téléchargement des traductions %1...").arg(u));
+        sendProgress(GlobalDownload, i*2+1, count*2, u);
         db->download(enrg->sourceName, u, enrg->type, true);
     }
+
+    endProgress(GlobalDownload, count*2);
 
     db->rebuild();
 
@@ -137,6 +169,136 @@ Package *PackageSystem::package(const QString &name, const QString &version)
 Solver *PackageSystem::newSolver()
 {
     return new Solver(this, d);
+}
+
+ManagedDownload *PackageSystem::download(const QString &type, const QString &url, const QString &dest, bool block)
+{
+    // Ne pas télécharger un fichier en cache
+    if (QFile::exists(dest))
+    {
+        // TODO: Savoir s'il est à jour, mais à part les listes de paquets, c'est normalement bon (les listes de paquets sont supprimées après traitement
+
+        if (!block)
+        {
+            ManagedDownload *rs = new ManagedDownload;
+            rs->reply = 0;
+            rs->url = url;
+            rs->destination = dest;
+            
+            emit downloadEnded(rs);
+            return rs;
+        }
+
+        return 0;
+    }
+    
+    if (type == "remote")
+    {
+        // Lancer le téléchargement
+        QNetworkReply *reply = d->nmanager->get(QNetworkRequest(QUrl(url)));
+        connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(dlProgress(qint64, qint64)));
+
+        if (!block)
+        {
+            // Ajouter le ManagedDownload dans la liste
+            ManagedDownload *rs = new ManagedDownload;
+            rs->reply = reply;
+            rs->url = url;
+            rs->destination = dest;
+
+            d->managedDls.insert(reply, rs);
+            return rs;
+        }
+        else
+        {
+            d->dlDest = dest;
+            d->loop.exec();
+        }
+    }
+    else if (type == "local")
+    {
+        if (!QFile::copy(url, dest))
+        {
+            raise(DownloadError, url);
+        }
+
+        // Si on ne bloquait pas, dire que c'est fini quand-même
+        if (!block)
+        {
+            ManagedDownload *rs = new ManagedDownload;
+            rs->reply = 0;
+            rs->url = url;
+            rs->destination = dest;
+            return rs;
+        }
+    }
+
+    return 0;
+}
+
+void PackageSystem::downloadFinished(QNetworkReply *reply)
+{
+    // Savoir si on bloquait
+    ManagedDownload *md = d->managedDls.value(reply, 0);
+    
+    // Voir s'il y a eu des erreurs
+    if (reply->error() != QNetworkReply::NoError)
+    {
+        raise(PackageSystem::DownloadError, d->dlDest);
+
+        if (md == 0)
+        {
+            // On était bloquant, quitter la boucle
+            d->loop.exit(1);
+        }
+    }
+
+    // Téléchargement
+    QString dlDest;
+
+    if (md != 0)
+    {
+        dlDest = md->destination;
+    }
+    else
+    {
+        dlDest = d->dlDest;
+    }
+    
+    QFile fl(dlDest);
+
+    if (!fl.open(QIODevice::WriteOnly))
+    {
+        raise(OpenFileError, fl.fileName());
+    }
+
+    fl.write(reply->readAll());
+
+    fl.close();
+
+    if (md == 0)
+    {
+        // Supprimer la réponse
+        delete reply;
+
+        // Quitter la boucle
+        d->loop.exit(0);
+    }
+    else
+    {
+        // Envoyer le signal comme quoi on a fini
+        emit downloadEnded(md);
+    }
+}
+
+void PackageSystem::dlProgress(qint64 done, qint64 total)
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+
+    if (reply != 0)
+    {
+        sendProgress(Download, done, total, reply->url().toString());
+    }
 }
 
 int PackageSystem::parseVersion(const QString &verStr, QString &name, QString &version)
@@ -279,7 +441,12 @@ void PackageSystem::raise(Error err, const QString &info)
     emit error(err, info);
 }
 
-void PackageSystem::sendProgress(int num, int tot, const QString &msg)
+void PackageSystem::sendProgress(Progress type, int num, int tot, const QString &msg)
 {
-    emit progress(num, tot, msg);
+    emit progress(type, num, tot, msg);
+}
+
+void PackageSystem::endProgress(Progress type, int tot)
+{
+    emit progress(type, tot, tot, QString());
 }

@@ -29,6 +29,7 @@
 
 class PackageSystem;
 class PackageSystemPrivate;
+struct ManagedDownload;
 
 class _Depend;
 
@@ -36,10 +37,13 @@ class Depend;
 
 class Package : public QObject
 {
+    Q_OBJECT
+    
     public:
         Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver::Action _action = Solver::None);
         ~Package();
 
+        void process();
         bool isValid();
         Solver::Action action();
 
@@ -53,8 +57,16 @@ class Package : public QObject
         QString section();
         QString distribution();
         QString license();
+        QString url();
 
         QList<Depend *> depends();
+
+    signals:
+        void installed();
+        void installing();
+
+    private slots:
+        void downloadEnded(ManagedDownload *md);
 
     private:
         struct Private;

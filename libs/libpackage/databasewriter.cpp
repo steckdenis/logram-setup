@@ -37,83 +37,22 @@
 DatabaseWriter::DatabaseWriter(PackageSystem *_parent)
 {
     parent = _parent;
-
-    nmanager = new QNetworkAccessManager(this);
-
-    connect(nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
 
 void DatabaseWriter::download(const QString &source, const QString &url, const QString &type, bool isTranslations)
 {
-    isTr = isTranslations;
-    dlType = type;
-    dlUrl = url;
-    dlSource = source;
+    // Calculer le nom du fichier
+    QString arch = url.section('/', -2, -2);
+    QString distro = url.section('/', -3, -3);
 
-    if (type == "remote")
-    {
-        // Lancer le téléchargement
-        QNetworkReply *reply = nmanager->get(QNetworkRequest(QUrl(url)));
-        connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(dlProgress(qint64, qint64)));
-
-        // Attendre
-        loop.exec();
-    }
-    else if (type == "local")
-    {
-        QFile fl(url);
-
-        if (!fl.open(QIODevice::ReadOnly))
-        {
-            parent->raise(PackageSystem::OpenFileError, url);
-        }
-
-        handleDl(&fl);
-
-        fl.close();
-    }
-}
-
-void DatabaseWriter::dlProgress(qint64 done, qint64 total)
-{
-    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-
-    if (reply != 0)
-    {
-        parent->sendProgress(done, total, tr("Téléchargement de %1").arg(reply->url().toString()));
-    }
-}
-
-void DatabaseWriter::handleDl(QIODevice *device)
-{
-    // Calculer le nom du fichier dans lequel on va placer le contenu de la source.
-    QString arch = dlUrl.section('/', -2, -2);
-    QString distro = dlUrl.section('/', -3, -3);
-
-    QString fname = QString("%1.%2.%3.%4.%5.lzma").arg(dlSource).arg(distro).arg(arch).arg(isTr).arg(dlType);
-    QString fileName("/var/cache/lgrpkg/");
+    QString fname = QString("%1.%2.%3.%4.%5.lzma").arg(source).arg(distro).arg(arch).arg(isTranslations).arg(type);
+    QString fileName("/var/cache/lgrpkg/download/");
 
     fileName += fname;
     cacheFiles.append(fileName);
-    
-    // Créer le fichier, le tronquer, et enregistrer le contenu de device dedans
-    QFile fl(fileName);
 
-    if (!fl.open(QIODevice::ReadWrite | QIODevice::Truncate))
-    {
-        parent->raise(PackageSystem::OpenFileError, fileName);
-    }
-
-    fl.write(device->readAll());
-
-    // Fermer
-    fl.close();
-
-    // Libérer l'éxécution
-    if (loop.isRunning())
-    {
-        loop.exit(0);
-    }
+    // Le télécharger
+    parent->download(type, url, fileName);
 }
 
 int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool create)
@@ -323,7 +262,7 @@ void DatabaseWriter::rebuild()
     transPtr = 0;
 
     // Première étape
-    parent->sendProgress(1, 6, tr("Lecture des listes"));
+    parent->sendProgress(PackageSystem::UpdateDatabase, 0, 6, tr("Lecture des listes"));
 
     for (pass=0; pass<2; ++pass)
     {
@@ -647,6 +586,15 @@ void DatabaseWriter::rebuild()
         }
     }
 
+    // Supprimer les fichiers temporaires
+    foreach (const QString &file, cacheFiles)
+    {
+        QString fname = file;
+        fname.replace(".lzma", "");
+
+        QFile::remove(fname);
+    }
+
     //qDebug() << packages;
     //qDebug() << packagesIndexes;
     //qDebug() << strings;
@@ -661,8 +609,8 @@ void DatabaseWriter::rebuild()
     int32_t length;
     
     // Liste des paquets
-    parent->sendProgress(2, 6, tr("Génération de la liste des paquets"));
-    QFile fl("/var/cache/lgrpkg/packages");
+    parent->sendProgress(PackageSystem::UpdateDatabase, 1, 6, tr("Génération de la liste des paquets"));
+    QFile fl("/var/cache/lgrpkg/db/packages");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -680,8 +628,8 @@ void DatabaseWriter::rebuild()
 
     // Chaînes de caractères
     fl.close();
-    parent->sendProgress(3, 6, tr("Écriture des chaînes de caractère"));
-    fl.setFileName("/var/cache/lgrpkg/strings");
+    parent->sendProgress(PackageSystem::UpdateDatabase, 2, 6, tr("Écriture des chaînes de caractère"));
+    fl.setFileName("/var/cache/lgrpkg/db/strings");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -706,8 +654,8 @@ void DatabaseWriter::rebuild()
 
     // Chaînes traduites
     fl.close();
-    parent->sendProgress(4, 6, tr("Écriture des traductions"));
-    fl.setFileName("/var/cache/lgrpkg/translate");
+    parent->sendProgress(PackageSystem::UpdateDatabase, 3, 6, tr("Écriture des traductions"));
+    fl.setFileName("/var/cache/lgrpkg/db/translate");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -732,8 +680,8 @@ void DatabaseWriter::rebuild()
 
     // Dépendances
     fl.close();
-    parent->sendProgress(5, 6, tr("Enregistrement des dépendances"));
-    fl.setFileName("/var/cache/lgrpkg/depends");
+    parent->sendProgress(PackageSystem::UpdateDatabase, 4, 6, tr("Enregistrement des dépendances"));
+    fl.setFileName("/var/cache/lgrpkg/db/depends");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -770,8 +718,8 @@ void DatabaseWriter::rebuild()
 
     // StrPackages
     fl.close();
-    parent->sendProgress(6, 6, tr("Enregistrement de données supplémentaires"));
-    fl.setFileName("/var/cache/lgrpkg/strpackages");
+    parent->sendProgress(PackageSystem::UpdateDatabase, 5, 6, tr("Enregistrement de données supplémentaires"));
+    fl.setFileName("/var/cache/lgrpkg/db/strpackages");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -810,19 +758,5 @@ void DatabaseWriter::rebuild()
     fl.close();
 
     // On a fini ! :-)
-}
-
-void DatabaseWriter::downloadFinished(QNetworkReply *reply)
-{
-    // Voir s'il y a eu des erreurs
-    if (reply->error() != QNetworkReply::NoError)
-    {
-        parent->raise(PackageSystem::DownloadError, dlUrl);
-    }
-
-    // Téléchargement
-    handleDl(reply);
-
-    // Supprimer la réponse
-    delete reply;
+    parent->endProgress(PackageSystem::UpdateDatabase, 6);
 }

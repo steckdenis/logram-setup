@@ -24,6 +24,10 @@
 #include "libpackage.h"
 #include "libpackage_p.h"
 
+#include <QtDebug>
+
+#include <QCoreApplication>
+
 /*************************************
 ******* Privates *********************
 *************************************/
@@ -38,6 +42,9 @@ struct Package::Private
     QList<Depend *> deps;
 
     Solver::Action action;
+
+    // Téléchargement
+    QString waitingDest;
 };
 
 struct Depend::Private
@@ -60,12 +67,41 @@ Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver
     d->psd = psd;
     d->depok = false;
     d->action = _action;
+
+    connect(ps, SIGNAL(downloadEnded(ManagedDownload *)), this, SLOT(downloadEnded(ManagedDownload *)));
 }
 
 Package::~Package()
 {
     qDeleteAll(d->deps);
     delete d;
+}
+
+void Package::process()
+{
+    // Télécharger le paquet
+    QString fname = "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
+    QString r = repo();
+    QString type = d->ps->repoType(r);
+    QString u = d->ps->repoUrl(r) + "/" + url();
+
+    d->waitingDest = fname;
+    
+    d->ps->download(type, u, fname, false); // Non-bloquant
+}
+
+void Package::downloadEnded(ManagedDownload *md)
+{
+    if (md->destination == d->waitingDest)
+    {
+        // Envoyer le signal comme quoi on va installer
+        emit installing();
+
+        // TODO: Installer le paquet
+
+        // Envoyer le signal comme quoi on a fini
+        emit installed();
+    }
 }
 
 Solver::Action Package::action()
@@ -154,6 +190,11 @@ QString Package::distribution()
 QString Package::license()
 {
     return d->psd->packageLicense(d->index);
+}
+
+QString Package::url()
+{
+    return d->psd->packageUrl(d->index);
 }
 
 /*************************************

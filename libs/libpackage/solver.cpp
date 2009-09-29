@@ -30,6 +30,8 @@
 #include <QHash>
 #include <QMap>
 #include <QFile>
+#include <QEventLoop>
+#include <QCoreApplication>
 
 #include <QtDebug>
 #include <QtScript>
@@ -58,6 +60,12 @@ struct Solver::Private
 
     // Programme QtScript
     QScriptValue weightFunction;
+
+    // Pour l'installation
+    QEventLoop loop;
+    int ipackages, tpackages;
+    bool idone;
+    Package *installingPackage;
 
     // Fonctions
     void addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists);
@@ -143,8 +151,8 @@ void Solver::solve()
         d->addPkgs(pkgsToAdd, lists, act);
     }
 
-    //NOTE: Debug
-    /*for (int i=0; i<d->packages.count(); ++i)
+#if 0
+    for (int i=0; i<d->packages.count(); ++i)
     {
         const QVector<Pkg> &pkgs = d->packages.at(i);
         qDebug() << "{" << d->wrongLists.contains(i);
@@ -153,7 +161,8 @@ void Solver::solve()
             qDebug() << "    " << d->psd->packageName(pkg.index) << d->psd->packageVersion(pkg.index);
         }
         qDebug() << "}";
-    }*/
+    }
+#endif
 
     // Créer les véritables listes de Package pour les listes trouvées, et étant correctes
     for (int i=0; i<d->packages.count(); ++i)
@@ -185,6 +194,76 @@ void Solver::solve()
     d->wrongLists.clear();
     d->wantedPackages.clear();
     d->wrongLists.clear();
+}
+
+void Solver::process(int index)
+{
+    // Installer les paquets d'une liste, donc explorer ses paquets
+    QList<Package *> list = d->lists.values().at(index);
+    d->ipackages = 0;
+    d->tpackages = list.count();
+    d->idone = false;
+    
+    for(int i=0; i<list.count(); ++i)
+    {
+        Package *pkg = list.at(i);
+
+        connect(pkg, SIGNAL(installed()), this, SLOT(packageInstalled()));
+        connect(pkg, SIGNAL(installing()), this, SLOT(packageInstalling()));
+        
+        pkg->process();
+    }
+
+    // NOTE: Quand tous les paquets sont en cache, le réseau n'est pas utilisé. Dans ce cas, pkg->process() n'utilise pas de
+    // signaux asynchrones, ce qui fait qu'une fois arrivé ici, packageInstalled() a déjà appelé loop.exit(0), et donc
+    // lancer la boucle bloquerait le programme
+    if (!d->idone)
+    {
+        // Attendre que tous les paquets soient installés
+        d->loop.exec();
+    }
+
+    // Nettoyage
+    disconnect(this, SLOT(packageInstalled()));
+    disconnect(this, SLOT(packageInstalling()));
+}
+
+void Solver::packageInstalled()
+{
+    d->ipackages++;
+
+    if (d->ipackages == d->tpackages)
+    {
+        // Tous les paquets sont installés
+        d->ps->sendProgress(PackageSystem::GlobalInstall, d->tpackages, d->tpackages, QString());
+
+        if (d->loop.isRunning())
+        {
+            d->loop.exit(0);
+        }
+        else
+        {
+            d->idone = true;
+        }
+    }
+}
+
+void Solver::packageInstalling()
+{
+    // Envoyer un signal pour dire qu'on installe un paquet
+    Package *pkg = qobject_cast<Package *>(sender());
+
+    if (pkg != 0)
+    {
+        d->installingPackage = pkg;
+        
+        d->ps->sendProgress(PackageSystem::GlobalInstall, d->ipackages, d->tpackages, pkg->name());
+    }
+}
+
+Package *Solver::installingPackage() const
+{
+    return d->installingPackage;
 }
 
 void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists)

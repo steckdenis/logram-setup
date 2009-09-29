@@ -78,14 +78,19 @@ struct _StrPackagePtr
 
 #include <QString>
 #include <QList>
+#include <QEventLoop>
+#include <QHash>
 
 class QFile;
+class QNetworkAccessManager;
 class PackageSystem;
+struct ManagedDownload;
 
 class PackageSystemPrivate
 {
     public:
         PackageSystemPrivate(PackageSystem *_ps);
+        void init();
 
         int package(const QString &name, const QString &version);
         QList<int> packagesByName(const QString &regex);
@@ -117,6 +122,13 @@ class PackageSystemPrivate
         uchar *m_packages, *m_strings, *m_translate, *m_depends, *m_strpackages;
 
         PackageSystem *ps;
+
+    public:
+        // Réellement privé à PackageSystem
+        QEventLoop loop;
+        QNetworkAccessManager *nmanager;
+        QString dlDest;
+        QHash<QNetworkReply *, ManagedDownload *> managedDls;
 };
 
 #endif

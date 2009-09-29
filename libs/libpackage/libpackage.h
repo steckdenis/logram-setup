@@ -31,6 +31,15 @@ class Package;
 class Solver;
 class PackageSystemPrivate;
 
+class QNetworkReply;
+
+struct ManagedDownload
+{
+    QNetworkReply *reply;
+    QString url;
+    QString destination;
+};
+
 class PackageSystem : public QObject
 {
     Q_OBJECT
@@ -50,6 +59,10 @@ class PackageSystem : public QObject
         static bool matchVersion(const QString &v1, const QString &v2, int op);
         static int parseVersion(const QString &verStr, QString &name, QString &version);
 
+        ManagedDownload *download(const QString &type, const QString &url, const QString &dest, bool block=true);
+        QString repoType(const QString &repoName);
+        QString repoUrl(const QString &repoName);
+
         // Gestion des erreurs
         enum Error
         {
@@ -60,12 +73,27 @@ class PackageSystem : public QObject
             ScriptException
         };
 
+        enum Progress
+        {
+            Other,
+            GlobalDownload,
+            Download,
+            UpdateDatabase,
+            GlobalInstall
+        };
+
         void raise(Error err, const QString &info);
-        void sendProgress(int num, int tot, const QString &msg);
+        void sendProgress(Progress type, int num, int tot, const QString &msg);
+        void endProgress(Progress type, int tot);
 
     signals:
         void error(PackageSystem::Error err, const QString &info);
-        void progress(int num, int tot, const QString &msg);
+        void progress(PackageSystem::Progress type, int num, int tot, const QString &msg);
+        void downloadEnded(ManagedDownload *reply);
+
+    private slots:
+        void downloadFinished(QNetworkReply *reply);
+        void dlProgress(qint64 done, qint64 total);
 
     protected:
         PackageSystemPrivate *d;

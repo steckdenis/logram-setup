@@ -31,6 +31,8 @@ class PackageSystemPrivate;
 
 class Solver : public QObject
 {
+    Q_OBJECT
+    
     public:
         Solver(PackageSystem *ps, PackageSystemPrivate *psd);
         ~Solver();
@@ -46,9 +48,15 @@ class Solver : public QObject
 
         void addPackage(const QString &nameStr, Action action);
         void solve();
+        void process(int index);
 
         int results() const;
         QList<Package *> result(int index, int &weight) const;
+        Package *installingPackage() const;
+
+    private slots:
+        void packageInstalled();
+        void packageInstalling();
 
     private:
         struct Private;

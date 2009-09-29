@@ -49,17 +49,9 @@ class DatabaseWriter : public QObject
         void download(const QString &source, const QString &url, const QString &type, bool isTranslations);
         void rebuild();
 
-    private slots:
-        void downloadFinished(QNetworkReply *reply);
-        void dlProgress(qint64 done, qint64 total);
-
     private:
         PackageSystem *parent;
-        QNetworkAccessManager *nmanager;
-
-        QEventLoop loop;
-        bool isTr;
-        QString dlType, dlUrl, dlSource;
+        
         QStringList cacheFiles;
 
         QList<_Package *> packages;

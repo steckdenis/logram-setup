@@ -118,7 +118,7 @@ void App::manageResults(Solver *solver)
         cout << endl;
 
         // Demander si c'est bon
-        cout << qPrintable(tr("[%1/%2, poids %3] Accepter (y), Suivante (n), Précédante (p) ou Annuler (c) ? ").arg(QString::number(index+1)).arg(QString::number(tot)).arg(weight));
+        cout << qPrintable(tr("[%1/%2, poids %3] Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ").arg(QString::number(index+1)).arg(QString::number(tot)).arg(weight));
         cin >> in;
 
         if (in == 'y')
@@ -137,7 +137,12 @@ void App::manageResults(Solver *solver)
         {
             return;
         }
+        else
+        {
+            break;
+        }
     }
 
-    // TODO: Installer les paquets
+    // Installer les paquets
+    solver->process(index);
 }

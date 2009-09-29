@@ -31,7 +31,10 @@
 PackageSystemPrivate::PackageSystemPrivate(PackageSystem *_ps)
 {
     ps = _ps;
-    
+}
+
+void PackageSystemPrivate::init()
+{
     // Ouvrir les fichiers
     mapFile("packages", &f_packages, &m_packages);
     mapFile("strings", &f_strings, &m_strings);
@@ -382,7 +385,7 @@ const char *PackageSystemPrivate::string(uchar *map, int index)
 
 void PackageSystemPrivate::mapFile(const QString &file, QFile **ptr, uchar **map)
 {
-    *ptr = new QFile("/var/cache/lgrpkg/" + file);
+    *ptr = new QFile("/var/cache/lgrpkg/db/" + file);
     QFile *f = *ptr;
 
     if (!f->open(QIODevice::ReadWrite))

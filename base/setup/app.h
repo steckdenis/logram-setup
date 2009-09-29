@@ -51,12 +51,10 @@ class App : public QCoreApplication
 
     public slots:
         void error(PackageSystem::Error err, const QString &info);
-        void progress(int done, int total, const QString &msg);
+        void progress(PackageSystem::Progress type, int done, int total, const QString &msg);
 
     private:
         PackageSystem *ps;
-
-        QString lastMsg;
 
         void manageResults(Solver *solver);
 };

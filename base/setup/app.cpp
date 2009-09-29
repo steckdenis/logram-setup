@@ -39,7 +39,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     // Ouvrir le système de paquets
     ps = new PackageSystem(this);
 
-    connect(ps, SIGNAL(progress(int, int, const QString &)), this, SLOT(progress(int, int, const QString &)));
+    connect(ps, SIGNAL(progress(PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(PackageSystem::Progress, int, int, const QString &)));
     connect(ps, SIGNAL(error(PackageSystem::Error, const QString &)), this, SLOT(error(PackageSystem::Error, const QString &)));
     
     //Parser les arguments
@@ -135,21 +135,48 @@ void App::error(PackageSystem::Error err, const QString &info)
         case PackageSystem::DownloadError:
             cout << "Error when downloading file ";
             break;
+        case PackageSystem::ScriptException:
+            cout << "Error in the QtScript ";
+            break;
     }
     
     cout << COLOR(info, "35") << endl;
 }
 
-void App::progress(int done, int total, const QString &msg)
+void App::progress(PackageSystem::Progress type, int done, int total, const QString &msg)
 {
-    // Si on affiche de nouveau le même message, revenir à la ligne au dessus
-    if (lastMsg == msg)
-    {
-        cout << "\033M";
-    }
-
+    if (done == total) return;
+    
     // Afficher le message
     cout << COLOR("[" + QString::number(done) + "/" + QString::number(total) + "] ", "33");
+
+    // Type
+    switch (type)
+    {
+        case PackageSystem::Other:
+            cout << COLOR(tr("Progression : "), "34");
+            break;
+            
+        case PackageSystem::GlobalDownload:
+            cout << COLOR(tr("Téléchargement de "), "34");
+            break;
+            
+        case PackageSystem::Download:
+            cout << COLOR(tr("Téléchargement de "), "34");
+            break;
+            
+        case PackageSystem::UpdateDatabase:
+            cout << COLOR(tr("Mise à jour de la base de donnée : "), "34");
+            break;
+            
+        case PackageSystem::GlobalInstall:
+            cout << COLOR(tr("Installation de "), "34");
+            break;
+    }
+    
+    // Message
     cout << qPrintable(msg);
     cout << endl;
+
+    // NOTE: Trouver une manière de ne pas spammer la sortie quand on télécharge quelque-chose (ça émet vraiment beaucoup de progress()). Plusieurs fichiers peuvent être téléchargés en même temps.
 }
