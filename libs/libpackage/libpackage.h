@@ -63,6 +63,9 @@ class PackageSystem : public QObject
         QString repoType(const QString &repoName);
         QString repoUrl(const QString &repoName);
 
+        bool installSuggests() const;
+        void setInstallSuggests(bool enable);
+
         // Gestion des erreurs
         enum Error
         {

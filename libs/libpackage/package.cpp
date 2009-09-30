@@ -90,17 +90,21 @@ void Package::process()
     d->ps->download(type, u, fname, false); // Non-bloquant
 }
 
+#include <QTimer>
+
 void Package::downloadEnded(ManagedDownload *md)
 {
     if (md->destination == d->waitingDest)
     {
         // Envoyer le signal comme quoi on va installer
-        emit installing();
+        //emit installing();
+        QTimer::singleShot(450, this, SIGNAL(installing()));
 
         // TODO: Installer le paquet
 
         // Envoyer le signal comme quoi on a fini
-        emit installed();
+        //emit installed();
+        QTimer::singleShot(500, this, SIGNAL(installed()));
     }
 }
 

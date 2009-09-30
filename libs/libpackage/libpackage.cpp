@@ -39,6 +39,10 @@ PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
 
     d->nmanager = new QNetworkAccessManager(this);
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
+
+    d->set = new QSettings("/etc/setup/sources.list", QSettings::IniFormat, this);
+
+    d->installSuggests = d->set->value("InstallSuggests", true).toBool();
 }
 
 void PackageSystem::init()
@@ -53,24 +57,22 @@ struct Enrg
 
 QString PackageSystem::repoType(const QString &repoName)
 {
-    QSettings set("/etc/setup/sources.list", QSettings::IniFormat);
     QString rs;
     
-    set.beginGroup(repoName);
-    rs = set.value("Type", "remote").toString();
-    set.endGroup();
+    d->set->beginGroup(repoName);
+    rs = d->set->value("Type", "remote").toString();
+    d->set->endGroup();
 
     return rs;
 }
 
 QString PackageSystem::repoUrl(const QString &repoName)
 {
-    QSettings set("/etc/setup/sources.list", QSettings::IniFormat);
     QString rs;
 
-    set.beginGroup(repoName);
-    rs = set.value("Url").toString();
-    set.endGroup();
+    d->set->beginGroup(repoName);
+    rs = d->set->value("Url").toString();
+    d->set->endGroup();
 
     return rs;
 }
@@ -78,21 +80,20 @@ QString PackageSystem::repoUrl(const QString &repoName)
 void PackageSystem::update()
 {
     // Explorer la liste des mirroirs dans /etc/setup/sources.list, format QSettings
-    QSettings set("/etc/setup/sources.list", QSettings::IniFormat);
-    QString lang = set.value("Language", tr("fr", "Langue par défaut pour les paquets")).toString();
+    QString lang = d->set->value("Language", tr("fr", "Langue par défaut pour les paquets")).toString();
     
     DatabaseWriter *db = new DatabaseWriter(this);
 
     QList<Enrg *> enrgs;
 
-    foreach (const QString &sourceName, set.childGroups())
+    foreach (const QString &sourceName, d->set->childGroups())
     {
-        set.beginGroup(sourceName);
+        d->set->beginGroup(sourceName);
 
-        QString type = set.value("Type", "remote").toString();
-        QString url = set.value("Url").toString();
-        QStringList distros = set.value("Distributions").toString().split(' ', QString::SkipEmptyParts);
-        QStringList archs = set.value("Archs").toString().split(' ', QString::SkipEmptyParts);
+        QString type = d->set->value("Type", "remote").toString();
+        QString url = d->set->value("Url").toString();
+        QStringList distros = d->set->value("Distributions").toString().split(' ', QString::SkipEmptyParts);
+        QStringList archs = d->set->value("Archs").toString().split(' ', QString::SkipEmptyParts);
 
         // Explorer chaque distribution, et chaque architecture dedans
         foreach (const QString &distroName, distros)
@@ -111,7 +112,7 @@ void PackageSystem::update()
             }
         }
 
-        set.endGroup();
+        d->set->endGroup();
     }
 
     // Explorer les enregistrements et les télécharger
@@ -435,6 +436,20 @@ int PackageSystem::compareVersions(const QString &v1, const QString &v2)
 
     return 0;       //Égal
 }
+
+/* Options */
+
+bool PackageSystem::installSuggests() const
+{
+    return d->installSuggests;
+}
+
+void PackageSystem::setInstallSuggests(bool enable)
+{
+    d->installSuggests = enable;
+}
+
+/* Signaux */
 
 void PackageSystem::raise(Error err, const QString &info)
 {

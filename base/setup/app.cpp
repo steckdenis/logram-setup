@@ -51,6 +51,28 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         return;
     }
 
+    // Explorer les options
+    QString opt = args.at(1);
+
+    while (opt.startsWith('-'))
+    {
+        if (opt == "-S")
+        {
+            bool isug = true;
+
+            if (args.at(2) == "off")
+            {
+                isug = false;
+                args.removeAt(1); // normal que ce soit 1 pas 2
+            }
+
+            ps->setInstallSuggests(isug);
+        }
+
+        args.removeAt(1);
+        opt = args.at(1);
+    }
+
     QString cmd = args.at(1);
 
     // Initialiser le système de paquet si on en a besoin
@@ -98,13 +120,17 @@ void App::help()
 
     cout << endl;
 
-    cout << "Usage : setup <action> [arguments]" << endl;
+    cout << "Usage : setup [options] <action> [arguments]" << endl;
     cout << "    --help             Show help" << endl;
     cout << "    --version          Show version" << endl;
     cout << "    search <pattern>   Show all the packages matching <pattern>" << endl;
     cout << "    showpkg <name>     Show the informations of the package <name>" << endl;
     cout << "    update             Update the packages' database" << endl;
     cout << "    add <packages>     Add packages (prepend them with \"-\" to remove)" << endl;
+
+    cout << endl;
+    cout << "Options :" << endl;
+    cout << "    -S [off]           Enable (or disable) the installation of the suggests" << endl;
 }
 
 void App::version()

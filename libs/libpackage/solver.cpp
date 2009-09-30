@@ -79,7 +79,7 @@ Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
     d->psd = psd;
     d->ps = ps;
 
-    d->installSuggests = false; // TODO
+    d->installSuggests = ps->installSuggests();
 
     // Lire le programme QtScript
     QFile fl("/etc/setup/scripts/weight.qs");

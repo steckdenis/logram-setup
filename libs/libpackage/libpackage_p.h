@@ -83,6 +83,8 @@ struct _StrPackagePtr
 
 class QFile;
 class QNetworkAccessManager;
+class QSettings;
+
 class PackageSystem;
 struct ManagedDownload;
 
@@ -129,6 +131,9 @@ class PackageSystemPrivate
         QNetworkAccessManager *nmanager;
         QString dlDest;
         QHash<QNetworkReply *, ManagedDownload *> managedDls;
+        QSettings *set;
+
+        bool installSuggests;
 };
 
 #endif
