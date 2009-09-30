@@ -1,0 +1,7 @@
+Language=fr
+
+[repo]
+Type=remote
+Url=http://localhost/repo
+Distributions=experimental
+Archs=x86_64

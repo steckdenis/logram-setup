@@ -40,9 +40,12 @@ PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     d->nmanager = new QNetworkAccessManager(this);
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 
-    d->set = new QSettings("/etc/setup/sources.list", QSettings::IniFormat, this);
+    d->set = new QSettings("/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
 
     d->installSuggests = d->set->value("InstallSuggests", true).toBool();
+    d->parallelInstalls = d->set->value("ParallelInstalls", 1).toInt();
+    d->parallelDownloads = d->set->value("ParallelDownloads", 2).toInt();
+    d->installRoot = d->set->value("InstallRoot", "/").toString();
 }
 
 void PackageSystem::init()
@@ -177,8 +180,6 @@ ManagedDownload *PackageSystem::download(const QString &type, const QString &url
     // Ne pas télécharger un fichier en cache
     if (QFile::exists(dest))
     {
-        // TODO: Savoir s'il est à jour, mais à part les listes de paquets, c'est normalement bon (les listes de paquets sont supprimées après traitement
-
         if (!block)
         {
             ManagedDownload *rs = new ManagedDownload;
@@ -444,9 +445,39 @@ bool PackageSystem::installSuggests() const
     return d->installSuggests;
 }
 
+int PackageSystem::parallelDownloads() const
+{
+    return d->parallelDownloads;
+}
+
+int PackageSystem::parallelInstalls() const
+{
+    return d->parallelInstalls;
+}
+
+QString PackageSystem::installRoot() const
+{
+    return d->installRoot;
+}
+
 void PackageSystem::setInstallSuggests(bool enable)
 {
     d->installSuggests = enable;
+}
+
+void PackageSystem::setParallelDownloads(int num)
+{
+    d->parallelDownloads = num;
+}
+
+void PackageSystem::setParallelInstalls(int num)
+{
+    d->parallelInstalls = num;
+}
+
+void PackageSystem::setInstallRoot(const QString &root)
+{
+    d->installRoot = root;
 }
 
 /* Signaux */

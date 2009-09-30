@@ -1,7 +1,7 @@
 /*      Script de "pesage" des paquets.     */
 
 /*  Ce fichier contient une fonction nommée "weight" qui renvoie un nombre entre 0 et MAX_INT (32-bit, 4 milliards).
-    Plus ce nombre est élevé, plus la liste passée en paramètre à cette fonction a de chances d'etre installée.
+    Plus ce nombre est faible, plus la liste passée en paramètre à cette fonction a de chances d'être installée.
 
     Ainsi, l'utilisateur se voit toujours présenter la liste qui lui convient le mieux, plusieurs
     exemplaires de ce script étant disponibles.

@@ -49,6 +49,7 @@ struct Solver::Private
     PackageSystem *ps;
     PackageSystemPrivate *psd;
     bool installSuggests;
+    int parallelInstalls, parallelDownloads;
 
     // Liste pour la résolution des dépendances
     QList<QVector<Pkg> > packages;
@@ -63,9 +64,10 @@ struct Solver::Private
 
     // Pour l'installation
     QEventLoop loop;
-    int ipackages, tpackages;
+    int ipackages, dpackages, pipackages;
     bool idone;
     Package *installingPackage;
+    QList<Package *> list;
 
     // Fonctions
     void addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists);
@@ -80,9 +82,11 @@ Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
     d->ps = ps;
 
     d->installSuggests = ps->installSuggests();
+    d->parallelInstalls = ps->parallelInstalls();
+    d->parallelDownloads = ps->parallelDownloads();
 
     // Lire le programme QtScript
-    QFile fl("/etc/setup/scripts/weight.qs");
+    QFile fl("/etc/lgrpkg/scripts/weight.qs");
 
     if (!fl.open(QIODevice::ReadOnly))
     {
@@ -199,65 +203,113 @@ void Solver::solve()
 void Solver::process(int index)
 {
     // Installer les paquets d'une liste, donc explorer ses paquets
-    QList<Package *> list = d->lists.values().at(index);
+    d->list = d->lists.values().at(index);
     d->ipackages = 0;
-    d->tpackages = list.count();
-    d->idone = false;
+    d->pipackages = 0;
+
+    int maxdownloads = qMin(d->parallelDownloads, d->list.count());
+    d->dpackages = maxdownloads;
     
-    for(int i=0; i<list.count(); ++i)
+    for(int i=0; i<maxdownloads; ++i)
     {
-        Package *pkg = list.at(i);
+        Package *pkg = d->list.at(i);
 
         connect(pkg, SIGNAL(installed()), this, SLOT(packageInstalled()));
-        connect(pkg, SIGNAL(installing()), this, SLOT(packageInstalling()));
-        
-        pkg->process();
+        connect(pkg, SIGNAL(downloaded()), this, SLOT(packageDownloaded()), Qt::QueuedConnection);
+
+        // Progression
+        d->ps->sendProgress(PackageSystem::GlobalDownload, i, d->list.count(), pkg->name());
+
+        // Téléchargement
+        pkg->download();
     }
 
-    // NOTE: Quand tous les paquets sont en cache, le réseau n'est pas utilisé. Dans ce cas, pkg->process() n'utilise pas de
-    // signaux asynchrones, ce qui fait qu'une fois arrivé ici, packageInstalled() a déjà appelé loop.exit(0), et donc
-    // lancer la boucle bloquerait le programme
-    if (!d->idone)
-    {
-        // Attendre que tous les paquets soient installés
-        d->loop.exec();
-    }
+    // Attendre
+    d->loop.exec();
 
     // Nettoyage
     disconnect(this, SLOT(packageInstalled()));
-    disconnect(this, SLOT(packageInstalling()));
+    disconnect(this, SLOT(packageDownloaded()));
 }
 
 void Solver::packageInstalled()
 {
-    d->ipackages++;
-
-    if (d->ipackages == d->tpackages)
+    Package *pkg = static_cast<Package *>(sender());
+    
+    // Voir si on a un paquet suivant
+    if (d->ipackages < d->dpackages)
     {
-        // Tous les paquets sont installés
-        d->ps->sendProgress(PackageSystem::GlobalInstall, d->tpackages, d->tpackages, QString());
+        Package *next = d->list.at(d->ipackages);
 
-        if (d->loop.isRunning())
-        {
-            d->loop.exit(0);
-        }
-        else
-        {
-            d->idone = true;
-        }
+        // Progression
+        d->ps->sendProgress(PackageSystem::Install, d->ipackages, d->list.count(), next->name());
+
+        // Installation
+        d->ipackages++;
+        d->installingPackage = next;
+
+        next->install();
+    }
+    else if (d->ipackages < d->list.count())
+    {
+        // On n'a pas tout installé, mais les téléchargements ne suivent pas, arrêter cette branche et dire à
+        // packageDownloaded qu'on l'attend
+        d->pipackages--;
+        return;
+    }
+    else if (d->ipackages < (d->list.count() + (d->pipackages - 1)))
+    {
+        // Laisser le dernier se finir
+        d->ipackages++;
+    }
+    else
+    {
+        // On a tout installé et fini
+        d->ps->endProgress(PackageSystem::Install, d->list.count());
+
+        d->loop.exit();
     }
 }
 
-void Solver::packageInstalling()
+void Solver::packageDownloaded()
 {
-    // Envoyer un signal pour dire qu'on installe un paquet
     Package *pkg = qobject_cast<Package *>(sender());
 
-    if (pkg != 0)
+    if (!pkg) return;
+
+    // Installer le paquet si le nombre de paquets installés en parallèle n'est pas dépasse
+    if (d->pipackages < d->parallelInstalls)
     {
-        d->installingPackage = pkg;
+        // Progression
+        d->ps->sendProgress(PackageSystem::Install, d->ipackages, d->list.count(), pkg->name());
         
-        d->ps->sendProgress(PackageSystem::GlobalInstall, d->ipackages, d->tpackages, pkg->name());
+        // Installer
+        d->ipackages++;
+        d->pipackages++;
+        d->installingPackage = pkg;
+        pkg->install();
+    }
+
+    // Si disponible, télécharger un autre paquet
+    if (d->dpackages < d->list.count())
+    {
+        Package *next = d->list.at(d->dpackages);
+
+        // Connexion de signaux
+        connect(next, SIGNAL(installed()), this, SLOT(packageInstalled()));
+        connect(next, SIGNAL(downloaded()), this, SLOT(packageDownloaded()), Qt::QueuedConnection);
+
+        // Progression
+        d->ps->sendProgress(PackageSystem::GlobalDownload, d->dpackages, d->list.count(), next->name());
+
+        // Téléchargement
+        d->dpackages++;
+        next->download();
+    }
+    else
+    {
+        // On a tout téléchargé
+        d->ps->endProgress(PackageSystem::GlobalDownload, d->list.count());
     }
 }
 

@@ -24,6 +24,7 @@
 #define __PACKAGE_H__
 
 #include <QObject>
+#include <QProcess>
 
 #include "solver.h"
 
@@ -43,7 +44,8 @@ class Package : public QObject
         Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver::Action _action = Solver::None);
         ~Package();
 
-        void process();
+        void install();
+        void download();
         bool isValid();
         Solver::Action action();
 
@@ -63,10 +65,12 @@ class Package : public QObject
 
     signals:
         void installed();
-        void installing();
+        void downloaded();
 
     private slots:
         void downloadEnded(ManagedDownload *md);
+        void processOut();
+        void processEnd(int exitCode, QProcess::ExitStatus exitStatus);
 
     private:
         struct Private;

@@ -133,7 +133,10 @@ class PackageSystemPrivate
         QHash<QNetworkReply *, ManagedDownload *> managedDls;
         QSettings *set;
 
+        // Options
         bool installSuggests;
+        int parallelInstalls, parallelDownloads;
+        QString installRoot;
 };
 
 #endif

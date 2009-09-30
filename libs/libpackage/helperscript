@@ -1,0 +1,6 @@
+#!/bin/sh
+
+/bin/echo "Installation de \"$1\" à la version \"$2\" :"
+/bin/echo "    - Chemin du .tlz : $3"
+/bin/echo "    - Préfixe d'installation : $4"
+/bin/echo

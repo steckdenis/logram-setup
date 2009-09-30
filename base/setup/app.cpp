@@ -68,6 +68,22 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 
             ps->setInstallSuggests(isug);
         }
+        else if (opt == "-I")
+        {
+            ps->setParallelInstalls(args.takeAt(2).toInt());
+        }
+        else if (opt == "-D")
+        {
+            ps->setParallelDownloads(args.takeAt(2).toInt());
+        }
+        else if (opt == "-R")
+        {
+            ps->setInstallRoot(args.takeAt(2));
+        }
+        else
+        {
+            help();
+        }
 
         args.removeAt(1);
         opt = args.at(1);
@@ -131,6 +147,9 @@ void App::help()
     cout << endl;
     cout << "Options :" << endl;
     cout << "    -S [off]           Enable (or disable) the installation of the suggests" << endl;
+    cout << "    -I <num>           Number of parallel installs" << endl;
+    cout << "    -D <num>           Number of parallel downloads" << endl;
+    cout << "    -R <install root>  Root path of the installation (usually /, but it can be anything, for example to build a Logram From Scratch)" << endl;
 }
 
 void App::version()
@@ -195,7 +214,7 @@ void App::progress(PackageSystem::Progress type, int done, int total, const QStr
             cout << COLOR(tr("Mise à jour de la base de donnée : "), "34");
             break;
             
-        case PackageSystem::GlobalInstall:
+        case PackageSystem::Install:
             cout << COLOR(tr("Installation de "), "34");
             break;
     }

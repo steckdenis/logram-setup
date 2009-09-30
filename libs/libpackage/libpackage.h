@@ -64,7 +64,13 @@ class PackageSystem : public QObject
         QString repoUrl(const QString &repoName);
 
         bool installSuggests() const;
+        int parallelDownloads() const;
+        int parallelInstalls() const;
+        QString installRoot() const;
         void setInstallSuggests(bool enable);
+        void setParallelDownloads(int num);
+        void setParallelInstalls(int num);
+        void setInstallRoot(const QString &root);
 
         // Gestion des erreurs
         enum Error
@@ -82,7 +88,7 @@ class PackageSystem : public QObject
             GlobalDownload,
             Download,
             UpdateDatabase,
-            GlobalInstall
+            Install
         };
 
         void raise(Error err, const QString &info);

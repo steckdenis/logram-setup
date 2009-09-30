@@ -20,6 +20,12 @@ includes.path = /usr/include/logram
 target.path = /usr/lib
 
 scripts.files = *.qs
-scripts.path = /etc/setup/scripts
+scripts.path = /etc/lgrpkg/scripts
 
-INSTALLS += includes target scripts
+slist.files = sources.list.sample
+slist.path = /etc/lgrpkg
+
+hscript.files = helperscript
+hscript.path = /usr/bin
+
+INSTALLS += includes target scripts hscript

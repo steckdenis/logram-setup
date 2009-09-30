@@ -27,6 +27,7 @@
 #include <QtDebug>
 
 #include <QCoreApplication>
+#include <QProcess>
 
 /*************************************
 ******* Privates *********************
@@ -45,6 +46,10 @@ struct Package::Private
 
     // Téléchargement
     QString waitingDest;
+
+    // Installation
+    QProcess *installProcess;
+    QString installCommand;
 };
 
 struct Depend::Private
@@ -77,7 +82,39 @@ Package::~Package()
     delete d;
 }
 
-void Package::process()
+void Package::install()
+{
+    d->installProcess = new QProcess();
+
+    connect(d->installProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processEnd(int, QProcess::ExitStatus)));
+    connect(d->installProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(processOut()));
+
+    d->installCommand = QString("/usr/bin/helperscript %1 %2 %3 %4")
+        .arg(name())
+        .arg(version())
+        .arg(d->waitingDest)
+        .arg(d->ps->installRoot());
+        
+    d->installProcess->start(d->installCommand);
+}
+
+void Package::processOut()
+{
+    qDebug() << d->installProcess->readAll().trimmed();
+}
+
+void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    if (exitCode != 0 && exitStatus != QProcess::NormalExit)
+    {
+        d->ps->raise(PackageSystem::ProcessError, d->installCommand);
+    }
+
+    // L'installation est finie, le dire, même si on a eu une erreur (pas rester coincé dans le QEventLoop)
+    emit installed();
+}
+
+void Package::download()
 {
     // Télécharger le paquet
     QString fname = "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
@@ -86,25 +123,21 @@ void Package::process()
     QString u = d->ps->repoUrl(r) + "/" + url();
 
     d->waitingDest = fname;
-    
-    d->ps->download(type, u, fname, false); // Non-bloquant
-}
 
-#include <QTimer>
+    d->ps->download(type, u, fname, false); // Non-bloquant
+    
+    //emit downloaded();
+}
 
 void Package::downloadEnded(ManagedDownload *md)
 {
-    if (md->destination == d->waitingDest)
+    if (md != 0)
     {
-        // Envoyer le signal comme quoi on va installer
-        //emit installing();
-        QTimer::singleShot(450, this, SIGNAL(installing()));
-
-        // TODO: Installer le paquet
-
-        // Envoyer le signal comme quoi on a fini
-        //emit installed();
-        QTimer::singleShot(500, this, SIGNAL(installed()));
+        if (md->destination == d->waitingDest)
+        {
+            // On a téléchargé le paquet !
+            emit downloaded();
+        }
     }
 }
 

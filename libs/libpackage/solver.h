@@ -56,7 +56,7 @@ class Solver : public QObject
 
     private slots:
         void packageInstalled();
-        void packageInstalling();
+        void packageDownloaded();
 
     private:
         struct Private;
