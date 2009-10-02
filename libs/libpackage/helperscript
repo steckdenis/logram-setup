@@ -95,9 +95,9 @@ case "$1" in
         
         source /var/cache/lgrpkg/temp/$2_$3/__LOGRAM/pkgbuild.sh
 
-        preinst $2 $3
+        preinst $2 $3 $5
         inst $2 $3 $4 $5
-        postinst $2 $3
+        postinst $2 $3 $5
         ;;
     remove)
         remove $2 $3 $5
