@@ -89,7 +89,7 @@ void Package::install()
     connect(d->installProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processEnd(int, QProcess::ExitStatus)));
     connect(d->installProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(processOut()));
 
-    d->installCommand = QString("/usr/bin/helperscript %1 %2 %3 %4")
+    d->installCommand = QString("/usr/bin/helperscript install %1 %2 %3 %4")
         .arg(name())
         .arg(version())
         .arg(d->waitingDest)
@@ -100,7 +100,21 @@ void Package::install()
 
 void Package::processOut()
 {
-    qDebug() << d->installProcess->readAll().trimmed();
+    QString out = d->installProcess->readAll().trimmed();
+
+    // Parser la sortie de type TYPE#paramètres#...
+    QStringList parts = out.split('#');
+    QString command = parts.takeAt(0);
+
+    if (command == "MESSAGE")
+    {
+        d->ps->sendMessage(this, parts.join("#"));
+    }
+    else
+    {
+        // Message en texte brut
+        d->ps->sendMessage(this, out);
+    }
 }
 
 void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)

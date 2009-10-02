@@ -143,6 +143,14 @@ void App::manageResults(Solver *solver)
         }
     }
 
+    cout << endl;
+    cout << COLOR(tr("Installation des paquets..."), "32") << endl;
+    cout << endl;
+
     // Installer les paquets
     solver->process(index);
+
+    cout << endl;
+    cout << COLOR(tr("Paquets installés !"), "32") << endl;
+    cout << endl;
 }

@@ -496,3 +496,8 @@ void PackageSystem::endProgress(Progress type, int tot)
 {
     emit progress(type, tot, tot, QString());
 }
+
+void PackageSystem::sendMessage(Package *sndr, const QString &msg)
+{
+    emit message(sndr, msg);
+}

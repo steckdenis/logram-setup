@@ -63,6 +63,7 @@ class PackageSystem : public QObject
         QString repoType(const QString &repoName);
         QString repoUrl(const QString &repoName);
 
+        // Options
         bool installSuggests() const;
         int parallelDownloads() const;
         int parallelInstalls() const;
@@ -71,6 +72,9 @@ class PackageSystem : public QObject
         void setParallelDownloads(int num);
         void setParallelInstalls(int num);
         void setInstallRoot(const QString &root);
+
+        // Dialogue avec les paquets
+        void sendMessage(Package *sender, const QString &message);
 
         // Gestion des erreurs
         enum Error
@@ -99,6 +103,8 @@ class PackageSystem : public QObject
         void error(PackageSystem::Error err, const QString &info);
         void progress(PackageSystem::Progress type, int num, int tot, const QString &msg);
         void downloadEnded(ManagedDownload *reply);
+
+        void message(Package *sndr, const QString &msg);
 
     private slots:
         void downloadFinished(QNetworkReply *reply);
