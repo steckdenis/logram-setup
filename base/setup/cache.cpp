@@ -75,15 +75,26 @@ void App::showpkg(const QString &name)
     }
 
     // Afficher les informations
-    cout << COLOR(tr("Nom                : "), "33") << COLOR(pkg->name(), "34") << endl;
-    cout << COLOR(tr("Version            : "), "33") << qPrintable(pkg->version()) << endl;
-    cout << COLOR(tr("Titre              : "), "33") << qPrintable(pkg->title()) << endl;
-    cout << COLOR(tr("Section            : "), "33") << qPrintable(pkg->section()) << endl;
-    cout << COLOR(tr("Distribution       : "), "33") << qPrintable(pkg->distribution()) << endl;
-    cout << COLOR(tr("Dépôt d'origine    : "), "33") << qPrintable(pkg->repo()) << endl;
-    cout << COLOR(tr("Paquet source      : "), "33") << qPrintable(pkg->source()) << endl;
-    cout << COLOR(tr("Licence            : "), "33") << qPrintable(pkg->license()) << endl;
-    cout << COLOR(tr("Description courte : "), "33") << qPrintable(pkg->shortDesc()) << endl;
+    cout << COLOR(tr("Nom                 : "), "33") << COLOR(pkg->name(), "34") << endl;
+    cout << COLOR(tr("Version             : "), "33") << qPrintable(pkg->version()) << endl;
+    cout << COLOR(tr("Titre               : "), "33") << qPrintable(pkg->title()) << endl;
+    cout << COLOR(tr("Section             : "), "33") << qPrintable(pkg->section()) << endl;
+    cout << COLOR(tr("Distribution        : "), "33") << qPrintable(pkg->distribution()) << endl;
+    if (pkg->isInstalled())
+    {
+        cout << COLOR(tr("Version installée   : "), "33") << qPrintable(pkg->installedVersion()) << endl;
+        cout << COLOR(tr("Date d'installation : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
+    }
+    else
+    {
+        cout << COLOR(tr("Version installée   : "), "33") << qPrintable(tr("Non installé")) << endl;
+    }
+    cout << COLOR(tr("Téléchargement      : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->downloadSize())) << endl;
+    cout << COLOR(tr("Taille installée    : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->installSize())) << endl;
+    cout << COLOR(tr("Dépôt d'origine     : "), "33") << qPrintable(pkg->repo()) << endl;
+    cout << COLOR(tr("Paquet source       : "), "33") << qPrintable(pkg->source()) << endl;
+    cout << COLOR(tr("Licence             : "), "33") << qPrintable(pkg->license()) << endl;
+    cout << COLOR(tr("Description courte  : "), "33") << qPrintable(pkg->shortDesc()) << endl;
     
     cout << endl << COLOR(tr("Description longue : "), "35") << endl << endl;
     cout << qPrintable(pkg->longDesc());

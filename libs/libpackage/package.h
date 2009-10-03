@@ -25,6 +25,7 @@
 
 #include <QObject>
 #include <QProcess>
+#include <QDateTime>
 
 #include "solver.h"
 
@@ -60,6 +61,12 @@ class Package : public QObject
         QString distribution();
         QString license();
         QString url();
+        QString installedVersion();
+        QDateTime installedDate();
+        QString installedRepo();
+        bool isInstalled();
+        int downloadSize();
+        int installSize();
 
         QList<Depend *> depends();
 

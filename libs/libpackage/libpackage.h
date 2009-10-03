@@ -32,6 +32,7 @@ class Solver;
 class PackageSystemPrivate;
 
 class QNetworkReply;
+class QSettings;
 
 struct ManagedDownload
 {
@@ -51,17 +52,20 @@ class PackageSystem : public QObject
         // API publique
         QList<Package *> packagesByName(const QString &regex);
         Package *package(const QString &name, const QString &version = QString());
-
         void update();
         Solver *newSolver();
 
+        // Fonctions statiques
         static int compareVersions(const QString &v1, const QString &v2);
         static bool matchVersion(const QString &v1, const QString &v2, int op);
         static int parseVersion(const QString &verStr, QString &name, QString &version);
+        static QString fileSizeFormat(int size);
 
+        // API utilisée par des éléments de liblpackages
         ManagedDownload *download(const QString &type, const QString &url, const QString &dest, bool block=true);
         QString repoType(const QString &repoName);
         QString repoUrl(const QString &repoName);
+        QSettings *installedPackagesList() const;
 
         // Options
         bool installSuggests() const;

@@ -29,22 +29,34 @@ prepare()
 
     echo ">> Importing $name..."
 
-    # 1. Décompresser
+    # 1. Obtenir les tailles
+    dlsize=$(ls $file -l | cut -d ' ' -f 5)
+
+    # 2. Décompresser
+    lzma -dc $file > uncompressed.tar
+    insize=$(ls uncompressed.tar -l | cut -d ' ' -f 5)
+
+    # 3. Extraire les fichiers
     mkdir tmp
     cd tmp
 
-    tar --lzma -xf $file
+    tar -xf ../uncompressed.tar
 
     cd ..
 
-    # 2. Copier le Control
-    cp tmp/__LOGRAM/control $INCOMING/$(basename $file .tlz).control
+    # 4. Copier le Control
+    bname=$(basename $file .tlz)
+    cp tmp/__LOGRAM/control $INCOMING/$bname.control
 
-    # 3. Copier les fichiers de traduction
+    echo "DownloadSize=$dlsize" >> $INCOMING/$bname.control
+    echo "InstallSize=$insize" >> $INCOMING/$bname.control
+
+    # 5. Copier les fichiers de traduction
     cp tmp/__LOGRAM/$name.* $INCOMING
 
-    # 4. Supprimer le tmp
+    # 6. Supprimer le tmp
     rm -rf tmp
+    rm -f uncompressed.tar
 }
 
 include()

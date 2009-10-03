@@ -41,6 +41,7 @@ PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 
     d->set = new QSettings("/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
+    d->ipackages = new QSettings("/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
 
     d->installSuggests = d->set->value("InstallSuggests", true).toBool();
     d->parallelInstalls = d->set->value("ParallelInstalls", 1).toInt();
@@ -78,6 +79,11 @@ QString PackageSystem::repoUrl(const QString &repoName)
     d->set->endGroup();
 
     return rs;
+}
+
+QSettings *PackageSystem::installedPackagesList() const
+{
+    return d->ipackages;
 }
 
 void PackageSystem::update()
@@ -436,6 +442,26 @@ int PackageSystem::compareVersions(const QString &v1, const QString &v2)
     }
 
     return 0;       //Égal
+}
+
+QString PackageSystem::fileSizeFormat(int size)
+{
+    if (size < 1024)
+    {
+        return QString::number(size) + " o";
+    }
+    else if (size < 1024*1024)
+    {
+        return QString::number(size/1024) + " Kio";
+    }
+    else if (size < 1024*1024*1024)
+    {
+        return QString::number(size/(1024*1024)) + "Mio";
+    }
+    else
+    {
+        return QString::number(size/(1024*1024*1024)) + " Gio";
+    }
 }
 
 /* Options */

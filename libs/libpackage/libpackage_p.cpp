@@ -234,6 +234,24 @@ _Depend *PackageSystemPrivate::depend(int32_t ptr)
     return (_Depend *)dep;
 }
 
+int PackageSystemPrivate::packageDownloadSize(int index)
+{
+    _Package *pkg = package(index);
+    
+    if (pkg == 0) return 0;
+    
+    return pkg->dsize;
+}
+
+int PackageSystemPrivate::packageInstallSize(int index)
+{
+    _Package *pkg = package(index);
+    
+    if (pkg == 0) return 0;
+    
+    return pkg->isize;
+}
+
 QString PackageSystemPrivate::packageName(int index)
 {
     _Package *pkg = package(index);

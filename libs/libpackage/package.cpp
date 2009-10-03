@@ -28,6 +28,7 @@
 
 #include <QCoreApplication>
 #include <QProcess>
+#include <QSettings>
 
 /*************************************
 ******* Privates *********************
@@ -123,6 +124,16 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     {
         d->ps->raise(PackageSystem::ProcessError, d->installCommand);
     }
+    
+    // Enregistrer le paquet dans la liste des paquets installés
+    QSettings *set = d->ps->installedPackagesList();
+    
+    set->beginGroup(name());
+    set->setValue("InstalledVersion", version());
+    set->setValue("InstalledDate", QDateTime::currentDateTime());
+    set->setValue("InstalledRepo", repo());
+    set->setValue("IsInstalled", true);
+    set->endGroup();
 
     // L'installation est finie, le dire, même si on a eu une erreur (pas rester coincé dans le QEventLoop)
     emit installed();
@@ -246,6 +257,36 @@ QString Package::license()
 QString Package::url()
 {
     return d->psd->packageUrl(d->index);
+}
+
+int Package::downloadSize()
+{
+    return d->psd->packageDownloadSize(d->index);
+}
+
+int Package::installSize()
+{
+    return d->psd->packageInstallSize(d->index);
+}
+
+QString Package::installedVersion()
+{
+    return d->ps->installedPackagesList()->value(name() + "/InstalledVersion").toString();
+}
+
+QDateTime Package::installedDate()
+{
+    return d->ps->installedPackagesList()->value(name() + "/InstalledDate").toDateTime();
+}
+
+QString Package::installedRepo()
+{
+    return d->ps->installedPackagesList()->value(name() + "/InstalledRepo").toString();
+}
+
+bool Package::isInstalled()
+{
+    return d->ps->installedPackagesList()->value(name() + "/IsInstalled", false).toBool();
 }
 
 /*************************************

@@ -391,6 +391,14 @@ void DatabaseWriter::rebuild()
                     {
                         pkg->license = stringIndex(value, index, false, false);
                     }
+                    else if (key == "DownloadSize")
+                    {
+                        pkg->dsize = value.toInt();
+                    }
+                    else if (key == "InstallSize")
+                    {
+                        pkg->isize = value.toInt();
+                    }
                     else if (key == "Url")
                     {
                         pkg->url = stringIndex(value, index, false, false);

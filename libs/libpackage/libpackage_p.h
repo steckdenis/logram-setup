@@ -37,6 +37,8 @@ struct _Package
     int32_t distribution; // Distribution
     int32_t license;    // Licence
     int32_t deps;       // Index du tableau de dépendances
+    int32_t isize;      // Taille de l'installation
+    int32_t dsize;      // Taille du téléchargement
 };
 
 struct _String
@@ -111,6 +113,8 @@ class PackageSystemPrivate
         QString packageDistribution(int index);
         QString packageLicense(int index);
         QString packageUrl(int index);
+        int packageDownloadSize(int index);
+        int packageInstallSize(int index);
 
         const char *string(uchar *map, int index);
         _Package *package(int index);
@@ -131,7 +135,7 @@ class PackageSystemPrivate
         QNetworkAccessManager *nmanager;
         QString dlDest;
         QHash<QNetworkReply *, ManagedDownload *> managedDls;
-        QSettings *set;
+        QSettings *set, *ipackages;
 
         // Options
         bool installSuggests;
