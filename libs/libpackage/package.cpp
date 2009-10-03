@@ -132,6 +132,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     set->setValue("InstalledVersion", version());
     set->setValue("InstalledDate", QDateTime::currentDateTime());
     set->setValue("InstalledRepo", repo());
+    set->setValue("InstalledBy", getenv("USER"));
     set->setValue("IsInstalled", true);
     set->endGroup();
 
@@ -282,6 +283,11 @@ QDateTime Package::installedDate()
 QString Package::installedRepo()
 {
     return d->ps->installedPackagesList()->value(name() + "/InstalledRepo").toString();
+}
+
+QString Package::installedBy()
+{
+    return d->ps->installedPackagesList()->value(name() + "/InstalledBy").toString();
 }
 
 bool Package::isInstalled()

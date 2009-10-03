@@ -84,6 +84,7 @@ void App::showpkg(const QString &name)
     {
         cout << COLOR(tr("Version installée   : "), "33") << qPrintable(pkg->installedVersion()) << endl;
         cout << COLOR(tr("Date d'installation : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
+        cout << COLOR(tr("Installé par        : "), "33") << qPrintable(pkg->installedBy()) << endl;
     }
     else
     {

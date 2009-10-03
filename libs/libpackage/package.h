@@ -64,6 +64,7 @@ class Package : public QObject
         QString installedVersion();
         QDateTime installedDate();
         QString installedRepo();
+        QString installedBy();
         bool isInstalled();
         int downloadSize();
         int installSize();
