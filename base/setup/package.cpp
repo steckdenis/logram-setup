@@ -78,12 +78,15 @@ void App::manageResults(Solver *solver)
     int index = 0;
     int tot = solver->results();
     int weight;
+    int dlSize, instSize;
     char in;
     
     while (true)
     {
         cout << endl;
-        
+
+        dlSize = 0;
+        instSize = 0;
         packages = solver->result(index, weight);
 
         foreach (Package *pkg, packages)
@@ -94,18 +97,24 @@ void App::manageResults(Solver *solver)
 
             if (pkg->action() == Solver::Install)
             {
+                dlSize += pkg->downloadSize();
+                instSize += pkg->installSize();
                 cout << COLOR(name, "34");
             }
             else if (pkg->action() == Solver::Remove)
             {
+                instSize -= pkg->installSize();
                 cout << COLOR(name, "31");
             }
             else if (pkg->action() == Solver::Update)
             {
+                dlSize += pkg->downloadSize();
+                // TODO: Différence entre la version installée et la version qu'on va télécharger
                 cout << COLOR(name, "33");
             }
             else if (pkg->action() == Solver::Purge)
             {
+                instSize -= pkg->installSize();
                 cout << COLOR(name, "35");
             }
 
@@ -118,7 +127,13 @@ void App::manageResults(Solver *solver)
         cout << endl;
 
         // Demander si c'est bon
-        cout << qPrintable(tr("[%1/%2, poids %3] Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ").arg(QString::number(index+1)).arg(QString::number(tot)).arg(weight));
+        cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, installation de %5\n"
+                              "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ?")
+                                  .arg(QString::number(index+1))
+                                  .arg(QString::number(tot))
+                                  .arg(weight)
+                                  .arg(PackageSystem::fileSizeFormat(dlSize))
+                                  .arg(PackageSystem::fileSizeFormat(instSize)));
         cin >> in;
 
         if (in == 'y')
