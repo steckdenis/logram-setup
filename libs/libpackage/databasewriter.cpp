@@ -29,6 +29,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrl>
+#include <QTime>
 
 #include <QFile>
 #include <QProcess>
@@ -220,36 +221,26 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
 void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op)
 {
     // Explorer tous les paquets connus
-    QHash<QByteArray, _Package *>::const_iterator i = knownPackages.constBegin();
-    QList<QByteArray> parts;
+    const QList<knownEntry *> &entries = knownPackages.value(name);
     _Depend *depend;
     
-    while (i != knownPackages.constEnd())
+    foreach (knownEntry *entry, entries)
     {
-        // Splitter la valeur
-        parts = i.key().split('=');
-
-        // Nom dans parts[0], Version dans parts[1]. Vérifier que le nom est bon
-        if (parts.at(0) == name)
+        // Si on ne précise pas d'opérateur, ou si la version correspond, ajouter une reverse dependency
+        QString v1(entry->version);
+        QString v2(version);
+        
+        if (op == DEPEND_OP_NOVERSION || PackageSystem::matchVersion(v1, v2, op))
         {
-            // Si on ne précise pas d'opérateur, ou si la version correspond, ajouter une reverse dependency
-            QString v1(parts.at(1));
-            QString v2(version);
-            
-            if (op == DEPEND_OP_NOVERSION || PackageSystem::matchVersion(v1, v2, op))
-            {
-                depend = new _Depend;
-                depend->type = DEPEND_TYPE_REVDEP;
-                depend->op = DEPEND_OP_EQ;
-                depend->pkgname = pkg->name;
-                depend->pkgver = pkg->version;
+            depend = new _Depend;
+            depend->type = DEPEND_TYPE_REVDEP;
+            depend->op = DEPEND_OP_EQ;
+            depend->pkgname = pkg->name;
+            depend->pkgver = pkg->version;
 
-                // Ajouter la revdep au paquet cible
-                depends[i.value()->deps].append(depend);
-            }
+            // Ajouter la revdep au paquet cible
+            depends[entry->pkg->deps].append(depend);
         }
-
-        ++i;
     }
 }
 
@@ -263,7 +254,7 @@ void DatabaseWriter::rebuild()
 
     // Première étape
     parent->sendProgress(PackageSystem::UpdateDatabase, 0, 6, tr("Lecture des listes"));
-
+    
     for (pass=0; pass<2; ++pass)
     {
         foreach (const QString &file, cacheFiles)
@@ -376,7 +367,13 @@ void DatabaseWriter::rebuild()
                         // Si le nom est aussi ok, ajouter le couple clef/valeur
                         if (!pkgname.isEmpty())
                         {
-                            knownPackages.insertMulti(pkgname + "=" + value, pkg);
+                            knownEntry *entry = new knownEntry;
+                            knownEntries.append(entry);
+                            
+                            entry->pkg = pkg;
+                            entry->version = value;
+                            
+                            knownPackages[pkgname].append(entry);
                         }
                     }
                     else if (key == "Source")
@@ -437,7 +434,13 @@ void DatabaseWriter::rebuild()
                             }
 
                             // Ajouter <dep>=<version> dans knownPackages
-                            knownPackages.insertMulti(dep + "=" + version, pkg);
+                            knownEntry *entry = new knownEntry;
+                            knownEntries.append(entry);
+                            
+                            entry->pkg = pkg;
+                            entry->version = version;
+                            
+                            knownPackages[dep].append(entry);
                         }
                     }
                 }
@@ -602,6 +605,9 @@ void DatabaseWriter::rebuild()
 
         QFile::remove(fname);
     }
+    
+    // Nettoyer
+    qDeleteAll(knownEntries);
 
     //qDebug() << packages;
     //qDebug() << packagesIndexes;

@@ -456,7 +456,7 @@ QString PackageSystem::fileSizeFormat(int size)
     }
     else if (size < 1024*1024*1024)
     {
-        return QString::number(size/(1024*1024)) + "Mio";
+        return QString::number(size/(1024*1024)) + " Mio";
     }
     else
     {

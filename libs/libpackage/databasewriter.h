@@ -40,6 +40,12 @@ struct _Package;
 struct _StrPackage;
 struct _Depend;
 
+struct knownEntry
+{
+    QString version;
+    _Package *pkg;
+};
+
 class DatabaseWriter : public QObject
 {
     Q_OBJECT
@@ -65,7 +71,9 @@ class DatabaseWriter : public QObject
 
         QList<QList<_StrPackage *> > strPackages;
         QList<QList<_Depend *> > depends;
-        QHash<QByteArray, _Package *> knownPackages;
+        
+        QHash<QByteArray, QList<knownEntry *> > knownPackages; // (nom, [(version, _Package)])
+        QList<knownEntry *> knownEntries;
 
         void handleDl(QIODevice *device);
         int stringIndex(const QByteArray &str, int pkg, bool isTr, bool create = true);
