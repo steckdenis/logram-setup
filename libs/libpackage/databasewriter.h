@@ -78,7 +78,7 @@ class DatabaseWriter : public QObject
         void handleDl(QIODevice *device);
         int stringIndex(const QByteArray &str, int pkg, bool isTr, bool create = true);
         void setDepends(_Package *pkg, const QByteArray &str, int type);
-        void revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op);
+        void revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op, int type);
 };
 
 #endif

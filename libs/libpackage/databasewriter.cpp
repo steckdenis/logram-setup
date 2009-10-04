@@ -155,9 +155,16 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
             depends[pkg->deps].append(depend);
 
             // Gérer les dépendances inverses
-            if (type == DEPEND_TYPE_DEPEND)
+            if (type == DEPEND_TYPE_DEPEND || type == DEPEND_TYPE_CONFLICT)
             {
-                revdep(pkg, dep, QByteArray(), DEPEND_OP_NOVERSION);
+                int tp = DEPEND_TYPE_CONFLICT;
+                
+                if (type == DEPEND_TYPE_DEPEND)
+                {
+                    tp = DEPEND_TYPE_REVDEP;
+                }
+                
+                revdep(pkg, dep, QByteArray(), DEPEND_OP_NOVERSION, tp);
             }
         }
         else
@@ -210,15 +217,22 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
             depends[pkg->deps].append(depend);
 
             // Gérer les dépendances inverses
-            if (type == DEPEND_TYPE_DEPEND)
+            if (type == DEPEND_TYPE_DEPEND || type == DEPEND_TYPE_CONFLICT)
             {
-                revdep(pkg, name, version, op);
+                int tp = DEPEND_TYPE_CONFLICT;
+
+                if (type == DEPEND_TYPE_DEPEND)
+                {
+                    tp = DEPEND_TYPE_REVDEP;
+                }
+                
+                revdep(pkg, name, version, op, tp);
             }
         }
     }
 }
 
-void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op)
+void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op, int type)
 {
     // Explorer tous les paquets connus
     const QList<knownEntry *> &entries = knownPackages.value(name);
@@ -233,7 +247,7 @@ void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteAr
         if (op == DEPEND_OP_NOVERSION || PackageSystem::matchVersion(v1, v2, op))
         {
             depend = new _Depend;
-            depend->type = DEPEND_TYPE_REVDEP;
+            depend->type = type;
             depend->op = DEPEND_OP_EQ;
             depend->pkgname = pkg->name;
             depend->pkgver = pkg->version;
