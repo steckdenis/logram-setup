@@ -70,6 +70,7 @@ class Package : public QObject
         int downloadSize();
         int installSize();
 
+        QList<Package *> versions();
         QList<Depend *> depends();
         QString dependsToString(const QList<Depend *> &deps, int type);
 

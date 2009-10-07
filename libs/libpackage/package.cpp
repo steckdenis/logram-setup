@@ -198,6 +198,20 @@ bool Package::isValid()
     return d->index != -1;
 }
 
+QList<Package *> Package::versions()
+{
+    QList<int> pkgs = d->psd->packagesOfString(0, d->psd->package(d->index)->name, DEPEND_OP_NOVERSION);
+    QList<Package *> rs;
+
+    foreach(int pkg, pkgs)
+    {
+        Package *pk = new Package(pkg, d->ps, d->psd);
+        rs.append(pk);
+    }
+
+    return rs;
+}
+
 QList<Depend *> Package::depends()
 {
     if (d->depok)

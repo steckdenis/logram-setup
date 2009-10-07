@@ -185,7 +185,31 @@ void App::showpkg(const QString &name)
                 cout << qPrintable(dep->version()) << ")" << endl;
             }
         }
-
-        cout << endl;
     }
+
+    // Versions disponibles
+    cout << endl << COLOR(tr("Versions disponibles : "), "35") << endl << endl;
+
+    QList<Package *> vers = pkg->versions();
+
+    foreach(Package *ver, vers)
+    {
+        if (ver->status() == PACKAGE_STATE_INSTALLED)
+        {
+            cout << COLOR("  » ", "34");
+        }
+        else if (ver->status() == PACKAGE_STATE_REMOVED)
+        {
+            cout << COLOR("  « ", "31");
+        }
+        else
+        {
+            cout << "  * ";
+        }
+
+        cout << COLOR(ver->version().leftJustified(26, ' ', true), "32") << ' '
+             << qPrintable(ver->shortDesc()) << endl;
+    }
+
+    cout << endl;
 }
