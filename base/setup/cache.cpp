@@ -182,8 +182,10 @@ void App::showpkg(const QString &name)
                         break;
                 }
 
-                cout << qPrintable(dep->version()) << ")" << endl;
+                cout << qPrintable(dep->version()) << ")";
             }
+
+            cout << endl;
         }
     }
 
