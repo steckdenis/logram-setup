@@ -125,16 +125,37 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         d->ps->raise(PackageSystem::ProcessError, d->installCommand);
     }
     
-    // Enregistrer le paquet dans la liste des paquets installés
+    // Enregistrer le paquet dans la liste des paquets installés pour le prochain setup update
     QSettings *set = d->ps->installedPackagesList();
     
     set->beginGroup(name());
-    set->setValue("InstalledVersion", version());
-    set->setValue("InstalledDate", QDateTime::currentDateTime());
+    set->setValue("Url", url());
+    set->setValue("Name", name());
+    set->setValue("Version", version());
+    set->setValue("Source", source());
+    set->setValue("Maintainer", maintainer());
+    set->setValue("Section", section());
+    set->setValue("Distribution", distribution());
+    set->setValue("Licence", license());
+    set->setValue("Depends", dependsToString(depends(), DEPEND_TYPE_DEPEND));
+    set->setValue("Provides", dependsToString(depends(), DEPEND_TYPE_PROVIDE));
+    set->setValue("Suggest", dependsToString(depends(), DEPEND_TYPE_SUGGEST));
+    set->setValue("Replaces", dependsToString(depends(), DEPEND_TYPE_REPLACE));
+    set->setValue("Conflicts", dependsToString(depends(), DEPEND_TYPE_CONFLICT));
+    set->setValue("DownloadSize", downloadSize());
+    set->setValue("InstallSize", installSize());
+
+    set->setValue("Title", QString(title().toUtf8().toBase64()));
+    set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
+    set->setValue("LongDesc", QString(longDesc().toUtf8().toBase64()));
+    
+    set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
     set->setValue("InstalledRepo", repo());
-    set->setValue("InstalledBy", getenv("USER"));
-    set->setValue("IsInstalled", true);
+    set->setValue("InstalledBy", QString(getenv("UID")).toInt());
+    set->setValue("State", PACKAGE_STATE_INSTALLED);
     set->endGroup();
+
+    // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
 
     // L'installation est finie, le dire, même si on a eu une erreur (pas rester coincé dans le QEventLoop)
     emit installed();
@@ -205,6 +226,57 @@ QList<Depend *> Package::depends()
     return rs;
 }
 
+QString Package::dependsToString(const QList<Depend *> &deps, int type)
+{
+    QString rs;
+    
+    for (int i=0; i<deps.count(); ++i)
+    {
+        Depend *dep = deps.at(i);
+
+        if (dep->type() != type)
+        {
+            continue;
+        }
+
+        if (i != 0)
+        {
+            rs += "; ";
+        }
+
+        rs += dep->name();
+
+        if (dep->op() != DEPEND_OP_NOVERSION)
+        {
+            switch (dep->op())
+            {
+                case DEPEND_OP_EQ:
+                    rs += " (= ";
+                    break;
+                case DEPEND_OP_GREQ:
+                    rs += " (>= ";
+                    break;
+                case DEPEND_OP_GR:
+                    rs += " (> ";
+                    break;
+                case DEPEND_OP_LOEQ:
+                    rs += " (<= ";
+                    break;
+                case DEPEND_OP_LO:
+                    rs += " (< ";
+                    break;
+                case DEPEND_OP_NE:
+                    rs += " (!= ";
+                    break;
+            }
+
+            rs += dep->version() + ")";
+        }
+    }
+
+    return rs;
+}
+
 QString Package::name()
 {
     return d->psd->packageName(d->index);
@@ -213,6 +285,11 @@ QString Package::name()
 QString Package::version()
 {
     return d->psd->packageVersion(d->index);
+}
+
+QString Package::maintainer()
+{
+    return d->psd->packageMaintainer(d->index);
 }
 
 QString Package::shortDesc()
@@ -270,29 +347,25 @@ int Package::installSize()
     return d->psd->packageInstallSize(d->index);
 }
 
-QString Package::installedVersion()
-{
-    return d->ps->installedPackagesList()->value(name() + "/InstalledVersion").toString();
-}
 
 QDateTime Package::installedDate()
 {
-    return d->ps->installedPackagesList()->value(name() + "/InstalledDate").toDateTime();
+    QDateTime rs;
+    _Package *pkg = d->psd->package(d->index);
+
+    rs.setTime_t(pkg->idate);
+    
+    return rs;
 }
 
-QString Package::installedRepo()
+int Package::installedBy()
 {
-    return d->ps->installedPackagesList()->value(name() + "/InstalledRepo").toString();
+    return d->psd->package(d->index)->iby;
 }
 
-QString Package::installedBy()
+int Package::status()
 {
-    return d->ps->installedPackagesList()->value(name() + "/InstalledBy").toString();
-}
-
-bool Package::isInstalled()
-{
-    return d->ps->installedPackagesList()->value(name() + "/IsInstalled", false).toBool();
+    return d->psd->package(d->index)->state;
 }
 
 /*************************************

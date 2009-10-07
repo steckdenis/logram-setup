@@ -74,27 +74,41 @@ void App::showpkg(const QString &name)
         return;
     }
 
+    // Status du paquet
+    QString status;
+
+    if (pkg->status() == PACKAGE_STATE_NOTINSTALLED)
+    {
+        status = tr("Non-installé");
+    }
+    else if (pkg->status() == PACKAGE_STATE_INSTALLED)
+    {
+        status = tr("Installé");
+    }
+    else
+    {
+        status = tr("Supprimé");
+    }
+
     // Afficher les informations
     cout << COLOR(tr("Nom                 : "), "33") << COLOR(pkg->name(), "34") << endl;
     cout << COLOR(tr("Version             : "), "33") << qPrintable(pkg->version()) << endl;
     cout << COLOR(tr("Titre               : "), "33") << qPrintable(pkg->title()) << endl;
     cout << COLOR(tr("Section             : "), "33") << qPrintable(pkg->section()) << endl;
     cout << COLOR(tr("Distribution        : "), "33") << qPrintable(pkg->distribution()) << endl;
-    if (pkg->isInstalled())
+    cout << COLOR(tr("Status              : "), "33") << qPrintable(status) << endl;
+    if (pkg->status() == PACKAGE_STATE_INSTALLED)
     {
-        cout << COLOR(tr("Version installée   : "), "33") << qPrintable(pkg->installedVersion()) << endl;
         cout << COLOR(tr("Date d'installation : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
-        cout << COLOR(tr("Installé par        : "), "33") << qPrintable(pkg->installedBy()) << endl;
-    }
-    else
-    {
-        cout << COLOR(tr("Version installée   : "), "33") << qPrintable(tr("Non installé")) << endl;
+        // TODO: Uid vers nom d'utilisateur
+        //cout << COLOR(tr("Installé par        : "), "33") << qPrintable(pkg->installedBy()) << endl;
     }
     cout << COLOR(tr("Téléchargement      : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->downloadSize())) << endl;
     cout << COLOR(tr("Taille installée    : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->installSize())) << endl;
     cout << COLOR(tr("Dépôt d'origine     : "), "33") << qPrintable(pkg->repo()) << endl;
     cout << COLOR(tr("Paquet source       : "), "33") << qPrintable(pkg->source()) << endl;
     cout << COLOR(tr("Licence             : "), "33") << qPrintable(pkg->license()) << endl;
+    cout << COLOR(tr("Mainteneur          : "), "33") << qPrintable(pkg->maintainer()) << endl;
     cout << COLOR(tr("Description courte  : "), "33") << qPrintable(pkg->shortDesc()) << endl;
     
     cout << endl << COLOR(tr("Description longue : "), "35") << endl << endl;
@@ -149,28 +163,26 @@ void App::showpkg(const QString &name)
                 switch (dep->op())
                 {
                     case DEPEND_OP_EQ:
-                        cout << " ( = ";
+                        cout << " (= ";
                         break;
                     case DEPEND_OP_GREQ:
-                        cout << " ( >= ";
+                        cout << " (>= ";
                         break;
                     case DEPEND_OP_GR:
-                        cout << " ( > ";
+                        cout << " (> ";
                         break;
                     case DEPEND_OP_LOEQ:
-                        cout << " ( <= ";
+                        cout << " (<= ";
                         break;
                     case DEPEND_OP_LO:
-                        cout << " ( < ";
+                        cout << " (< ";
                         break;
                     case DEPEND_OP_NE:
-                        cout << " ( != ";
+                        cout << " (!= ";
                         break;
                 }
 
                 cout << qPrintable(dep->version()) << ")" << endl;
-
-                // TODO: Gérer les dépendances multiples (OR, AND, XOR, etc)
             }
         }
 

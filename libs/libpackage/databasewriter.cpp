@@ -262,43 +262,71 @@ void DatabaseWriter::rebuild()
 {
     // On utilise 2 passes (d'abord créer les paquets, puis les manipuler)
     int pass;
+    int numFile, numLine;
 
     strPtr = 0;
     transPtr = 0;
 
     // Première étape
     parent->sendProgress(PackageSystem::UpdateDatabase, 0, 6, tr("Lecture des listes"));
+
+    // On lit également la liste des fichiers installés
+    QString ipackagelist = "/var/cache/lgrpkg/db/installed_packages.list";
+    bool hasInstalledPackages = false;
+    
+    if (QFile::exists(ipackagelist))
+    {
+        cacheFiles.append(ipackagelist);
+        hasInstalledPackages = true;
+    }
     
     for (pass=0; pass<2; ++pass)
     {
+        numFile = 0;
+        numLine = 0;
         foreach (const QString &file, cacheFiles)
         {
-            QString fname = file;
-            fname.replace(".lzma", "");
+            numFile++;
             
-            if (pass == 0)
+            QString fname = file;
+            QStringList parts;
+            QString reponame, distroname, arch, method;
+            bool istr;
+
+            bool isInstalledPackages = (numFile == cacheFiles.count() && hasInstalledPackages);
+            
+            if (!isInstalledPackages)
             {
-                // Supprimer le fichier de sortie
-                if (QFile::exists(fname))
-                {
-                    QFile::remove(fname);
-                }
-                
-                QString cmd = QString("unlzma ") + file;
+                fname.replace(".lzma", "");
 
-                if (QProcess::execute(cmd) != 0)
+                if (pass == 0)
                 {
-                    parent->raise(PackageSystem::ProcessError, cmd);
+                    // Supprimer le fichier de sortie
+                    if (QFile::exists(fname))
+                    {
+                        QFile::remove(fname);
+                    }
+
+                    QString cmd = QString("unlzma ") + file;
+
+                    if (QProcess::execute(cmd) != 0)
+                    {
+                        parent->raise(PackageSystem::ProcessError, cmd);
+                    }
                 }
+
+                // Gérer le fichier
+                parts = file.section('/', -1, -1).split('.');
+                reponame = parts.at(0);
+                distroname = parts.at(1);
+                arch = parts.at(2);
+                istr = (parts.at(3) == "1");
+                method = parts.at(4);
             }
-
-            // Gérer le fichier
-            QStringList parts = file.section('/', -1, -1).split('.');
-            QString reponame = parts.at(0);
-            QString distroname = parts.at(1);
-            QString arch = parts.at(2);
-            bool istr = (parts.at(3) == "1");
-            QString method = parts.at(4);
+            else
+            {
+                istr = false;
+            }
 
             // Pas de passe 1 pour translate
             if (pass == 0 && istr) continue;
@@ -322,6 +350,12 @@ void DatabaseWriter::rebuild()
             {
                 line = fl.readLine().trimmed();
 
+                // Compter les lignes, pour identifier les paquets
+                if (!istr)
+                {
+                    numLine++;
+                }
+
                 if (pass == 0)
                 {
                     if (line.startsWith('['))
@@ -331,21 +365,6 @@ void DatabaseWriter::rebuild()
                         name = line;
                         name.replace('[', "");
                         name.replace(']', "");
-
-                        // Préparer pour la gestion des dépendances
-                        pkg->deps = depends.count();
-
-                        depends.append(QList<_Depend *>());
-
-                        // Ajouter le paquet
-                        packages.append(pkg);
-                        QByteArray key = name + "_" + distroname.toUtf8();
-                        index = packages.count()-1;
-                        packagesIndexes.insert(key, index);
-
-                        // Clef utiles
-                        pkg->distribution = stringIndex(distroname.toUtf8(), index, false, false);
-                        pkg->repo = stringIndex(reponame.toUtf8(), index, false, false);
 
                         // Initialisations
                         pkgname.clear();
@@ -375,12 +394,50 @@ void DatabaseWriter::rebuild()
                     else if (key == "Version")
                     {
                         pkgver = value;
-                        pkg->version = stringIndex(value, index, false, false);
-                        pkg->name = stringIndex(pkgname, index, false, true);
 
-                        // Si le nom est aussi ok, ajouter le couple clef/valeur
-                        if (!pkgname.isEmpty())
+                        // Vérifier que ce paquet à cette version n'existe pas déjà
+                        bool found = false;
+                        
+                        if (isInstalledPackages)
                         {
+                            if (knownPackages.contains(pkgname))
+                            {
+                                const QList<knownEntry *> entries = knownPackages.value(pkgname);
+
+                                foreach(knownEntry *entry, entries)
+                                {
+                                    if (entry->version == value)
+                                    {
+                                        found = true;
+                                        delete pkg;
+                                        pkg = entry->pkg;
+                                        index = packages.indexOf(pkg);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Si le nom est aussi ok, ajouter le couple clef/valeur
+                        if (!found)
+                        {
+                            // Ajouter le paquet aux listes, on peut maintenant
+                            pkg->deps = depends.count();
+
+                            depends.append(QList<_Depend *>());
+
+                            // Ajouter le paquet
+                            packages.append(pkg);
+                            index = packages.count()-1;
+
+                            // Clef utiles
+                            if (!isInstalledPackages)
+                            {
+                                pkg->repo = stringIndex(reponame.toUtf8(), index, false, false);
+                                pkg->idate = 0;
+                                pkg->iby = 0;
+                                pkg->state = PACKAGE_STATE_NOTINSTALLED;
+                            }
+                            
                             knownEntry *entry = new knownEntry;
                             knownEntries.append(entry);
                             
@@ -389,10 +446,21 @@ void DatabaseWriter::rebuild()
                             
                             knownPackages[pkgname].append(entry);
                         }
+
+                        pkg->version = stringIndex(value, index, false, false);
+                        pkg->name = stringIndex(pkgname, index, false, true);
                     }
                     else if (key == "Source")
                     {
                         pkg->source = stringIndex(value, index, false, false);
+                    }
+                    else if (key == "Maintainer")
+                    {
+                        pkg->maintainer = stringIndex(value, index, false, false);
+                    }
+                    else if (key == "Distribution")
+                    {
+                        pkg->distribution = stringIndex(value, index, false, false);
                     }
                     else if (key == "Section")
                     {
@@ -457,6 +525,38 @@ void DatabaseWriter::rebuild()
                             knownPackages[dep].append(entry);
                         }
                     }
+
+                    if (isInstalledPackages)
+                    {
+                        if (key == "InstalledDate")
+                        {
+                            pkg->idate = value.toInt();
+                        }
+                        else if (key == "InstalledRepo")
+                        {
+                            pkg->repo = stringIndex(value, index, false, false);
+                        }
+                        else if (key == "State")
+                        {
+                            pkg->state = value.toInt();
+                        }
+                        else if (key == "InstalledBy")
+                        {
+                            pkg->iby = value.toInt();
+                        }
+                        else if (key == "Title")
+                        {
+                            pkg->title = stringIndex(QByteArray::fromBase64(value.replace('"', "")), index, true, false);
+                        }
+                        else if (key == "ShortDesc")
+                        {
+                            pkg->short_desc = stringIndex(QByteArray::fromBase64(value.replace('"', "")), index, true, false);
+                        }
+                        else if (key == "LongDesc")
+                        {
+                            pkg->long_desc = stringIndex(QByteArray::fromBase64(value.replace('"', "")), index, true, false);
+                        }
+                    }
                 }
                 else if (pass == 1)
                 {
@@ -489,9 +589,20 @@ void DatabaseWriter::rebuild()
                         if (number == 0)
                         {
                             // Nom du paquet qui recoit
-                            name = line;
-                            index = packagesIndexes.value(name + "_" + distroname.toUtf8());
-                            pkg = packages.at(index);
+                            QList<QByteArray> parts = line.split(' ');
+                            
+                            name = parts.at(0);
+                            
+                            const QList<knownEntry *> entries = knownPackages.value(name);
+
+                            foreach(knownEntry *entry, entries)
+                            {
+                                if (entry->version == parts.at(1))
+                                {
+                                    pkg = entry->pkg;
+                                    index = packages.indexOf(pkg);
+                                }
+                            }
                         }
                         else if (number == 1)
                         {
@@ -520,13 +631,13 @@ void DatabaseWriter::rebuild()
                             name = line;
                             name.replace('[', "");
                             name.replace(']', "");
-                            index = packagesIndexes.value(name + "_" + distroname.toUtf8());
-                            pkg = packages.at(index);
+                            //index = packagesIndexes.value(numLine);
+                            //pkg = packages.at(index);
                         }
 
                         // Si la ligne ne contient pas un égal, on passe à la suivante (marche aussi quand la ligne commence par [)
                         if (!line.contains('=')) continue;
-                        if (pkg == 0) continue;
+                        //if (pkg == 0) continue;
 
                         // Lire les clefs et les valeurs
                         QList<QByteArray> parts = line.split('=');
@@ -540,6 +651,20 @@ void DatabaseWriter::rebuild()
                             value += parts.at(i);
                         }
 
+                        if (key == "Version")
+                        {
+                            // Retrouver le paquet du bon nom et de la bonne version
+                            const QList<knownEntry *> entries = knownPackages.value(name);
+
+                            foreach(knownEntry *entry, entries)
+                            {
+                                if (entry->version == value)
+                                {
+                                    pkg = entry->pkg;
+                                    index = packages.indexOf(pkg);
+                                }
+                            }
+                        }
                         if (key == "Depends")
                         {
                             setDepends(pkg, value, DEPEND_TYPE_DEPEND);
@@ -612,12 +737,19 @@ void DatabaseWriter::rebuild()
     }
 
     // Supprimer les fichiers temporaires
+    numFile = 0;
+    
     foreach (const QString &file, cacheFiles)
     {
-        QString fname = file;
-        fname.replace(".lzma", "");
+        numFile++;
 
-        QFile::remove(fname);
+        if (numFile != cacheFiles.count())
+        {
+            QString fname = file;
+            fname.replace(".lzma", "");
+
+            QFile::remove(fname);
+        }
     }
     
     // Nettoyer

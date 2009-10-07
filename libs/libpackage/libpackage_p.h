@@ -25,8 +25,10 @@
 
 struct _Package
 {
+    // TODO: Maintainer
     int32_t name;       // Index de la chaîne du nom
     int32_t version;    // Index de la chaîne de version
+    int32_t maintainer; // Index de la chaîne du nom du mainteneur
     int32_t title;      // Index de la chaîne de titre
     int32_t short_desc; // Index de la chaîne de description courte
     int32_t long_desc;  // Index de la chaîne de description longue
@@ -39,6 +41,10 @@ struct _Package
     int32_t deps;       // Index du tableau de dépendances
     int32_t isize;      // Taille de l'installation
     int32_t dsize;      // Taille du téléchargement
+
+    int32_t idate;      // Timestamp de l'installation
+    int32_t iby;        // UID de l'utilisateur ayant installé le paquet
+    int32_t state;      // Status du paquet (PACKAGE_STATE)
 };
 
 struct _String
@@ -104,6 +110,7 @@ class PackageSystemPrivate
 
         QString packageName(int index);
         QString packageVersion(int index);
+        QString packageMaintainer(int index);
         QString packageLongDesc(int index);
         QString packageShortDesc(int index);
         QString packageTitle(int index);

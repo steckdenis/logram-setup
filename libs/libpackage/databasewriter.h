@@ -61,7 +61,7 @@ class DatabaseWriter : public QObject
         QStringList cacheFiles;
 
         QList<_Package *> packages;
-        QHash<QByteArray, int> packagesIndexes;
+        //QHash<int, int> packagesIndexes;
         QList<_String *> strings;
         QList<_String *> translate;
         QHash<QByteArray, int> stringsIndexes;

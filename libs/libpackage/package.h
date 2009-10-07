@@ -52,6 +52,7 @@ class Package : public QObject
 
         QString name();
         QString version();
+        QString maintainer();
         QString shortDesc();
         QString longDesc();
         QString title();
@@ -61,15 +62,16 @@ class Package : public QObject
         QString distribution();
         QString license();
         QString url();
-        QString installedVersion();
+        
         QDateTime installedDate();
-        QString installedRepo();
-        QString installedBy();
-        bool isInstalled();
+        int installedBy();
+        int status();
+        
         int downloadSize();
         int installSize();
 
         QList<Depend *> depends();
+        QString dependsToString(const QList<Depend *> &deps, int type);
 
     signals:
         void installed();
@@ -118,5 +120,9 @@ class Depend
 #define DEPEND_OP_LOEQ       4   // <=
 #define DEPEND_OP_LO         5   // <
 #define DEPEND_OP_NE         6   // !=
+
+#define PACKAGE_STATE_NOTINSTALLED  0   // Non-installé
+#define PACKAGE_STATE_INSTALLED     1   // Installé
+#define PACKAGE_STATE_REMOVED       2   // Supprimé
 
 #endif

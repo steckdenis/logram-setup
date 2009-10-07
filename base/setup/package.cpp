@@ -128,7 +128,7 @@ void App::manageResults(Solver *solver)
 
         // Demander si c'est bon
         cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, installation de %5\n"
-                              "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ?")
+                              "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
                                   .arg(QString::number(index+1))
                                   .arg(QString::number(tot))
                                   .arg(weight)

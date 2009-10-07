@@ -270,6 +270,15 @@ QString PackageSystemPrivate::packageVersion(int index)
     return QString(string(m_strings, pkg->version));
 }
 
+QString PackageSystemPrivate::packageMaintainer(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->maintainer));
+}
+
 QString PackageSystemPrivate::packageLongDesc(int index)
 {
     _Package *pkg = package(index);

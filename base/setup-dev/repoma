@@ -100,6 +100,11 @@ include()
             if [ ${line:0:12} = "Distribution" ]; then
                 distrib=${line:13}
             fi
+
+            # Si on a la version, la prendre
+            if [ ${line:0:7} = "Version" ]; then
+                version=${line:8}
+            fi
         done < $INCOMING/$(basename $filename .tlz).control
 
         # Écrire dans dists/<distrib>/<arch>/parts/<d>/<name>.control, puisqu'on n'a
@@ -116,7 +121,7 @@ include()
         do
             cname=$cdir/$(basename $lang)
 
-            echo "$name" > $cname
+            echo "$name $version" > $cname
 
             # Lire les lignes
             step="0"
