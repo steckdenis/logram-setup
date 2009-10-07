@@ -402,7 +402,7 @@ void DatabaseWriter::rebuild()
                         {
                             if (knownPackages.contains(pkgname))
                             {
-                                const QList<knownEntry *> entries = knownPackages.value(pkgname);
+                                const QList<knownEntry *> &entries = knownPackages.value(pkgname);
 
                                 foreach(knownEntry *entry, entries)
                                 {
@@ -593,7 +593,7 @@ void DatabaseWriter::rebuild()
                             
                             name = parts.at(0);
                             
-                            const QList<knownEntry *> entries = knownPackages.value(name);
+                            const QList<knownEntry *> &entries = knownPackages.value(name);
 
                             foreach(knownEntry *entry, entries)
                             {
@@ -654,7 +654,7 @@ void DatabaseWriter::rebuild()
                         if (key == "Version")
                         {
                             // Retrouver le paquet du bon nom et de la bonne version
-                            const QList<knownEntry *> entries = knownPackages.value(name);
+                            const QList<knownEntry *> &entries = knownPackages.value(name);
 
                             foreach(knownEntry *entry, entries)
                             {
