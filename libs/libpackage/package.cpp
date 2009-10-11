@@ -153,6 +153,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     set->setValue("InstalledRepo", repo());
     set->setValue("InstalledBy", QString(getenv("UID")).toInt());
     set->setValue("State", PACKAGE_STATE_INSTALLED);
+    set->setValue("InstallRoot", d->ps->installRoot());
     set->endGroup();
 
     // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
@@ -164,7 +165,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 void Package::download()
 {
     // Télécharger le paquet
-    QString fname = "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
+    QString fname = d->ps->installRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
     QString r = repo();
     QString type = d->ps->repoType(r);
     QString u = d->ps->repoUrl(r) + "/" + url();

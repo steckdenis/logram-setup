@@ -47,7 +47,7 @@ void DatabaseWriter::download(const QString &source, const QString &url, const Q
     QString distro = url.section('/', -3, -3);
 
     QString fname = QString("%1.%2.%3.%4.%5.lzma").arg(source).arg(distro).arg(arch).arg(isTranslations).arg(type);
-    QString fileName("/var/cache/lgrpkg/download/");
+    QString fileName(parent->installRoot() + "/var/cache/lgrpkg/download/");
 
     fileName += fname;
     cacheFiles.append(fileName);
@@ -271,7 +271,7 @@ void DatabaseWriter::rebuild()
     parent->sendProgress(PackageSystem::UpdateDatabase, 0, 6, tr("Lecture des listes"));
 
     // On lit également la liste des fichiers installés
-    QString ipackagelist = "/var/cache/lgrpkg/db/installed_packages.list";
+    QString ipackagelist = parent->installRoot() + "/var/cache/lgrpkg/db/installed_packages.list";
     bool hasInstalledPackages = false;
     
     if (QFile::exists(ipackagelist))
@@ -770,7 +770,7 @@ void DatabaseWriter::rebuild()
     
     // Liste des paquets
     parent->sendProgress(PackageSystem::UpdateDatabase, 1, 6, tr("Génération de la liste des paquets"));
-    QFile fl("/var/cache/lgrpkg/db/packages");
+    QFile fl(parent->installRoot() +  "/var/cache/lgrpkg/db/packages");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -789,7 +789,7 @@ void DatabaseWriter::rebuild()
     // Chaînes de caractères
     fl.close();
     parent->sendProgress(PackageSystem::UpdateDatabase, 2, 6, tr("Écriture des chaînes de caractère"));
-    fl.setFileName("/var/cache/lgrpkg/db/strings");
+    fl.setFileName(parent->installRoot() + "/var/cache/lgrpkg/db/strings");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -815,7 +815,7 @@ void DatabaseWriter::rebuild()
     // Chaînes traduites
     fl.close();
     parent->sendProgress(PackageSystem::UpdateDatabase, 3, 6, tr("Écriture des traductions"));
-    fl.setFileName("/var/cache/lgrpkg/db/translate");
+    fl.setFileName(parent->installRoot() + "/var/cache/lgrpkg/db/translate");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -841,7 +841,7 @@ void DatabaseWriter::rebuild()
     // Dépendances
     fl.close();
     parent->sendProgress(PackageSystem::UpdateDatabase, 4, 6, tr("Enregistrement des dépendances"));
-    fl.setFileName("/var/cache/lgrpkg/db/depends");
+    fl.setFileName(parent->installRoot() + "/var/cache/lgrpkg/db/depends");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -879,7 +879,7 @@ void DatabaseWriter::rebuild()
     // StrPackages
     fl.close();
     parent->sendProgress(PackageSystem::UpdateDatabase, 5, 6, tr("Enregistrement de données supplémentaires"));
-    fl.setFileName("/var/cache/lgrpkg/db/strpackages");
+    fl.setFileName(parent->installRoot() + "/var/cache/lgrpkg/db/strpackages");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {

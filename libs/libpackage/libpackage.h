@@ -66,6 +66,7 @@ class PackageSystem : public QObject
         QString repoType(const QString &repoName);
         QString repoUrl(const QString &repoName);
         QSettings *installedPackagesList() const;
+        QStringList filesOfPackage(const QString &packageName);
 
         // Options
         bool installSuggests() const;

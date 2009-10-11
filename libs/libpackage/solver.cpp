@@ -197,7 +197,6 @@ void Solver::solve()
     // On peut supprimer les tables temporaires (pas d->lists !)
     d->wrongLists.clear();
     d->wantedPackages.clear();
-    d->wrongLists.clear();
 }
 
 void Solver::process(int index)
@@ -432,14 +431,14 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
         
         QList<int> pkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
 
-        if (pkgsToAdd.count() == 0)
+        if (pkgsToAdd.count() == 0 && act == Solver::Install)
         {
             // Aucun des paquets demandés ne convient, distribution cassée. On quitte la branche
             wrongLists << lists;
             return;
         }
 
-        // NOTE: Si A dépend de B=1.2 ou B=1.1, et qu'on supprime B=1.1, créer une branche où on
+        // TODO: Si A dépend de B=1.2 ou B=1.1, et qu'on supprime B=1.1, créer une branche où on
         // supprime A et B=1.1, et une branche où on supprime B=1.1 et installe B=1.2
         addPkgs(pkgsToAdd, lists, act);
     }

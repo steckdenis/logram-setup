@@ -32,7 +32,6 @@ using namespace std;
 void App::update()
 {
     // Mettre à jour la base de donnée
-
     ps->update();
 }
 
@@ -53,6 +52,16 @@ void App::find(const QString &pattern)
     }
 
     qDeleteAll(pkgs);
+}
+
+void App::showFiles(const QString &packageName)
+{
+    QStringList files = ps->filesOfPackage(packageName);
+
+    foreach(const QString &file, files)
+    {
+        cout << qPrintable(file);
+    }
 }
 
 void App::showpkg(const QString &name)

@@ -80,6 +80,12 @@ void App::manageResults(Solver *solver)
     int weight;
     int dlSize, instSize;
     char in;
+
+    if (tot == 0)
+    {
+        cout << endl << COLOR(tr("Aucune solution d'installation n'a été trouvée. Vérifiez que ce que vous demandez est possible"), "31") << endl << endl;
+        return;
+    }
     
     while (true)
     {

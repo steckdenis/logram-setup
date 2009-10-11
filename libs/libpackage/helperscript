@@ -27,7 +27,7 @@ depack()
     # $4 = préfixe d'installation
 
     # Créer le dossier temporaire de l'extraction
-    tempdir=/var/cache/lgrpkg/temp/$1_$2
+    tempdir=$4/var/cache/lgrpkg/temp/$1_$2
     mkdir -p $tempdir
 
     # Se placer dedans et y extraire l'archive
@@ -46,7 +46,7 @@ inst()
     # $3 = chemin du .tlz
     # $4 = préfixe d'installation
 
-    tempdir=/var/cache/lgrpkg/temp/$1_$2
+    tempdir=$4/var/cache/lgrpkg/temp/$1_$2
     pwd=$PWD
     cd $tempdir
 
@@ -56,7 +56,7 @@ inst()
     cat /tmp/$1$2_files | xargs "-d\n" cp -a --parents -t "$4"
 
     # Enregistrer la liste des fichiers dans la base de donnée (format texte)
-    dbdir=/var/cache/lgrpkg/db/pkgs/$1_$2
+    dbdir=$4/var/cache/lgrpkg/db/pkgs/$1_$2
     mkdir -p $dbdir
     
     mv /tmp/$1$2_files $dbdir/files.list

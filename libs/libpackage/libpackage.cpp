@@ -33,6 +33,8 @@
 #include <QNetworkReply>
 #include <QFile>
 
+#include <QtDebug>
+
 PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
 {
     d = new PackageSystemPrivate(this);
@@ -41,7 +43,7 @@ PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 
     d->set = new QSettings("/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
-    d->ipackages = new QSettings("/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
+    d->ipackages = new QSettings(installRoot() + "/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
 
     d->installSuggests = d->set->value("InstallSuggests", true).toBool();
     d->parallelInstalls = d->set->value("ParallelInstalls", 1).toInt();
@@ -174,6 +176,37 @@ Package *PackageSystem::package(const QString &name, const QString &version)
     pkg = new Package(i, this, d);
 
     return pkg;
+}
+
+QStringList PackageSystem::filesOfPackage(const QString &packageName)
+{
+    // Vérifier que le paquet existe
+    if (!d->ipackages->childGroups().contains(packageName))
+    {
+        return QStringList();
+    }
+
+    // La liste des fichiers se trouve dans /var/cache/lgrpkg/db/pkgs/<nom>_<version>/files.list
+    QString version = d->ipackages->value(packageName + "/Version").toString();
+    QString iroot = d->ipackages->value(packageName + "/InstallRoot").toString();
+    QString fileName = installRoot() + "/var/cache/lgrpkg/db/pkgs/" + packageName + "_" + version + "/files.list";
+
+    QFile fl(fileName);
+
+    if (!fl.open(QIODevice::ReadOnly))
+    {
+        raise(OpenFileError, fileName);
+    }
+
+    // Lire les lignes et les ajouter au résultat
+    QStringList rs;
+
+    while (!fl.atEnd())
+    {
+        rs.append(fl.readLine().replace("./", iroot.toAscii() + "/"));
+    }
+
+    return rs;
 }
 
 Solver *PackageSystem::newSolver()

@@ -129,6 +129,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 
         add(packages);
     }
+    else if (cmd == "files")
+    {
+        showFiles(args.at(2));
+    }
 }
 
 void App::help()
@@ -144,6 +148,7 @@ void App::help()
     cout << "    showpkg <name>     Show the informations of the package <name>" << endl;
     cout << "    update             Update the packages' database" << endl;
     cout << "    add <packages>     Add packages (prepend them with \"-\" to remove)" << endl;
+    cout << "    files <pkg>        Show the list of the files in the installed package <pkg>" << endl;
 
     cout << endl;
     cout << "Options :" << endl;

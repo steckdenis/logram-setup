@@ -49,6 +49,7 @@ class App : public QCoreApplication
         void showpkg(const QString &name);
         void update();
         void add(const QStringList &packages);
+        void showFiles(const QString &packageName);
 
     public slots:
         void error(PackageSystem::Error err, const QString &info);
