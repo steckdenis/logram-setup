@@ -331,7 +331,7 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
 
     for(int i=0; i<list.count(); ++i)
     {
-        Pkg pk = list.at(i);
+        const Pkg &pk = list.at(i);
         _Package *lpkg = psd->package(pk.index);
 
         // Voir si on a déjà dans la liste un paquet du même nom que nous
@@ -355,12 +355,7 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
             else
             {
                 // Les versions ne sont pas les mêmes
-                if (pk.action != action)
-                {
-                    // Par exemple, supprimer foo-1.2 et installer foo-1.3, c'est ok
-                    return;
-                }
-                else
+                if (pk.action == action)
                 {
                     // Contradiction, on ne peut pas par exemple installer deux versions les mêmes
                     wrongLists.append(listIndex);
@@ -375,6 +370,41 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
     pkg.index = packageIndex;
     pkg.action = action;
     packages[listIndex].append(pkg);
+
+    // Si on veut supprimer le paquet et que le paquet n'est pas installé, quitter
+    if (action == Solver::Remove && mpkg->state != PACKAGE_STATE_INSTALLED)
+    {
+        return;
+    }
+
+    // Si on veut installer un paquet déjà installé, quitter
+    if (action == Solver::Install && mpkg->state == PACKAGE_STATE_INSTALLED)
+    {
+        return;
+    }
+
+    // Si on installe le paquet, vérifier que d'autres versions ne sont pas installées
+    if (action == Solver::Install)
+    {
+        QList<int> otherVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
+        
+        foreach(int otherVersion, otherVersions)
+        {
+            _Package *opkg = psd->package(otherVersion);
+            
+            // NOTE: le "&& opkg->name == mpkg->name" permet d'avoir deux paquets fournissant le même provide ensemble
+            if (opkg->state == PACKAGE_STATE_INSTALLED && opkg->version != mpkg->version && opkg->name == mpkg->name)
+            {
+                // Supprimer le paquet
+                QList<int> pkgsToAdd;
+                pkgsToAdd.append(otherVersion);
+
+                addPkgs(pkgsToAdd, lists, Solver::Remove);
+
+                break;  // On n'a qu'une seule autre version d'installée, normalement
+            }
+        }
+    }
 
     // Explorer les dépendances du paquet
     QList<_Depend *> deps = psd->depends(packageIndex);
@@ -396,7 +426,6 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
         else if (dep->type == DEPEND_TYPE_REVDEP && action == Solver::Remove)
         {
             act = Solver::Remove;
-            // TODO: Vérifier que la dépendance inverse est installée avant de surcharger l'arbre
         }
 
         if (act == Solver::None) continue;
@@ -409,7 +438,9 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
             wrongLists << lists;
             return;
         }
-            
+
+        // NOTE: Si A dépend de B=1.2 ou B=1.1, et qu'on supprime B=1.1, créer une branche où on
+        // supprime A et B=1.1, et une branche où on supprime B=1.1 et installe B=1.2
         addPkgs(pkgsToAdd, lists, act);
     }
 
