@@ -1,0 +1,129 @@
+<page title="L'interface : ce que vous voyez">
+    <text>
+        C'en est enfin fini avec les entrailles de l'ordinateur. Tout ce qui sera expliqué à partir de maintenant et dans le reste de l'assistant, vous pourrez le voir. Avant de continuer, si vous vous sentez un peu fâtigué, faites une petit pose. Après cela, si votre mémoire vous joue des tours, relisez les quelques pages précédantes, en cliquant sur le bouton «Précédant» en dessous de la ligne de séparation.
+    </text>
+    <text>
+        Les logiciels sont très utiles, mais ils ne sont pas très visibles. Par exemple, le texte que vous voyez est affiché par un logiciel, mais saviez-vous que c'en était un ? Dans cette page, nous allons découvrir la manière dont les logiciels s'affichent à l'écran, et comment vous pouvez interagir avec.
+    </text>
+    <text>
+        Pour faciliter l'apprentissage, une nouvelle fonctionnalité de l'Assistant fait son apparition. Regardez attentivement les boutons en dessous de la barre de séparation, et vous constaterez qu'il y en a un qui semble avoir changé. Au lieu d'afficher «Page suivante» en gris, il affiche maintenant «Page suivant (1/8)», en noir. Le fait qu'il s'affiche en noir indique que vous pouvez cliquer dessus.
+    </text>
+    <text>
+        Les pages de l'assistant peuvent en effet être découpées en [em]sous-pages[/em]. Avec le bouton «Suivant», vous passez de pages en pages, d'idées en idées, et vous apprenez quelque-chose de différent. Les sous-pages sont utiles quand il faut mettre trop de texte dans une page, ce qui la ferait dépasser au bas de l'Assistant, et ce ne serait absolument pas beau. Les sous-pages continuent une même idée. Par exemple, les sous-pages que vous allez lire vont vous apprendre à utiliser l'interface des logiciels.
+    </text>
+    <text>
+        Pour commencer avec la première étape, cliquez sur «Page suivante».
+    </text>
+    <page />
+    <text>
+        Magnifique, vous avez trouvé le bouton !
+    </text>
+    <text>
+        Une interface est constituée d'éléments. Vous en connaissez déjà un, ce sont les boutons, que vous pouvez cliquer. Vous apprendrez plus tard à reconnaître tous les éléments possibles, et à les utiliser. Nous allons d'abord commencer par apprendre le plus important : les [em]fenêtres[/em].
+    </text>
+    <text>
+        Non, les [em]fenêtres[/em] ici ne sont pas les fenêtres que vous avez dans une pièce. Ce sont des rectangles à l'écran contenant l'interface d'un logiciel. Chaque logiciel a sa fenêtre, chaque fenêtre appartient à un logiciel. Tout ce que le logiciel affiche est contenu dans sa fenêtre. Ça permet de garder l'écran bien rangé, sans que les logiciels «se mélangent».
+    </text>
+    <image path="img/window.png" tooltip="Une fenêtre classique" />
+    <text>
+        Voici la photo d'une fenêtre plus ou moins normale, d'un vrai programme. Pour les curieux, ce programme est un [em]éditeur de texte[/em]. Il vous permet de taper du texte et de l'enregistrer dans un fichier.
+    </text>
+    <text>
+        Cliquez sur «Page suivante» pour commencer l'exploration de cette fenêtre.
+    </text>
+    <page />
+    <image path="img/window.png" tooltip="Une fenêtre classique" />
+    <text>
+        Cette fenêtre est constituée d'éléments lui permettant de se différencier des autres. Voici la liste de ces composants :
+    </text>
+    <text>
+        [ul]
+        [li]L'[b]icône[/b] vous permet de rapidement repérer une fenêtre. Ici, l'icône de l'éditeur de texte est une feuille de papier sur laquelle on écrit.[/li]
+        [li]La [b]barre de titre[/b] contient le nom de la fenêtre, et d'autres informations. Ici, c'est le nom du fichier ouvert (il n'en n'a pas encore), et le nom du logiciel utilisé.[/li]
+        [li]Les [b]boutons[/b] de la barre de titre vous permettent de modifier la fenêtre et de la fermer. La petite croix vous permet de fermer la fenêtre, c'est tout ce qu'il y a à retenir.[/li]
+        [li]La [b]barre de menus[/b] contient la liste de tout ce que le logiciel sait faire, vous le découvrirez plus tard.[/li]
+        [li]La [b]barre d'actions[/b] contient les actions les plus souvent utilisées, pour ne pas devoir naviger dans les menus. Vous découvrirez cela également un peu plus tard.[/li]
+        [li]La [b]zone de contenu[/b] est l'espace de travail du logiciel. C'est comme une feuille de papier, dans le cas d'un éditeur de texte.[/li]
+        [li]La [b]zone de notifications[/b] vous informe de l'état du logiciel, s'il fait quelque-chose, s'il attend quelque-chose, etc. Ce n'est pas très utile, sauf dans certains cas.[/li]
+        [/ul]
+    </text>
+    <text>
+        Cliquez sur «Page suivante», et nous allons découvrir comment gérer les fenêtres. Elles permettent plein de choses.
+    </text>
+    <page />
+    <text>
+        Une fenêtre peut donc être qualifiée de «conteneur». Elle contient toute l'interface de son logiciel.
+    </text>
+    <text>
+        Si les fenêtres n'étaient que des rectangles, il serait bien difficile d'utiliser un ordinateur. Heureusement, il est possible de gérer finement les fenêtres, et c'est ce que nous allons apprendre ici.
+    </text>
+    <text>
+        Tout d'abord, sachez que l'Assistant est contenu dans sa propre fenêtre, la seule qui est normalement affichée à l'écran. Elle va donc vous servir à tester tout ce qui est dit ici, pour enfin passer dans le concret, et commencer à utiliser votre ordinateur.
+    </text>
+    <text>
+        Une fenêtre est déplaçable, ce qui veut dire que vous pouvez la bouger sur tout l'écran, comme une feuille de papier sur votre bureau. Pour tester, déplacez le curseur de la souris sur la [em]barre de titre[/em], qui contient «L'interface : ce que vous voyez - Logram Assistant». Une fois la souris dessus, cliquez avec le bouton gauche (droit pour les gauchers). Tout en maintenant ce bouton enfoncé, déplacez la souris. La fenêtre la suit !
+    </text>
+    <text>
+        Vous pouvez donc déplacer cette fenêtre où vous voulez, et par la même occasion découvrir ce qu'il y a en dessous. En effet, si plusieurs fenêtres sont ouvertes (vous tapez un texte et regardez des photos par exemple), une fenêtre peut passer au-dessus d'une autre. On l'appelle la «fenêtre de premier-plan». Si vous cliquez sur la barre de titre de la fenêtre qu'elle cache, cette fenêtre repasse au dessus. C'est comme si vous avez plusieurs feuilles sur votre bureau, qui peuvent se chevaucher, et passer les unes au-dessus des autres.
+    </text>
+    <text>
+        On peut faire d'autres choses avec les fenêtres, mais vous découvrirez ça en temps voulu, quand vous saurez «revenir en arrière» (on peut cacher les fenêtres, mais si on ne sait pas les retrouver, c'est plus embêtant). C'en est donc fini pour les fenêtres, et nous allons pouvoir passer à la suite ! N'oubliez pas de cliquer sur «Page suivante» à chaque fois pour continuer.
+    </text>
+    <page />
+    <text>
+        Une fenêtre contient des [em]contrôles[/em], et c'est maintenant que vous allez les découvrir. Un contrôle est un simple élément graphique accomplissant une tâche très simple. Il en existe de toutes sortes, pour qu'ensemble, ils forment le logiciel que vous utilisez. Voici la liste des contrôles :
+    </text>
+    <image path="img/button.png" tooltip="Un bouton. N'essayez pas de cliquer dessus, c'est une image" />
+    <text>
+        Vous connaissez déjà les boutons. Ce sont eux qui permettent de facilement «donner des ordres» aux logiciels et à l'ordinateur. Ils contiennent un texte décrivant ce qu'ils font, et parfois une icône (petite image permettant de rapidement identifier leur fonctionnement, visuellement).
+    </text>
+    <image path="img/checkboxes.png" tooltip="Cases à cocher et d'options" />
+    <text>
+        Ces contrôles, que vous n'avez encore jamais vu, permettent tout deux de choisir des options. Ceux en forme de rond ne permettent de choisir qu'une option dans le groupe (une porte est soit ouverte, soite fermée, pas les deux). Ceux en carrés permettent de [em]cocher[/em] autant de cases que vous voulez (vous pouvez avoir une voiture, un vélo, ou les deux).
+    </text>
+    <image path="img/lineedit.png" tooltip="Une zone de texte" />
+    <text>
+        Ceci est un contrôle qui nécessite de taper au clavier. Quand il est entouré de bleu, comme ici, c'est qu'il vous demande d'entrer du texte. Généralement, le type du texte à entrer est marqué à côté (par exemple : «Votre nom : »). S'il n'est pas entouré de bleu, c'est qu'il ne vous demande rien, et que vous pouvez l'ignorer. Si vous voulez lui dire quelque-chose, donc explicitement entrer du texte (par exemple, pour corriger une erreur), cliquez dessus. Il s'entoure instantanément de bleu, prêt à accueillir votre saisie.
+    </text>
+    <image path="img/spinbox.png" tooltip="Boîtes à nombres" />
+    <text>
+        Ces deux contrôles vous permettent de donner des nombres à l'ordinateur (votre âge par exemple). Le premier vous permet de l'entrer au clavier, pour plus de précision. Il s'entoure de bleu comme la zone de texte. Le deuxième est un peu plus compliqué à utiliser : placez le curseur de la souris sur la petite partie qui ressord, cliquez, maintenez le bouton enfoncé et glissez. Une fois fini, relâchez la souris.
+    </text>
+    <page />
+    <image path="img/textedit.png" tooltip="Zone de texte riche" />
+    <text>
+        Voici le premier des [em]contrôles riches[/em] que vous allez découvrir. Ils sont composés de plusieurs contrôles plus simples, et permettent plus de choses. Celui-ci contient du texte sur plusieurs lignes, et s'utilise comme une zone de texte normale (vous cliquez dessus et entrez du texte). Au passage, pour commencer une nouvelle lignes, appuyez sur la touche «Entrée», à droite des lettres, avec une flèche qui descent puis qui va à gauche. C'est une grosse touche, bien visible. À droite du texte se trouve un contrôle appelé «ascenseur». Si vous cliquez sur les petites flèches, vous pouvez monter et descendre dans le texte (pour voir un morceau qui ne rentrerait pas dans la partie blanche). L'élément spécial au centre vous permet de voir où vous en êtes dans le texte (au début, au milieu, à la fin, etc).
+    </text>
+    <image path="img/progressbar.png" tooltip="Barre de progression" />
+    <text>
+        Tous les traitements faits par un ordinateur ne sont pas instantanés, et un contrôle a été créé pour vous montrer l'était d'avancement d'une tâche longue. Au début, la [em]barre de progression[/em] est vide. Au fur et à mesure de la progression, elle se remplit de plus en plus, jusqu'à être entièrement pleine. Dans ce cas, c'est que le traitement est fini. Elle peut alors disparaître, ou un message vous dira ce qui s'est passé.
+    </text>
+    <text>
+        Allez, plus que deux contrôles, et vous découvrire la pièce finale du puzzle, la pièce la plus belle. Vous ne le regretterez pas !
+    </text>
+    <page />
+    <image path="img/menu.png" tooltip="Un menu" />
+    <text>
+        Quand vous avez appris à vous servir des fenêtres, vous avez vu qu'elles disposent de «barre de menus». La barre de menus est une suite de textes agissant presque comme des boutons. Si vous cliquez dessus, un [em]menu[/em] apparaît. Un menu est, comme le montre l'image ci-dessus, une suite d'éléments de texte s'utilisant également comme des boutons. Quand vous cliquez dessus, l'action marquée dessus est éxécutée.
+    </text>
+    <text>
+        Les éléments avec une petite flèche sur la droite ouvrent un autre menu, appelé «sous-menu». Ainsi, les actions possibles peuvent être classées et regroupées de manière à être plus facilement retrouvables. Quand vous cliquez sur un élément de menu, le menu se ferme pour vous laisser continuer à travailler. Si vous avez ouvert un menu par erreur et que vous voulez le fermer, cliquez simplement en dehors, n'importe où, ou de préférence, appuyez sur la touche «Échappement», tout à fait en haut à gauche du clavier.
+    </text>
+    <text>
+        Les menus seront beaucoup utilisés dans l'Assistant. Quand vous devrez utiliser un menu, ce sera marqué par exemple [b]Outils»Importation»Avec filtre...[/b], ce qui veut dire que vous devrez cliquer sur le menu «Outils», puis sur l'élément «Importation», puis sur l'élément «Avec filtre...» dans le sous-menu qui s'affiche. Les trois points indiquent que cette action va ouvrir une [em]boîte de dialogue[/em], c'est à dire une nouvelle fenêtre vous demandant des informations. Vous découvrirez les boîtes de dialogue plus tard.
+    </text>
+    <page />
+    <image path="img/toolbar.png" tooltip="Une barre d'actions" />
+    <text>
+        Ceci est le dernier contrôle que vous découvrirez dans l'Assistant. Avec les menus et les boutons, il vous permet de donner des ordres au logiciel qui l'affiche. Tout ce qui peut être fait avec la barre d'actions peut être fait depuis les menus, ce n'est qu'un raccourcis vers les éléments les plus utilisés dans le menu, avec une belle icône pour rapidement repérer ce que vous cherchez. Une barre d'outils s'utilise comme un ensemble de boutons : vous cliquez sur l'icône de l'action que vous souhaitez faire, et l'action est éxécutée.
+    </text>
+    <text>
+        Voilà, c'est fini pour cette longe page découpée en sous-pages. Vous connaissez maintenant les principaux contrôles qui existent. Il se peut que vous en rencontriez d'autres, mais ce sont généralement des assemblages d'autres contrôles, plus simples, que vous connaissez.
+    </text>
+    <text>
+        Comme promis, vous allez maintenant plonger dans la découverte active de votre ordinateur, maintenant que les bases sont préparées. Vous allez découvrir ce qu'est l'environnement, et apprendre à l'utiliser. Une fois que vous saurez faire ça, vous aurez fini la première partie de l'assistant et vous pourrez passer à la véritable utilisation de votre ordinateur.
+    </text>
+    <text>
+        Cliquez sur le bouton «Suivant» pour passer à la page sur l'environnement.
+    </text>
+</page>

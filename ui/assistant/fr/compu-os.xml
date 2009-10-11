@@ -1,0 +1,14 @@
+<page title="Le système d'exploitation : l'âme">
+    <text>
+        Un ordinateur tout seul ne sait rien faire, tout juste s'alumer, et encore, pas totalement.
+    </text>
+    <text>
+        Pour lui donner vie, il faut un [em]programme[/em] spécial, qui agit comme une âme pour l'ordinateur. Un programme est une suite d'instructions qui dit tout ce qu'il doit faire à l'ordinateur. Par exemple, «va dans la cuisine, allume la cafetière, mets une tasse, appuie sur le bouton» pourrait être le programme permettant à l'ordinateur de vous faire votre café préféré.
+    </text>
+    <text>
+        Le rôle du système d'exploitation est de contrôler l'ordinateur. Un ordinateur est une machine tellement complexe qu'elle ne sait pas elle-même de quoi elle est constituée, et comment elle fonctionne. Le système d'exploitation passe donc son temps à lui expliquer, patiemment, toutes les étapes et tous les composants à utiliser pour éxécuter la moindre action.
+    </text>
+    <text>
+        Par exemple, quand vous déplacez la souris, le système d'exploitation explique à l'ordinateur comment faire pour faire bouger le curseur à l'écran. Il s'occupe également d'autres choses, comme de la gestion du clavier (à la base, l'ordinateur ne sait pas ce qu'il y a d'écrit sur les touches, c'est le système d'exploitation qui traduit et affiche la lettre correspondante).
+    </text>
+</page>

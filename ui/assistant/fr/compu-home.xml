@@ -1,9 +1,24 @@
 <page title="Découvrir l'ordinateur">
     <text>
-        Bla bla bla, j'aime dore le texte très long qui ne racconte rien :-°
+        Bienvenue dans cette première étape de l'Assistant ! Toute l'équipe de Logram vous remercie de suivre cette documentation.
     </text>
-    <page />
     <text>
-        Et moi je suis la page 2 :)
+        Dans cette partie, vous allez apprendre les bases de l'utilisation d'un ordinateur, ainsi que quelques informations plus avancées sur son utilisation.
     </text>
+    <text>
+        Pour être certain que vous compreniez bien tout, nous allons commencer par les bases, c'est à dire l'interaction avec la souris. Si quelqu'un est actuellement en train de manipuler l'ordinateur à votre place pour vous montrer l'assistant, n'ayez crainte, vous vous débrouillerez dès la prochaine étape.
+    </text>
+    <text>
+        Nous allons commencer par le strict nécessaire que vous devez maîtriser avant de continuer : l'utilisation basique de la souris, et l'utilisation basique de l'assistant.
+    </text>
+    <text>
+        [img src="img/mouse.png" title="Une souris classie" style="float:left;" /]La souris est un objet posé sur le bureau, que vous tenez dans la main droite (la gauche pour les gauchers). Quand vous la déplacez, une petite flèche (appelée [em]curseur[/em]) bouge à l'écran. Elle dispose également d'au moins deux boutons : un à gauche, l'autre à droite. En combinant ce déplacement et le [em]clic[/em], vous pouvez précisément contrôler l'ordinateur.
+    </text>
+    <text>
+        [b]Remarque :[/b] Sur les ordinateurs portables, il se peut que vous n'ayez pas une souris de cette sorte, mais une petite palette sous le clavier. Pour déplacer le curseur, posez délicatement un doigt sur la palette, et faites-le glisser. Pour cliquer, donnez une légère tappe dans la palette. C'est un peu plus difficile à utiliser qu'une souris, mais c'est moins encombrant.
+    </text>
+    <text>
+        Comme premier exercice, et pour vous familiariser avec la souris, déplacez la souris jusqu'à ce que le curseur soit sur le bouton ci-dessous, et poussez sur le bouton gauche (droit pour les gauchers) :
+    </text>
+    <button to="compu-known.xml" title="Apprendre la suite des bases (cliquez ici)" />
 </page>

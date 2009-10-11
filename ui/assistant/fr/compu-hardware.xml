@@ -1,0 +1,16 @@
+<page title="Le matériel : l'ordinateur lui-même">
+    <text>
+        Félicitations, vous avez décidé d'en apprendre plus. Vous verrez que ces quelques pages supplémentaires vous aideront à mieux comprendre ce qui se passera une fois que vous utiliserez pleinement votre ordinateur.
+    </text>
+    <text>
+        Un ordinateur est avant tout une machine comme une autre, constituée de métal, de plastique, et de tout un tas de choses. Les composants de l'ordinateur sont assemblés avec précision pour former la machine que vous avez sous les yeux : une concentration de technologie à votre service.
+    </text>
+    <text>
+        Il existe deux types d'ordinateurs : les ordinateurs «de bureau», constitués d'éléments séparés (une [em]tour[/em] contenant le corps, mais aussi un écran, un clavier, une souris, peut-être des hauts-parleurs, une imprimante, etc), et les ordinateurs «portables», bien plus compacts et constitués d'un seul élément.
+    </text>
+    <image path="img/computer-desktop.png" tooltip="Un ordinateur de bureau" />
+    <image path="img/computer-laptop.png" tooltip="Un ordinateur portable" />
+    <text>
+        [em]note : quand des images sont affichées ainsi, et que vous placez le curseur de la souris dessus pendant quelques secondes sans le bouger, un petit texte d'aide apparaît. Déplacez à nouveau la souris pour qu'il parte.[/em]
+    </text>
+</page>

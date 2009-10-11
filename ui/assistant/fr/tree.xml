@@ -2,22 +2,16 @@
     <page title="Découvrir l'ordinateur" page="compu-home.xml">
         <page title="Savoir nécessaire pour continuer" page="compu-known.xml" />
         <page title="Maîtriser la souris" page="compu-mouse.xml" />
-        <page title="Maîtriser le clavier" page="compu-keyboard.xml" />
+        <page title="Découvrir le clavier" page="compu-keyboard.xml" />
         <page title="Structure d'un ordinateur" page="compu-struct.xml">
             <page title="Le matériel" page="compu-hardware.xml" />
             <page title="Le système d'exploitation" page="compu-os.xml" />
-            <page title="Les fichiers" page="compu-files" />
+            <page title="Les fichiers" page="compu-files.xml" />
             <page title="Les logiciels" page="compu-software.xml" />
             <page title="L'interface" page="compu-interface.xml" />
             <page title="L'environnement" page="compu-environment.xml" />
         </page>
-        <page title="Ce qui vous attend en partie 3">
-            <page title="Les réseaux" page="compu-network.xml" />
-            <page title="Internet" page="compu-internet.xml" />
-            <page title="Gestion des programmes" page="compu-packages.xml" />
-            <page title="Gestion des fichiers" page="compu-filemanagment.xml" />
-            <page title="L'administration" page="compu-admin.xml" />
-        </page>
+        <page title="Ce qui vous attend dans la suite" page="compu-next.xml" />
     </page>
     
     <page title="Découvrir Linux" page="linux-home.xml">

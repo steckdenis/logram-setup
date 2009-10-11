@@ -21,5 +21,5 @@
     <text>
         Que l'aventure commence !
     </text>
-    <image path="img/logram-logo.png" tooltip="Image de test" />
+    <image path="img/logram-logo.png" tooltip="Logo de la distribution Logram" />
 </page>

@@ -1,0 +1,17 @@
+<page title="Les fichiers : la mémoire de l'ordinateur">
+    <text>
+        Le système d'exploitation s'occupe du contrôle de l'ordinateur, mais ce n'est pas suffisant. En effet, il faut que l'ordinateur se rappelle de ce que vous lui dite, comme il doit se rappeler de son système d'exploitation (il ne sait pas de quoi il est constitué, donc il ne sait pas se créer tout seul un système d'exploitation).
+    </text>
+    <text>
+        La notion de [em]fichier[/em] est relativement complexe, mais est nécessaire. Pour facilité la compréhension, nous allons établir en parallèle avec la vie réelle.
+    </text>
+    <text>
+        Imaginez que vous travaillez dans un bureau. Vous manipulez ce qui vous entoure et réfléchissez. On va dire que votre bureau est l'ordinateur (le matériel, dépourvu de toute intelligence) que vous êtes le système d'exploitation (l'intelligence qui permet au reste de fonctionner, donc au travail d'être fait, en utilisant les composants qui tous seuls ne savent rien faire). Maintenant, vous avez besoin d'une information, un dossier, une photo, etc. Comment la trouver ?
+    </text>
+    <text>
+        Vous avez certainement votre propre manière de ranger vos affaires et de les retrouver. L'ordinateur a aussi sa manière : il utilise les fichiers. Un fichier est un petit emplacement dans l'ordinateur dans lequel on peut placer tout type d'information (une photo, une musique, etc). Comme garder une liste de fichiers est impossible (imaginez 2000 photos, comment vite en retrouver une ?), les fichiers sont classés par dossiers. Ainsi, vous pouvez rassembler les photos de vacances ensemble, celles de votre mariage dans un autre dossier, etc. Un dossier peut lui-même être contenu dans un autre dossier, et ainsi de suite, autant que vous voulez.
+    </text>
+    <text>
+        La partie complexe de la notion est que tout cela est virtuel. Le fichier n'existe pas vraiment, vous ne pouvez pas le toucher. Par contre, il existe dans votre ordinateur ce qu'on appelle un «disque dur», c'est à dire une petite boîte contenant des plateaux métalliques. Les informations (fichiers, dossiers et contenus) sont enregistrés dessus grâce à des champs magnétiques, comme un film est enregistré sur une casette vidéo. Quand vous voulez voir une photo, le système d'exploitation envoie les commandes nécessaires au disque dur pour qu'il lise le fichier, puis l'affiche. C'est comme quand vous prenez un classeur, le feuilletez, et en sortez la feuille qui vous intéresse.
+    </text>
+</page>

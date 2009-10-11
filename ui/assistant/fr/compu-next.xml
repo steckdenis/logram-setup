@@ -1,0 +1,27 @@
+<page title="Ce qui vous attend dans la suite">
+    <text>
+        Cette première partie de l'Assistant est maintenant finie. Vous allez pouvoir passer en partie deux. Elle contient des informations très intéressantes pour la suite, et est une bonne préparation pour la partie trois. Vous savez maintenant interagir basiquement avec votre ordinateur. Il se pourrait même qu'à force de découverte et de curiosité, vous parveniez à l'utiliser tout seul. Néanmoins, les parties suivantes sont là pour que vous appreniez plus facilement et plus rapidement.
+    </text>
+    <text>
+        Voici la liste des gros chapitres que vous avez à découvrir :
+    </text>
+    <text>
+        [b]Les réseaux[/b] permettent de connecter plusieurs ordinateurs ensemble et de les faire parler. Vous pouvez ainsi échanger des documents entre tous les ordinateurs de votre maison sans vous lever de votre chaise.
+    </text>
+    <text>
+        [b]Internet[/b] est un réseau, mais couvrant le monde entier. Il vous permet de communiquer avec tout le monde. Internet est un endroit magnifique, mais comme tout endroit publique, il faut être prudent. On peut y vivre de très belles choses comme on peut y perdre beaucoup.
+    </text>
+    <text>
+        [b]La gestion des programmes[/b] vous apprendra à utiliser tout ce qui se trouve sur votre ordinateur, ainsi qu'à installer ou supprimer des logiciels supplémentaires.
+    </text>
+    <text>
+        [b]La gestion des fichiers[/b] vous permetta d'enfin gérer vous-même vos fichiers, et de leur donner un aspect plus concret. Vous verrez que si vous n'avez pas bien compris le chapitre sur les fichiers, il sera tout de suite plus clair.
+    </text>
+    <text>
+        [b]L'administration[/b]. Vous êtes le maître de votre ordinateur, et votre ordinateur est à votre service. L'administration conciste à le configurer pour qu'il fasse ce que vous voulez comme vous voulez. Elle permet aussi de le maintenir en forme.
+    </text>
+    <text>
+        Tout ceci est un programme bien chargé. Pour le moment, concentrez-vous sur la partie deux. Pour le plaisir, voici le bouton de la première page. Le cliquer est un geste significatif : vous avez déjà fait un tiers du chemin, l'ordinateur n'est plus pour vous une boîte magique, il commence à prendre vie !
+    </text>
+    <button to="linux-home.xml" title="Je connais les ordinateurs, mais pas Linux" />
+</page>

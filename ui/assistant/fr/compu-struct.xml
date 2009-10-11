@@ -1,0 +1,12 @@
+<page title="Structure d'un ordinateur">
+    <text>
+        Maintenant que vous savez interagir avec l'ordinateur, nous allons un peu explorer sa structure. Le but des pages suivantes est de le transformer de «boîte magique» à «appareil que je comprends».
+    </text>
+    <text>
+        Lire ces pages est vraiment conseillé. Si vous ne le souhaitez pas, cliquez simplement sur «Suivant», pour passer à la suite. Si vous êtes intéressé, cliquez sur ce bouton :
+    </text>
+    <button to="compu-hardware.xml" title="En apprendre plus sur l'ordinateur" />
+    <text>
+        Ce choix (cliquer sur «Suivant» ou sur un autre bouton) sera présent tout au long de l'Assistant. Il vous permet de personnaliser votre apprentissage et de ne lire que ce que vous souhaitez. Sans le savoir, c'est quelque-chose que vous avez déjà fait sur la toute première page, en cliquant (ou en faisant cliquer) sur «Je ne connais rien aux ordinateurs».
+    </text>
+</page>

@@ -1,0 +1,21 @@
+<page title="Découverte du clavier">
+    <text>
+        Si l'ordinateur ne devait comprendre que la souris, il serait bien difficile à utiliser. Ce serait comme vouloir raconter une histoire à une personne totalement sourde et aveugle, ne comprenant que quand vous la touchez directement.
+    </text>
+    <text>
+        Heureusement, l'ordinateur n'est pas de ce style. Vous pouvez communiquer au moyens du clavier, lui «parler», en écrivant des mots.
+    </text>
+    <image path="img/keyboard.png" tooltip="Un clavier standard" />
+    <text>
+        Le clavier est plus grand que la souris, et se présente sous une forme plus ou moins rectangulaire. Il est composé de [em]touches[/em], c'est à dire de petits morceaux généralement en plastique qui s'enfoncent quand on appuie dessus.
+    </text>
+    <text>
+        Quand l'ordinateur vous le demande, ou quand vous le lui demandez, vous pouvez entrer du texte à l'écran. Pour cela, appuyez successivement sur les touches du clavier qui portent une lettre. La lettre apparaîtra en minuscule.
+    </text>
+    <text>
+        Pour les majuscules, c'est déjà plus compliqué. Il faut en effet appuyer sur deux touches en même temps : la touche [em]majuscule[/em] (représentant une flèche vers le haut, en bas tout à fait à gauche du clavier), et, tout en la maintenant enfoncée, la touche portant la lettre que vous voulez taper. Une fois la lettre tapée (elle apparaît en majuscule), vous pouvez relâcher la touche majuscule. Les autres lettres seront à nouveau en minuscule. Notez que si vous la maintenez enfoncée, vous pourrez taper plusieurs lettres de suite en majuscule.
+    </text>
+    <text>
+        Pour taper des accents, il faut utiliser les touches juste au-dessus des lettres, avec des nombres dessus. Sous le nombre de chaque touche se trouve le caractère qui sera tapé si vous appuyez sur la touche. Si vous maintenez la touche [em]majuscule[/em] enfoncée, c'est le nombre qui sera tapé.
+    </text>
+</page>
