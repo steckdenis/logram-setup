@@ -113,6 +113,7 @@ binaries()
         export v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
 
         # Obtenir les dépendances
+        export GUI="false"
         d_$binary
         
         # Obtenir la distribution dans laquelle le paquet va aller
@@ -132,6 +133,7 @@ Section=$SECTION
 Distribution=$distro
 License=$LICENSE
 PrimaryLang=$PRIMARYLANG
+Gui=$GUI
 Depends=$DEPENDS
 Provides=$PROVIDES
 Replaces=$REPLACES

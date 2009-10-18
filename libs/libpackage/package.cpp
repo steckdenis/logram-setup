@@ -352,6 +352,11 @@ QString Package::url()
     return d->psd->packageUrl(d->index);
 }
 
+bool Package::isGui()
+{
+    return d->psd->packageGui(d->index);
+}
+
 int Package::downloadSize()
 {
     return d->psd->packageDownloadSize(d->index);

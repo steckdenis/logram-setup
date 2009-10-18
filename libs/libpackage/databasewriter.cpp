@@ -480,6 +480,10 @@ void DatabaseWriter::rebuild()
                     {
                         pkg->url = stringIndex(value, index, false, false);
                     }
+                    else if (key == "Gui")
+                    {
+                        pkg->is_gui = (value == "true");
+                    }
                     else if (key == "Provides")
                     {
                         // Insérer des knownPackages pour chaque provide

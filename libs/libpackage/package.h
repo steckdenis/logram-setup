@@ -64,6 +64,7 @@ class Package : public QObject
         QString distribution();
         QString license();
         QString url();
+        bool isGui();
         
         QDateTime installedDate();
         int installedBy();

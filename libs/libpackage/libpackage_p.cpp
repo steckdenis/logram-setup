@@ -342,6 +342,15 @@ QString PackageSystemPrivate::packageUrl(int index)
     return QString(string(m_strings, pkg->url));
 }
 
+bool PackageSystemPrivate::packageGui(int index)
+{
+    _Package *pkg = package(index);
+    
+    if (pkg == 0) return false;
+    
+    return pkg->is_gui;
+}
+
 _Package *PackageSystemPrivate::package(int index)
 {
     // Trouver l'adresse du paquet

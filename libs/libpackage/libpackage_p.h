@@ -38,6 +38,7 @@ struct _Package
     int32_t section;    // Section
     int32_t distribution; // Distribution
     int32_t license;    // Licence
+    int32_t is_gui;     // Programme en GUI (NOTE: 32 bits disponibles, on peut en faire des flags)
     int32_t deps;       // Index du tableau de dépendances
     int32_t isize;      // Taille de l'installation
     int32_t dsize;      // Taille du téléchargement
@@ -118,6 +119,7 @@ class PackageSystemPrivate
         QString packageDistribution(int index);
         QString packageLicense(int index);
         QString packageUrl(int index);
+        bool packageGui(int index);
         int packageDownloadSize(int index);
         int packageInstallSize(int index);
 

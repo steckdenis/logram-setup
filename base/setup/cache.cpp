@@ -103,6 +103,7 @@ void App::showpkg(const QString &name)
     cout << COLOR(tr("Nom                 : "), "33") << COLOR(pkg->name(), "34") << endl;
     cout << COLOR(tr("Version             : "), "33") << qPrintable(pkg->version()) << endl;
     cout << COLOR(tr("Titre               : "), "33") << qPrintable(pkg->title()) << endl;
+    cout << COLOR(tr("Logiciel graphique  : "), "33") << qPrintable(pkg->isGui() ? tr("Oui") : tr("Non")) << endl;
     cout << COLOR(tr("Section             : "), "33") << qPrintable(pkg->section()) << endl;
     cout << COLOR(tr("Distribution        : "), "33") << qPrintable(pkg->distribution()) << endl;
     cout << COLOR(tr("Status              : "), "33") << qPrintable(status) << endl;
