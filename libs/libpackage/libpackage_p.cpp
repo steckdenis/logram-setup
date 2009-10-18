@@ -279,15 +279,6 @@ QString PackageSystemPrivate::packageMaintainer(int index)
     return QString(string(m_strings, pkg->maintainer));
 }
 
-QString PackageSystemPrivate::packageLongDesc(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_translate, pkg->long_desc));
-}
-
 QString PackageSystemPrivate::packageShortDesc(int index)
 {
     _Package *pkg = package(index);
@@ -295,15 +286,6 @@ QString PackageSystemPrivate::packageShortDesc(int index)
     if (pkg == 0) return QString();
 
     return QString(string(m_translate, pkg->short_desc));
-}
-
-QString PackageSystemPrivate::packageTitle(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_translate, pkg->title));
 }
 
 QString PackageSystemPrivate::packageSource(int index)

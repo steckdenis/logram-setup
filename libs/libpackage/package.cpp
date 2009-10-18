@@ -314,12 +314,12 @@ QString Package::shortDesc()
 
 QString Package::longDesc()
 {
-    return d->psd->packageLongDesc(d->index);
+    return QString(); // TODO: Télécharger les métadonnées
 }
 
 QString Package::title()
 {
-    return d->psd->packageTitle(d->index);
+    return QString(); // TODO: Télécharger les métadonnées
 }
 
 QString Package::source()

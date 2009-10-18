@@ -29,6 +29,8 @@
 
 #include "solver.h"
 
+#include <stdint.h>
+
 class PackageSystem;
 class PackageSystemPrivate;
 struct ManagedDownload;

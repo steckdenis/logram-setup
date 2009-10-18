@@ -2,7 +2,8 @@
 # sepa <action> fichier.sh
 action=$1
 shfile=$2
-shname=${shfile%.sh}
+shname=$(basename "$shfile" .sh)
+shdir=$(dirname "$shfile")
 
 ### Fonctions accessibles par le pkgbuild
 gitco()
@@ -31,8 +32,6 @@ usage()
     echo
     echo "Actions :"
     echo "    - getsource    : Download the sourcecode of a package"
-    echo "    - preparepatch : Prepare the package to create a new Logram patch"
-    echo "    - genpatch     : Create the .diff.lzma itself"
     echo "    - createsource : Create the .tlz of the package"
     echo "    - unpacksrc    : Unpack the source .tlz"
     echo "    - build        : Build a source package"
@@ -45,48 +44,18 @@ getsource()
     download
 }
 
-# Préparer le paquet pour la création d'un nouveau patch Logram
-preparepatch()
-{
-    if [ ! -d src ]; then
-        getsource
-    fi
-
-    cp -r src src.orig
-}
-
-# Créer le diff.lzma du paquet
-genpatch()
-{
-    diff -ur src.orig src | lzma > $shname.diff.lzma
-}
-
 # Créer l'archive source prête à l'envoi
 createsource()
 {
-    files="$shfile translate"
-
-    # Si on n'a pas les sources, on les récupère
-    if [ ! -d src ]; then
-        getsource
+    # Trouver la version
+    if [ "$DEVEL" = "true" ]; then
+        _v="devel"
+    else
+        _v=$VERSION
     fi
-
-    # Si on a un diff, on l'inclus
-    if [ -f $shname.diff.lzma ]; then
-        files="$files $shname.diff.lzma"
-    fi
-
-    # Explorer les fichiers qu'on veut inclure
-    for f in ${FILES[*]}; do
-        files="$files $f"
-    done
-
-    for b in ${BINARIES[*]}; do
-        files="$files $b.files"
-    done
-
+    
     # Lancer la commande
-    tar --lzma -cf $shname.src.tlz $files
+    tar --lzma -cf $SOURCE~$_v.src.tlz $shdir
 }
 
 # Décompresser un paquet source
@@ -95,22 +64,11 @@ unpacksrc()
     tar --lzma -xf $shfile
 }
 
-# Patcher la source avec son patch
-patchsource()
-{
-    # Vérifier qu'on a la source
-    if [ ! -d src ]; then
-        getsource
-    fi
-    
-    lzma -dc $shname.diff.lzma | patch -p0
-}
-
 # Compiler
 _build()
 {
     if [ ! -d src ]; then
-        patchsource
+        getsource
     fi
 
     # Dossier temporaire
@@ -144,16 +102,11 @@ binaries()
                 mkdir -p $(dirname tmp/${fl:6})
                 cp -rf $fl tmp/${fl:6}
             done
-        done < $binary.files
+        done < "$shdir/$binary.files"
 
-        # Créer un dossier pour les métadonnées
+        # Copier les métadonnées
         mkdir -p tmp/__LOGRAM
-
-        # Y copier les traductions
-        cp translate/$binary.* tmp/__LOGRAM
-
-        # Ainsi que le pkgbuild (pour postinst, etc)
-        cp $shfile tmp/__LOGRAM/pkgbuild.sh
+        cp -r $shdir/* tmp/__LOGRAM
 
         # Trouver la version
         mv=$(cd src && version)
@@ -161,6 +114,13 @@ binaries()
 
         # Obtenir les dépendances
         d_$binary
+        
+        # Obtenir la distribution dans laquelle le paquet va aller
+        distro=$(cat $shdir/metadata.xml \
+            | grep entry \
+            | grep distribution \
+            | head -n1 \
+            | cut -d '"' -f 2)
 
         # Générer le fichier de contrôle pour Setup
         echo "[Binary]
@@ -169,8 +129,8 @@ Version=$v
 Source=$SOURCE
 Maintainer=$MAINTAINER
 Section=$SECTION
-Distribution=$DISTRIBUTION
-Licence=$LICENCE
+Distribution=$distro
+License=$LICENSE
 PrimaryLang=$PRIMARYLANG
 Depends=$DEPENDS
 Provides=$PROVIDES
@@ -198,20 +158,11 @@ case $action in
     getsource)
         getsource
         ;;
-    preparepatch)
-        preparepatch
-        ;;
-    genpatch)
-        genpatch
-        ;;
     createsource)
         createsource
         ;;
     unpacksrc)
         unpacksrc
-        ;;
-    patchsource)
-        patchsource
         ;;
     build)
         _build

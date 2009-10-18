@@ -341,9 +341,7 @@ void DatabaseWriter::rebuild()
 
             QByteArray line, name, long_desc, pkgname, pkgver;
             _Package *pkg = 0;
-            int number = 0;
             int index;
-            bool waspoint = false;
 
             // Lire le fichier
             while (!fl.atEnd())
@@ -466,7 +464,7 @@ void DatabaseWriter::rebuild()
                     {
                         pkg->section = stringIndex(value, index, false, false);
                     }
-                    else if (key == "Licence")
+                    else if (key == "License")
                     {
                         pkg->license = stringIndex(value, index, false, false);
                     }
@@ -544,17 +542,9 @@ void DatabaseWriter::rebuild()
                         {
                             pkg->iby = value.toInt();
                         }
-                        else if (key == "Title")
-                        {
-                            pkg->title = stringIndex(QByteArray::fromBase64(value.replace('"', "")), index, true, false);
-                        }
                         else if (key == "ShortDesc")
                         {
                             pkg->short_desc = stringIndex(QByteArray::fromBase64(value.replace('"', "")), index, true, false);
-                        }
-                        else if (key == "LongDesc")
-                        {
-                            pkg->long_desc = stringIndex(QByteArray::fromBase64(value.replace('"', "")), index, true, false);
                         }
                     }
                 }
@@ -563,64 +553,34 @@ void DatabaseWriter::rebuild()
                     // Si ce sont les traductions, savoir à quel paquet elles appartiennent
                     if (istr)
                     {
-                        // Si après un point, on a une ligne vide, alors on a fini un paquet
-                        if (line == "" && waspoint)
-                        {
-                            if (pkg != 0)
-                            {
-                                // Description longue du paquet
-                                pkg->long_desc = stringIndex(long_desc, index, true);
-
-                                // Réinitialisations
-                                number = 0;
-                                pkg = 0;
-                                waspoint = false;
-                                long_desc.clear();
-                            }
-
-                            continue;
-                        }
-
-                        // On a un point. Si on a une ligne vide après, on a fini un paquet
-                        waspoint = (line == ".");
-
-                        if (waspoint) continue;
+                        // Chaque ligne est de la forme "package:description courte"
+                        QList<QByteArray> parts = line.split(':');
                         
-                        if (number == 0)
-                        {
-                            // Nom du paquet qui recoit
-                            QList<QByteArray> parts = line.split(' ');
-                            
-                            name = parts.at(0);
-                            
-                            const QList<knownEntry *> &entries = knownPackages.value(name);
+                        // Trouver le bon paquet
+                        QByteArray name = parts.takeAt(0);
+                        
+                        const QList<knownEntry *> &entries = knownPackages.value(name);
+                        int strDistro = stringsIndexes.value(distroname.toAscii());
 
-                            foreach(knownEntry *entry, entries)
+                        foreach(knownEntry *entry, entries)
+                        {
+                            if (entry->pkg->distribution == strDistro)
                             {
-                                if (entry->version == parts.at(1))
+                                index = packages.indexOf(entry->pkg);
+                                
+                                // Fusioner les parties
+                                QByteArray s_desc;
+
+                                for (int i=0; i<parts.count(); ++i)
                                 {
-                                    pkg = entry->pkg;
-                                    index = packages.indexOf(pkg);
+                                    if (i)
+                                        s_desc += ":";
+                                    s_desc += parts.at(i);
                                 }
+                                
+                                entry->pkg->short_desc = stringIndex(s_desc, index, true);
                             }
                         }
-                        else if (number == 1)
-                        {
-                            // Titre
-                            pkg->title = stringIndex(line, index, true);
-                        }
-                        else if (number == 2)
-                        {
-                            // Description courte
-                            pkg->short_desc = stringIndex(line, index, true);
-                        }
-                        else
-                        {
-                            // Description longue, ligne par ligne
-                            long_desc += line + "\n";
-                        }
-
-                        number++;
                     }
                     else
                     {

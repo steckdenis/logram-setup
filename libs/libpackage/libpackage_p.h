@@ -23,15 +23,15 @@
 #ifndef __PACKAGESYSTEM_P_H__
 #define __PACKAGESYSTEM_P_H__
 
+#include <stdint.h>
+
 struct _Package
 {
     // TODO: Maintainer
     int32_t name;       // Index de la chaîne du nom
     int32_t version;    // Index de la chaîne de version
     int32_t maintainer; // Index de la chaîne du nom du mainteneur
-    int32_t title;      // Index de la chaîne de titre
     int32_t short_desc; // Index de la chaîne de description courte
-    int32_t long_desc;  // Index de la chaîne de description longue
     int32_t source;     // Nom du paquet source
     int32_t repo;       // Nom du mirroir qui fourni le paquet (sources.list)
     int32_t url;        // Url de téléchargement
@@ -111,9 +111,7 @@ class PackageSystemPrivate
         QString packageName(int index);
         QString packageVersion(int index);
         QString packageMaintainer(int index);
-        QString packageLongDesc(int index);
         QString packageShortDesc(int index);
-        QString packageTitle(int index);
         QString packageSource(int index);
         QString packageRepo(int index);
         QString packageSection(int index);

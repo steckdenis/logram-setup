@@ -51,8 +51,46 @@ prepare()
     echo "DownloadSize=$dlsize" >> $INCOMING/$bname.control
     echo "InstallSize=$insize" >> $INCOMING/$bname.control
 
-    # 5. Copier les fichiers de traduction
-    cp tmp/__LOGRAM/$name.* $INCOMING
+    # 5. Copier les descriptions courtes pour utilisation plus tard
+    for f in tmp/__LOGRAM/descriptions.*; do
+        lang=$(echo $f | cut -d '.' -f 2)
+        short_title=$(cat $f | grep -e "^$name:")
+        
+        echo "$short_title" > $INCOMING/$name.desc.$lang
+        
+        # Récupérer le titre et la description longue pour ce paquet et cette langue
+        xml sel -T -B -t -m "//package[@name='$name']/title/$lang" -v . -n tmp/__LOGRAM/metadata.xml > $INCOMING/$name.$lang
+        echo >> $INCOMING/$name.$lang
+        echo "$short_title" | cut -d ':' -f 2- >> $INCOMING/$name.$lang
+        echo >> $INCOMING/$name.$lang
+        
+        # Description longue
+        found="false"
+        index="0"
+        line=""
+        
+        xml sel -T -B -t -m "//package[@name='$name']/description/$lang" -v . -n tmp/__LOGRAM/metadata.xml | sed -e 's/^ *//g' \
+        | (while read l; do
+            if [ $found = "true" ]; then
+                echo "$line" >> $INCOMING/$name.$lang
+            fi
+            
+            # Si la ligne n'est pas vide, ou alors qu'on est au centre du fichier, l'ajouter
+            if [ ${#l} -ne 0 -o $found = "true" ]; then
+                found="true"
+                
+                line="$l"
+            fi
+        done)
+        
+        if [ ${#line} -ne 0 ]; then
+            echo "$line" >> $INCOMING/$name.$lang
+        fi
+        
+        if [ $found = "false" ]; then
+            echo >> $INCOMING/$name.$lang
+        fi
+    done
 
     # 6. Supprimer le tmp
     rm -rf tmp
@@ -116,38 +154,8 @@ include()
         echo "Url=pool/$d/$name/$bname" >> $cdir/$name.control
         echo -e "$content" >> $cdir/$name.control
 
-        # Copier et adapter tous les fichiers langue du paquet (<name>.*)
-        for lang in $INCOMING/$name.*
-        do
-            cname=$cdir/$(basename $lang)
-
-            echo "$name $version" > $cname
-
-            # Lire les lignes
-            step="0"
-
-            while read line; do
-                if [ $step = "0" ]; then
-                    echo "$line" >> $cname
-                    step="1"
-                elif [ $step = "1" ]; then
-                    # Sauter la ligne vide après
-                    step="2"
-                elif [ $step = "2" ]; then
-                    echo "$line" >> $cname
-                    step="3"
-                elif [ $step = "3" ]; then
-                    # Sauter la ligne vide
-                    step="4"
-                else
-                    echo "$line" >> $cname
-                fi
-            done < $lang
-
-            # Bien terminer le machin
-            echo "." >> $cname
-            echo >> $cname
-        done
+        # Copier et adapter tous les fichiers langue du paquet (<name>.desc.*)
+        cp $INCOMING/$name.desc.* $cdir
     fi
 
     # Générer la liste des fichiers
