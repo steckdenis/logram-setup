@@ -132,38 +132,42 @@ void App::showpkg(const QString &name)
         cout << endl;
         cout << COLOR(tr("Dépendances :"), "35") << endl;
         cout << qPrintable(tr("Légende : "))
-            << COLOR(tr("Dépend "), "31")
-            << COLOR(tr("Suggère "), "32")
-            << COLOR(tr("Conflit "), "33")
-            << COLOR(tr("Fourni "), "34")
-            << COLOR(tr("Remplace "), "35")
-            << COLOR(tr("Est requis par"), "37")
+            << COLOR(tr("D: Dépend "), "31")
+            << COLOR(tr("S: Suggère "), "32")
+            << COLOR(tr("C: Conflit "), "33")
+            << COLOR(tr("P: Fourni "), "34")
+            << COLOR(tr("R: Remplace "), "35")
+            << COLOR(tr("N: Est requis par"), "37")
         << endl << endl;
 
         for (int i=0; i<deps.count(); ++i)
         {
             Depend *dep = deps.at(i);
 
-            cout << "  * ";
-
             switch (dep->type())
             {
                 case DEPEND_TYPE_DEPEND:
+                    cout << " D: ";
                     cout << COLOR(dep->name(), "31");
                     break;
                 case DEPEND_TYPE_SUGGEST:
+                    cout << " S: ";
                     cout << COLOR(dep->name(), "32");
                     break;
                 case DEPEND_TYPE_CONFLICT:
+                    cout << " C: ";
                     cout << COLOR(dep->name(), "33");
                     break;
                 case DEPEND_TYPE_PROVIDE:
+                    cout << " P: ";
                     cout << COLOR(dep->name(), "34");
                     break;
                 case DEPEND_TYPE_REPLACE:
+                    cout << " R: ";
                     cout << COLOR(dep->name(), "35");
                     break;
                 case DEPEND_TYPE_REVDEP:
+                    cout << " N: ";
                     cout << COLOR(dep->name(), "37");
                     break;
             }
@@ -200,7 +204,8 @@ void App::showpkg(const QString &name)
     }
 
     // Versions disponibles
-    cout << endl << COLOR(tr("Versions disponibles : "), "35") << endl << endl;
+    cout << endl << COLOR(tr("Versions disponibles : "), "35") << endl;
+    cout << qPrintable(tr("Légende : * = Disponible, I = installée, R = supprimée")) << endl << endl;
 
     QList<Package *> vers = pkg->versions();
 
@@ -208,11 +213,11 @@ void App::showpkg(const QString &name)
     {
         if (ver->status() == PACKAGE_STATE_INSTALLED)
         {
-            cout << COLOR("  » ", "34");
+            cout << COLOR("  I ", "34");
         }
         else if (ver->status() == PACKAGE_STATE_REMOVED)
         {
-            cout << COLOR("  « ", "31");
+            cout << COLOR("  R ", "31");
         }
         else
         {

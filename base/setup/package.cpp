@@ -67,10 +67,10 @@ void App::manageResults(Solver *solver)
 {
     cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "32") << endl;
     cout << qPrintable(tr("    Légende : "))
-         << COLOR(tr("Installer "), "34")
-         << COLOR(tr("Supprimer "), "31")
-         << COLOR(tr("Mettre à jour "), "33")
-         << COLOR(tr("Supprimer totalement "), "35")
+         << COLOR(tr("I: Installer "), "34")
+         << COLOR(tr("R: Supprimer "), "31")
+         << COLOR(tr("U: Mettre à jour "), "33")
+         << COLOR(tr("P: Supprimer totalement "), "35")
          << endl;
 
     // Boucle pour demander son avis à l'utilisateur
@@ -98,28 +98,30 @@ void App::manageResults(Solver *solver)
         foreach (Package *pkg, packages)
         {
             QString name = pkg->name().leftJustified(15, ' ', true);
-            
-            cout << "  * ";
 
             if (pkg->action() == Solver::Install)
             {
+                cout << " I: ";
                 dlSize += pkg->downloadSize();
                 instSize += pkg->installSize();
                 cout << COLOR(name, "34");
             }
             else if (pkg->action() == Solver::Remove)
             {
+                cout << " R: ";
                 instSize -= pkg->installSize();
                 cout << COLOR(name, "31");
             }
             else if (pkg->action() == Solver::Update)
             {
+                cout << " U: ";
                 dlSize += pkg->downloadSize();
                 // TODO: Différence entre la version installée et la version qu'on va télécharger
                 cout << COLOR(name, "33");
             }
             else if (pkg->action() == Solver::Purge)
             {
+                cout << " P: ";
                 instSize -= pkg->installSize();
                 cout << COLOR(name, "35");
             }
@@ -133,13 +135,26 @@ void App::manageResults(Solver *solver)
         cout << endl;
 
         // Demander si c'est bon
-        cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, installation de %5\n"
+        if (instSize >= 0)
+        {
+            cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, installation de %5\n"
+                                "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
+                                    .arg(QString::number(index+1))
+                                    .arg(QString::number(tot))
+                                    .arg(weight)
+                                    .arg(PackageSystem::fileSizeFormat(dlSize))
+                                    .arg(PackageSystem::fileSizeFormat(instSize)));
+        }
+        else
+        {
+            cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, libération de %5\n"
                               "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
                                   .arg(QString::number(index+1))
                                   .arg(QString::number(tot))
                                   .arg(weight)
                                   .arg(PackageSystem::fileSizeFormat(dlSize))
-                                  .arg(PackageSystem::fileSizeFormat(instSize)));
+                                  .arg(PackageSystem::fileSizeFormat(-instSize)));
+        }
         cin >> in;
 
         if (in == 'y')
