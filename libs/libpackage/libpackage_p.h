@@ -34,7 +34,7 @@ struct _Package
     int32_t short_desc; // Index de la chaîne de description courte
     int32_t source;     // Nom du paquet source
     int32_t repo;       // Nom du mirroir qui fourni le paquet (sources.list)
-    int32_t url;        // Url de téléchargement
+    int32_t arch;       // Url de téléchargement
     int32_t section;    // Section
     int32_t distribution; // Distribution
     int32_t license;    // Licence
@@ -118,6 +118,7 @@ class PackageSystemPrivate
         QString packageSection(int index);
         QString packageDistribution(int index);
         QString packageLicense(int index);
+        QString packageArch(int index);
         QString packageUrl(int index);
         bool packageGui(int index);
         int packageDownloadSize(int index);

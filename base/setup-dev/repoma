@@ -92,7 +92,10 @@ prepare()
         fi
     done
 
-    # 6. Supprimer le tmp
+    # 6. Copier les métadonnées
+    cp tmp/__LOGRAM/metadata.xml $INCOMING/$name.metadata.xml
+
+    # 7. Supprimer le tmp
     rm -rf tmp
     rm -f uncompressed.tar
 }
@@ -115,7 +118,9 @@ include()
     fi
 
     dir=$POOL/$d/$name
+    metadir=$METADATA/$d/$name
     mkdir -p $dir
+    mkdir -p $metadir
 
     # Copier le fichier .tlz dedans
     cp $filename $dir
@@ -151,11 +156,14 @@ include()
         mkdir -p $cdir
 
         echo "[$name]" > $cdir/$name.control
-        echo "Url=pool/$d/$name/$bname" >> $cdir/$name.control
+        echo "Arch=$arch" >> $cdir/$name.control
         echo -e "$content" >> $cdir/$name.control
 
         # Copier et adapter tous les fichiers langue du paquet (<name>.desc.*)
         cp $INCOMING/$name.desc.* $cdir
+        
+        # Copier les métadonnées
+        cat $INCOMING/$name.metadata.xml | lzma > $metadir/$name~$version.metadata.xml.lzma
     fi
 
     # Générer la liste des fichiers

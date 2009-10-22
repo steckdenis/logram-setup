@@ -297,7 +297,7 @@ void DatabaseWriter::rebuild()
             
             if (!isInstalledPackages)
             {
-                fname.replace(".lzma", "");
+                fname.remove(".lzma");
 
                 if (pass == 0)
                 {
@@ -476,9 +476,9 @@ void DatabaseWriter::rebuild()
                     {
                         pkg->isize = value.toInt();
                     }
-                    else if (key == "Url")
+                    else if (key == "Arch")
                     {
-                        pkg->url = stringIndex(value, index, false, false);
+                        pkg->arch = stringIndex(value, index, false, false);
                     }
                     else if (key == "Gui")
                     {

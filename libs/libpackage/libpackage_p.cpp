@@ -203,9 +203,6 @@ QList<int> PackageSystemPrivate::packagesOfString(int stringIndex, int nameIndex
 
     for (int i=0; i<count; ++i)
     {
-        // Voir si c'est le bon paquet
-        _Package *pkg = package(((_StrPackage *)(sptr))->package);
-        
         // Si on n'a pas précisé de version, c'est ok
         if (op == DEPEND_OP_NOVERSION)
         {
@@ -333,13 +330,13 @@ QString PackageSystemPrivate::packageLicense(int index)
     return QString(string(m_strings, pkg->license));
 }
 
-QString PackageSystemPrivate::packageUrl(int index)
+QString PackageSystemPrivate::packageArch(int index)
 {
     _Package *pkg = package(index);
 
     if (pkg == 0) return QString();
 
-    return QString(string(m_strings, pkg->url));
+    return QString(string(m_strings, pkg->arch));
 }
 
 bool PackageSystemPrivate::packageGui(int index)

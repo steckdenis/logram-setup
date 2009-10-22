@@ -23,6 +23,7 @@
 #include "app.h"
 
 #include <logram/package.h>
+#include <logram/packagemetadata.h>
 
 #include <QString>
 
@@ -82,6 +83,10 @@ void App::showpkg(const QString &name)
         cout << COLOR(tr("Le paquet que vous avez entré n'existe pas. Si vous avez précisé une version, ne le faites plus pour voir si un paquet du même nom existe"), "31") << endl;
         return;
     }
+    
+    // Précharger les métadonnées
+    PackageMetaData *metadata = pkg->metadata();
+    metadata->setCurrentPackage(pkg->name());
 
     // Status du paquet
     QString status;
@@ -102,7 +107,7 @@ void App::showpkg(const QString &name)
     // Afficher les informations
     cout << COLOR(tr("Nom                 : "), "33") << COLOR(pkg->name(), "34") << endl;
     cout << COLOR(tr("Version             : "), "33") << qPrintable(pkg->version()) << endl;
-    cout << COLOR(tr("Titre               : "), "33") << qPrintable(pkg->title()) << endl;
+    cout << COLOR(tr("Titre               : "), "33") << qPrintable(metadata->packageTitle()) << endl;
     cout << COLOR(tr("Logiciel graphique  : "), "33") << qPrintable(pkg->isGui() ? tr("Oui") : tr("Non")) << endl;
     cout << COLOR(tr("Section             : "), "33") << qPrintable(pkg->section()) << endl;
     cout << COLOR(tr("Distribution        : "), "33") << qPrintable(pkg->distribution()) << endl;
@@ -122,7 +127,7 @@ void App::showpkg(const QString &name)
     cout << COLOR(tr("Description courte  : "), "33") << qPrintable(pkg->shortDesc()) << endl;
     
     cout << endl << COLOR(tr("Description longue : "), "35") << endl << endl;
-    cout << qPrintable(pkg->longDesc());
+    cout << qPrintable(metadata->packageDescription()) << endl;
 
     // Afficher les dépendances
     QList<Depend *> deps = pkg->depends();

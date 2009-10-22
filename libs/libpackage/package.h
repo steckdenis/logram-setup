@@ -33,6 +33,7 @@
 
 class PackageSystem;
 class PackageSystemPrivate;
+class PackageMetaData;
 struct ManagedDownload;
 
 class _Depend;
@@ -52,18 +53,23 @@ class Package : public QObject
         bool isValid();
         Solver::Action action();
 
+        enum UrlType
+        {
+            Binary,
+            Metadata
+        };
+        
         QString name();
         QString version();
         QString maintainer();
         QString shortDesc();
-        QString longDesc();
-        QString title();
         QString source();
         QString repo();
         QString section();
         QString distribution();
         QString license();
-        QString url();
+        QString arch();
+        QString url(UrlType type = Package::Binary);
         bool isGui();
         
         QDateTime installedDate();
@@ -72,6 +78,8 @@ class Package : public QObject
         
         int downloadSize();
         int installSize();
+        
+        PackageMetaData *metadata();
 
         QList<Package *> versions();
         QList<Depend *> depends();

@@ -23,6 +23,7 @@
 #include "package.h"
 #include "libpackage.h"
 #include "libpackage_p.h"
+#include "packagemetadata.h"
 
 #include <QtDebug>
 
@@ -51,6 +52,9 @@ struct Package::Private
     // Installation
     QProcess *installProcess;
     QString installCommand;
+    
+    // Métadonnées
+    PackageMetaData *md;
 };
 
 struct Depend::Private
@@ -73,6 +77,7 @@ Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver
     d->psd = psd;
     d->depok = false;
     d->action = _action;
+    d->md = 0;
 
     connect(ps, SIGNAL(downloadEnded(ManagedDownload *)), this, SLOT(downloadEnded(ManagedDownload *)));
 }
@@ -81,6 +86,17 @@ Package::~Package()
 {
     qDeleteAll(d->deps);
     delete d;
+}
+
+PackageMetaData *Package::metadata()
+{
+    if (d->md == 0)
+    {
+        // On doit récupérer les métadonnées
+        d->md = new PackageMetaData(this, d->ps);
+    }
+    
+    return d->md;
 }
 
 void Package::install()
@@ -123,6 +139,9 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     if (exitCode != 0 && exitStatus != QProcess::NormalExit)
     {
         d->ps->raise(PackageSystem::ProcessError, d->installCommand);
+        // L'installation est finie, le dire, même si on a eu une erreur (pas rester coincé dans le QEventLoop)
+        emit installed();
+        return;
     }
     
     // Enregistrer le paquet dans la liste des paquets installés pour le prochain setup update
@@ -145,9 +164,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     set->setValue("DownloadSize", downloadSize());
     set->setValue("InstallSize", installSize());
 
-    set->setValue("Title", QString(title().toUtf8().toBase64()));
     set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
-    set->setValue("LongDesc", QString(longDesc().toUtf8().toBase64()));
     
     set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
     set->setValue("InstalledRepo", repo());
@@ -158,7 +175,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 
     // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
 
-    // L'installation est finie, le dire, même si on a eu une erreur (pas rester coincé dans le QEventLoop)
+    // L'installation est finie
     emit installed();
 }
 
@@ -312,16 +329,6 @@ QString Package::shortDesc()
     return d->psd->packageShortDesc(d->index);
 }
 
-QString Package::longDesc()
-{
-    return QString(); // TODO: Télécharger les métadonnées
-}
-
-QString Package::title()
-{
-    return QString(); // TODO: Télécharger les métadonnées
-}
-
 QString Package::source()
 {
     return d->psd->packageSource(d->index);
@@ -347,9 +354,35 @@ QString Package::license()
     return d->psd->packageLicense(d->index);
 }
 
-QString Package::url()
+QString Package::arch()
 {
-    return d->psd->packageUrl(d->index);
+    return d->psd->packageArch(d->index);
+}
+
+QString Package::url(UrlType type)
+{
+    // Construire la partie premières_lettres/nom
+    QString n = name();
+    QString d;
+    
+    if (n.startsWith("lib"))
+    {
+        d = n.left(4);
+    }
+    else
+    {
+        d = n.left(1);
+    }
+    
+    // Compléter en fonction du type demandé
+    if (type == Binary)
+    {
+        return "pool/" + d + "/" + n + "/" + n + "~" + version() + "." + arch() + ".tlz";
+    }
+    else
+    {
+        return "metadata/" + d + "/" + n + "/" + n + "~" + version() + ".metadata.xml.lzma";
+    }
 }
 
 bool Package::isGui()
