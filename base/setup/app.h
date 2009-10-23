@@ -46,7 +46,7 @@ class App : public QCoreApplication
         void help();
         void version();
         void find(const QString &pattern);
-        void showpkg(const QString &name);
+        void showpkg(const QString &name, bool changelog);
         void update();
         void add(const QStringList &packages);
         void showFiles(const QString &packageName);

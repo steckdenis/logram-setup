@@ -138,3 +138,32 @@ void PackageMetaData::setCurrentPackage(const QString &name)
         package = package.nextSiblingElement("package");
     }
 }
+
+QList<ChangeLogEntry *> PackageMetaData::changelog() const
+{
+    QDomElement entry = documentElement().firstChildElement("changelog").firstChildElement("entry");
+    
+    QList<ChangeLogEntry *> rs;
+    
+    while (!entry.isNull())
+    {
+        ChangeLogEntry *e = new ChangeLogEntry;
+        
+        e->version = entry.attribute("version");
+        e->author = entry.attribute("author");
+        e->email = entry.attribute("email");
+        e->distribution = entry.attribute("distribution");
+        e->text = stringOfKey(entry);
+        
+        // Trouver la date
+        e->date = QDateTime(QDate::fromString(entry.attribute("date"), "yyyy-MM-dd"),
+                            QTime::fromString(entry.attribute("time"), "hh:mm:ss"));
+        
+        // Ajouter à la liste
+        rs.append(e);
+        
+        entry = entry.nextSiblingElement("entry");
+    }
+    
+    return rs;
+}

@@ -88,7 +88,31 @@ binaries()
     if [ ! -d build ]; then
         _build
     fi
+    
+    # Trouver la version
+    mv=$(cd src && version)
+    export v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
 
+    # Obtenir la distribution dans laquelle le paquet va aller
+    #distro=$(cat $shdir/metadata.xml \
+    #    | grep entry \
+    #    | grep distribution \
+    #    | head -n1 \
+    #    | cut -d '"' -f 2)
+    distro=$(xml sel -T -B -t -m "//changelog/entry[1]" -v @distribution $shdir/metadata.xml)
+        
+    # Enregistrer dans le changelog la version
+    oldver=$(xml sel -T -B -t -m "//changelog/entry[1]" -v @version $shdir/metadata.xml)
+        
+    if [ ${#oldver} = 0 ]; then
+        # Pas encore de version, l'ajouter
+        xml ed -P --append "//changelog/entry[1]" --type attr -n version --value "$v" $shdir/metadata.xml > $shdir/metadata.xml.new
+    else
+        xml ed -P --update "//changelog/entry[1]/@version" --value "$v" $shdir/metadata.xml > $shdir/metadata.xml.new
+    fi
+    
+    mv $shdir/metadata.xml.new $shdir/metadata.xml
+        
     # Explorer les binaires
     for binary in ${BINARIES[*]}; do
         echo -n ">> $binary..."
@@ -108,20 +132,9 @@ binaries()
         mkdir -p tmp/__LOGRAM
         cp -r $shdir/* tmp/__LOGRAM
 
-        # Trouver la version
-        mv=$(cd src && version)
-        export v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
-
         # Obtenir les dépendances
         export GUI="false"
         d_$binary
-        
-        # Obtenir la distribution dans laquelle le paquet va aller
-        distro=$(cat $shdir/metadata.xml \
-            | grep entry \
-            | grep distribution \
-            | head -n1 \
-            | cut -d '"' -f 2)
 
         # Générer le fichier de contrôle pour Setup
         echo "[Binary]

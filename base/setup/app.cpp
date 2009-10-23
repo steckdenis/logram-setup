@@ -54,6 +54,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 
     // Explorer les options
     QString opt = args.at(1);
+    bool changelog = false;
 
     while (opt.startsWith('-'))
     {
@@ -80,6 +81,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         else if (opt == "-R")
         {
             ps->setInstallRoot(args.takeAt(2));
+        }
+        else if (opt == "-C")
+        {
+            changelog = true;
         }
         else
         {
@@ -112,7 +117,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     }
     else if (cmd == "showpkg")
     {
-        showpkg(args.at(2));
+        showpkg(args.at(2), changelog);
     }
     else if (cmd == "update")
     {
@@ -156,6 +161,7 @@ void App::help()
     cout << "    -I <num>           Number of parallel installs" << endl;
     cout << "    -D <num>           Number of parallel downloads" << endl;
     cout << "    -R <install root>  Root path of the installation (usually /, but it can be anything, for example to build a Logram From Scratch)" << endl;
+    cout << "    -C                 Show changelog in showpkg" << endl;
 }
 
 void App::version()

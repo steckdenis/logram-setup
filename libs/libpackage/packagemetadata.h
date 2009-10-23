@@ -26,9 +26,19 @@
 #include <QtXml/QDomDocument>
 
 #include <QObject>
+#include <QDateTime>
 
 class Package;
 class PackageSystem;
+
+struct ChangeLogEntry
+{
+    QString version;
+    QString author, email;
+    QString distribution;
+    QDateTime date;
+    QString text;
+};
 
 class PackageMetaData : public QDomDocument, public QObject
 {
@@ -41,6 +51,8 @@ class PackageMetaData : public QDomDocument, public QObject
         QString packageDescription() const;
         QString packageTitle() const;
         QString currentPackage() const;
+        
+        QList<ChangeLogEntry *> changelog() const;
         
         void setCurrentPackage(const QString &name);
         

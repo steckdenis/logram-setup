@@ -65,7 +65,7 @@ void App::showFiles(const QString &packageName)
     }
 }
 
-void App::showpkg(const QString &name)
+void App::showpkg(const QString &name, bool changelog)
 {
     QString n = name.section('=', 0, 0);
     QString v;
@@ -234,4 +234,30 @@ void App::showpkg(const QString &name)
     }
 
     cout << endl;
+    
+    if (changelog)
+    {
+        cout << endl << COLOR(tr("Historique des versions : "), "35") << endl << endl;
+        
+        // Afficher le changelog
+        QList<ChangeLogEntry *> entries = metadata->changelog();
+        
+        foreach(ChangeLogEntry *entry, entries)
+        {
+            cout
+            << COLOR(entry->version, "32")
+            << " ("
+            << COLOR(entry->author + " <" + entry->email + ">", "33")
+            << "), "
+            << COLOR(entry->date.toString(Qt::DefaultLocaleShortDate), "36") << endl;
+            
+            cout << endl;
+            
+            cout << qPrintable(entry->text);
+            
+            cout << endl << endl;
+        }
+        
+        qDeleteAll(entries);
+    }
 }
