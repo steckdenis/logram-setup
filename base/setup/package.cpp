@@ -94,6 +94,13 @@ void App::manageResults(Solver *solver)
         dlSize = 0;
         instSize = 0;
         packages = solver->result(index, weight);
+        
+        // Si la liste est vide, c'est qu'on n'a rien à faire
+        // TODO (p.e dans solver) : si la liste est vide et qu'on a demandé une installation, passer le paquet en installé manuellement
+        if (packages.count() == 0)
+        {
+            cout << COLOR(tr("Cette solution est vide, ce qui veut dire qu'aucun changement ne devra être appliqué à votre système. Si c'est la seule solution, alors c'est que tout est déjà correct au niveau de vos paquets"), "34") << endl;
+        }
 
         foreach (Package *pkg, packages)
         {
@@ -159,6 +166,11 @@ void App::manageResults(Solver *solver)
 
         if (in == 'y')
         {
+            if (packages.count() == 0)
+            {
+                return;
+            }
+            
             break;
         }
         else if (in == 'n')

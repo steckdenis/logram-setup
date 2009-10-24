@@ -148,14 +148,13 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     QSettings *set = d->ps->installedPackagesList();
     
     set->beginGroup(name());
-    set->setValue("Url", url());
     set->setValue("Name", name());
     set->setValue("Version", version());
     set->setValue("Source", source());
     set->setValue("Maintainer", maintainer());
     set->setValue("Section", section());
     set->setValue("Distribution", distribution());
-    set->setValue("Licence", license());
+    set->setValue("License", license());
     set->setValue("Depends", dependsToString(depends(), DEPEND_TYPE_DEPEND));
     set->setValue("Provides", dependsToString(depends(), DEPEND_TYPE_PROVIDE));
     set->setValue("Suggest", dependsToString(depends(), DEPEND_TYPE_SUGGEST));

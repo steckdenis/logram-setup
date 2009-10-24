@@ -42,6 +42,7 @@ struct Pkg
 {
     int index;
     Solver::Action action;
+    bool reallyWanted;
 };
 
 struct Solver::Private
@@ -70,8 +71,8 @@ struct Solver::Private
     QList<Package *> list;
 
     // Fonctions
-    void addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists);
-    void addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, Solver::Action act);
+    void addPkg(Pkg &pkg, int listIndex, QList<int> &plists);
+    void addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists);
     int listWeight(QList<Package *> *list);
 };
 
@@ -140,7 +141,9 @@ QList<Package *> Solver::result(int index, int &weight) const
 void Solver::solve()
 {
     QList<int> lists;
-    QList<int> pkgsToAdd;
+    QList<int> mpkgsToAdd;
+    QVector<Pkg> pkgsToAdd;
+    Pkg p;
 
     // Créer la première liste
     d->packages.append(QVector<Pkg>());
@@ -150,9 +153,20 @@ void Solver::solve()
     foreach(const QString &pkg, d->wantedPackages.keys())
     {
         Action act = d->wantedPackages.value(pkg);
-        pkgsToAdd = d->psd->packagesByVString(pkg);
+        mpkgsToAdd = d->psd->packagesByVString(pkg);
+        
+        foreach(int i, mpkgsToAdd)
+        {
+            p.index = i;
+            p.action = act;
+            p.reallyWanted = true;
+            
+            pkgsToAdd.append(p);
+        }
 
-        d->addPkgs(pkgsToAdd, lists, act);
+        d->addPkgs(pkgsToAdd, lists);
+        
+        pkgsToAdd.clear();
     }
 
 #if 0
@@ -182,9 +196,13 @@ void Solver::solve()
 
         foreach(const Pkg &pkg, pkgs)
         {
-            Package *package = new Package(pkg.index, d->ps, d->psd, pkg.action);
+            // Un paquet peut ne pas être voulu (paquet non-installé sélectionné pour suppression histoire de faire échouer la liste si un paquet nécessitant de l'installer est installé, mais ça l'utilisateur n'a pas à savoir)
+            if (pkg.reallyWanted)
+            {
+                Package *package = new Package(pkg.index, d->ps, d->psd, pkg.action);
 
-            list.append(package);
+                list.append(package);
+            }
         }
 
         // Peser la liste
@@ -317,7 +335,7 @@ Package *Solver::installingPackage() const
     return d->installingPackage;
 }
 
-void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action action, QList<int> &plists)
+void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
 {
     QList<int> lists;
 
@@ -326,7 +344,7 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
 
     // Explorer la liste actuelle pour voir si le paquet demandé n'est pas déjà dedans
     QVector<Pkg> &list = packages[listIndex];
-    _Package *mpkg = psd->package(packageIndex);
+    _Package *mpkg = psd->package(pkg.index);
 
     for(int i=0; i<list.count(); ++i)
     {
@@ -340,7 +358,7 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
             if (lpkg->version == mpkg->version)
             {
                 // Si on veut faire la même action, on retourne true (dépendance en boucle ok)
-                if (pk.action == action)
+                if (pk.action == pkg.action)
                 {
                     return;
                 }
@@ -354,7 +372,7 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
             else
             {
                 // Les versions ne sont pas les mêmes
-                if (pk.action == action)
+                if (pk.action == pkg.action)
                 {
                     // Contradiction, on ne peut pas par exemple installer deux versions les mêmes
                     wrongLists.append(listIndex);
@@ -364,26 +382,32 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
         }
     }
 
-    // Ajouter le paquet dans la liste
-    Pkg pkg;
-    pkg.index = packageIndex;
-    pkg.action = action;
-    packages[listIndex].append(pkg);
-
     // Si on veut supprimer le paquet et que le paquet n'est pas installé, quitter
-    if (action == Solver::Remove && mpkg->state != PACKAGE_STATE_INSTALLED)
+    bool ok = false;
+    
+    if (pkg.action == Solver::Remove && mpkg->state != PACKAGE_STATE_INSTALLED)
     {
-        return;
+        pkg.reallyWanted = false;
+        ok = true;
     }
 
     // Si on veut installer un paquet déjà installé, quitter
-    if (action == Solver::Install && mpkg->state == PACKAGE_STATE_INSTALLED)
+    if (pkg.action == Solver::Install && mpkg->state == PACKAGE_STATE_INSTALLED)
+    {
+        pkg.reallyWanted = false;
+        ok = true;
+    }
+    
+    // Ajouter le paquet dans la liste
+    packages[listIndex].append(pkg);
+    
+    if (ok)
     {
         return;
     }
 
     // Si on installe le paquet, vérifier que d'autres versions ne sont pas installées
-    if (action == Solver::Install)
+    if (pkg.action == Solver::Install)
     {
         QList<int> otherVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
         
@@ -395,10 +419,16 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
             if (opkg->state == PACKAGE_STATE_INSTALLED && opkg->version != mpkg->version && opkg->name == mpkg->name)
             {
                 // Supprimer le paquet
-                QList<int> pkgsToAdd;
-                pkgsToAdd.append(otherVersion);
+                Pkg pkgToAdd;
+                
+                pkgToAdd.index = otherVersion;
+                pkgToAdd.action = Solver::Remove;
+                pkgToAdd.reallyWanted = true;
+                
+                QVector<Pkg> pkgsToAdd;
+                pkgsToAdd.append(pkgToAdd);
 
-                addPkgs(pkgsToAdd, lists, Solver::Remove);
+                addPkgs(pkgsToAdd, lists);
 
                 break;  // On n'a qu'une seule autre version d'installée, normalement
             }
@@ -406,41 +436,54 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
     }
 
     // Explorer les dépendances du paquet
-    QList<_Depend *> deps = psd->depends(packageIndex);
+    QList<_Depend *> deps = psd->depends(pkg.index);
 
     foreach (_Depend *dep, deps)
     {
         // Mapper les DEPEND_TYPE en Action
         Solver::Action act = Solver::None;
 
-        if ((dep->type == DEPEND_TYPE_DEPEND && action == Solver::Install)
-         || (dep->type == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
+        if ((dep->type == DEPEND_TYPE_DEPEND && pkg.action == Solver::Install)
+         || (dep->type == DEPEND_TYPE_SUGGEST && pkg.action == Solver::Install && installSuggests))
         {
             act = Solver::Install;
         }
-        else if ((dep->type == DEPEND_TYPE_CONFLICT || dep->type == DEPEND_TYPE_REPLACE) && action == Solver::Install)
+        else if ((dep->type == DEPEND_TYPE_CONFLICT || dep->type == DEPEND_TYPE_REPLACE) && pkg.action == Solver::Install)
         {
             act = Solver::Remove;
         }
-        else if (dep->type == DEPEND_TYPE_REVDEP && action == Solver::Remove)
+        else if (dep->type == DEPEND_TYPE_REVDEP && pkg.action == Solver::Remove)
         {
             act = Solver::Remove;
         }
 
         if (act == Solver::None) continue;
         
-        QList<int> pkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+        QList<int> mpkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
 
-        if (pkgsToAdd.count() == 0 && act == Solver::Install)
+        if (mpkgsToAdd.count() == 0 && act == Solver::Install)
         {
             // Aucun des paquets demandés ne convient, distribution cassée. On quitte la branche
             wrongLists << lists;
             return;
         }
+        
+        // Créer le pkgsToAdd
+        QVector<Pkg> pkgsToAdd;
+        Pkg p;
+        
+        foreach(int i, mpkgsToAdd)
+        {
+            p.index = i;
+            p.action = act;
+            p.reallyWanted = true;
+            
+            pkgsToAdd.append(p);
+        }
 
         // TODO: Si A dépend de B=1.2 ou B=1.1, et qu'on supprime B=1.1, créer une branche où on
         // supprime A et B=1.1, et une branche où on supprime B=1.1 et installe B=1.2
-        addPkgs(pkgsToAdd, lists, act);
+        addPkgs(pkgsToAdd, lists);
     }
 
     // Rajouter les listes nouvellement créées dans plists
@@ -449,7 +492,7 @@ void Solver::Private::addPkg(int packageIndex, int listIndex, Solver::Action act
     plists << lists;
 }
 
-void Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, Solver::Action act)
+void Solver::Private::addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists)
 {
     bool first = true;
 
@@ -469,7 +512,7 @@ void Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, So
                  traités comme il faut
         */
         int count = lists.count();
-        int pindex = pkgsToAdd.at(j);
+        Pkg pkg = pkgsToAdd.at(j);
         
         for (int i=0; i<count; ++i)
         {
@@ -477,7 +520,7 @@ void Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, So
 
             if (first)
             {
-                addPkg(pindex, lindex, act, lists);
+                addPkg(pkg, lindex, lists);
             }
             else
             {
@@ -498,7 +541,7 @@ void Solver::Private::addPkgs(const QList<int> &pkgsToAdd, QList<int> &lists, So
                     mpkgs.append(pkgs.at(k));
                 }
                 
-                addPkg(pindex, lindex, act, lists);
+                addPkg(pkg, lindex, lists);
             }
         }
 

@@ -270,6 +270,8 @@ ManagedDownload *PackageSystem::download(const QString &type, const QString &url
             rs->reply = 0;
             rs->url = url;
             rs->destination = dest;
+            
+            emit downloadEnded(rs);
             return rs;
         }
     }

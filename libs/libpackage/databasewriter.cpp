@@ -446,7 +446,7 @@ void DatabaseWriter::rebuild()
                         }
 
                         pkg->version = stringIndex(value, index, false, false);
-                        pkg->name = stringIndex(pkgname, index, false, true);
+                        pkg->name = stringIndex(pkgname, index, false, !found);
                     }
                     else if (key == "Source")
                     {
