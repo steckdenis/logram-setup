@@ -454,7 +454,43 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
         }
         else if (dep->type == DEPEND_TYPE_REVDEP && pkg.action == Solver::Remove)
         {
-            act = Solver::Remove;
+            // Gestion des dépendances inverses. Créer n branches. Dans la première,
+            // supprimer dep. Dans les autres, installer les provides
+            QList<int> myVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
+            QList<int> revdepPackage = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+            QVector<Pkg> pkgsToAdd;
+            
+            // Ajout de la dépendance inverse à supprimer
+            Pkg p;
+            
+            if (revdepPackage.count() != 0)
+            {
+                p.index = revdepPackage.at(0);  // N'en contient qu'un
+                p.action = Solver::Remove;
+                p.reallyWanted = true;
+                
+                pkgsToAdd.append(p);
+            }
+            
+            // Ajouter les versions ne notre paquet
+            foreach(int i, myVersions)
+            {
+                if (i != pkg.index)
+                {
+                    p.index = i;
+                    p.action = Solver::Install;
+                    p.reallyWanted = true;
+                    
+                    pkgsToAdd.append(p);
+                }
+            }
+            
+            // Ajouter les paquets
+            if (pkgsToAdd.count() != 0)
+            {
+                addPkgs(pkgsToAdd, lists);
+                continue;
+            }
         }
 
         if (act == Solver::None) continue;
@@ -480,9 +516,7 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
             
             pkgsToAdd.append(p);
         }
-
-        // TODO: Si A dépend de B=1.2 ou B=1.1, et qu'on supprime B=1.1, créer une branche où on
-        // supprime A et B=1.1, et une branche où on supprime B=1.1 et installe B=1.2
+        
         addPkgs(pkgsToAdd, lists);
     }
 
@@ -502,7 +536,7 @@ void Solver::Private::addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists)
     {
         lcounts.append(packages.at(list).count());
     }
-    
+
     // Si on a plusieurs choix, créer les sous-listes nécessaires
     for (int j=0; j<pkgsToAdd.count(); ++j)
     {

@@ -79,6 +79,7 @@ void App::manageResults(Solver *solver)
     int tot = solver->results();
     int weight;
     int dlSize, instSize;
+    bool allempty = true;
     char in;
 
     if (tot == 0)
@@ -99,8 +100,25 @@ void App::manageResults(Solver *solver)
         // TODO (p.e dans solver) : si la liste est vide et qu'on a demandé une installation, passer le paquet en installé manuellement
         if (packages.count() == 0)
         {
-            cout << COLOR(tr("Cette solution est vide, ce qui veut dire qu'aucun changement ne devra être appliqué à votre système. Si c'est la seule solution, alors c'est que tout est déjà correct au niveau de vos paquets"), "34") << endl;
+            if (index >= tot)
+            {
+                // Reboucler
+                if (allempty == true)
+                {
+                    // Sauf que rien ne contient la solution, donc quitter
+                    break;
+                }
+                
+                index = 0;
+                continue;
+            }
+            
+            // Passer à la solution suivante
+            index++;
+            continue;
         }
+        
+        allempty = false;
 
         foreach (Package *pkg, packages)
         {
@@ -137,6 +155,12 @@ void App::manageResults(Solver *solver)
                  << COLOR(pkg->version().leftJustified(15, ' ', true), "32") << ' '
                  << qPrintable(pkg->shortDesc())
                  << endl;
+        }
+        
+        if (allempty)
+        {
+            cout << COLOR(tr("Cette solution est vide, ce qui veut dire qu'aucun changement ne devra être appliqué à votre système. Si c'est la seule solution, alors c'est que tout est déjà correct au niveau de vos paquets"), "34") << endl;
+            return;
         }
 
         cout << endl;
