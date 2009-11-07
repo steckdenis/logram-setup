@@ -254,6 +254,8 @@ ManagedDownload *PackageSystem::download(const QString &type, const QString &url
         {
             d->dlDest = dest;
             d->loop.exec();
+            
+            delete reply;
         }
     }
     else if (type == "local")
@@ -321,9 +323,6 @@ void PackageSystem::downloadFinished(QNetworkReply *reply)
 
     if (md == 0)
     {
-        // Supprimer la réponse
-        delete reply;
-
         // Quitter la boucle
         d->loop.exit(0);
     }
