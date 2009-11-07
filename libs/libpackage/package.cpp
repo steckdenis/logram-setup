@@ -181,7 +181,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 void Package::download()
 {
     // Télécharger le paquet
-    QString fname = d->ps->installRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
+    QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
     QString r = repo();
     QString type = d->ps->repoType(r);
     QString u = d->ps->repoUrl(r) + "/" + url();

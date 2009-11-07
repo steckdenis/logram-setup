@@ -148,7 +148,15 @@ class PackageSystemPrivate
         // Options
         bool installSuggests;
         int parallelInstalls, parallelDownloads;
-        QString installRoot;
+        QString installRoot, confRoot, varRoot;
+        int setParams;
 };
+
+#define PACKAGESYSTEM_OPT_INSTALLSUGGESTS    1
+#define PACKAGESYSTEM_OPT_PARALLELINSTALLS   2
+#define PACKAGESYSTEM_OPT_PARALLELDOWNLOADS  4
+#define PACKAGESYSTEM_OPT_INSTALLROOT        8
+#define PACKAGESYSTEM_OPT_CONFROOT          16
+#define PACKAGESYSTEM_OPT_VARROOT           32
 
 #endif

@@ -48,7 +48,7 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     // Télécharger les métadonnées
     QString repo = pkg->repo();
     QString type = ps->repoType(repo);
-    QString fname = d->ps->installRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.lzma";
+    QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.lzma";
     
     ps->download(type, ps->repoUrl(repo) + "/" + pkg->url(Package::Metadata), fname);
     

@@ -40,15 +40,40 @@ PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     d = new PackageSystemPrivate(this);
 
     d->nmanager = new QNetworkAccessManager(this);
+    d->setParams = 0;
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
+}
 
-    d->set = new QSettings("/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
-    d->ipackages = new QSettings(installRoot() + "/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
-
-    d->installSuggests = d->set->value("InstallSuggests", true).toBool();
-    d->parallelInstalls = d->set->value("ParallelInstalls", 1).toInt();
-    d->parallelDownloads = d->set->value("ParallelDownloads", 2).toInt();
-    d->installRoot = d->set->value("InstallRoot", "/").toString();
+void PackageSystem::loadConfig()
+{
+    d->set = new QSettings(confRoot() + "/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
+    
+    if ((d->setParams & PACKAGESYSTEM_OPT_INSTALLSUGGESTS) == 0)
+    {
+        d->installSuggests = d->set->value("InstallSuggests", true).toBool();
+    }
+    if ((d->setParams & PACKAGESYSTEM_OPT_PARALLELINSTALLS) == 0)
+    {
+        d->parallelInstalls = d->set->value("ParallelInstalls", 1).toInt();
+    }
+    if ((d->setParams & PACKAGESYSTEM_OPT_PARALLELDOWNLOADS) == 0)
+    {
+        d->parallelDownloads = d->set->value("ParallelDownloads", 2).toInt();
+    }
+    if ((d->setParams & PACKAGESYSTEM_OPT_INSTALLROOT) == 0)
+    {
+        d->installRoot = d->set->value("InstallRoot", "/").toString();
+    }
+    if ((d->setParams & PACKAGESYSTEM_OPT_CONFROOT) == 0)
+    {
+        d->confRoot = d->set->value("ConfigRoot", "/").toString();
+    }
+    if ((d->setParams & PACKAGESYSTEM_OPT_VARROOT) == 0)
+    {
+        d->varRoot = d->set->value("VarRoot", "/").toString();
+    }
+    
+    d->ipackages = new QSettings(varRoot() + "/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
 }
 
 void PackageSystem::init()
@@ -189,7 +214,7 @@ QStringList PackageSystem::filesOfPackage(const QString &packageName)
     // La liste des fichiers se trouve dans /var/cache/lgrpkg/db/pkgs/<nom>_<version>/files.list
     QString version = d->ipackages->value(packageName + "/Version").toString();
     QString iroot = d->ipackages->value(packageName + "/InstallRoot").toString();
-    QString fileName = installRoot() + "/var/cache/lgrpkg/db/pkgs/" + packageName + "_" + version + "/files.list";
+    QString fileName = varRoot() + "/var/cache/lgrpkg/db/pkgs/" + packageName + "_" + version + "/files.list";
 
     QFile fl(fileName);
 
@@ -520,23 +545,55 @@ QString PackageSystem::installRoot() const
     return d->installRoot;
 }
 
+QString PackageSystem::confRoot() const
+{
+    return d->confRoot;
+}
+
+QString PackageSystem::varRoot() const
+{
+    return d->varRoot;
+}
+
+void PackageSystem::setConfRoot(const QString &root)
+{
+    d->setParams |= PACKAGESYSTEM_OPT_CONFROOT;
+    
+    d->confRoot = root;
+}
+
+void PackageSystem::setVarRoot(const QString &root)
+{
+    d->setParams |= PACKAGESYSTEM_OPT_VARROOT;
+    
+    d->varRoot = root;
+}
+
 void PackageSystem::setInstallSuggests(bool enable)
 {
+    d->setParams |= PACKAGESYSTEM_OPT_INSTALLSUGGESTS;
+    
     d->installSuggests = enable;
 }
 
 void PackageSystem::setParallelDownloads(int num)
 {
+    d->setParams |= PACKAGESYSTEM_OPT_PARALLELDOWNLOADS;
+    
     d->parallelDownloads = num;
 }
 
 void PackageSystem::setParallelInstalls(int num)
 {
+    d->setParams |= PACKAGESYSTEM_OPT_PARALLELINSTALLS;
+    
     d->parallelInstalls = num;
 }
 
 void PackageSystem::setInstallRoot(const QString &root)
 {
+    d->setParams |= PACKAGESYSTEM_OPT_INSTALLROOT;
+    
     d->installRoot = root;
 }
 

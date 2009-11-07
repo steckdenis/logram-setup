@@ -400,7 +400,7 @@ const char *PackageSystemPrivate::string(uchar *map, int index)
 
 void PackageSystemPrivate::mapFile(const QString &file, QFile **ptr, uchar **map)
 {
-    *ptr = new QFile(ps->installRoot() + "/var/cache/lgrpkg/db/" + file);
+    *ptr = new QFile(ps->varRoot() + "/var/cache/lgrpkg/db/" + file);
     QFile *f = *ptr;
 
     if (!f->open(QIODevice::ReadWrite))

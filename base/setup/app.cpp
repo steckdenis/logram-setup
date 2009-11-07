@@ -78,9 +78,17 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         {
             ps->setParallelDownloads(args.takeAt(2).toInt());
         }
-        else if (opt == "-R")
+        else if (opt == "-iR")
         {
             ps->setInstallRoot(args.takeAt(2));
+        }
+        else if (opt == "-cR")
+        {
+            ps->setConfRoot(args.takeAt(2));
+        }
+        else if (opt == "-vR")
+        {
+            ps->setVarRoot(args.takeAt(2));
         }
         else if (opt == "-C")
         {
@@ -94,6 +102,8 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         args.removeAt(1);
         opt = args.at(1);
     }
+    
+    ps->loadConfig();
 
     QString cmd = args.at(1);
 
@@ -103,11 +113,11 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         ps->init();
     }
 
-    if (cmd == "--help")
+    if (cmd == "help")
     {
         help();
     }
-    else if (cmd == "--version")
+    else if (cmd == "version")
     {
         version();
     }
@@ -138,6 +148,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     {
         showFiles(args.at(2));
     }
+    else
+    {
+        help();
+    }
 }
 
 void App::help()
@@ -147,8 +161,8 @@ void App::help()
     cout << endl;
 
     cout << "Usage : setup [options] <action> [arguments]" << endl;
-    cout << "    --help             Show help" << endl;
-    cout << "    --version          Show version" << endl;
+    cout << "    help               Show help" << endl;
+    cout << "    version            Show version" << endl;
     cout << "    search <pattern>   Show all the packages matching <pattern>" << endl;
     cout << "    showpkg <name>     Show the informations of the package <name>" << endl;
     cout << "    update             Update the packages' database" << endl;
@@ -160,7 +174,9 @@ void App::help()
     cout << "    -S [off]           Enable (or disable) the installation of the suggests" << endl;
     cout << "    -I <num>           Number of parallel installs" << endl;
     cout << "    -D <num>           Number of parallel downloads" << endl;
-    cout << "    -R <install root>  Root path of the installation (usually /, but it can be anything, for example to build a Logram From Scratch)" << endl;
+    cout << "    -iR <install root> Root path of the installation (usually /, but it can be anything, for example to build a Logram From Scratch)" << endl;
+    cout << "    -cR <conf root>    Root path of the installation files (usually /, the configuration files are read in <conf root>etc/lgrpkg)" << endl;
+    cout << "    -vR <var root>     Root path of the temporary files and the database (usually /)" << endl;
     cout << "    -C                 Show changelog in showpkg" << endl;
 }
 

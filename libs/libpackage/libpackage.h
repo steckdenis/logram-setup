@@ -48,6 +48,7 @@ class PackageSystem : public QObject
     public:
         PackageSystem(QObject *parent = 0);
         void init();
+        void loadConfig();
 
         // API publique
         QList<Package *> packagesByName(const QString &regex);
@@ -73,10 +74,14 @@ class PackageSystem : public QObject
         int parallelDownloads() const;
         int parallelInstalls() const;
         QString installRoot() const;
+        QString confRoot() const;
+        QString varRoot() const;
         void setInstallSuggests(bool enable);
         void setParallelDownloads(int num);
         void setParallelInstalls(int num);
         void setInstallRoot(const QString &root);
+        void setConfRoot(const QString &root);
+        void setVarRoot(const QString &root);
 
         // Dialogue avec les paquets
         void sendMessage(Package *sender, const QString &message);
