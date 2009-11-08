@@ -136,7 +136,7 @@ void Package::processOut()
 
 void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    if (exitCode != 0 && exitStatus != QProcess::NormalExit)
+    if (exitCode != 0 || exitStatus != QProcess::NormalExit)
     {
         d->ps->raise(PackageSystem::ProcessError, d->installCommand);
         // L'installation est finie, le dire, même si on a eu une erreur (pas rester coincé dans le QEventLoop)
