@@ -405,15 +405,21 @@ void PackageSystemPrivate::mapFile(const QString &file, QFile **ptr, uchar **map
 
     if (!f->open(QIODevice::ReadWrite))
     {
-        ps->raise(PackageSystem::OpenFileError, f->fileName());
-        return;
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = f->fileName();
+        
+        throw err;
     }
 
     *map = f->map(0, f->size());
 
     if (*map == 0)
     {
-        ps->raise(PackageSystem::MapFileError, f->fileName());
-        return;
+        PackageError err;
+        err.type = PackageError::MapFileError;
+        err.info = f->fileName();
+        
+        throw err;
     }
 }

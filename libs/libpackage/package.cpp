@@ -52,6 +52,7 @@ struct Package::Private
     // Installation
     QProcess *installProcess;
     QString installCommand;
+    QString readBuf;
     
     // Métadonnées
     PackageMetaData *md;
@@ -117,7 +118,9 @@ void Package::install()
 
 void Package::processOut()
 {
-    QString out = d->installProcess->readAll().trimmed();
+    QString buf = d->installProcess->readAll();
+    d->readBuf += buf;
+    QString out = buf.trimmed();
 
     // Parser la sortie de type TYPE#paramètres#...
     QStringList parts = out.split('#');
@@ -138,11 +141,17 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 {
     if (exitCode != 0 || exitStatus != QProcess::NormalExit)
     {
-        d->ps->raise(PackageSystem::ProcessError, d->installCommand);
-        // L'installation est finie, le dire, même si on a eu une erreur (pas rester coincé dans le QEventLoop)
-        emit installed();
-        return;
+        PackageError err;
+        err.type = PackageError::ProcessError;
+        err.info = d->installCommand;
+        err.more = d->readBuf;
+        
+        d->readBuf.clear();
+        
+        throw err;
     }
+    
+    d->readBuf.clear();
     
     // Enregistrer le paquet dans la liste des paquets installés pour le prochain setup update
     QSettings *set = d->ps->installedPackagesList();

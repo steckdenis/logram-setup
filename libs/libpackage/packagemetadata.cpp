@@ -63,7 +63,11 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     
     if (QProcess::execute(cmd) != 0)
     {
-        ps->raise(PackageSystem::ProcessError, cmd);
+        PackageError err;
+        err.type = PackageError::ProcessError;
+        err.info = cmd;
+        
+        throw err;
     }
     
     // Charger le document

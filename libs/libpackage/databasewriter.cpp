@@ -311,7 +311,11 @@ void DatabaseWriter::rebuild()
 
                     if (QProcess::execute(cmd) != 0)
                     {
-                        parent->raise(PackageSystem::ProcessError, cmd);
+                        PackageError err;
+                        err.type = PackageError::ProcessError;
+                        err.info = cmd;
+                        
+                        throw err;
                     }
                 }
 
@@ -336,7 +340,11 @@ void DatabaseWriter::rebuild()
 
             if (!fl.open(QIODevice::ReadOnly))
             {
-                parent->raise(PackageSystem::OpenFileError, fname);
+                PackageError err;
+                err.type = PackageError::OpenFileError,
+                err.info = fname;
+                
+                throw err;
             }
 
             QByteArray line, name, long_desc, pkgname, pkgver;
@@ -738,7 +746,11 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fl.fileName();
+        
+        throw err;
     }
 
     length = packages.count();
@@ -757,7 +769,11 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fl.fileName();
+        
+        throw err;
     }
 
     length = strings.count();
@@ -783,7 +799,11 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fl.fileName();
+        
+        throw err;
     }
 
     length = translate.count();
@@ -809,7 +829,11 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fl.fileName();
+        
+        throw err;
     }
 
     length = depends.count();
@@ -847,7 +871,11 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        parent->raise(PackageSystem::OpenFileError, fl.fileName());
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fl.fileName();
+        
+        throw err;
     }
 
     length = strPackages.count();

@@ -91,7 +91,11 @@ Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
 
     if (!fl.open(QIODevice::ReadOnly))
     {
-        ps->raise(PackageSystem::OpenFileError, fl.fileName());
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fl.fileName();
+        
+        throw err;
     }
 
     // Parser le script
@@ -100,7 +104,11 @@ Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
 
     if (engine->hasUncaughtException())
     {
-        ps->raise(PackageSystem::ScriptException, engine->uncaughtExceptionLineNumber() + ": " + engine->uncaughtException().toString());
+        PackageError err;
+        err.type = PackageError::ScriptException;
+        err.info = engine->uncaughtExceptionLineNumber() + ": " + engine->uncaughtException().toString();
+        
+        throw err;
     }
 
     QScriptValue global = engine->globalObject();

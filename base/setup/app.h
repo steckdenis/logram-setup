@@ -50,9 +50,10 @@ class App : public QCoreApplication
         void update();
         void add(const QStringList &packages);
         void showFiles(const QString &packageName);
+        
+        void error(const PackageError &err);
 
     public slots:
-        void error(PackageSystem::Error err, const QString &info);
         void progress(PackageSystem::Progress type, int done, int total, const QString &msg);
 
         void message(Package *sndr, const QString &msg);

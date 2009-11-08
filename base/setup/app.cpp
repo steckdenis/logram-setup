@@ -36,121 +36,128 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     
-    // Ouvrir le système de paquets
-    ps = new PackageSystem(this);
-
-    connect(ps, SIGNAL(progress(PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(PackageSystem::Progress, int, int, const QString &)));
-    connect(ps, SIGNAL(error(PackageSystem::Error, const QString &)), this, SLOT(error(PackageSystem::Error, const QString &)));
-    connect(ps, SIGNAL(message(Package *, const QString &)), this, SLOT(message(Package *, const QString &)));
-    
-    //Parser les arguments
-    QStringList args = arguments();
-
-    if (args.count() == 1)
+    try
     {
-        help();
-        return;
-    }
+        // Ouvrir le système de paquets
+        ps = new PackageSystem(this);
 
-    // Explorer les options
-    QString opt = args.at(1);
-    bool changelog = false;
+        connect(ps, SIGNAL(progress(PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(PackageSystem::Progress, int, int, const QString &)));
+        connect(ps, SIGNAL(message(Package *, const QString &)), this, SLOT(message(Package *, const QString &)));
+        
+        //Parser les arguments
+        QStringList args = arguments();
 
-    while (opt.startsWith('-'))
-    {
-        if (opt == "-S")
+        if (args.count() == 1)
         {
-            bool isug = true;
+            help();
+            return;
+        }
 
-            if (args.at(2) == "off")
+        // Explorer les options
+        QString opt = args.at(1);
+        bool changelog = false;
+
+        while (opt.startsWith('-'))
+        {
+            if (opt == "-S")
             {
-                isug = false;
-                args.removeAt(1); // normal que ce soit 1 pas 2
+                bool isug = true;
+
+                if (args.at(2) == "off")
+                {
+                    isug = false;
+                    args.removeAt(1); // normal que ce soit 1 pas 2
+                }
+
+                ps->setInstallSuggests(isug);
+            }
+            else if (opt == "-I")
+            {
+                ps->setParallelInstalls(args.takeAt(2).toInt());
+            }
+            else if (opt == "-D")
+            {
+                ps->setParallelDownloads(args.takeAt(2).toInt());
+            }
+            else if (opt == "-iR")
+            {
+                ps->setInstallRoot(args.takeAt(2));
+            }
+            else if (opt == "-cR")
+            {
+                ps->setConfRoot(args.takeAt(2));
+            }
+            else if (opt == "-vR")
+            {
+                ps->setVarRoot(args.takeAt(2));
+            }
+            else if (opt == "-C")
+            {
+                changelog = true;
+            }
+            else
+            {
+                help();
             }
 
-            ps->setInstallSuggests(isug);
+            args.removeAt(1);
+            opt = args.at(1);
         }
-        else if (opt == "-I")
+        
+        ps->loadConfig();
+
+        QString cmd = args.at(1);
+
+        // Initialiser le système de paquet si on en a besoin
+        if (cmd != "update")
         {
-            ps->setParallelInstalls(args.takeAt(2).toInt());
+            ps->init();
         }
-        else if (opt == "-D")
+
+        if (cmd == "help")
         {
-            ps->setParallelDownloads(args.takeAt(2).toInt());
+            help();
         }
-        else if (opt == "-iR")
+        else if (cmd == "version")
         {
-            ps->setInstallRoot(args.takeAt(2));
+            version();
         }
-        else if (opt == "-cR")
+        else if (cmd == "search")
         {
-            ps->setConfRoot(args.takeAt(2));
+            find(args.at(2));
         }
-        else if (opt == "-vR")
+        else if (cmd == "showpkg")
         {
-            ps->setVarRoot(args.takeAt(2));
+            showpkg(args.at(2), changelog);
         }
-        else if (opt == "-C")
+        else if (cmd == "update")
         {
-            changelog = true;
+            update();
+        }
+        else if (cmd == "add")
+        {
+            QStringList packages;
+
+            for (int i=2; i<args.count(); ++i)
+            {
+                packages.append(args.at(i));
+            }
+
+            add(packages);
+        }
+        else if (cmd == "files")
+        {
+            showFiles(args.at(2));
         }
         else
         {
             help();
         }
-
-        args.removeAt(1);
-        opt = args.at(1);
     }
-    
-    ps->loadConfig();
-
-    QString cmd = args.at(1);
-
-    // Initialiser le système de paquet si on en a besoin
-    if (cmd != "update")
+    catch (const PackageError &err)
     {
-        ps->init();
-    }
-
-    if (cmd == "help")
-    {
-        help();
-    }
-    else if (cmd == "version")
-    {
-        version();
-    }
-    else if (cmd == "search")
-    {
-        find(args.at(2));
-    }
-    else if (cmd == "showpkg")
-    {
-        showpkg(args.at(2), changelog);
-    }
-    else if (cmd == "update")
-    {
-        update();
-    }
-    else if (cmd == "add")
-    {
-        QStringList packages;
-
-        for (int i=2; i<args.count(); ++i)
-        {
-            packages.append(args.at(i));
-        }
-
-        add(packages);
-    }
-    else if (cmd == "files")
-    {
-        showFiles(args.at(2));
-    }
-    else
-    {
-        help();
+        error(err);
+        exit(1);
     }
 }
 
@@ -190,30 +197,35 @@ void App::version()
     cout << "(at your option) any later version." << endl;
 }
 
-void App::error(PackageSystem::Error err, const QString &info)
+void App::error(const PackageError &err)
 {
     cout << COLOR("ERROR : ", "31");
 
-    switch (err)
+    switch (err.type)
     {
-        case PackageSystem::OpenFileError:
+        case PackageError::OpenFileError:
             cout << "Cannot open file ";
             break;
-        case PackageSystem::MapFileError:
+        case PackageError::MapFileError:
             cout << "Cannot map file ";
             break;
-        case PackageSystem::ProcessError:
+        case PackageError::ProcessError:
             cout << "Error when executing command ";
             break;
-        case PackageSystem::DownloadError:
+        case PackageError::DownloadError:
             cout << "Error when downloading file ";
             break;
-        case PackageSystem::ScriptException:
+        case PackageError::ScriptException:
             cout << "Error in the QtScript ";
             break;
     }
     
-    cout << COLOR(info, "35") << endl;
+    cout << COLOR(err.info, "35") << endl;
+    
+    if (!err.more.isEmpty())
+    {
+        cout << qPrintable(err.more);
+    }
 }
 
 void App::progress(PackageSystem::Progress type, int done, int total, const QString &msg)

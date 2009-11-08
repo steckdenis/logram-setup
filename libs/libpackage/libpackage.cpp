@@ -220,7 +220,11 @@ QStringList PackageSystem::filesOfPackage(const QString &packageName)
 
     if (!fl.open(QIODevice::ReadOnly))
     {
-        raise(OpenFileError, fileName);
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fileName;
+        
+        throw err;
     }
 
     // Lire les lignes et les ajouter au résultat
@@ -278,7 +282,16 @@ ManagedDownload *PackageSystem::download(const QString &type, const QString &url
         else
         {
             d->dlDest = dest;
-            d->loop.exec();
+            
+            try
+            {
+                d->loop.exec();
+            }
+            catch (const PackageError &err)
+            {
+                d->loop.exit(1);
+                throw;
+            }
             
             delete reply;
         }
@@ -287,7 +300,11 @@ ManagedDownload *PackageSystem::download(const QString &type, const QString &url
     {
         if (!QFile::copy(url, dest))
         {
-            raise(DownloadError, url);
+            PackageError err;
+            err.type = PackageError::DownloadError;
+            err.info = url;
+            
+            throw err;
         }
 
         // Si on ne bloquait pas, dire que c'est fini quand-même
@@ -314,13 +331,11 @@ void PackageSystem::downloadFinished(QNetworkReply *reply)
     // Voir s'il y a eu des erreurs
     if (reply->error() != QNetworkReply::NoError)
     {
-        raise(PackageSystem::DownloadError, d->dlDest);
-
-        if (md == 0)
-        {
-            // On était bloquant, quitter la boucle
-            d->loop.exit(1);
-        }
+        PackageError err;
+        err.type = PackageError::DownloadError;
+        err.info = d->dlDest;
+        
+        throw err;
     }
 
     // Téléchargement
@@ -339,7 +354,11 @@ void PackageSystem::downloadFinished(QNetworkReply *reply)
 
     if (!fl.open(QIODevice::WriteOnly))
     {
-        raise(OpenFileError, fl.fileName());
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fl.fileName();
+        
+        throw err;
     }
 
     fl.write(reply->readAll());
@@ -598,12 +617,6 @@ void PackageSystem::setInstallRoot(const QString &root)
 }
 
 /* Signaux */
-
-void PackageSystem::raise(Error err, const QString &info)
-{
-    emit error(err, info);
-}
-
 void PackageSystem::sendProgress(Progress type, int num, int tot, const QString &msg)
 {
     emit progress(type, num, tot, msg);

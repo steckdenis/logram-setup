@@ -41,6 +41,22 @@ struct ManagedDownload
     QString destination;
 };
 
+struct PackageError
+{
+    enum Error
+    {
+        OpenFileError,
+        MapFileError,
+        ProcessError,
+        DownloadError,
+        ScriptException
+    };
+    
+    Error type;
+    QString info;   // Informations en une ligne (le nom du fichier qu'on peut pas ouvrir, etc)
+    QString more;   // Facultatif : informations supplémentaires (sortie du script qui a planté)
+};
+
 class PackageSystem : public QObject
 {
     Q_OBJECT
@@ -86,16 +102,7 @@ class PackageSystem : public QObject
         // Dialogue avec les paquets
         void sendMessage(Package *sender, const QString &message);
 
-        // Gestion des erreurs
-        enum Error
-        {
-            OpenFileError,
-            MapFileError,
-            ProcessError,
-            DownloadError,
-            ScriptException
-        };
-
+        // Progression
         enum Progress
         {
             Other,
@@ -105,12 +112,10 @@ class PackageSystem : public QObject
             Install
         };
 
-        void raise(Error err, const QString &info);
         void sendProgress(Progress type, int num, int tot, const QString &msg);
         void endProgress(Progress type, int tot);
 
     signals:
-        void error(PackageSystem::Error err, const QString &info);
         void progress(PackageSystem::Progress type, int num, int tot, const QString &msg);
         void downloadEnded(ManagedDownload *reply);
 
