@@ -13,7 +13,7 @@ gitco()
 
 gitversion()
 {
-    git log --raw -1 | grep 'Date:' | cut -d ' ' -f 5,6,8 | sed -e 's/ //g'
+    git log --pretty=format:'%ai' -1 | cut -d ' ' -f 1 | sed -e 's/-//g'
 }
 
 # Charger le fichier .sh
@@ -130,7 +130,17 @@ binaries()
 
         # Copier les métadonnées
         mkdir -p tmp/__LOGRAM
-        cp -r $shdir/* tmp/__LOGRAM
+        
+        cp $shdir/pkgbuild.sh tmp/__LOGRAM
+        cp $shdir/descriptions.* tmp/__LOGRAM
+        cp $shdir/metadata.xml tmp/__LOGRAM
+        
+        # Copier les fichiers en plus
+        xml sel -T -t -m "//package[@name='$binary']/embed" -v @file -n $shdir/metadata.xml \
+        | (while read l; do
+            mkdir -p $(dirname "tmp/__LOGRAM/$l")
+            cp -r "$shdir/$l" "tmp/__LOGRAM/$l"
+        done)
 
         # Obtenir les dépendances
         export GUI="false"
