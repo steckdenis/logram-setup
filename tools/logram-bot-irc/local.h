@@ -7,12 +7,15 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
-#include <pthread.h>
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+
+#include <pthread.h>
+#include <regex.h>
 
 #include "queue.h"
 #include "structs.h"

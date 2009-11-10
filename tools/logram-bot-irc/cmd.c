@@ -44,15 +44,20 @@ char **parse_cmd (struct msg_t *msg)
 
 void handle_quit (int sock, struct msg_t *data, int argc, char **argv)
 {
-	if (!strcmp (global->config.admin, data->userhost))
+	regex_t reg;
+	int match;
+
+	if (0 == regcomp (&reg, global->config.admin, REG_NOSUB | REG_EXTENDED))
 	{
-		release ();
+		match = regexec (&reg, data->userhost, 0, NULL, 0);
+		regfree (&reg);
+
+		if (match == 0)
+			release ();
 	}
-	else
-	{
-		message (sock, "PRIVMSG %s :Vous n'avez pas les permissions pour fermer le bot\r\n",
-				data->channel);
-	}
+
+	message (sock, "PRIVMSG %s :Vous n'avez pas les permissions pour fermer le bot\r\n",
+			data->channel);
 }
 
 void handle_help (int sock, struct msg_t *data, int argc, char **argv)

@@ -14,7 +14,7 @@ void init (void)
 	global->config.port    = 6667;
 	global->config.channel = "#logram-project";
 	/* Bot */
-	global->config.admin = "n=linkdd@ydb.me";
+	global->config.admin = "n=linkdd@ydb.me|n=quassel@cable-85.28.122.36.coditel.net";
 	global->config.nick  = "Logram-Bot";
 	global->config.host  = "Logram-Bot_hostname";
 	global->config.ident = "Logram-Bot";
