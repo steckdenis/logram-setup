@@ -16,7 +16,21 @@
     aucun problème.
 */
 
+var DOWNLOAD_FACTOR=20;
+var INSTALL_FACTOR=15;
+
 function weight(list, act)
 {
-    return list.length;
+    var w;
+    w = 0;
+    
+    for (var i=0; i<list.length; i++)
+    {
+        pkg = list[i];
+        
+        w += (pkg.downloadSize * DOWNLOAD_FACTOR / 1048576);
+        w += (pkg.installSize * INSTALL_FACTOR / 1048576);
+    }
+    
+    return w;
 }

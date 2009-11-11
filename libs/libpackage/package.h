@@ -44,6 +44,25 @@ class Package : public QObject
 {
     Q_OBJECT
     
+    Q_PROPERTY(Solver::Action action READ action)
+    
+    Q_PROPERTY(QString name READ name)
+    Q_PROPERTY(QString version READ version)
+    Q_PROPERTY(QString maintainer READ maintainer)
+    Q_PROPERTY(QString shortDesc READ shortDesc)
+    Q_PROPERTY(QString source READ source)
+    Q_PROPERTY(QString repo READ repo)
+    Q_PROPERTY(QString section READ section)
+    Q_PROPERTY(QString distribution READ distribution)
+    Q_PROPERTY(QString license READ license)
+    Q_PROPERTY(QString arch READ arch)
+    Q_PROPERTY(QString url READ url)
+    
+    Q_PROPERTY(bool gui READ isGui)
+    
+    Q_PROPERTY(int downloadSize READ downloadSize)
+    Q_PROPERTY(int installSize READ installSize)
+    
     public:
         Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver::Action _action = Solver::None);
         ~Package();
