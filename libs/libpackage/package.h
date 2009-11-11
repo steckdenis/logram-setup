@@ -89,6 +89,8 @@ class Package : public QObject
         QString license();
         QString arch();
         QString url(UrlType type = Package::Binary);
+        QString packageHash();
+        QString metadataHash();
         bool isGui();
         
         QDateTime installedDate();

@@ -134,7 +134,7 @@ void Solver::addPackage(const QString &nameStr, Action action)
 
 int Solver::results() const
 {
-    return d->lists.values().count();
+    return d->lists.count();
 }
 
 QList<Package *> Solver::result(int index, int &weight) const

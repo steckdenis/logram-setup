@@ -50,7 +50,8 @@ struct PackageError
         ProcessError,
         DownloadError,
         ScriptException,
-        SignatureError
+        SignatureError,
+        SHAError
     };
     
     Error type;

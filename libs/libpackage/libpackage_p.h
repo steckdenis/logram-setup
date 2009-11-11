@@ -122,6 +122,8 @@ class PackageSystemPrivate
         QString packageLicense(int index);
         QString packageArch(int index);
         QString packageUrl(int index);
+        QString packagePkgHash(int index);
+        QString packageMtdHash(int index);
         bool packageGui(int index);
         int packageDownloadSize(int index);
         int packageInstallSize(int index);

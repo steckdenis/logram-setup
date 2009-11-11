@@ -227,7 +227,10 @@ void App::error(const PackageError &err)
             cout << "Error in the QtScript ";
             break;
         case PackageError::SignatureError:
-            cout << "Invalid signature of file ";
+            cout << "Invalid GPG signature of file ";
+            break;
+        case PackageError::SHAError:
+            cout << "Bad SHA1 sum, file corrupted ";
             break;
     }
     
@@ -235,7 +238,7 @@ void App::error(const PackageError &err)
     
     if (!err.more.isEmpty())
     {
-        cout << qPrintable(err.more);
+        cout << qPrintable(err.more) << endl;
     }
 }
 

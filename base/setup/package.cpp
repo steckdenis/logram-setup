@@ -100,13 +100,16 @@ void App::manageResults(Solver *solver)
         // TODO (p.e dans solver) : si la liste est vide et qu'on a demandé une installation, passer le paquet en installé manuellement
         if (packages.count() == 0)
         {
+            index++;
+            
             if (index >= tot)
             {
                 // Reboucler
                 if (allempty == true)
                 {
                     // Sauf que rien ne contient la solution, donc quitter
-                    break;
+                    cout << COLOR(tr("Les changements que vous souhaitez appliquer semblent déjà avoir été appliqués. Votre système ne sera pas modifié."), "34") << endl << endl;
+                    return;
                 }
                 
                 index = 0;
@@ -114,7 +117,6 @@ void App::manageResults(Solver *solver)
             }
             
             // Passer à la solution suivante
-            index++;
             continue;
         }
         
@@ -155,12 +157,6 @@ void App::manageResults(Solver *solver)
                  << COLOR(pkg->version().leftJustified(15, ' ', true), "32") << ' '
                  << qPrintable(pkg->shortDesc())
                  << endl;
-        }
-        
-        if (allempty)
-        {
-            cout << COLOR(tr("Cette solution est vide, ce qui veut dire qu'aucun changement ne devra être appliqué à votre système. Si c'est la seule solution, alors c'est que tout est déjà correct au niveau de vos paquets"), "34") << endl;
-            return;
         }
 
         cout << endl;

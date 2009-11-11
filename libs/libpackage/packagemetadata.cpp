@@ -28,6 +28,7 @@
 #include <QFile>
 #include <QLocale>
 #include <QRegExp>
+#include <QCryptographicHash>
 
 #include <QtXml>
 #include <QtDebug>
@@ -78,10 +79,36 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     }
     
     // Charger le document
-    qDebug() << fname;
     QFile fl(fname);
     
-    setContent(&fl);
+    if (!fl.open(QIODevice::ReadOnly))
+    {
+        PackageError err;
+        err.type = PackageError::OpenFileError;
+        err.info = fname;
+        
+        throw err;
+    }
+    
+    QByteArray contents = fl.readAll();
+    fl.close();
+    
+    // Vérifier le hash
+    QByteArray sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
+    
+    qDebug() << sha1sum << pkg->metadataHash();
+    
+    if (sha1sum != pkg->metadataHash())
+    {
+        PackageError err;
+        err.type = PackageError::SHAError;
+        err.info = pkg->name();
+        err.more = fname;
+        
+        throw err;
+    }
+    
+    setContent(contents);
 }
 
 PackageMetaData::~PackageMetaData()

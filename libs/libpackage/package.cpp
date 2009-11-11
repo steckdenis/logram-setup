@@ -30,6 +30,8 @@
 #include <QCoreApplication>
 #include <QProcess>
 #include <QSettings>
+#include <QFile>
+#include <QCryptographicHash>
 
 /*************************************
 ******* Privates *********************
@@ -198,8 +200,6 @@ void Package::download()
     d->waitingDest = fname;
 
     d->ps->download(type, u, fname, false); // Non-bloquant
-    
-    //emit downloaded();
 }
 
 void Package::downloadEnded(ManagedDownload *md)
@@ -208,6 +208,34 @@ void Package::downloadEnded(ManagedDownload *md)
     {
         if (md->destination == d->waitingDest)
         {
+            // Vérifier le sha1sum du paquet
+            QFile fl(d->waitingDest);
+            
+            if (!fl.open(QIODevice::ReadOnly))
+            {
+                PackageError err;
+                err.type = PackageError::OpenFileError;
+                err.info = d->waitingDest;
+                
+                throw err;
+            }
+            
+            QByteArray contents = fl.readAll();
+            fl.close();
+            
+            QString sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
+            
+            // Comparer les hashs
+            if (sha1sum != packageHash())
+            {
+                PackageError err;
+                err.type = PackageError::SHAError;
+                err.info = name();
+                err.more = md->url;
+                
+                throw err;
+            }
+            
             // On a téléchargé le paquet !
             emit downloaded();
         }
@@ -365,6 +393,16 @@ QString Package::license()
 QString Package::arch()
 {
     return d->psd->packageArch(d->index);
+}
+
+QString Package::packageHash()
+{
+    return d->psd->packagePkgHash(d->index);
+}
+
+QString Package::metadataHash()
+{
+    return d->psd->packageMtdHash(d->index);
 }
 
 QString Package::url(UrlType type)

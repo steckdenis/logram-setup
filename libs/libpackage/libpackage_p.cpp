@@ -339,6 +339,24 @@ QString PackageSystemPrivate::packageArch(int index)
     return QString(string(m_strings, pkg->arch));
 }
 
+QString PackageSystemPrivate::packagePkgHash(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->pkg_hash));
+}
+
+QString PackageSystemPrivate::packageMtdHash(int index)
+{
+    _Package *pkg = package(index);
+
+    if (pkg == 0) return QString();
+
+    return QString(string(m_strings, pkg->mtd_hash));
+}
+
 bool PackageSystemPrivate::packageGui(int index)
 {
     _Package *pkg = package(index);
