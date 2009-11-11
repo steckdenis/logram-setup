@@ -54,6 +54,23 @@ void DatabaseWriter::download(const QString &source, const QString &url, const Q
 
     // Le télécharger
     parent->download(type, url, fileName);
+    
+    // Télécharger également la signature
+    parent->download(type, url + ".sig", fileName + ".sig");
+    
+    // Vérifier la signature
+    QString cmd = "gpg --verify " + fileName + ".sig " + fileName;
+    if (QProcess::execute(cmd) != 0)
+    {
+        // Signature pas bonne
+        PackageError err;
+        err.type = PackageError::SignatureError;
+        err.info = url;
+        
+        throw err;
+    }
+    
+    QFile::remove(fileName + ".sig");
 }
 
 int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool create)
@@ -475,6 +492,14 @@ void DatabaseWriter::rebuild()
                     else if (key == "License")
                     {
                         pkg->license = stringIndex(value, index, false, false);
+                    }
+                    else if (key == "PackageHash")
+                    {
+                        pkg->pkg_hash = stringIndex(value, index, false, false);
+                    }
+                    else if (key == "MetadataHash")
+                    {
+                        pkg->mtd_hash = stringIndex(value, index, false, false);
                     }
                     else if (key == "DownloadSize")
                     {

@@ -49,7 +49,8 @@ struct PackageError
         MapFileError,
         ProcessError,
         DownloadError,
-        ScriptException
+        ScriptException,
+        SignatureError
     };
     
     Error type;

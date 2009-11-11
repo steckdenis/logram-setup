@@ -226,6 +226,9 @@ void App::error(const PackageError &err)
         case PackageError::ScriptException:
             cout << "Error in the QtScript ";
             break;
+        case PackageError::SignatureError:
+            cout << "Invalid signature of file ";
+            break;
     }
     
     cout << COLOR(err.info, "35") << endl;

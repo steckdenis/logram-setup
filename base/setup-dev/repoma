@@ -150,24 +150,26 @@ include()
             fi
         done < $INCOMING/$(basename $filename .tlz).control
 
-        # Écrire dans dists/<distrib>/<arch>/parts/<d>/<name>.control, puisqu'on n'a
+        # Écrire dans dists/<distrib>/<arch>/parts/<d>/<name>.control
         cdir=$DISTS/$distrib/$arch/parts/$d
-
         mkdir -p $cdir
-
-        echo "[$name]" > $cdir/$name.control
-        echo "Arch=$arch" >> $cdir/$name.control
-        echo -e "$content" >> $cdir/$name.control
-
+        
         # Copier et adapter tous les fichiers langue du paquet (<name>.desc.*)
         cp $INCOMING/$name.desc.* $cdir
         
         # Copier les métadonnées
         cat $INCOMING/$name.metadata.xml | lzma > $metadir/$name~$version.metadata.xml.lzma
+        
+        # Fichier .control
+        echo "[$name]" > $cdir/$name.control
+        echo "Arch=$arch" >> $cdir/$name.control
+        echo "PackageHash=$(cd $(dirname $POOL) && sha1sum -b $filename | cut -d ' ' -f 1)" >> $cdir/$name.control
+        echo "MetadataHash=$(cd $(dirname $METADATA) && sha1sum -b $metadir/$name~$version.metadata.xml.lzma | cut -d ' ' -f 1)" >> $cdir/$name.control
+        echo -e "$content" >> $cdir/$name.control
     fi
 
     # Générer la liste des fichiers
-    tar --lzma --list -f $filename > $dir/$(basename $filename).files
+    tar --lzma --list -f $filename > $dir/$bname.files
 }
 
 tellv4()
@@ -196,11 +198,17 @@ exp()
 
             # Bêtement concaténer le contenu des fichiers de parts
             find $arch/parts -name '*.control' -exec cat {} \; | lzma > $arch/packages.lzma
+            
+            # Signer ce fichier
+            (cd $arch && gpg --yes --local-user $SIGN_USER --detach-sign packages.lzma)
 
             # Générer les fichiers de langue
             for lang in $LANGS
             do
                 find $arch/parts -name "*.$lang" -exec cat {} \; | lzma > $arch/translate.$lang.lzma
+                
+                # Signer ce fichier
+                (cd $arch && gpg --yes --local-user $SIGN_USER --detach-sign translate.$lang.lzma)
             done
 
             echo " done"
