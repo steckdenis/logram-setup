@@ -30,6 +30,7 @@
 #include <QRegExp>
 
 #include <QtXml>
+#include <QtDebug>
 
 struct PackageMetaData::Private
 {
@@ -45,32 +46,39 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     d->ps = ps;
     d->pkg = pkg;
     
-    // Télécharger les métadonnées
-    QString repo = pkg->repo();
-    QString type = ps->repoType(repo);
-    QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.lzma";
+    QString fname = ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + pkg->name() + "_" + pkg->version() + "/metadata.xml";
     
-    ps->download(type, ps->repoUrl(repo) + "/" + pkg->url(Package::Metadata), fname);
-    
-    // Décompresser les métadonnées
-    QString cmd = "unlzma " + fname;
-    fname.remove(".lzma");
-    
-    if (QFile::exists(fname))
+    // Si le paquet n'est pas téléchargé, télécharger les métadonnées
+    if (!QFile::exists(fname))
     {
-        QFile::remove(fname);
-    }
-    
-    if (QProcess::execute(cmd) != 0)
-    {
-        PackageError err;
-        err.type = PackageError::ProcessError;
-        err.info = cmd;
+        // Télécharger les métadonnées
+        QString repo = pkg->repo();
+        QString type = ps->repoType(repo);
+        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.lzma";
         
-        throw err;
+        ps->download(type, ps->repoUrl(repo) + "/" + pkg->url(Package::Metadata), fname);
+        
+        // Décompresser les métadonnées
+        QString cmd = "unlzma " + fname;
+        fname.remove(".lzma");
+        
+        if (QFile::exists(fname))
+        {
+            QFile::remove(fname);
+        }
+        
+        if (QProcess::execute(cmd) != 0)
+        {
+            PackageError err;
+            err.type = PackageError::ProcessError;
+            err.info = cmd;
+            
+            throw err;
+        }
     }
     
     // Charger le document
+    qDebug() << fname;
     QFile fl(fname);
     
     setContent(&fl);

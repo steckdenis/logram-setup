@@ -94,7 +94,7 @@ case "$1" in
     install)
         depack $2 $3 $4 $5 || exit 1
         
-        source /var/cache/lgrpkg/temp/$2_$3/__LOGRAM/pkgbuild.sh || exit 1
+        source $5/var/cache/lgrpkg/temp/$2_$3/__LOGRAM/pkgbuild.sh || exit 1
 
         preinst $2 $3 $5 || exit 1
         inst $2 $3 $4 $5 || exit 1

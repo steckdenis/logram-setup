@@ -79,6 +79,14 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             {
                 ps->setParallelDownloads(args.takeAt(2).toInt());
             }
+            else if (opt == "-R")
+            {
+                QString root = args.takeAt(2);
+                
+                ps->setInstallRoot(root);
+                ps->setConfRoot(root);
+                ps->setVarRoot(root);
+            }
             else if (opt == "-iR")
             {
                 ps->setInstallRoot(args.takeAt(2));
