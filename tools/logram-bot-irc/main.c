@@ -26,12 +26,14 @@ void init (void)
 	global->title.ask     = NULL;
 	global->title.msg     = NULL;
 	global->title.wiki    = NULL;
+	global->title.pkg     = NULL;
 
 	global->link.news    = NULL;
 	global->link.journal = NULL;
 	global->link.ask     = NULL;
 	global->link.msg     = NULL;
 	global->link.wiki    = NULL;
+	global->link.pkg     = NULL;
 }
 
 void release (void)

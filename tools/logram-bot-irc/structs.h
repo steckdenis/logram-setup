@@ -23,6 +23,7 @@ struct global_t
 		char *ask;
 		char *msg;
 		char *wiki;
+		char *pkg;
 	} title, link;
 
 	int sock;

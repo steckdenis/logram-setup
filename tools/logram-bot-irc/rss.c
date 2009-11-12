@@ -39,6 +39,7 @@ void get_rss (int s)
 		parse_rss (feeds, &global->title.ask,     &global->link.ask,     "Demande", s);	
 		parse_rss (feeds, &global->title.msg,     &global->link.msg,     "Forum",   s);	
 		parse_rss (feeds, &global->title.wiki,    &global->link.wiki,    "Wiki",    s);	
+		parse_rss (feeds, &global->title.pkg,     &global->link.pkg,     "Paquet",  s);	
 		fclose (feeds);
 	}
 }
