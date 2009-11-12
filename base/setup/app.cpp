@@ -106,6 +106,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             else
             {
                 help();
+                return;
             }
 
             args.removeAt(1);
@@ -132,10 +133,22 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         }
         else if (cmd == "search")
         {
+            if (args.count() != 3)
+            {
+                help();
+                return;
+            }
+            
             find(args.at(2));
         }
         else if (cmd == "showpkg")
         {
+            if (args.count() != 3)
+            {
+                help();
+                return;
+            }
+            
             showpkg(args.at(2), changelog);
         }
         else if (cmd == "update")
@@ -144,6 +157,12 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         }
         else if (cmd == "add")
         {
+            if (args.count() < 3)
+            {
+                help();
+                return;
+            }
+            
             QStringList packages;
 
             for (int i=2; i<args.count(); ++i)
@@ -155,11 +174,18 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         }
         else if (cmd == "files")
         {
+            if (args.count() != 3)
+            {
+                help();
+                return;
+            }
+            
             showFiles(args.at(2));
         }
         else
         {
             help();
+            return;
         }
     }
     catch (const PackageError &err)
