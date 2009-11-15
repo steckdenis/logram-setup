@@ -70,6 +70,7 @@ struct Solver::Private
     bool idone;
     Package *installingPackage;
     QList<Package *> list;
+    QList<Package *> downloadedPackages;
 
     // Fonctions
     void addPkg(Pkg &pkg, int listIndex, QList<int> &plists);
@@ -257,6 +258,8 @@ void Solver::process(int index)
     // Nettoyage
     disconnect(this, SLOT(packageInstalled()));
     disconnect(this, SLOT(packageDownloaded()));
+    
+    d->downloadedPackages.clear();
 }
 
 void Solver::packageInstalled()
@@ -264,9 +267,9 @@ void Solver::packageInstalled()
     Package *pkg = static_cast<Package *>(sender());
     
     // Voir si on a un paquet suivant
-    if (d->ipackages < d->dpackages)
+    if (d->downloadedPackages.count() != 0)
     {
-        Package *next = d->list.at(d->ipackages);
+        Package *next = d->downloadedPackages.takeAt(0);
 
         // Progression
         d->ps->sendProgress(PackageSystem::Install, d->ipackages, d->list.count(), next->name());
@@ -318,6 +321,11 @@ void Solver::packageDownloaded()
         d->installingPackage = pkg;
         pkg->install();
     }
+    else
+    {
+        // Placer ce paquet en attente d'installation
+        d->downloadedPackages.append(pkg);
+    }
 
     // Si disponible, télécharger un autre paquet
     if (d->dpackages < d->list.count())
@@ -327,7 +335,8 @@ void Solver::packageDownloaded()
         // Connexion de signaux
         connect(next, SIGNAL(installed()), this, SLOT(packageInstalled()));
         connect(next, SIGNAL(downloaded()), this, SLOT(packageDownloaded()), Qt::QueuedConnection);
-
+        connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
+        
         // Progression
         d->ps->sendProgress(PackageSystem::GlobalDownload, d->dpackages, d->list.count(), next->name());
 
