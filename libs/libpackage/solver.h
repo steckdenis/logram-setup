@@ -28,6 +28,7 @@
 class Package;
 class PackageSystem;
 class PackageSystemPrivate;
+class Communication;
 
 class Solver : public QObject
 {
@@ -57,6 +58,9 @@ class Solver : public QObject
     private slots:
         void packageInstalled();
         void packageDownloaded();
+        
+    signals:
+        void communication(Package *sender, Communication *comm);
 
     private:
         struct Private;

@@ -42,7 +42,6 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         ps = new PackageSystem(this);
 
         connect(ps, SIGNAL(progress(PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(PackageSystem::Progress, int, int, const QString &)));
-        connect(ps, SIGNAL(message(Package *, const QString &)), this, SLOT(message(Package *, const QString &)));
         
         //Parser les arguments
         QStringList args = arguments();
@@ -304,11 +303,4 @@ void App::progress(PackageSystem::Progress type, int done, int total, const QStr
     cout << endl;
 
     // NOTE: Trouver une manière de ne pas spammer la sortie quand on télécharge quelque-chose (ça émet vraiment beaucoup de progress()). Plusieurs fichiers peuvent être téléchargés en même temps.
-}
-
-void App::message(Package *sndr, const QString &msg)
-{
-    cout << COLOR("MESSAGE ", "33");
-    cout << COLOR(tr("de %1~%2 : ").arg(sndr->name()).arg(sndr->version()), "37");
-    cout << qPrintable(msg) << endl;
 }

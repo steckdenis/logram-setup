@@ -11,8 +11,8 @@ QT -= gui
 QT += xml network script
 
 # Input
-HEADERS += libpackage.h libpackage_p.h package.h databasewriter.h solver.h packagemetadata.h
-SOURCES += libpackage.cpp libpackage_p.cpp package.cpp databasewriter.cpp solver.cpp packagemetadata.cpp
+HEADERS += libpackage.h libpackage_p.h package.h databasewriter.h solver.h packagemetadata.h communication.h
+SOURCES += libpackage.cpp libpackage_p.cpp package.cpp databasewriter.cpp solver.cpp packagemetadata.cpp communication.cpp
 
 includes.files = *.h
 includes.path = /usr/include/logram

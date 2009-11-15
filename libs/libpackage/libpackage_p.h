@@ -103,6 +103,7 @@ class PackageSystemPrivate
 {
     public:
         PackageSystemPrivate(PackageSystem *_ps);
+        ~PackageSystemPrivate();
         void init();
 
         int package(const QString &name, const QString &version);

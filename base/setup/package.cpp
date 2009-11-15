@@ -32,6 +32,8 @@ void App::add(const QStringList &packages)
 {
     Solver *solver = ps->newSolver();
     
+    connect(solver, SIGNAL(communication(Package *, Communication *)), this, SLOT(communication(Package *, Communication *)));
+    
     foreach(const QString &package, packages)
     {
         QString name = package;
@@ -182,7 +184,7 @@ void App::manageResults(Solver *solver)
                                   .arg(PackageSystem::fileSizeFormat(dlSize))
                                   .arg(PackageSystem::fileSizeFormat(-instSize)));
         }
-        cin >> in;
+        cin >> in; cin.get();
 
         if (in == 'y')
         {

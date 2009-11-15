@@ -34,6 +34,7 @@
 class PackageSystem;
 class PackageSystemPrivate;
 class PackageMetaData;
+class Communication;
 struct ManagedDownload;
 
 class _Depend;
@@ -109,6 +110,8 @@ class Package : public QObject
     signals:
         void installed();
         void downloaded();
+        
+        void communication(Package *sender, Communication *comm);
 
     private slots:
         void downloadEnded(ManagedDownload *md);

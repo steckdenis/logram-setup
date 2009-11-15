@@ -31,6 +31,12 @@
 PackageSystemPrivate::PackageSystemPrivate(PackageSystem *_ps)
 {
     ps = _ps;
+    
+    f_packages = 0;
+    f_strings = 0;
+    f_translate = 0;
+    f_depends = 0;
+    f_strpackages = 0;
 }
 
 void PackageSystemPrivate::init()
@@ -41,6 +47,45 @@ void PackageSystemPrivate::init()
     mapFile("translate", &f_translate, &m_translate);
     mapFile("depends", &f_depends, &m_depends);
     mapFile("strpackages", &f_strpackages, &m_strpackages);
+}
+
+PackageSystemPrivate::~PackageSystemPrivate()
+{
+    if (f_packages != 0)
+    {
+        f_packages->close();
+        f_packages->unmap(m_packages);
+        delete f_packages;
+        f_packages = 0;
+    }
+    if (f_strings != 0)
+    {
+        f_strings->close();
+        f_strings->unmap(m_strings);
+        delete f_strings;
+        f_strings = 0;
+    }
+    if (f_translate != 0)
+    {
+        f_translate->close();
+        f_translate->unmap(m_translate);
+        delete f_translate;
+        f_translate = 0;
+    }
+    if (f_depends != 0)
+    {
+        f_depends->close();
+        f_depends->unmap(m_depends);
+        delete f_depends;
+        f_depends = 0;
+    }
+    if (f_strpackages != 0)
+    {
+        f_strpackages->close();
+        f_strpackages->unmap(m_strpackages);
+        delete f_strpackages;
+        f_strpackages = 0;
+    }
 }
 
 QList<int> PackageSystemPrivate::packagesByName(const QString &regex)

@@ -24,6 +24,7 @@
 #include "libpackage.h"
 #include "libpackage_p.h"
 #include "packagemetadata.h"
+#include "communication.h"
 
 #include <QtDebug>
 
@@ -105,6 +106,8 @@ PackageMetaData *Package::metadata()
 void Package::install()
 {
     d->installProcess = new QProcess();
+    
+    d->installProcess->setProcessChannelMode(QProcess::MergedChannels);
 
     connect(d->installProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processEnd(int, QProcess::ExitStatus)));
     connect(d->installProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(processOut()));
@@ -124,18 +127,32 @@ void Package::processOut()
     d->readBuf += buf;
     QString out = buf.trimmed();
 
-    // Parser la sortie de type TYPE#paramètres#...
-    QStringList parts = out.split('#');
-    QString command = parts.takeAt(0);
-
-    if (command == "MESSAGE")
+    // Voir si une communication n'est pas arrivée
+    if (out.startsWith("[[>>|") && out.endsWith("|<<]]"))
     {
-        d->ps->sendMessage(this, parts.join("#"));
-    }
-    else
-    {
-        // Message en texte brut
-        d->ps->sendMessage(this, out);
+        QStringList parts = out.split('|');
+        
+        // Trouver le nom de la communication, en enlevant d'abord le premier [[>>
+        parts.removeAt(0);
+        QString name = parts.takeAt(0);
+        
+        // Créer la communication
+        Communication *comm = new Communication(d->ps, this, name);
+        
+        // Explorer les paramètres
+        while (parts.count() != 1)
+        {
+            QString key = parts.takeAt(0);
+            QString value = parts.takeAt(0);
+            
+            comm->addKey(key, value);
+        }
+        
+        // Envoyer la demande de communication
+        emit communication(this, comm);
+        
+        // Retourner le résultat au processus
+        d->installProcess->write(comm->processData().toUtf8() + "\n");
     }
 }
 
@@ -173,6 +190,8 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     set->setValue("Conflicts", dependsToString(depends(), DEPEND_TYPE_CONFLICT));
     set->setValue("DownloadSize", downloadSize());
     set->setValue("InstallSize", installSize());
+    set->setValue("MetadataHash", metadataHash());
+    set->setValue("PackageHash", packageHash());
 
     set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
     
@@ -183,7 +202,12 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     set->setValue("InstallRoot", d->ps->installRoot());
     set->endGroup();
 
-    // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
+    // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé 
+    _Package *pkg = d->psd->package(d->index);
+    
+    pkg->idate = QDateTime::currentDateTime().toTime_t();
+    pkg->iby = QString(getenv("UID")).toInt();
+    pkg->state = PACKAGE_STATE_INSTALLED;
 
     // L'installation est finie
     emit installed();

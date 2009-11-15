@@ -34,6 +34,7 @@
 
 class Solver;
 class Package;
+class Communication;
 
 class App : public QCoreApplication
 {
@@ -55,8 +56,7 @@ class App : public QCoreApplication
 
     public slots:
         void progress(PackageSystem::Progress type, int done, int total, const QString &msg);
-
-        void message(Package *sndr, const QString &msg);
+        void communication(Package *sender, Communication *comm);
 
     private:
         PackageSystem *ps;

@@ -10,9 +10,27 @@
 #### Fonctions d'aide pour le pkgbuild
 #################
 
-message()
+communicate()
 {
-    echo "MESSAGE#$1"
+    # Nom de la communication
+    str="[[>>|$1"
+    
+    # Paramètres
+    shift
+    
+    while [ ${#1} -ne 0 ]; do
+        str="$str|$1|$2"
+        
+        shift 2
+    done
+    
+    str="$str|<<]]"
+    /bin/echo "$str" >&2
+    
+    # Attendre une réponse, et l'échoer, ce qui permet d'attendre que l'utilisateur ait lu le message,
+    # répondu à une question (et dans ce cas la réponse nous arrive), etc
+    read rs
+    echo "$rs"
 }
 
 #################

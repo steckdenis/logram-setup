@@ -24,6 +24,7 @@
 #include "libpackage.h"
 #include "libpackage_p.h"
 #include "package.h"
+#include "communication.h"
 
 #include <QVector>
 #include <QList>
@@ -241,6 +242,7 @@ void Solver::process(int index)
 
         connect(pkg, SIGNAL(installed()), this, SLOT(packageInstalled()));
         connect(pkg, SIGNAL(downloaded()), this, SLOT(packageDownloaded()), Qt::QueuedConnection);
+        connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
 
         // Progression
         d->ps->sendProgress(PackageSystem::GlobalDownload, i, d->list.count(), pkg->name());
@@ -294,6 +296,8 @@ void Solver::packageInstalled()
 
         d->loop.exit();
     }
+    
+    //NOTE: Pouvons-nous delete pkg; maintenant ?
 }
 
 void Solver::packageDownloaded()

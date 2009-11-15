@@ -102,8 +102,7 @@ class PackageSystem : public QObject
         void setVarRoot(const QString &root);
 
         // Dialogue avec les paquets
-        void sendMessage(Package *sender, const QString &message);
-
+        
         // Progression
         enum Progress
         {
@@ -120,8 +119,6 @@ class PackageSystem : public QObject
     signals:
         void progress(PackageSystem::Progress type, int num, int tot, const QString &msg);
         void downloadEnded(ManagedDownload *reply);
-
-        void message(Package *sndr, const QString &msg);
 
     private slots:
         void downloadFinished(QNetworkReply *reply);

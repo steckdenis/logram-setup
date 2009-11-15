@@ -96,8 +96,6 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     // Vérifier le hash
     QByteArray sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
     
-    qDebug() << sha1sum << pkg->metadataHash();
-    
     if (sha1sum != pkg->metadataHash())
     {
         PackageError err;
