@@ -111,6 +111,7 @@ int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool 
             transPtr += str.length() + 1;
 
             translate.append(mstr);
+            translateStrings.append(str);
             rs = translate.count()-1;
             translateIndexes.insert(str, rs);
         }
@@ -121,6 +122,7 @@ int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool 
             strPtr += str.length() + 1;
 
             strings.append(mstr);
+            stringsStrings.append(str);
             rs = strings.count()-1;
             stringsIndexes.insert(str, rs);
         }
@@ -192,9 +194,9 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
 
             // Splitter avec les espaces
             QList<QByteArray> parts = dep.split(' ');
-            QByteArray name = parts.at(0);
-            QByteArray _op = parts.at(1);
-            QByteArray version = parts.at(2);
+            const QByteArray &name = parts.at(0);
+            const QByteArray &_op = parts.at(1);
+            const QByteArray &version = parts.at(2);
 
             // Trouver le bon opérateur
             int8_t op = 0;
@@ -280,6 +282,9 @@ void DatabaseWriter::rebuild()
     // On utilise 2 passes (d'abord créer les paquets, puis les manipuler)
     int pass;
     int numFile, numLine;
+    char *linedata;
+    
+    linedata = new char[2048];  // 2Kio max par lignes, c'est suffisant, même pour les traductions
 
     strPtr = 0;
     transPtr = 0;
@@ -367,11 +372,13 @@ void DatabaseWriter::rebuild()
             QByteArray line, name, long_desc, pkgname, pkgver;
             _Package *pkg = 0;
             int index;
+            int linelength;
 
             // Lire le fichier
             while (!fl.atEnd())
             {
-                line = fl.readLine().trimmed();
+                linelength = fl.readLine(linedata, 2048);
+                line = QByteArray::fromRawData(linedata, linelength-1); // -1 : sauter le \n
 
                 // Compter les lignes, pour identifier les paquets
                 if (!istr)
@@ -400,15 +407,8 @@ void DatabaseWriter::rebuild()
 
                     // Lire les clefs et les valeurs
                     QList<QByteArray> parts = line.split('=');
-                    QByteArray key = parts.takeAt(0);
-                    QByteArray value;
-
-                    for (int i=0; i<parts.count(); ++i)
-                    {
-                        if (i)
-                            value += "=";
-                        value += parts.at(i);
-                    }
+                    const QByteArray &key = parts.at(0);
+                    const QByteArray &value = parts.at(1);
 
                     if (key == "Name")
                     {
@@ -434,7 +434,7 @@ void DatabaseWriter::rebuild()
                                         found = true;
                                         delete pkg;
                                         pkg = entry->pkg;
-                                        index = packages.indexOf(pkg);
+                                        index = entry->index;
                                     }
                                 }
                             }
@@ -466,6 +466,7 @@ void DatabaseWriter::rebuild()
                             
                             entry->pkg = pkg;
                             entry->version = value;
+                            entry->index = index;
                             
                             knownPackages[pkgname].append(entry);
                         }
@@ -581,7 +582,10 @@ void DatabaseWriter::rebuild()
                         }
                         else if (key == "ShortDesc")
                         {
-                            pkg->short_desc = stringIndex(QByteArray::fromBase64(value.replace('"', "")), index, true, false);
+                            QByteArray v = value;
+                            v.replace('"', "");
+                            
+                            pkg->short_desc = stringIndex(QByteArray::fromBase64(v), index, true, false);
                         }
                     }
                 }
@@ -594,7 +598,7 @@ void DatabaseWriter::rebuild()
                         QList<QByteArray> parts = line.split(':');
                         
                         // Trouver le bon paquet
-                        QByteArray name = parts.takeAt(0);
+                        const QByteArray &name = parts.takeAt(0);
                         
                         const QList<knownEntry *> &entries = knownPackages.value(name);
                         int strDistro = stringsIndexes.value(distroname.toAscii());
@@ -603,7 +607,7 @@ void DatabaseWriter::rebuild()
                         {
                             if (entry->pkg->distribution == strDistro)
                             {
-                                index = packages.indexOf(entry->pkg);
+                                index = entry->index;
                                 
                                 // Fusioner les parties
                                 QByteArray s_desc;
@@ -658,7 +662,7 @@ void DatabaseWriter::rebuild()
                                 if (entry->version == value)
                                 {
                                     pkg = entry->pkg;
-                                    index = packages.indexOf(pkg);
+                                    index = entry->index;
                                 }
                             }
                         }
@@ -803,7 +807,7 @@ void DatabaseWriter::rebuild()
 
     length = strings.count();
     fl.write((const char *)&length, sizeof(int32_t));
-
+    
     foreach (_String *str, strings)
     {
         // Ecrire la chaine
@@ -813,7 +817,7 @@ void DatabaseWriter::rebuild()
     for (int i=0; i<strings.count(); ++i)
     {
         // On écrit maintenant les valeurs
-        QByteArray str = stringsIndexes.key(i);
+        const QByteArray &str = stringsStrings.at(i);
         fl.write(str.constData(), str.length()+1); // +1 : nous avons besoin du \0 à la fin
     }
 
@@ -843,7 +847,7 @@ void DatabaseWriter::rebuild()
     for (int i=0; i<translate.count(); ++i)
     {
         // On écrit maintenant les valeurs
-        QByteArray str = translateIndexes.key(i);
+        const QByteArray &str = translateStrings.at(i);
         fl.write(str.constData(), str.length()+1); // +1 : nous avons besoin du \0 à la fin
     }
 

@@ -42,8 +42,9 @@ struct _Depend;
 
 struct knownEntry
 {
-    QString version;
+    QByteArray version;
     _Package *pkg;
+    int index;
 };
 
 class DatabaseWriter : public QObject
@@ -61,11 +62,14 @@ class DatabaseWriter : public QObject
         QStringList cacheFiles;
 
         QList<_Package *> packages;
+        
         //QHash<int, int> packagesIndexes;
         QList<_String *> strings;
         QList<_String *> translate;
         QHash<QByteArray, int> stringsIndexes;
         QHash<QByteArray, int> translateIndexes;
+        QList<QByteArray> stringsStrings;
+        QList<QByteArray> translateStrings;
 
         int strPtr, transPtr;
 

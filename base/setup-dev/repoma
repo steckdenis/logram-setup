@@ -162,10 +162,11 @@ include()
         
         # Fichier .control
         echo "[$name]" > $cdir/$name.control
+        echo -ne "$content" >> $cdir/$name.control
         echo "Arch=$arch" >> $cdir/$name.control
         echo "PackageHash=$(cd $(dirname $POOL) && sha1sum -b $filename | cut -d ' ' -f 1)" >> $cdir/$name.control
         echo "MetadataHash=$(cd $(dirname $METADATA) && sha1sum -b $INCOMING/$name.metadata.xml | cut -d ' ' -f 1)" >> $cdir/$name.control
-        echo -e "$content" >> $cdir/$name.control
+        echo >> $cdir/$name.control
     fi
 
     # Générer la liste des fichiers
