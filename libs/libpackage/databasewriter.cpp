@@ -194,6 +194,9 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
 
             // Splitter avec les espaces
             QList<QByteArray> parts = dep.split(' ');
+            
+            if (parts.count() != 3) return;
+            
             const QByteArray &name = parts.at(0);
             const QByteArray &_op = parts.at(1);
             const QByteArray &version = parts.at(2);
@@ -435,6 +438,8 @@ void DatabaseWriter::rebuild()
                                         delete pkg;
                                         pkg = entry->pkg;
                                         index = entry->index;
+                                        
+                                        break;
                                     }
                                 }
                             }
@@ -557,6 +562,7 @@ void DatabaseWriter::rebuild()
                             
                             entry->pkg = pkg;
                             entry->version = version;
+                            entry->index = index;
                             
                             knownPackages[dep].append(entry);
                         }
@@ -620,6 +626,8 @@ void DatabaseWriter::rebuild()
                                 }
                                 
                                 entry->pkg->short_desc = stringIndex(s_desc, index, true);
+                                
+                                break;
                             }
                         }
                     }
@@ -632,8 +640,6 @@ void DatabaseWriter::rebuild()
                             name = line;
                             name.replace('[', "");
                             name.replace(']', "");
-                            //index = packagesIndexes.value(numLine);
-                            //pkg = packages.at(index);
                         }
 
                         // Si la ligne ne contient pas un égal, on passe à la suivante (marche aussi quand la ligne commence par [)
@@ -663,26 +669,28 @@ void DatabaseWriter::rebuild()
                                 {
                                     pkg = entry->pkg;
                                     index = entry->index;
+                                    
+                                    break;
                                 }
                             }
                         }
-                        if (key == "Depends")
+                        if (key == "Depends" && !value.isNull())
                         {
                             setDepends(pkg, value, DEPEND_TYPE_DEPEND);
                         }
-                        else if (key == "Replaces")
+                        else if (key == "Replaces" && !value.isNull())
                         {
                             setDepends(pkg, value, DEPEND_TYPE_REPLACE);
                         }
-                        else if (key == "Suggest")
+                        else if (key == "Suggest" && !value.isNull())
                         {
                             setDepends(pkg, value, DEPEND_TYPE_SUGGEST);
                         }
-                        else if (key == "Conflicts")
+                        else if (key == "Conflicts" && !value.isNull())
                         {
                             setDepends(pkg, value, DEPEND_TYPE_CONFLICT);
                         }
-                        else if (key == "Provides")
+                        else if (key == "Provides" && !value.isNull())
                         {
                             setDepends(pkg, value, DEPEND_TYPE_PROVIDE);
                             

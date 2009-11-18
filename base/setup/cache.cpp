@@ -46,8 +46,8 @@ void App::find(const QString &pattern)
         Package *pkg = pkgs.at(i);
         
         cout
-        << COLOR(pkg->name().leftJustified(15, ' ', true), "33") << ' '
-        << COLOR(pkg->version().leftJustified(15, ' ', true), "32") << ' '
+        << COLOR(pkg->name().leftJustified(20, ' ', false), "33") << ' '
+        << COLOR(pkg->version().leftJustified(20, ' ', false), "32") << ' '
         << qPrintable(pkg->shortDesc())
         << endl;
     }

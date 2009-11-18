@@ -180,13 +180,14 @@ void Solver::solve()
     }
 
 #if 0
+    qDebug() << d->wrongLists;
     for (int i=0; i<d->packages.count(); ++i)
     {
         const QVector<Pkg> &pkgs = d->packages.at(i);
         qDebug() << "{" << d->wrongLists.contains(i);
         foreach(const Pkg &pkg, pkgs)
         {
-            qDebug() << "    " << d->psd->packageName(pkg.index) << d->psd->packageVersion(pkg.index);
+            qDebug() << "    " << d->psd->packageName(pkg.index) << d->psd->packageVersion(pkg.index) << pkg.action;
         }
         qDebug() << "}";
     }
