@@ -96,10 +96,13 @@ int main (int argc, char **argv)
 					char **argv = parse_cmd (msg);
 					int i, argc;
 
-					for (argc = 0; argv[argc] != NULL; ++argc);
-					for (i = 0; commands[i].name != NULL; ++i)
-						if (!strcmp (argv[0], commands[i].name))
-							commands[i].handler (s, msg, argc, argv);
+					if (argv != NULL && argv[0] != NULL)
+					{
+						for (argc = 0; argv[argc] != NULL; ++argc);
+						for (i = 0; commands[i].name != NULL; ++i)
+							if (!strcmp (argv[0], commands[i].name))
+								commands[i].handler (s, msg, argc, argv);
+					}
 				}
 
 				stack_delete ();
