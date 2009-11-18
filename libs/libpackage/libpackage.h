@@ -75,8 +75,9 @@ class PackageSystem : public QObject
         Solver *newSolver();
 
         // Fonctions statiques
-        static int compareVersions(const QString &v1, const QString &v2);
-        static bool matchVersion(const QString &v1, const QString &v2, int op);
+        static int compareVersions(const char *a, const char *b);
+        static int compareVersions(const QByteArray &v1, const QByteArray &v2);
+        static bool matchVersion(const QByteArray &v1, const QByteArray &v2, int op);
         static int parseVersion(const QString &verStr, QString &name, QString &version);
         static QString fileSizeFormat(int size);
 

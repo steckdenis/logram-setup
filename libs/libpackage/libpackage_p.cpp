@@ -140,7 +140,7 @@ QList<int> PackageSystemPrivate::packagesByVString(const QString &verStr)
             pver = QString(string(0, pkg->version));
 
             // Voir si la version correspond
-            if (PackageSystem::matchVersion(pver, version, op))
+            if (PackageSystem::matchVersion(pver.toUtf8(), version.toUtf8(), op))
             {
                 rs.append(i);
             }
@@ -253,7 +253,7 @@ QList<int> PackageSystemPrivate::packagesOfString(int stringIndex, int nameIndex
         {
             rs.append( ((_StrPackage *)(sptr))->package );
         }
-        else if (PackageSystem::matchVersion(QString(string(0, ((_StrPackage *)(sptr))->version)), cmpVersion, op))
+        else if (PackageSystem::matchVersion(QByteArray(string(0, ((_StrPackage *)(sptr))->version)), cmpVersion.toUtf8(), op))
         {
             rs.append( ((_StrPackage *)(sptr))->package );
         }

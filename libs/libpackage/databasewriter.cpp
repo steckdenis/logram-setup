@@ -263,10 +263,8 @@ void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteAr
     foreach (knownEntry *entry, entries)
     {
         // Si on ne précise pas d'opérateur, ou si la version correspond, ajouter une reverse dependency
-        QString v1(entry->version);
-        QString v2(version);
         
-        if (op == DEPEND_OP_NOVERSION || PackageSystem::matchVersion(v1, v2, op))
+        if (op == DEPEND_OP_NOVERSION || PackageSystem::matchVersion(entry->version, version, op))
         {
             depend = new _Depend;
             depend->type = type;

@@ -33,6 +33,8 @@
 #include <QNetworkReply>
 #include <QFile>
 
+#include <cctype>
+
 #include <QtDebug>
 
 PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
@@ -435,7 +437,7 @@ int PackageSystem::parseVersion(const QString &verStr, QString &name, QString &v
     return rs;
 }
 
-bool PackageSystem::matchVersion(const QString &v1, const QString &v2, int op)
+bool PackageSystem::matchVersion(const QByteArray &v1, const QByteArray &v2, int op)
 {
     // Comparer les versions
     int rs = compareVersions(v1, v2);
@@ -460,66 +462,77 @@ bool PackageSystem::matchVersion(const QString &v1, const QString &v2, int op)
     return true;
 }
 
-int PackageSystem::compareVersions(const QString &v1, const QString &v2)
+int PackageSystem::compareVersions(const QByteArray &v1, const QByteArray &v2)
 {
-    QRegExp regex("[^\\d]");
-    QStringList v1s = v1.split(regex, QString::SkipEmptyParts);
-    QStringList v2s = v2.split(regex, QString::SkipEmptyParts);
+    return compareVersions(v1.constData(), v2.constData());
+}
 
-    if (v1 == v2) return 0;
-
-    /* Compare Version */
-    /*
-     * We compare character by character. For example :
-     *      0.1.7-2 => 0 1 7 2
-     *      0.1.7   => 0 1 7
-     *
-     * With "maxlength", we know that we must add 0 like this :
-     *      0 1 7 2 => 0 1 7 2
-     *      0 1 7   => 0 1 7 0
-     *
-     * We compare every number with its double. If their are equal
-     *      Continue
-     * If V1 is more recent
-     *      Return true
-     * End bloc
-     */
-
-    int maxlength = v1s.count() > v2s.count() ? v1s.count() : v2s.count();
-
-    int v1num, v2num;
-
-    for (int i = 0; i < maxlength; i++)
+int PackageSystem::compareVersions(const char *a, const char *b)
+{
+    if (strcmp(a, b) == 0) return 0;
+    
+    // Explorer chaque caractère
+    int numa, numb;
+    
+    while (*a && *b)
     {
-        if (i >= v1s.count())
+        //Sauter tout ce qui n'est pas nombre
+        while (*a && !isdigit(*a)) a++;
+        while (*b && !isdigit(*b)) b++;
+        
+        // On a donc maintenant des digits sous la dent, les transformer en entiers
+        numa = 0;
+        numb = 0;
+        
+        if (!*b && !*a)
         {
-            v1num = 0;
+            // Les deux chaînes sont arrivées au bout, elles sont les mêmes
+            return 0;
+        }
+        
+        if (*a)
+        {
+            while (*a && isdigit(*a))
+            {
+                numa *= 10;
+                numa += (*a - '0');
+                a++;
+            }
         }
         else
         {
-            v1num = v1s.at(i).toInt();
+            // Il manque un champ, l'ajouter
+            numa = 0;
         }
-
-        if (i >= v2s.count())
+        
+        if (*b)
         {
-            v2num = 0;
+            while (*b && isdigit(*b))
+            {
+                numb *= 10;
+                numb += (*b - '0');
+                b++;
+            }
         }
         else
         {
-            v2num = v2s.at(i).toInt();
+            numb = 0;
         }
-
-        if (v1num > v2num)
+        
+        // Comparer les nombres
+        if (numa > numb)
         {
             return 1;
         }
-        else if (v1num < v2num)
+        else if (numa < numb)
         {
             return -1;
         }
+        
+        // Deux nombres égaux, passer à la suite des champs
     }
-
-    return 0;       //Égal
+    
+    return 0;   // Les mêmes
 }
 
 QString PackageSystem::fileSizeFormat(int size)
