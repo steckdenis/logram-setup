@@ -35,6 +35,10 @@
 #include <QProcess>
 #include <QtDebug>
 
+#include <iostream>
+#include <fstream>
+using namespace std;
+
 DatabaseWriter::DatabaseWriter(PackageSystem *_parent)
 {
     parent = _parent;
@@ -282,10 +286,7 @@ void DatabaseWriter::rebuild()
 {
     // On utilise 2 passes (d'abord créer les paquets, puis les manipuler)
     int pass;
-    int numFile, numLine;
-    char *linedata;
-    
-    linedata = new char[2048];  // 2Kio max par lignes, c'est suffisant, même pour les traductions
+    int numFile;
 
     strPtr = 0;
     transPtr = 0;
@@ -306,7 +307,6 @@ void DatabaseWriter::rebuild()
     for (pass=0; pass<2; ++pass)
     {
         numFile = 0;
-        numLine = 0;
         foreach (const QString &file, cacheFiles)
         {
             numFile++;
@@ -359,9 +359,11 @@ void DatabaseWriter::rebuild()
             if (pass == 0 && istr) continue;
 
             // Lire toutes les lignes de ce fichier
-            QFile fl(fname);
+            ifstream fd;
+            
+            fd.open(qPrintable(fname), ios::binary);
 
-            if (!fl.open(QIODevice::ReadOnly))
+            if (fd.fail())
             {
                 PackageError err;
                 err.type = PackageError::OpenFileError,
@@ -374,18 +376,42 @@ void DatabaseWriter::rebuild()
             _Package *pkg = 0;
             int index;
             int linelength;
+            
+            int flength, fpos;
+            
+            // Réserver le buffer mémoire pour le fichier
+            fd.seekg(0, ios::end);
+            flength = fd.tellg();
+            fpos = 0;
+            fd.seekg(0, ios::beg);
+            
+            char *buffer = new char[flength];
+            fd.read(buffer, flength);
+            
+            fd.close();
 
             // Lire le fichier
-            while (!fl.atEnd())
+            while (fpos < flength)
             {
-                linelength = fl.readLine(linedata, 2048);
-                line = QByteArray::fromRawData(linedata, linelength-1); // -1 : sauter le \n
-
-                // Compter les lignes, pour identifier les paquets
-                if (!istr)
+                // Lire une ligne
+                char *cline = buffer;
+                linelength = 0;
+                
+                while (fpos < flength && *buffer != '\n')
                 {
-                    numLine++;
+                    linelength++;
+                    buffer++;
+                    fpos++;
                 }
+                
+                if (fpos < flength)
+                {
+                    // Sauter le \n
+                    buffer++;
+                    fpos++;
+                }
+                
+                line = QByteArray::fromRawData(cline, linelength); // -1 : sauter le \n
 
                 if (pass == 0)
                 {
@@ -738,8 +764,6 @@ void DatabaseWriter::rebuild()
                     }
                 }
             }
-
-            fl.close();
         }
     }
 
