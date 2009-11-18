@@ -1,0 +1,14 @@
+LUploader is a Qt frontend to upload files on your Logram account.
+
+Here is the GUI, very simple :
+
++-----------------------------------+
+|                                   |
+| Login :    [           ]          |
+| Password : [           ]          |
+| File :     [           ] [browse] |
+| Folder :   [ home  [v] ]          |
+|                                   |
+| [submit]                          |
+|                                   |
++-----------------------------------+
