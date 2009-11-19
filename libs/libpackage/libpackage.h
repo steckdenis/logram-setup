@@ -69,8 +69,9 @@ class PackageSystem : public QObject
         void loadConfig();
 
         // API publique
-        QList<Package *> packagesByName(const QString &regex);
+        QList<int> packagesByName(const QString &regex);
         Package *package(const QString &name, const QString &version = QString());
+        Package *package(int id);
         void update();
         Solver *newSolver();
 

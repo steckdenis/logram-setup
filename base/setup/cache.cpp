@@ -38,21 +38,23 @@ void App::update()
 
 void App::find(const QString &pattern)
 {
-    QList<Package *> pkgs = ps->packagesByName("*" + pattern + "*");
+    QList<int> pkgs = ps->packagesByName("*" + pattern + "*");
 
     // Afficher joliment les paquets
     for (int i=0; i<pkgs.count(); ++i)
     {
-        Package *pkg = pkgs.at(i);
+        int id = pkgs.at(i);
+        
+        Package *pkg = ps->package(id);
         
         cout
         << COLOR(pkg->name().leftJustified(20, ' ', false), "33") << ' '
         << COLOR(pkg->version().leftJustified(20, ' ', false), "32") << ' '
         << qPrintable(pkg->shortDesc())
         << endl;
+        
+        delete pkg;
     }
-
-    qDeleteAll(pkgs);
 }
 
 void App::showFiles(const QString &packageName)

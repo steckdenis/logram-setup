@@ -461,7 +461,7 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
     QList<_Depend *> deps = psd->depends(pkg.index);
 
     foreach (_Depend *dep, deps)
-    {
+    {   
         // Mapper les DEPEND_TYPE en Action
         Solver::Action act = Solver::None;
 
@@ -515,7 +515,10 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
             }
         }
 
-        if (act == Solver::None) continue;
+        if (act == Solver::None)
+        {
+            continue;
+        }
         
         QList<int> mpkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
 

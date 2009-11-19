@@ -101,7 +101,7 @@ QList<int> PackageSystemPrivate::packagesByName(const QString &regex)
     for (int i=0; i<count; ++i)
     {
         pkgname = packageName(i);
-
+        
         // Voir si ça correspond à la regex
         if (exp.exactMatch(pkgname))
         {

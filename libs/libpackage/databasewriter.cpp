@@ -287,6 +287,8 @@ void DatabaseWriter::rebuild()
     // On utilise 2 passes (d'abord créer les paquets, puis les manipuler)
     int pass;
     int numFile;
+    QList<char *> buffers;
+    char *buffer;
 
     strPtr = 0;
     transPtr = 0;
@@ -372,7 +374,7 @@ void DatabaseWriter::rebuild()
                 throw err;
             }
 
-            QByteArray line, name, long_desc, pkgname, pkgver;
+            QByteArray name, long_desc, pkgname, pkgver;
             _Package *pkg = 0;
             int index;
             int linelength;
@@ -385,7 +387,8 @@ void DatabaseWriter::rebuild()
             fpos = 0;
             fd.seekg(0, ios::beg);
             
-            char *buffer = new char[flength];
+            buffer = new char[flength];
+            buffers.append(buffer); //Pour deleter après
             fd.read(buffer, flength);
             
             fd.close();
@@ -395,13 +398,62 @@ void DatabaseWriter::rebuild()
             {
                 // Lire une ligne
                 char *cline = buffer;
+                bool containsequal = false;
+                int indexofequal;
                 linelength = 0;
+                indexofequal = 0;
                 
-                while (fpos < flength && *buffer != '\n')
+                if (!istr)
                 {
-                    linelength++;
-                    buffer++;
-                    fpos++;
+                    // Trouver le égal, s'il existe
+                    while (fpos < flength && *buffer != '\n')
+                    {
+                        // Si la ligne contient un égal, le savoir
+                        if (*buffer == '=')
+                        {
+                            containsequal = true;
+                            indexofequal = linelength;
+                            break;
+                        }
+                            
+                        linelength++;
+                        buffer++;
+                        fpos++;
+                    }
+                    
+                    // Continuer la ligne
+                    while (fpos < flength && *buffer != '\n')
+                    {
+                        linelength++;
+                        buffer++;
+                        fpos++;
+                    }
+                }
+                else
+                {
+                    // Trouver le :, s'il existe
+                    while (fpos < flength && *buffer != '\n')
+                    {
+                        // Si la ligne contient un égal, le savoir
+                        if (*buffer == ':')
+                        {
+                            containsequal = true;
+                            indexofequal = linelength;
+                            break;
+                        }
+                            
+                        linelength++;
+                        buffer++;
+                        fpos++;
+                    }
+                    
+                    // Continuer la ligne
+                    while (fpos < flength && *buffer != '\n')
+                    {
+                        linelength++;
+                        buffer++;
+                        fpos++;
+                    }
                 }
                 
                 if (fpos < flength)
@@ -411,31 +463,32 @@ void DatabaseWriter::rebuild()
                     fpos++;
                 }
                 
-                line = QByteArray::fromRawData(cline, linelength); // -1 : sauter le \n
+                // Si la ligne est vide, continuer
+                if (linelength == 0) continue;
 
                 if (pass == 0)
                 {
-                    if (line.startsWith('['))
+                    if (cline[0] == '[')
                     {
                         // On commence un paquet
                         pkg = new _Package;
-                        name = line;
-                        name.replace('[', "");
-                        name.replace(']', "");
-
+                        name = QByteArray::fromRawData(cline + 1, linelength - 2); // -2 : sauter le ] et le [
+                        
                         // Initialisations
                         pkgname.clear();
                         pkgver.clear();
+                        
+                        // Lire la ligne suivante
+                        continue;
                     }
 
                     // Si la ligne ne contient pas un égal, on passe à la suivante (marche aussi quand la ligne commence par [)
-                    if (!line.contains('=')) continue;
+                    if (!containsequal) continue;
                     if (pkg == 0) continue;
 
                     // Lire les clefs et les valeurs
-                    QList<QByteArray> parts = line.split('=');
-                    const QByteArray &key = parts.at(0);
-                    const QByteArray &value = parts.at(1);
+                    QByteArray key = QByteArray::fromRawData(cline, indexofequal);
+                    QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1, linelength - indexofequal - 1);
 
                     if (key == "Name")
                     {
@@ -625,11 +678,10 @@ void DatabaseWriter::rebuild()
                     if (istr)
                     {
                         // Chaque ligne est de la forme "package:description courte"
-                        QList<QByteArray> parts = line.split(':');
+                        QByteArray name = QByteArray::fromRawData(cline, indexofequal);
+                        QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1, linelength - indexofequal - 1);
                         
                         // Trouver le bon paquet
-                        const QByteArray &name = parts.takeAt(0);
-                        
                         const QList<knownEntry *> &entries = knownPackages.value(name);
                         int strDistro = stringsIndexes.value(distroname.toAscii());
 
@@ -639,17 +691,8 @@ void DatabaseWriter::rebuild()
                             {
                                 index = entry->index;
                                 
-                                // Fusioner les parties
-                                QByteArray s_desc;
-
-                                for (int i=0; i<parts.count(); ++i)
-                                {
-                                    if (i)
-                                        s_desc += ":";
-                                    s_desc += parts.at(i);
-                                }
-                                
-                                entry->pkg->short_desc = stringIndex(s_desc, index, true);
+                                // Lui assigner sa description
+                                entry->pkg->short_desc = stringIndex(value, index, true);
                                 
                                 break;
                             }
@@ -658,29 +701,18 @@ void DatabaseWriter::rebuild()
                     else
                     {
                         // On a un format à la QSettings
-                        if (line.startsWith('['))
+                        if (cline[0] == '[')
                         {
                             // On commence un paquet
-                            name = line;
-                            name.replace('[', "");
-                            name.replace(']', "");
+                            name = QByteArray::fromRawData(cline + 1, linelength - 2); // -2 : sauter le ] et le [
                         }
 
                         // Si la ligne ne contient pas un égal, on passe à la suivante (marche aussi quand la ligne commence par [)
-                        if (!line.contains('=')) continue;
-                        //if (pkg == 0) continue;
+                        if (!containsequal) continue;
 
                         // Lire les clefs et les valeurs
-                        QList<QByteArray> parts = line.split('=');
-                        QByteArray key = parts.takeAt(0);
-                        QByteArray value;
-                        
-                        for (int i=0; i<parts.count(); ++i)
-                        {
-                            if (i)
-                                value += "=";
-                            value += parts.at(i);
-                        }
+                        QByteArray key = QByteArray::fromRawData(cline, indexofequal);
+                        QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1, linelength - indexofequal - 1);
 
                         if (key == "Version")
                         {
@@ -795,9 +827,11 @@ void DatabaseWriter::rebuild()
     //qDebug() << strPackages;
     //qDebug() << knownPackages;
     //qDebug() << depends;
+    //qDebug() << stringsStrings;
 
     /*** Écrire les listes dans les fichiers ***/
     int32_t length;
+    char zero = 0;
     
     // Liste des paquets
     parent->sendProgress(PackageSystem::UpdateDatabase, 1, 6, tr("Génération de la liste des paquets"));
@@ -848,7 +882,8 @@ void DatabaseWriter::rebuild()
     {
         // On écrit maintenant les valeurs
         const QByteArray &str = stringsStrings.at(i);
-        fl.write(str.constData(), str.length()+1); // +1 : nous avons besoin du \0 à la fin
+        fl.write(str.constData(), str.length());
+        fl.write(&zero, 1);
     }
 
     // Chaînes traduites
@@ -878,7 +913,8 @@ void DatabaseWriter::rebuild()
     {
         // On écrit maintenant les valeurs
         const QByteArray &str = translateStrings.at(i);
-        fl.write(str.constData(), str.length()+1); // +1 : nous avons besoin du \0 à la fin
+        fl.write(str.constData(), str.length());
+        fl.write(&zero, 1);
     }
 
     // Dépendances
@@ -967,6 +1003,12 @@ void DatabaseWriter::rebuild()
 
     // Fermer le fichier
     fl.close();
+    
+    // Librérer les buffers
+    foreach(char *buf, buffers)
+    {
+        delete buf;
+    }
 
     // On a fini ! :-)
     parent->endProgress(PackageSystem::UpdateDatabase, 6);

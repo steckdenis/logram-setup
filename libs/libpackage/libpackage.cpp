@@ -178,21 +178,9 @@ void PackageSystem::update()
     delete db;
 }
 
-QList<Package *> PackageSystem::packagesByName(const QString &regex)
+QList<int> PackageSystem::packagesByName(const QString &regex)
 {
-    QList<Package *> rs;
-    Package *pkg;
-    
-    QList<int> pkgs = d->packagesByName(regex);
-
-    foreach(int i, pkgs)
-    {
-        pkg = new Package(i, this, d);
-
-        rs.append(pkg);
-    }
-
-    return rs;
+    return d->packagesByName(regex);
 }
 
 Package *PackageSystem::package(const QString &name, const QString &version)
@@ -203,6 +191,11 @@ Package *PackageSystem::package(const QString &name, const QString &version)
     pkg = new Package(i, this, d);
 
     return pkg;
+}
+
+Package *PackageSystem::package(int id)
+{
+    return new Package(id, this, d);
 }
 
 QStringList PackageSystem::filesOfPackage(const QString &packageName)
