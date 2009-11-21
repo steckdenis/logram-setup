@@ -37,6 +37,7 @@ struct Communication::Private
     PackageSystem *ps;
     Package *pkg;
     PackageMetaData *md;
+    bool error;
     
     QDomElement element;
     
@@ -56,10 +57,18 @@ Communication::Communication(PackageSystem *ps, Package *pkg, const QString &nam
 {
     d = new Private;
     
+    d->error = false;
     d->ps = ps;
     d->pkg = pkg;
     d->md = pkg->metadata();
     d->choicesFetched = false;
+    
+    if (d->md == 0)
+    {
+        // Les métadonnées n'ont pas pu être obtenues
+        d->error = true;
+        return;
+    }
     
     // Trouver l'élément de la communication
     QDomElement comm = d->md->documentElement().firstChildElement("communication");
@@ -77,6 +86,11 @@ Communication::Communication(PackageSystem *ps, Package *pkg, const QString &nam
 Communication::~Communication()
 {
     delete d;
+}
+
+bool Communication::error() const
+{
+    return d->error;
 }
 
 void Communication::addKey(const QString &key, const QString &value)

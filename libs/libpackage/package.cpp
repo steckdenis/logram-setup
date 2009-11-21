@@ -98,6 +98,11 @@ PackageMetaData *Package::metadata()
     {
         // On doit récupérer les métadonnées
         d->md = new PackageMetaData(this, d->ps);
+        
+        if (d->md->error())
+        {
+            d->md = 0;
+        }
     }
     
     return d->md;
@@ -139,6 +144,13 @@ void Package::processOut()
         // Créer la communication
         Communication *comm = new Communication(d->ps, this, name);
         
+        if (comm->error())
+        {
+            // Erreur survenue
+            emit installed(false);
+            return;
+        }
+        
         // Explorer les paramètres
         while (parts.count() != 1)
         {
@@ -160,14 +172,16 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 {
     if (exitCode != 0 || exitStatus != QProcess::NormalExit)
     {
-        PackageError err;
-        err.type = PackageError::ProcessError;
-        err.info = d->installCommand;
-        err.more = d->readBuf;
+        PackageError *err = new PackageError;
+        err->type = PackageError::ProcessError;
+        err->info = d->installCommand;
+        err->more = d->readBuf;
         
         d->readBuf.clear();
         
-        throw err;
+        d->ps->setLastError(err);
+        emit installed(false);
+        return;
     }
     
     d->readBuf.clear();
@@ -210,10 +224,10 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     pkg->state = PACKAGE_STATE_INSTALLED;
 
     // L'installation est finie
-    emit installed();
+    emit installed(true);
 }
 
-void Package::download()
+bool Package::download()
 {
     // Télécharger le paquet
     QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
@@ -222,8 +236,12 @@ void Package::download()
     QString u = d->ps->repoUrl(r) + "/" + url();
 
     d->waitingDest = fname;
+    
+    ManagedDownload *md = new ManagedDownload;
 
-    d->ps->download(type, u, fname, false); // Non-bloquant
+    return d->ps->download(type, u, fname, false, md); // Non-bloquant
+    
+    // Ne pas deleter md, on en a besoin dans downloadEnded (il est passé en paramètre)
 }
 
 void Package::downloadEnded(ManagedDownload *md)
@@ -237,11 +255,14 @@ void Package::downloadEnded(ManagedDownload *md)
             
             if (!fl.open(QIODevice::ReadOnly))
             {
-                PackageError err;
-                err.type = PackageError::OpenFileError;
-                err.info = d->waitingDest;
+                PackageError *err = new PackageError;
+                err->type = PackageError::OpenFileError;
+                err->info = d->waitingDest;
                 
-                throw err;
+                d->ps->setLastError(err);
+                
+                emit downloaded(false);
+                return;
             }
             
             QByteArray contents = fl.readAll();
@@ -252,16 +273,19 @@ void Package::downloadEnded(ManagedDownload *md)
             // Comparer les hashs
             if (sha1sum != packageHash())
             {
-                PackageError err;
-                err.type = PackageError::SHAError;
-                err.info = name();
-                err.more = md->url;
+                PackageError *err = new PackageError;
+                err->type = PackageError::SHAError;
+                err->info = name();
+                err->more = md->url;
                 
-                throw err;
+                d->ps->setLastError(err);
+                
+                emit downloaded(false);
+                return;
             }
             
             // On a téléchargé le paquet !
-            emit downloaded();
+            emit downloaded(true);
         }
     }
 }

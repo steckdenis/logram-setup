@@ -39,14 +39,16 @@ PackageSystemPrivate::PackageSystemPrivate(PackageSystem *_ps)
     f_strpackages = 0;
 }
 
-void PackageSystemPrivate::init()
+bool PackageSystemPrivate::init()
 {
     // Ouvrir les fichiers
-    mapFile("packages", &f_packages, &m_packages);
-    mapFile("strings", &f_strings, &m_strings);
-    mapFile("translate", &f_translate, &m_translate);
-    mapFile("depends", &f_depends, &m_depends);
-    mapFile("strpackages", &f_strpackages, &m_strpackages);
+    if (!mapFile("packages", &f_packages, &m_packages)) return false;
+    if (!mapFile("strings", &f_strings, &m_strings)) return false;
+    if (!mapFile("translate", &f_translate, &m_translate)) return false;
+    if (!mapFile("depends", &f_depends, &m_depends)) return false;
+    if (!mapFile("strpackages", &f_strpackages, &m_strpackages)) return false;
+    
+    return true;
 }
 
 PackageSystemPrivate::~PackageSystemPrivate()
@@ -88,10 +90,10 @@ PackageSystemPrivate::~PackageSystemPrivate()
     }
 }
 
-QList<int> PackageSystemPrivate::packagesByName(const QString &regex)
+bool PackageSystemPrivate::packagesByName(const QString &regex, QList<int> &rs)
 {
     // Explorer le contenu de packages à la recherche d'un paquet dont le nom est bon
-    QList<int> rs;
+    rs = QList<int>();
     QString pkgname;
     
     QRegExp exp(regex, Qt::CaseSensitive, QRegExp::Wildcard);
@@ -110,7 +112,7 @@ QList<int> PackageSystemPrivate::packagesByName(const QString &regex)
         }
     }
 
-    return rs;
+    return true;
 }
 
 QList<int> PackageSystemPrivate::packagesByVString(const QString &verStr)
@@ -150,7 +152,7 @@ QList<int> PackageSystemPrivate::packagesByVString(const QString &verStr)
     return rs;
 }
 
-int PackageSystemPrivate::package(const QString &name, const QString &version)
+bool PackageSystemPrivate::package(const QString &name, const QString &version, int &rs)
 {
     QString pkgname;
     int32_t count = *(int32_t *)m_packages;
@@ -164,16 +166,31 @@ int PackageSystemPrivate::package(const QString &name, const QString &version)
             // Vérifier aussi la version
             if (version.isNull())
             {
-                return i;
+                rs = i;
+                return true;
             }
             else if (version == packageVersion(i))
             {
-                return i;
+                return true;
+                rs = i;
             }
         }
     }
 
-    return -1;
+    PackageError *err = new PackageError;
+    err->type = PackageError::PackageNotFound;
+    
+    if (version.isNull())
+    {
+        err->info = name;
+    }
+    else
+    {
+        err->info = name + "~" + version;
+    }
+    
+    ps->setLastError(err);
+    return false;
 }
 
 QList<_Depend *> PackageSystemPrivate::depends(int pkgIndex)
@@ -461,28 +478,34 @@ const char *PackageSystemPrivate::string(uchar *map, int index)
     return ptr;
 }
 
-void PackageSystemPrivate::mapFile(const QString &file, QFile **ptr, uchar **map)
+bool PackageSystemPrivate::mapFile(const QString &file, QFile **ptr, uchar **map)
 {
     *ptr = new QFile(ps->varRoot() + "/var/cache/lgrpkg/db/" + file);
     QFile *f = *ptr;
 
     if (!f->open(QIODevice::ReadWrite))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = f->fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = f->fileName();
         
-        throw err;
+        ps->setLastError(err);
+        
+        return false;
     }
 
     *map = f->map(0, f->size());
 
     if (*map == 0)
     {
-        PackageError err;
-        err.type = PackageError::MapFileError;
-        err.info = f->fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::MapFileError;
+        err->info = f->fileName();
         
-        throw err;
+        ps->setLastError(err);
+        
+        return false;
     }
+    
+    return true;
 }

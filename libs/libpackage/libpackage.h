@@ -39,6 +39,7 @@ struct ManagedDownload
     QNetworkReply *reply;
     QString url;
     QString destination;
+    bool error;
 };
 
 struct PackageError
@@ -51,12 +52,14 @@ struct PackageError
         DownloadError,
         ScriptException,
         SignatureError,
-        SHAError
+        SHAError,
+        PackageNotFound,
+        BadDownloadType
     };
     
     Error type;
-    QString info;   // Informations en une ligne (le nom du fichier qu'on peut pas ouvrir, etc)
-    QString more;   // Facultatif : informations supplémentaires (sortie du script qui a planté)
+    QString info;    // Informations en une ligne (le nom du fichier qu'on peut pas ouvrir, etc)
+    QString more;    // Facultatif : informations supplémentaires (sortie du script qui a planté)
 };
 
 class PackageSystem : public QObject
@@ -65,14 +68,14 @@ class PackageSystem : public QObject
     
     public:
         PackageSystem(QObject *parent = 0);
-        void init();
+        bool init();
         void loadConfig();
 
         // API publique
-        QList<int> packagesByName(const QString &regex);
-        Package *package(const QString &name, const QString &version = QString());
+        bool packagesByName(const QString &regex, QList<int> &rs);
+        bool package(const QString &name, const QString &version, Package* &rs);
         Package *package(int id);
-        void update();
+        bool update();
         Solver *newSolver();
 
         // Fonctions statiques
@@ -83,11 +86,11 @@ class PackageSystem : public QObject
         static QString fileSizeFormat(int size);
 
         // API utilisée par des éléments de liblpackages
-        ManagedDownload *download(const QString &type, const QString &url, const QString &dest, bool block=true);
+        bool download(const QString &type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs);
         QString repoType(const QString &repoName);
         QString repoUrl(const QString &repoName);
         QSettings *installedPackagesList() const;
-        QStringList filesOfPackage(const QString &packageName);
+        bool filesOfPackage(const QString &packageName, QStringList &rs);
 
         // Options
         bool installSuggests() const;
@@ -102,9 +105,11 @@ class PackageSystem : public QObject
         void setInstallRoot(const QString &root);
         void setConfRoot(const QString &root);
         void setVarRoot(const QString &root);
-
-        // Dialogue avec les paquets
         
+        // Gestion des erreurs
+        void setLastError(PackageError *err);
+        PackageError *lastError();
+
         // Progression
         enum Progress
         {

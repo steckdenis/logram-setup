@@ -36,161 +36,157 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     
-    try
+    // Ouvrir le système de paquets
+    ps = new PackageSystem(this);
+
+    connect(ps, SIGNAL(progress(PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(PackageSystem::Progress, int, int, const QString &)));
+    
+    //Parser les arguments
+    QStringList args = arguments();
+
+    if (args.count() == 1)
     {
-        // Ouvrir le système de paquets
-        ps = new PackageSystem(this);
+        help();
+        return;
+    }
 
-        connect(ps, SIGNAL(progress(PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(PackageSystem::Progress, int, int, const QString &)));
-        
-        //Parser les arguments
-        QStringList args = arguments();
+    // Explorer les options
+    QString opt = args.at(1);
+    bool changelog = false;
 
-        if (args.count() == 1)
+    while (opt.startsWith('-'))
+    {
+        if (opt == "-S")
         {
-            help();
-            return;
+            bool isug = true;
+
+            if (args.at(2) == "off")
+            {
+                isug = false;
+                args.removeAt(1); // normal que ce soit 1 pas 2
+            }
+
+            ps->setInstallSuggests(isug);
         }
-
-        // Explorer les options
-        QString opt = args.at(1);
-        bool changelog = false;
-
-        while (opt.startsWith('-'))
+        else if (opt == "-I")
         {
-            if (opt == "-S")
-            {
-                bool isug = true;
-
-                if (args.at(2) == "off")
-                {
-                    isug = false;
-                    args.removeAt(1); // normal que ce soit 1 pas 2
-                }
-
-                ps->setInstallSuggests(isug);
-            }
-            else if (opt == "-I")
-            {
-                ps->setParallelInstalls(args.takeAt(2).toInt());
-            }
-            else if (opt == "-D")
-            {
-                ps->setParallelDownloads(args.takeAt(2).toInt());
-            }
-            else if (opt == "-R")
-            {
-                QString root = args.takeAt(2);
-                
-                ps->setInstallRoot(root);
-                ps->setConfRoot(root);
-                ps->setVarRoot(root);
-            }
-            else if (opt == "-iR")
-            {
-                ps->setInstallRoot(args.takeAt(2));
-            }
-            else if (opt == "-cR")
-            {
-                ps->setConfRoot(args.takeAt(2));
-            }
-            else if (opt == "-vR")
-            {
-                ps->setVarRoot(args.takeAt(2));
-            }
-            else if (opt == "-C")
-            {
-                changelog = true;
-            }
-            else
-            {
-                help();
-                return;
-            }
-
-            args.removeAt(1);
-            opt = args.at(1);
+            ps->setParallelInstalls(args.takeAt(2).toInt());
         }
-        
-        ps->loadConfig();
-
-        QString cmd = args.at(1);
-
-        // Initialiser le système de paquet si on en a besoin
-        if (cmd != "update")
+        else if (opt == "-D")
         {
-            ps->init();
+            ps->setParallelDownloads(args.takeAt(2).toInt());
         }
-
-        if (cmd == "help")
+        else if (opt == "-R")
         {
-            help();
-        }
-        else if (cmd == "version")
-        {
-            version();
-        }
-        else if (cmd == "search")
-        {
-            if (args.count() != 3)
-            {
-                help();
-                return;
-            }
+            QString root = args.takeAt(2);
             
-            find(args.at(2));
+            ps->setInstallRoot(root);
+            ps->setConfRoot(root);
+            ps->setVarRoot(root);
         }
-        else if (cmd == "showpkg")
+        else if (opt == "-iR")
         {
-            if (args.count() != 3)
-            {
-                help();
-                return;
-            }
-            
-            showpkg(args.at(2), changelog);
+            ps->setInstallRoot(args.takeAt(2));
         }
-        else if (cmd == "update")
+        else if (opt == "-cR")
         {
-            update();
+            ps->setConfRoot(args.takeAt(2));
         }
-        else if (cmd == "add")
+        else if (opt == "-vR")
         {
-            if (args.count() < 3)
-            {
-                help();
-                return;
-            }
-            
-            QStringList packages;
-
-            for (int i=2; i<args.count(); ++i)
-            {
-                packages.append(args.at(i));
-            }
-
-            add(packages);
+            ps->setVarRoot(args.takeAt(2));
         }
-        else if (cmd == "files")
+        else if (opt == "-C")
         {
-            if (args.count() != 3)
-            {
-                help();
-                return;
-            }
-            
-            showFiles(args.at(2));
+            changelog = true;
         }
         else
         {
             help();
             return;
         }
+
+        args.removeAt(1);
+        opt = args.at(1);
     }
-    catch (const PackageError &err)
+    
+    ps->loadConfig();
+
+    QString cmd = args.at(1);
+
+    // Initialiser le système de paquet si on en a besoin
+    if (cmd != "update")
     {
-        error(err);
-        exit(1);
+        if (!ps->init())
+        {
+            error();
+            return;
+        }
+    }
+
+    if (cmd == "help")
+    {
+        help();
+    }
+    else if (cmd == "version")
+    {
+        version();
+    }
+    else if (cmd == "search")
+    {
+        if (args.count() != 3)
+        {
+            help();
+            return;
+        }
+        
+        find(args.at(2));
+    }
+    else if (cmd == "showpkg")
+    {
+        if (args.count() != 3)
+        {
+            help();
+            return;
+        }
+        
+        showpkg(args.at(2), changelog);
+    }
+    else if (cmd == "update")
+    {
+        update();
+    }
+    else if (cmd == "add")
+    {
+        if (args.count() < 3)
+        {
+            help();
+            return;
+        }
+        
+        QStringList packages;
+
+        for (int i=2; i<args.count(); ++i)
+        {
+            packages.append(args.at(i));
+        }
+
+        add(packages);
+    }
+    else if (cmd == "files")
+    {
+        if (args.count() != 3)
+        {
+            help();
+            return;
+        }
+        
+        showFiles(args.at(2));
+    }
+    else
+    {
+        help();
+        return;
     }
 }
 
@@ -230,11 +226,13 @@ void App::version()
     cout << "(at your option) any later version." << endl;
 }
 
-void App::error(const PackageError &err)
+void App::error()
 {
     cout << COLOR("ERROR : ", "31");
+    
+    PackageError *err = ps->lastError();
 
-    switch (err.type)
+    switch (err->type)
     {
         case PackageError::OpenFileError:
             cout << "Cannot open file ";
@@ -257,13 +255,19 @@ void App::error(const PackageError &err)
         case PackageError::SHAError:
             cout << "Bad SHA1 sum, file corrupted ";
             break;
+        case PackageError::PackageNotFound:
+            cout << "Package not found ";
+            break;
+        case PackageError::BadDownloadType:
+            cout << "Bad download type, please report the bug ";
+            break;
     }
     
-    cout << COLOR(err.info, "35") << endl;
+    cout << COLOR(err->info, "35") << endl;
     
-    if (!err.more.isEmpty())
+    if (!err->more.isEmpty())
     {
-        cout << qPrintable(err.more) << endl;
+        cout << qPrintable(err->more) << endl;
     }
 }
 

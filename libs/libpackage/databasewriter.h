@@ -53,8 +53,8 @@ class DatabaseWriter : public QObject
     public:
         DatabaseWriter(PackageSystem *_parent);
 
-        void download(const QString &source, const QString &url, const QString &type, bool isTranslations);
-        void rebuild();
+        bool download(const QString &source, const QString &url, const QString &type, bool isTranslations);
+        bool rebuild();
 
     private:
         PackageSystem *parent;

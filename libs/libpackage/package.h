@@ -69,7 +69,7 @@ class Package : public QObject
         ~Package();
 
         void install();
-        void download();
+        bool download();
         bool isValid();
         Solver::Action action();
 
@@ -108,8 +108,8 @@ class Package : public QObject
         QString dependsToString(const QList<Depend *> &deps, int type);
 
     signals:
-        void installed();
-        void downloaded();
+        void installed(bool success);
+        void downloaded(bool success);
         
         void communication(Package *sender, Communication *comm);
 

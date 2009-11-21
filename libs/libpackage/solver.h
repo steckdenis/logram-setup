@@ -37,6 +37,7 @@ class Solver : public QObject
     public:
         Solver(PackageSystem *ps, PackageSystemPrivate *psd);
         ~Solver();
+        bool error() const;
 
         enum Action
         {
@@ -48,16 +49,16 @@ class Solver : public QObject
         };
 
         void addPackage(const QString &nameStr, Action action);
-        void solve();
-        void process(int index);
+        bool solve();
+        bool process(int index);
 
         int results() const;
         QList<Package *> result(int index, int &weight) const;
         Package *installingPackage() const;
 
     private slots:
-        void packageInstalled();
-        void packageDownloaded();
+        void packageInstalled(bool success);
+        void packageDownloaded(bool success);
         
     signals:
         void communication(Package *sender, Communication *comm);

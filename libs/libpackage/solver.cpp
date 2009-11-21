@@ -52,6 +52,7 @@ struct Solver::Private
     PackageSystemPrivate *psd;
     bool installSuggests;
     int parallelInstalls, parallelDownloads;
+    bool error;
 
     // Liste pour la résolution des dépendances
     QList<QVector<Pkg> > packages;
@@ -81,6 +82,8 @@ struct Solver::Private
 Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
 {
     d = new Private;
+    
+    d->error = false;
     d->psd = psd;
     d->ps = ps;
 
@@ -93,11 +96,14 @@ Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
 
     if (!fl.open(QIODevice::ReadOnly))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fl.fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
         
-        throw err;
+        d->ps->setLastError(err);
+        
+        d->error = true;
+        return;
     }
 
     // Parser le script
@@ -106,11 +112,14 @@ Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
 
     if (engine->hasUncaughtException())
     {
-        PackageError err;
-        err.type = PackageError::ScriptException;
-        err.info = engine->uncaughtExceptionLineNumber() + ": " + engine->uncaughtException().toString();
+        PackageError *err = new PackageError;
+        err->type = PackageError::ScriptException;
+        err->info = engine->uncaughtExceptionLineNumber() + ": " + engine->uncaughtException().toString();
         
-        throw err;
+        d->ps->setLastError(err);
+        
+        d->error = true;
+        return;
     }
 
     QScriptValue global = engine->globalObject();
@@ -127,6 +136,11 @@ Solver::~Solver()
     }
 
     delete d;
+}
+
+bool Solver::error() const
+{
+    return d->error;
 }
 
 void Solver::addPackage(const QString &nameStr, Action action)
@@ -148,7 +162,7 @@ QList<Package *> Solver::result(int index, int &weight) const
     return rs;
 }
 
-void Solver::solve()
+bool Solver::solve()
 {
     QList<int> lists;
     QList<int> mpkgsToAdd;
@@ -164,6 +178,18 @@ void Solver::solve()
     {
         Action act = d->wantedPackages.value(pkg);
         mpkgsToAdd = d->psd->packagesByVString(pkg);
+        
+        if (mpkgsToAdd.count() == 0)
+        {
+            // Aucun paquet ne correspond
+            PackageError *err = new PackageError;
+            err->type = PackageError::PackageNotFound;
+            err->info = pkg;
+            
+            d->ps->setLastError(err);
+            
+            return false;
+        }
         
         foreach(int i, mpkgsToAdd)
         {
@@ -226,9 +252,11 @@ void Solver::solve()
     // On peut supprimer les tables temporaires (pas d->lists !)
     d->wrongLists.clear();
     d->wantedPackages.clear();
+    
+    return true;
 }
 
-void Solver::process(int index)
+bool Solver::process(int index)
 {
     // Installer les paquets d'une liste, donc explorer ses paquets
     d->list = d->lists.values().at(index);
@@ -242,30 +270,42 @@ void Solver::process(int index)
     {
         Package *pkg = d->list.at(i);
 
-        connect(pkg, SIGNAL(installed()), this, SLOT(packageInstalled()));
-        connect(pkg, SIGNAL(downloaded()), this, SLOT(packageDownloaded()), Qt::QueuedConnection);
+        connect(pkg, SIGNAL(installed(bool)), this, SLOT(packageInstalled(bool)));
+        connect(pkg, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
         connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
 
         // Progression
         d->ps->sendProgress(PackageSystem::GlobalDownload, i, d->list.count(), pkg->name());
 
         // Téléchargement
-        pkg->download();
+        if (!pkg->download())
+        {
+            return false;
+        }
     }
 
     // Attendre
-    d->loop.exec();
+    int rs = d->loop.exec();
 
     // Nettoyage
-    disconnect(this, SLOT(packageInstalled()));
-    disconnect(this, SLOT(packageDownloaded()));
+    disconnect(this, SLOT(packageInstalled(bool)));
+    disconnect(this, SLOT(packageDownloaded(bool)));
     
     d->downloadedPackages.clear();
+    
+    return (rs == 0);
 }
 
-void Solver::packageInstalled()
+void Solver::packageInstalled(bool success)
 {
     Package *pkg = static_cast<Package *>(sender());
+    
+    if (!success)
+    {
+        // Un paquet a planté, arrêter
+        d->loop.exit(1);
+        return;
+    }
     
     // Voir si on a un paquet suivant
     if (d->downloadedPackages.count() != 0)
@@ -298,17 +338,22 @@ void Solver::packageInstalled()
         // On a tout installé et fini
         d->ps->endProgress(PackageSystem::Install, d->list.count());
 
-        d->loop.exit();
+        d->loop.exit(0);
     }
     
     //NOTE: Pouvons-nous delete pkg; maintenant ?
 }
 
-void Solver::packageDownloaded()
+void Solver::packageDownloaded(bool success)
 {
     Package *pkg = qobject_cast<Package *>(sender());
 
-    if (!pkg) return;
+    if (!success || !pkg)
+    {
+        // Un paquet a planté, arrêter
+        d->loop.exit(1);
+        return;
+    }
 
     // Installer le paquet si le nombre de paquets installés en parallèle n'est pas dépasse
     if (d->pipackages < d->parallelInstalls)
@@ -334,8 +379,8 @@ void Solver::packageDownloaded()
         Package *next = d->list.at(d->dpackages);
 
         // Connexion de signaux
-        connect(next, SIGNAL(installed()), this, SLOT(packageInstalled()));
-        connect(next, SIGNAL(downloaded()), this, SLOT(packageDownloaded()), Qt::QueuedConnection);
+        connect(next, SIGNAL(installed(bool)), this, SLOT(packageInstalled(bool)));
+        connect(next, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
         connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
         
         // Progression
@@ -343,7 +388,12 @@ void Solver::packageDownloaded()
 
         // Téléchargement
         d->dpackages++;
-        next->download();
+        
+        if (!next->download())
+        {
+            d->loop.exit(1);
+            return;
+        }
     }
     else
     {

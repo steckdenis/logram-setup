@@ -33,12 +33,21 @@ using namespace std;
 void App::update()
 {
     // Mettre à jour la base de donnée
-    ps->update();
+    if (!ps->update())
+    {
+        error();
+    }
 }
 
 void App::find(const QString &pattern)
 {
-    QList<int> pkgs = ps->packagesByName("*" + pattern + "*");
+    QList<int> pkgs;
+    
+    if (!ps->packagesByName("*" + pattern + "*", pkgs))
+    {
+        error();
+        return;
+    }
 
     // Afficher joliment les paquets
     for (int i=0; i<pkgs.count(); ++i)
@@ -68,7 +77,13 @@ void App::find(const QString &pattern)
 
 void App::showFiles(const QString &packageName)
 {
-    QStringList files = ps->filesOfPackage(packageName);
+    QStringList files;
+    
+    if (!ps->filesOfPackage(packageName, files))
+    {
+        error();
+        return;
+    }
 
     foreach(const QString &file, files)
     {
@@ -86,17 +101,23 @@ void App::showpkg(const QString &name, bool changelog)
         v = name.section('=', 1, -1);
     }
 
-    Package *pkg = ps->package(n, v);
-
-    // Vérifier que le paquet est valide
-    if (!pkg->isValid())
+    Package *pkg;
+    
+    if (!ps->package(n, v, pkg))
     {
-        cout << COLOR(tr("Le paquet que vous avez entré n'existe pas. Si vous avez précisé une version, ne le faites plus pour voir si un paquet du même nom existe"), "31") << endl;
+        error();
         return;
     }
     
     // Précharger les métadonnées
     PackageMetaData *metadata = pkg->metadata();
+    
+    if (metadata == 0)
+    {
+        error();
+        return;
+    }
+    
     metadata->setCurrentPackage(pkg->name());
 
     // Status du paquet

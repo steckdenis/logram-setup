@@ -44,7 +44,7 @@ DatabaseWriter::DatabaseWriter(PackageSystem *_parent)
     parent = _parent;
 }
 
-void DatabaseWriter::download(const QString &source, const QString &url, const QString &type, bool isTranslations)
+bool DatabaseWriter::download(const QString &source, const QString &url, const QString &type, bool isTranslations)
 {
     // Calculer le nom du fichier
     QString arch = url.section('/', -2, -2);
@@ -57,24 +57,37 @@ void DatabaseWriter::download(const QString &source, const QString &url, const Q
     cacheFiles.append(fileName);
 
     // Le télécharger
-    parent->download(type, url, fileName);
+    ManagedDownload *unused = new ManagedDownload;
+    
+    if (!parent->download(type, url, fileName, true, unused))
+    {
+        return false;
+    }
     
     // Télécharger également la signature
-    parent->download(type, url + ".sig", fileName + ".sig");
+    if (!parent->download(type, url + ".sig", fileName + ".sig", true, unused))
+    {
+        return false;
+    }
+    
+    delete unused;
     
     // Vérifier la signature
     QString cmd = "gpg --verify " + fileName + ".sig " + fileName;
     if (QProcess::execute(cmd) != 0)
     {
         // Signature pas bonne
-        PackageError err;
-        err.type = PackageError::SignatureError;
-        err.info = url;
+        PackageError *err = new PackageError;
+        err->type = PackageError::SignatureError;
+        err->info = url;
         
-        throw err;
+        parent->setLastError(err);
+        return false;
     }
     
     QFile::remove(fileName + ".sig");
+    
+    return true;
 }
 
 int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool create)
@@ -282,7 +295,7 @@ void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteAr
     }
 }
 
-void DatabaseWriter::rebuild()
+bool DatabaseWriter::rebuild()
 {
     // On utilise 2 passes (d'abord créer les paquets, puis les manipuler)
     int pass;
@@ -336,11 +349,12 @@ void DatabaseWriter::rebuild()
 
                     if (QProcess::execute(cmd) != 0)
                     {
-                        PackageError err;
-                        err.type = PackageError::ProcessError;
-                        err.info = cmd;
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::ProcessError;
+                        err->info = cmd;
                         
-                        throw err;
+                        parent->setLastError(err);
+                        return false;
                     }
                 }
 
@@ -367,11 +381,12 @@ void DatabaseWriter::rebuild()
 
             if (fd.fail())
             {
-                PackageError err;
-                err.type = PackageError::OpenFileError,
-                err.info = fname;
+                PackageError *err = new PackageError;
+                err->type = PackageError::OpenFileError,
+                err->info = fname;
                 
-                throw err;
+                parent->setLastError(err);
+                return false;
             }
 
             QByteArray name, long_desc, pkgname, pkgver;
@@ -839,11 +854,12 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fl.fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
         
-        throw err;
+        parent->setLastError(err);
+        return false;
     }
 
     length = packages.count();
@@ -862,11 +878,12 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fl.fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
         
-        throw err;
+        parent->setLastError(err);
+        return false;
     }
 
     length = strings.count();
@@ -893,11 +910,12 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fl.fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
         
-        throw err;
+        parent->setLastError(err);
+        return false;
     }
 
     length = translate.count();
@@ -924,11 +942,12 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fl.fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
         
-        throw err;
+        parent->setLastError(err);
+        return false;
     }
 
     length = depends.count();
@@ -966,11 +985,12 @@ void DatabaseWriter::rebuild()
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fl.fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
         
-        throw err;
+        parent->setLastError(err);
+        return false;
     }
 
     length = strPackages.count();
@@ -1012,4 +1032,6 @@ void DatabaseWriter::rebuild()
 
     // On a fini ! :-)
     parent->endProgress(PackageSystem::UpdateDatabase, 6);
+    
+    return true;
 }

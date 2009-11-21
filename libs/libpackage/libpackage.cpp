@@ -43,6 +43,7 @@ PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
 
     d->nmanager = new QNetworkAccessManager(this);
     d->setParams = 0;
+    d->lastError = 0;
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
 
@@ -78,9 +79,9 @@ void PackageSystem::loadConfig()
     d->ipackages = new QSettings(varRoot() + "/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
 }
 
-void PackageSystem::init()
+bool PackageSystem::init()
 {
-    d->init();
+    return d->init();
 }
 
 struct Enrg
@@ -115,7 +116,7 @@ QSettings *PackageSystem::installedPackagesList() const
     return d->ipackages;
 }
 
-void PackageSystem::update()
+bool PackageSystem::update()
 {
     // Explorer la liste des mirroirs dans /etc/setup/sources.list, format QSettings
     QString lang = d->set->value("Language", tr("fr", "Langue par défaut pour les paquets")).toString();
@@ -162,35 +163,51 @@ void PackageSystem::update()
         QString u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/packages.lzma";
         
         sendProgress(GlobalDownload, i*2, count*2, u);
-        db->download(enrg->sourceName, u, enrg->type, false);
+        
+        if (!db->download(enrg->sourceName, u, enrg->type, false))
+        {
+            return false;
+        }
 
         // Traductions
         u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/translate." + lang + ".lzma";
         
         sendProgress(GlobalDownload, i*2+1, count*2, u);
-        db->download(enrg->sourceName, u, enrg->type, true);
+        
+        if (!db->download(enrg->sourceName, u, enrg->type, true))
+        {
+            return false;
+        }
     }
 
     endProgress(GlobalDownload, count*2);
 
-    db->rebuild();
+    if (!db->rebuild())
+    {
+        return false;
+    }
 
     delete db;
+    return true;
 }
 
-QList<int> PackageSystem::packagesByName(const QString &regex)
+bool PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
 {
-    return d->packagesByName(regex);
+    return d->packagesByName(regex, rs);
 }
 
-Package *PackageSystem::package(const QString &name, const QString &version)
+bool PackageSystem::package(const QString &name, const QString &version, Package* &rs)
 {
-    Package *pkg;
-    int i = d->package(name, version);
+    int i;
+    
+    if (!d->package(name, version, i))
+    {
+        return false;
+    }
+    
+    rs = new Package(i, this, d);
 
-    pkg = new Package(i, this, d);
-
-    return pkg;
+    return true;
 }
 
 Package *PackageSystem::package(int id)
@@ -198,12 +215,20 @@ Package *PackageSystem::package(int id)
     return new Package(id, this, d);
 }
 
-QStringList PackageSystem::filesOfPackage(const QString &packageName)
+bool PackageSystem::filesOfPackage(const QString &packageName, QStringList &rs)
 {
+    rs = QStringList();
+    
     // Vérifier que le paquet existe
     if (!d->ipackages->childGroups().contains(packageName))
     {
-        return QStringList();
+        PackageError *err = new PackageError;
+        err->type = PackageError::PackageNotFound;
+        err->info = packageName;
+        
+        setLastError(err);
+        
+        return false;
     }
 
     // La liste des fichiers se trouve dans /var/cache/lgrpkg/db/pkgs/<nom>_<version>/files.list
@@ -215,22 +240,22 @@ QStringList PackageSystem::filesOfPackage(const QString &packageName)
 
     if (!fl.open(QIODevice::ReadOnly))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fileName;
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fileName;
         
-        throw err;
+        setLastError(err);
+        
+        return false;
     }
 
     // Lire les lignes et les ajouter au résultat
-    QStringList rs;
-
     while (!fl.atEnd())
     {
         rs.append(fl.readLine().replace("./", iroot.toAscii() + "/"));
     }
-
-    return rs;
+    
+    return true;
 }
 
 Solver *PackageSystem::newSolver()
@@ -238,23 +263,23 @@ Solver *PackageSystem::newSolver()
     return new Solver(this, d);
 }
 
-ManagedDownload *PackageSystem::download(const QString &type, const QString &url, const QString &dest, bool block)
+bool PackageSystem::download(const QString &type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs)
 {
     // Ne pas télécharger un fichier en cache
     if (QFile::exists(dest))
     {
         if (!block)
         {
-            ManagedDownload *rs = new ManagedDownload;
+            rs = new ManagedDownload;
+            rs->error = false;
             rs->reply = 0;
             rs->url = url;
             rs->destination = dest;
             
             emit downloadEnded(rs);
-            return rs;
         }
 
-        return 0;
+        return true;
     }
     
     if (type == "remote")
@@ -266,56 +291,61 @@ ManagedDownload *PackageSystem::download(const QString &type, const QString &url
         if (!block)
         {
             // Ajouter le ManagedDownload dans la liste
-            ManagedDownload *rs = new ManagedDownload;
+            rs = new ManagedDownload;
+            rs->error = false;
             rs->reply = reply;
             rs->url = url;
             rs->destination = dest;
 
             d->managedDls.insert(reply, rs);
-            return rs;
+            return true;
         }
         else
         {
             d->dlDest = dest;
             
-            try
-            {
-                d->loop.exec();
-            }
-            catch (const PackageError &err)
-            {
-                d->loop.exit(1);
-                throw;
-            }
+            int rs = d->loop.exec();
             
             delete reply;
+            
+            return (rs == 0);
         }
     }
     else if (type == "local")
     {
         if (!QFile::copy(url, dest))
         {
-            PackageError err;
-            err.type = PackageError::DownloadError;
-            err.info = url;
+            PackageError *err = new PackageError;
+            err->type = PackageError::DownloadError;
+            err->info = url;
             
-            throw err;
+            setLastError(err);
+            
+            return false;
         }
 
         // Si on ne bloquait pas, dire que c'est fini quand-même
         if (!block)
         {
-            ManagedDownload *rs = new ManagedDownload;
+            rs = new ManagedDownload;
+            rs->error = false;
             rs->reply = 0;
             rs->url = url;
             rs->destination = dest;
             
             emit downloadEnded(rs);
-            return rs;
+            return true;
         }
+        
+        return true;
     }
-
-    return 0;
+    
+    PackageError *err = new PackageError;
+    err->type = PackageError::BadDownloadType;
+    err->info = type;
+    
+    setLastError(err);
+    return false;
 }
 
 void PackageSystem::downloadFinished(QNetworkReply *reply)
@@ -326,11 +356,22 @@ void PackageSystem::downloadFinished(QNetworkReply *reply)
     // Voir s'il y a eu des erreurs
     if (reply->error() != QNetworkReply::NoError)
     {
-        PackageError err;
-        err.type = PackageError::DownloadError;
-        err.info = d->dlDest;
+        PackageError *err = new PackageError;
+        err->type = PackageError::DownloadError;
+        err->info = d->dlDest;
         
-        throw err;
+        setLastError(err);
+        
+        if (md == 0)
+        {
+            d->loop.exit(1);
+            return;
+        }
+        else
+        {
+            md->error = true;
+            return;
+        }
     }
 
     // Téléchargement
@@ -349,11 +390,22 @@ void PackageSystem::downloadFinished(QNetworkReply *reply)
 
     if (!fl.open(QIODevice::WriteOnly))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fl.fileName();
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
         
-        throw err;
+        setLastError(err);
+        
+        if (md == 0)
+        {
+            d->loop.exit(1);
+            return;
+        }
+        else
+        {
+            md->error = true;
+            return;
+        }
     }
 
     fl.write(reply->readAll());
@@ -381,6 +433,25 @@ void PackageSystem::dlProgress(qint64 done, qint64 total)
         sendProgress(Download, done, total, reply->url().toString());
     }
 }
+
+/* Erreurs */
+
+void PackageSystem::setLastError(PackageError *err)
+{
+    if (d->lastError != 0)
+    {
+        delete d->lastError;
+    }
+    
+    d->lastError = err;
+}
+
+PackageError *PackageSystem::lastError()
+{
+    return d->lastError;
+}
+
+/* Utilitaires */
 
 int PackageSystem::parseVersion(const QString &verStr, QString &name, QString &version)
 {

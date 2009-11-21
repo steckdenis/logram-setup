@@ -57,7 +57,12 @@ void App::add(const QStringList &packages)
         solver->addPackage(name, action);
     }
 
-    solver->solve();
+    if (!solver->solve())
+    {
+        error();
+        delete solver;
+        return;
+    }
 
     // Afficher et gérer les résultats
     manageResults(solver);
@@ -218,7 +223,11 @@ void App::manageResults(Solver *solver)
     cout << endl;
 
     // Installer les paquets
-    solver->process(index);
+    if (!solver->process(index))
+    {
+        error();
+        return;
+    }   
 
     cout << endl;
     cout << COLOR(tr("Paquets installés !"), "32") << endl;

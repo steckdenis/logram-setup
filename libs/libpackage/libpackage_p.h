@@ -104,10 +104,10 @@ class PackageSystemPrivate
     public:
         PackageSystemPrivate(PackageSystem *_ps);
         ~PackageSystemPrivate();
-        void init();
+        bool init();
 
-        int package(const QString &name, const QString &version);
-        QList<int> packagesByName(const QString &regex);
+        bool package(const QString &name, const QString &version, int &rs);
+        bool packagesByName(const QString &regex, QList<int> &rs);
         QList<int> packagesByVString(const QString &verStr);
         QList<_Depend *> depends(int pkgIndex);
         QList<int> packagesOfString(int stringIndex, int nameIndex, int op);
@@ -134,7 +134,7 @@ class PackageSystemPrivate
         _Depend *depend(int32_t ptr);
         
     private:
-        void mapFile(const QString &file, QFile **ptr, uchar **map);
+        bool mapFile(const QString &file, QFile **ptr, uchar **map);
 
     private:
         QFile *f_packages, *f_strings, *f_translate, *f_depends, *f_strpackages;
@@ -149,6 +149,8 @@ class PackageSystemPrivate
         QString dlDest;
         QHash<QNetworkReply *, ManagedDownload *> managedDls;
         QSettings *set, *ipackages;
+        
+        PackageError *lastError;
 
         // Options
         bool installSuggests;

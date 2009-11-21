@@ -45,6 +45,7 @@ class PackageMetaData : public QDomDocument, public QObject
     public:
         PackageMetaData(Package *pkg, PackageSystem *ps);
         ~PackageMetaData();
+        bool error() const;
         
         QString primaryLang() const;
         QString stringOfKey(const QDomElement &element) const;

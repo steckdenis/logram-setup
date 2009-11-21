@@ -39,11 +39,14 @@ struct PackageMetaData::Private
     Package *pkg;
     
     QDomElement currentPackage;
+    
+    bool error;
 };
 
 PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument(), QObject(pkg)
 {
     d = new Private;
+    d->error = false;
     d->ps = ps;
     d->pkg = pkg;
     
@@ -57,7 +60,15 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
         QString type = ps->repoType(repo);
         fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.lzma";
         
-        ps->download(type, ps->repoUrl(repo) + "/" + pkg->url(Package::Metadata), fname);
+        ManagedDownload *md = new ManagedDownload;
+        
+        if (!ps->download(type, ps->repoUrl(repo) + "/" + pkg->url(Package::Metadata), fname, true, md))
+        {
+            d->error = true;
+            return;
+        }
+        
+        delete md;
         
         // Décompresser les métadonnées
         QString cmd = "unlzma " + fname;
@@ -70,11 +81,14 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
         
         if (QProcess::execute(cmd) != 0)
         {
-            PackageError err;
-            err.type = PackageError::ProcessError;
-            err.info = cmd;
+            PackageError *err = new PackageError;
+            err->type = PackageError::ProcessError;
+            err->info = cmd;
             
-            throw err;
+            d->ps->setLastError(err);
+            
+            d->error = true;
+            return;
         }
     }
     
@@ -83,11 +97,14 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     
     if (!fl.open(QIODevice::ReadOnly))
     {
-        PackageError err;
-        err.type = PackageError::OpenFileError;
-        err.info = fname;
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fname;
         
-        throw err;
+        d->ps->setLastError(err);
+        
+        d->error = true;
+        return;
     }
     
     QByteArray contents = fl.readAll();
@@ -98,12 +115,15 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     
     if (sha1sum != pkg->metadataHash())
     {
-        PackageError err;
-        err.type = PackageError::SHAError;
-        err.info = pkg->name();
-        err.more = fname;
+        PackageError *err = new PackageError;
+        err->type = PackageError::SHAError;
+        err->info = pkg->name();
+        err->more = fname;
         
-        throw err;
+        d->ps->setLastError(err);
+        
+        d->error = true;
+        return;
     }
     
     setContent(contents);
@@ -112,6 +132,11 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
 PackageMetaData::~PackageMetaData()
 {
     delete d;
+}
+
+bool PackageMetaData::error() const
+{
+    return d->error;
 }
 
 QString PackageMetaData::primaryLang() const

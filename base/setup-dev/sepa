@@ -90,8 +90,12 @@ binaries()
     fi
     
     # Trouver la version
-    mv=$(cd src && version)
-    export v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
+    if [ "$devel" = "true" ]; then
+        mv=$(cd src && version)
+        export v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
+    else
+        export v=$VERSION
+    fi
 
     # Obtenir la distribution dans laquelle le paquet va aller
     #distro=$(cat $shdir/metadata.xml \

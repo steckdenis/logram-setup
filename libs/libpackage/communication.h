@@ -33,6 +33,7 @@ class Communication : public QObject
     public:
         Communication(PackageSystem *ps, Package *pkg, const QString &name);
         ~Communication();
+        bool error() const;
         
         void addKey(const QString &key, const QString &value);
         

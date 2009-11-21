@@ -52,7 +52,7 @@ class App : public QCoreApplication
         void add(const QStringList &packages);
         void showFiles(const QString &packageName);
         
-        void error(const PackageError &err);
+        void error();
 
     public slots:
         void progress(PackageSystem::Progress type, int done, int total, const QString &msg);
