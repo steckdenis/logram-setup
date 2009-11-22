@@ -24,20 +24,15 @@
 #include "libpackage.h"
 #include "libpackage_p.h"
 #include "package.h"
-#include "communication.h"
+#include "packagelist.h"
 
 #include <QVector>
 #include <QList>
 #include <QHash>
-#include <QMap>
-#include <QFile>
-#include <QEventLoop>
 #include <QCoreApplication>
 
 #include <QtDebug>
-#include <QtScript>
-
-#include <iostream>
+#include <QtAlgorithms>
 
 struct Pkg
 {
@@ -51,7 +46,6 @@ struct Solver::Private
     PackageSystem *ps;
     PackageSystemPrivate *psd;
     bool installSuggests;
-    int parallelInstalls, parallelDownloads;
     bool error;
 
     // Liste pour la résolution des dépendances
@@ -60,23 +54,11 @@ struct Solver::Private
     QList<int> wrongLists;
 
     // Liste publique (QMap car on trie sur le poid. Il faut ensuite retourner les résultats à l'envers, pour un tri décroissant)
-    QMap<int, QList<Package *> > lists;
-
-    // Programme QtScript
-    QScriptValue weightFunction;
-
-    // Pour l'installation
-    QEventLoop loop;
-    int ipackages, dpackages, pipackages;
-    bool idone;
-    Package *installingPackage;
-    QList<Package *> list;
-    QList<Package *> downloadedPackages;
+    QList<PackageList *> lists;
 
     // Fonctions
     void addPkg(Pkg &pkg, int listIndex, QList<int> &plists);
     void addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists);
-    int listWeight(QList<Package *> *list);
 };
 
 Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
@@ -88,59 +70,11 @@ Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
     d->ps = ps;
 
     d->installSuggests = ps->installSuggests();
-    d->parallelInstalls = ps->parallelInstalls();
-    d->parallelDownloads = ps->parallelDownloads();
-
-    // Lire le programme QtScript
-    QFile fl("/etc/lgrpkg/scripts/weight.qs");
-
-    if (!fl.open(QIODevice::ReadOnly))
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::OpenFileError;
-        err->info = fl.fileName();
-        
-        d->ps->setLastError(err);
-        
-        d->error = true;
-        return;
-    }
-
-    // Parser le script
-    QScriptEngine *engine = new QScriptEngine();
-    engine->evaluate(fl.readAll(), fl.fileName());
-
-    if (engine->hasUncaughtException())
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::ScriptException;
-        err->info = engine->uncaughtExceptionLineNumber() + ": " + engine->uncaughtException().toString();
-        
-        d->ps->setLastError(err);
-        
-        d->error = true;
-        return;
-    }
-
-    QScriptValue global = engine->globalObject();
-    d->weightFunction = global.property("weight");
-
-    fl.close();
 }
 
 Solver::~Solver()
 {
-    if (d->weightFunction.engine() != 0)
-    {
-        delete d->weightFunction.engine();
-    }
-
     delete d;
-}
-
-bool Solver::error() const
-{
-    return d->error;
 }
 
 void Solver::addPackage(const QString &nameStr, Action action)
@@ -153,13 +87,14 @@ int Solver::results() const
     return d->lists.count();
 }
 
-QList<Package *> Solver::result(int index, int &weight) const
+PackageList *Solver::result(int index) const
 {
-    QList<Package *> rs = d->lists.values().at(index);
+    return d->lists.at(index);
+}
 
-    weight = d->lists.key(rs);
-
-    return rs;
+static bool listWeightLessThan(PackageList *l1, PackageList *l2)
+{
+    return l1->weight() < l2->weight();
 }
 
 bool Solver::solve()
@@ -222,14 +157,12 @@ bool Solver::solve()
     // Créer les véritables listes de Package pour les listes trouvées, et étant correctes
     for (int i=0; i<d->packages.count(); ++i)
     {
-        if (d->wrongLists.contains(i))
-        {
-            continue;
-        }
+        PackageList *plist = new PackageList(d->ps);
+        
+        plist->setWrong(d->wrongLists.contains(i));
 
         // La liste est bonne, créer les paquets
         const QVector<Pkg> &pkgs = d->packages.at(i);
-        QList<Package *> list;
 
         foreach(const Pkg &pkg, pkgs)
         {
@@ -238,173 +171,23 @@ bool Solver::solve()
             {
                 Package *package = new Package(pkg.index, d->ps, d->psd, pkg.action);
 
-                list.append(package);
+                plist->addPackage(package);
             }
         }
 
-        // Peser la liste
-        int weight = d->listWeight(&list);
-
         // Ajouter la liste
-        d->lists.insertMulti(weight, list);
+        d->lists.append(plist);
     }
+    
+    // Trier la liste par poids
+    qSort(d->lists.begin(), d->lists.end(), listWeightLessThan);
 
     // On peut supprimer les tables temporaires (pas d->lists !)
     d->wrongLists.clear();
     d->wantedPackages.clear();
+    d->packages.clear();
     
     return true;
-}
-
-bool Solver::process(int index)
-{
-    // Installer les paquets d'une liste, donc explorer ses paquets
-    d->list = d->lists.values().at(index);
-    d->ipackages = 0;
-    d->pipackages = 0;
-
-    int maxdownloads = qMin(d->parallelDownloads, d->list.count());
-    d->dpackages = maxdownloads;
-    
-    for(int i=0; i<maxdownloads; ++i)
-    {
-        Package *pkg = d->list.at(i);
-
-        connect(pkg, SIGNAL(installed(bool)), this, SLOT(packageInstalled(bool)));
-        connect(pkg, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
-        connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
-
-        // Progression
-        d->ps->sendProgress(PackageSystem::GlobalDownload, i, d->list.count(), pkg->name());
-
-        // Téléchargement
-        if (!pkg->download())
-        {
-            return false;
-        }
-    }
-
-    // Attendre
-    int rs = d->loop.exec();
-
-    // Nettoyage
-    disconnect(this, SLOT(packageInstalled(bool)));
-    disconnect(this, SLOT(packageDownloaded(bool)));
-    
-    d->downloadedPackages.clear();
-    
-    return (rs == 0);
-}
-
-void Solver::packageInstalled(bool success)
-{
-    Package *pkg = static_cast<Package *>(sender());
-    
-    if (!success)
-    {
-        // Un paquet a planté, arrêter
-        d->loop.exit(1);
-        return;
-    }
-    
-    // Voir si on a un paquet suivant
-    if (d->downloadedPackages.count() != 0)
-    {
-        Package *next = d->downloadedPackages.takeAt(0);
-
-        // Progression
-        d->ps->sendProgress(PackageSystem::Install, d->ipackages, d->list.count(), next->name());
-
-        // Installation
-        d->ipackages++;
-        d->installingPackage = next;
-
-        next->install();
-    }
-    else if (d->ipackages < d->list.count())
-    {
-        // On n'a pas tout installé, mais les téléchargements ne suivent pas, arrêter cette branche et dire à
-        // packageDownloaded qu'on l'attend
-        d->pipackages--;
-        return;
-    }
-    else if (d->ipackages < (d->list.count() + (d->pipackages - 1)))
-    {
-        // Laisser le dernier se finir
-        d->ipackages++;
-    }
-    else
-    {
-        // On a tout installé et fini
-        d->ps->endProgress(PackageSystem::Install, d->list.count());
-
-        d->loop.exit(0);
-    }
-    
-    //NOTE: Pouvons-nous delete pkg; maintenant ?
-}
-
-void Solver::packageDownloaded(bool success)
-{
-    Package *pkg = qobject_cast<Package *>(sender());
-
-    if (!success || !pkg)
-    {
-        // Un paquet a planté, arrêter
-        d->loop.exit(1);
-        return;
-    }
-
-    // Installer le paquet si le nombre de paquets installés en parallèle n'est pas dépasse
-    if (d->pipackages < d->parallelInstalls)
-    {
-        // Progression
-        d->ps->sendProgress(PackageSystem::Install, d->ipackages, d->list.count(), pkg->name());
-        
-        // Installer
-        d->ipackages++;
-        d->pipackages++;
-        d->installingPackage = pkg;
-        pkg->install();
-    }
-    else
-    {
-        // Placer ce paquet en attente d'installation
-        d->downloadedPackages.append(pkg);
-    }
-
-    // Si disponible, télécharger un autre paquet
-    if (d->dpackages < d->list.count())
-    {
-        Package *next = d->list.at(d->dpackages);
-
-        // Connexion de signaux
-        connect(next, SIGNAL(installed(bool)), this, SLOT(packageInstalled(bool)));
-        connect(next, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
-        connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
-        
-        // Progression
-        d->ps->sendProgress(PackageSystem::GlobalDownload, d->dpackages, d->list.count(), next->name());
-
-        // Téléchargement
-        d->dpackages++;
-        
-        if (!next->download())
-        {
-            d->loop.exit(1);
-            return;
-        }
-    }
-    else
-    {
-        // On a tout téléchargé
-        d->ps->endProgress(PackageSystem::GlobalDownload, d->list.count());
-    }
-}
-
-Package *Solver::installingPackage() const
-{
-    return d->installingPackage;
 }
 
 void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
@@ -656,14 +439,4 @@ void Solver::Private::addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists)
 
         if (first) first = false;
     }
-}
-
-int Solver::Private::listWeight(QList<Package *> *list)
-{
-    QScriptValueList args;
-
-    args << qScriptValueFromSequence(weightFunction.engine(), *(QObjectList *)list);
-    args << 0; // TODO: savoir si on installe, supprime, etc
-    
-    return weightFunction.call(QScriptValue(), args).toInt32();
 }

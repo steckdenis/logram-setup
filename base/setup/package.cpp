@@ -24,6 +24,7 @@
 
 #include <logram/solver.h>
 #include <logram/package.h>
+#include <logram/packagelist.h>
 
 #include <iostream>
 using namespace std;
@@ -31,8 +32,6 @@ using namespace std;
 void App::add(const QStringList &packages)
 {
     Solver *solver = ps->newSolver();
-    
-    connect(solver, SIGNAL(communication(Package *, Communication *)), this, SLOT(communication(Package *, Communication *)));
     
     foreach(const QString &package, packages)
     {
@@ -81,10 +80,9 @@ void App::manageResults(Solver *solver)
          << endl;
 
     // Boucle pour demander son avis à l'utilisateur
-    QList<Package *> packages;
+    PackageList *packages;
     int index = 0;
     int tot = solver->results();
-    int weight;
     int dlSize, instSize;
     bool allempty = true;
     char in;
@@ -101,11 +99,11 @@ void App::manageResults(Solver *solver)
 
         dlSize = 0;
         instSize = 0;
-        packages = solver->result(index, weight);
+        packages = solver->result(index);
         
         // Si la liste est vide, c'est qu'on n'a rien à faire
         // TODO (p.e dans solver) : si la liste est vide et qu'on a demandé une installation, passer le paquet en installé manuellement
-        if (packages.count() == 0)
+        if (packages->count() == 0)
         {
             index++;
             
@@ -129,8 +127,10 @@ void App::manageResults(Solver *solver)
         
         allempty = false;
 
-        foreach (Package *pkg, packages)
+        for (int i=0; i<packages->count(); ++i)
         {
+            Package *pkg = packages->at(i);
+            
             QString name = pkg->name().leftJustified(15, ' ', true);
 
             if (pkg->action() == Solver::Install)
@@ -175,7 +175,7 @@ void App::manageResults(Solver *solver)
                                 "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
                                     .arg(QString::number(index+1))
                                     .arg(QString::number(tot))
-                                    .arg(weight)
+                                    .arg(packages->weight())
                                     .arg(PackageSystem::fileSizeFormat(dlSize))
                                     .arg(PackageSystem::fileSizeFormat(instSize)));
         }
@@ -185,7 +185,7 @@ void App::manageResults(Solver *solver)
                               "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
                                   .arg(QString::number(index+1))
                                   .arg(QString::number(tot))
-                                  .arg(weight)
+                                  .arg(packages->weight())
                                   .arg(PackageSystem::fileSizeFormat(dlSize))
                                   .arg(PackageSystem::fileSizeFormat(-instSize)));
         }
@@ -193,7 +193,7 @@ void App::manageResults(Solver *solver)
 
         if (in == 'y')
         {
-            if (packages.count() == 0)
+            if (packages->count() == 0)
             {
                 return;
             }
@@ -221,9 +221,12 @@ void App::manageResults(Solver *solver)
     cout << endl;
     cout << COLOR(tr("Installation des paquets..."), "32") << endl;
     cout << endl;
+    
+    // Connecter un signal
+    connect(packages, SIGNAL(communication(Package *, Communication *)), this, SLOT(communication(Package *, Communication *)));
 
     // Installer les paquets
-    if (!solver->process(index))
+    if (!packages->process())
     {
         error();
         return;

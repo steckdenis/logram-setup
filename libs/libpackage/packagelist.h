@@ -1,5 +1,5 @@
 /*
- * solver.h
+ * packagelist.h
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,38 +20,42 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __SOLVER_H__
-#define __SOLVER_H__
+#ifndef __PACKAGELIST_H__
+#define __PACKAGELIST_H__
 
 #include <QObject>
 
-class Package;
 class PackageSystem;
-class PackageSystemPrivate;
-class PackageList;
+class Package;
+class Communication;
 
-class Solver : public QObject
+class PackageList : public QObject
 {
+    Q_OBJECT
+    
     public:
-        Solver(PackageSystem *ps, PackageSystemPrivate *psd);
-        ~Solver();
-
-        enum Action
-        {
-            None,
-            Install,
-            Remove,
-            Purge,
-            Update
-        };
-
-        void addPackage(const QString &nameStr, Action action);
-        bool solve();
-        bool process(int index);
-
-        int results() const;
-        PackageList *result(int index) const;
-
+        PackageList(PackageSystem *ps);
+        ~PackageList();
+        bool error() const;
+        
+        void addPackage(Package *pkg);
+        void setWrong(bool wrong);
+        
+        int count() const;
+        Package *at(int i) const;
+        Package *installingPackage() const;
+        bool wrong() const;
+        int weight() const;
+        
+        bool process();
+        
+    private slots:
+        void packageInstalled(bool success);
+        void packageDownloaded(bool success);
+        
+    signals:
+        void communication(Package *sender, Communication *comm);
+        
     private:
         struct Private;
         Private *d;
