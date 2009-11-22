@@ -424,21 +424,12 @@ bool DatabaseWriter::rebuild()
                     while (fpos < flength && *buffer != '\n')
                     {
                         // Si la ligne contient un égal, le savoir
-                        if (*buffer == '=')
+                        if (!containsequal  && *buffer == '=')
                         {
                             containsequal = true;
                             indexofequal = linelength;
-                            break;
                         }
                             
-                        linelength++;
-                        buffer++;
-                        fpos++;
-                    }
-                    
-                    // Continuer la ligne
-                    while (fpos < flength && *buffer != '\n')
-                    {
                         linelength++;
                         buffer++;
                         fpos++;
@@ -450,21 +441,12 @@ bool DatabaseWriter::rebuild()
                     while (fpos < flength && *buffer != '\n')
                     {
                         // Si la ligne contient un égal, le savoir
-                        if (*buffer == ':')
+                        if (!containsequal && *buffer == ':')
                         {
                             containsequal = true;
                             indexofequal = linelength;
-                            break;
                         }
                             
-                        linelength++;
-                        buffer++;
-                        fpos++;
-                    }
-                    
-                    // Continuer la ligne
-                    while (fpos < flength && *buffer != '\n')
-                    {
                         linelength++;
                         buffer++;
                         fpos++;

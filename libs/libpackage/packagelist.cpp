@@ -302,7 +302,7 @@ void PackageList::packageDownloaded(bool success)
         // Connexion de signaux
         connect(next, SIGNAL(installed(bool)), this, SLOT(packageInstalled(bool)));
         connect(next, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
-        connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
+        connect(next, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
         
         // Progression
         d->ps->sendProgress(PackageSystem::GlobalDownload, d->dpackages, count(), next->name());
