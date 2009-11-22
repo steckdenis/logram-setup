@@ -1,19 +1,14 @@
 #!/bin/sh
 
-cd ../../../../
+rm -f /tmp/svnlog.txt
 
-PREFIX="trunk/Distro/tools/logram-bot-irc"
+svn log -rHEAD svn://localhost/logram/trunk > /tmp/svnlog.txt
 
-rm -rf $PREFIX/svn.txt
+rev=$(cat /tmp/svnlog.txt | grep -P '^r' | cut -d ' ' -f 1)
+auth=$(cat /tmp/svnlog.txt | grep -P '^r' | cut -d ' ' -f 3)
+msg=$(cat /tmp/svnlog.txt | tail -n +4 | head -n -1)
 
-svn log -rHEAD > $PREFIX/tmp.txt
+echo "$rev" > svn.txt
+echo "$auth" >> svn.txt
+echo "$msg" >> svn.txt
 
-rev=$(cat $PREFIX/tmp.txt | grep -P '^r' | cut -d ' ' -f 1)
-auth=$(cat $PREFIX/tmp.txt | grep -P '^r' | cut -d ' ' -f 3)
-msg=$(cat $PREFIX/tmp.txt | tail -n +4 | head -n -1)
-
-echo $rev >> $PREFIX/svn.txt
-echo $auth >> $PREFIX/svn.txt
-echo $msg >> $PREFIX/svn.txt
-
-cd $PREFIX

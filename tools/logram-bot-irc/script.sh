@@ -10,9 +10,9 @@ cat tmp.txt | sed -n 's#.*<link>\(.*\)</link>.*#\1#p' | head -n 1 | tail -n 1 >>
 ## Journaux ##
 wget -q -O tmp.txt http://www.logram-project.org/feeds/latestjournal/
 cat tmp.txt | sed -n 's#.*<title>\(.*\)</title>.*#\1#p' | head -n 1 | tail -n 1 >> feeds.txt
-echo >> feeds.txt
+# echo >> feeds.txt
 cat tmp.txt | sed -n 's#.*<link>\(.*\)</link>.*#\1#p' | head -n 1 | tail -n 1 >> feeds.txt
-echo >> feeds.txt
+# echo >> feeds.txt
 
 ## Demandes ##
 wget -q -O tmp.txt http://www.logram-project.org/feeds/latestask/
