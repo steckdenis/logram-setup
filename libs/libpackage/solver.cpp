@@ -39,7 +39,15 @@ struct Pkg
     int index;
     Solver::Action action;
     bool reallyWanted;
+    
+    bool operator==(const Pkg &other);
 };
+
+// Utilisé par QList::contains
+bool Pkg::operator==(const Pkg &other)
+{
+    return (index == other.index) && (action == other.action);
+}
 
 struct Solver::Private
 {
@@ -50,10 +58,14 @@ struct Solver::Private
 
     // Liste pour la résolution des dépendances
     QList<QVector<Pkg> > packages;
+    QHash<int, QList<PackageList::Error *> > listErrors;
     QHash<QString, Solver::Action> wantedPackages;
     QList<int> wrongLists;
+    
+    // Permet de gérer correctement les suggestions
+    QList<int> topLevelPackages;
 
-    // Liste publique (QMap car on trie sur le poid. Il faut ensuite retourner les résultats à l'envers, pour un tri décroissant)
+    // Liste publique
     QList<PackageList *> lists;
 
     // Fonctions
@@ -100,7 +112,6 @@ static bool listWeightLessThan(PackageList *l1, PackageList *l2)
 bool Solver::solve()
 {
     QList<int> lists;
-    QList<int> mpkgsToAdd;
     QVector<Pkg> pkgsToAdd;
     Pkg p;
 
@@ -112,9 +123,9 @@ bool Solver::solve()
     foreach(const QString &pkg, d->wantedPackages.keys())
     {
         Action act = d->wantedPackages.value(pkg);
-        mpkgsToAdd = d->psd->packagesByVString(pkg);
+        d->topLevelPackages = d->psd->packagesByVString(pkg);
         
-        if (mpkgsToAdd.count() == 0)
+        if (d->topLevelPackages.count() == 0)
         {
             // Aucun paquet ne correspond
             PackageError *err = new PackageError;
@@ -126,7 +137,7 @@ bool Solver::solve()
             return false;
         }
         
-        foreach(int i, mpkgsToAdd)
+        foreach(int i, d->topLevelPackages)
         {
             p.index = i;
             p.action = act;
@@ -172,6 +183,15 @@ bool Solver::solve()
                 Package *package = new Package(pkg.index, d->ps, d->psd, pkg.action);
 
                 plist->addPackage(package);
+            }
+        }
+        
+        // Ajouter les éventuelles erreurs
+        if (plist->wrong())
+        {
+            foreach(PackageList::Error *err, d->listErrors.value(i))
+            {
+                plist->addError(err);
             }
         }
 
@@ -220,6 +240,19 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
                 else
                 {
                     // L'action n'est pas la même, c'est une contradiction, on quitte
+                    PackageList::Error *err = new PackageList::Error;
+                    err->type = PackageList::Error::SameNameSameVersionDifferentAction;
+                    
+                    err->package = psd->string(0, mpkg->name);
+                    err->version = psd->string(0, mpkg->version);
+                    err->action = pkg.action;
+                    
+                    err->otherPackage = psd->string(0, lpkg->name);
+                    err->otherVersion = psd->string(0, lpkg->version);
+                    err->otherAction = pk.action;
+                    
+                    listErrors[listIndex].append(err);
+                    
                     wrongLists.append(listIndex);
                     return;
                 }
@@ -230,6 +263,19 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
                 if (pk.action == pkg.action)
                 {
                     // Contradiction, on ne peut pas par exemple installer deux versions les mêmes
+                    PackageList::Error *err = new PackageList::Error;
+                    err->type = PackageList::Error::SameNameDifferentVersionSameAction;
+                    
+                    err->package = psd->string(0, mpkg->name);
+                    err->version = psd->string(0, mpkg->version);
+                    err->action = pkg.action;
+                    
+                    err->otherPackage = psd->string(0, lpkg->name);
+                    err->otherVersion = psd->string(0, lpkg->version);
+                    err->action = pk.action;
+                    
+                    listErrors[listIndex].append(err);
+                    
                     wrongLists.append(listIndex);
                     return;
                 }
@@ -299,7 +345,7 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
         Solver::Action act = Solver::None;
 
         if ((dep->type == DEPEND_TYPE_DEPEND && pkg.action == Solver::Install)
-         || (dep->type == DEPEND_TYPE_SUGGEST && pkg.action == Solver::Install && installSuggests))
+         || (dep->type == DEPEND_TYPE_SUGGEST && pkg.action == Solver::Install && installSuggests && topLevelPackages.contains(pkg.index)))
         {
             act = Solver::Install;
         }
@@ -358,6 +404,19 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
         if (mpkgsToAdd.count() == 0 && act == Solver::Install)
         {
             // Aucun des paquets demandés ne convient, distribution cassée. On quitte la branche
+            PackageList::Error *err = new PackageList::Error;
+            err->type = PackageList::Error::NoPackagesMatchingPattern;
+            
+            err->pattern = PackageSystem::dependString(
+                psd->string(0, dep->pkgname),
+                psd->string(0, dep->pkgver),
+                dep->op);
+                
+            err->package = psd->string(0, mpkg->name);
+            err->version = psd->string(0, mpkg->version);
+            
+            listErrors[listIndex].append(err);
+            
             wrongLists << lists;
             return;
         }
@@ -387,13 +446,25 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
 void Solver::Private::addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists)
 {
     bool first = true;
-
-    QList<int> lcounts;
-
-    foreach(int list, lists)
+    QHash<int, int> lcounts;
+    int count = lists.count();
+    
+#if 0
+    if (pkgsToAdd.count() > 1)
     {
-        lcounts.append(packages.at(list).count());
+        bool f = true;
+        foreach(const Pkg &pkg, pkgsToAdd)
+        {
+            if (f)
+            {
+                qDebug() << "Un choix :";
+                f = false;
+            }
+            
+            qDebug() << "    " << psd->packageName(pkg.index) << psd->packageVersion(pkg.index);
+        }
     }
+#endif
 
     // Si on a plusieurs choix, créer les sous-listes nécessaires
     for (int j=0; j<pkgsToAdd.count(); ++j)
@@ -403,7 +474,6 @@ void Solver::Private::addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists)
                  (puisqu'ils l'ont déjà été). Au prochain tour de foreach(), ils seront
                  traités comme il faut
         */
-        int count = lists.count();
         Pkg pkg = pkgsToAdd.at(j);
         
         for (int i=0; i<count; ++i)
@@ -412,31 +482,45 @@ void Solver::Private::addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists)
 
             if (first)
             {
-                addPkg(pkg, lindex, lists);
+                const QVector<Pkg> &pkgs = packages.at(lindex);
+                
+                lcounts[lindex] = pkgs.count();
+                
+                // Ne rien ajouter si la liste contient déjà ce paquet, exactement le même,
+                // avec la même action
+                if (!pkgs.contains(pkg))
+                {
+                    addPkg(pkg, lindex, lists);
+                }
             }
             else
             {
                 // On a une variante, créer une nouvelle liste, et y copier <lcount> éléments dedans
                 // (pour en faire une copie de la liste originelle)
                 const QVector<Pkg> &pkgs = packages.at(lindex);
-
-                packages.append(QVector<Pkg>());
-                lindex = packages.count()-1;
-                lists.append(lindex);
-
-                QVector<Pkg> &mpkgs = packages[lindex];
-
-                int lcount = lcounts.at(i);
                 
-                for (int k=0; k<lcount; ++k)
+                // Ne rien ajouter si la liste contient déjà ce paquet, exactement le même,
+                // avec la même action
+                if (!pkgs.contains(pkg))
                 {
-                    mpkgs.append(pkgs.at(k));
+                    int lcount = lcounts[lindex];
+                    
+                    packages.append(QVector<Pkg>());
+                    lindex = packages.count()-1;
+                    lists.append(lindex);
+
+                    QVector<Pkg> &mpkgs = packages[lindex];
+                    
+                    for (int k=0; k<lcount; ++k)
+                    {
+                        mpkgs.append(pkgs.at(k));
+                    }
+                    
+                    addPkg(pkg, lindex, lists);
                 }
-                
-                addPkg(pkg, lindex, lists);
             }
         }
 
-        if (first) first = false;
+        first = false;
     }
 }

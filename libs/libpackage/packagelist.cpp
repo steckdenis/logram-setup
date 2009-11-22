@@ -38,6 +38,7 @@ struct PackageList::Private
     bool wrong, weighted;
     int weight;
     QList<Package *> packages;
+    QList<PackageList::Error *> errs;
     int parallelInstalls, parallelDownloads;
     
     // Pour l'installation
@@ -122,6 +123,11 @@ void PackageList::addPackage(Package *pkg)
     d->packages.append(pkg);
 }
 
+void PackageList::addError(Error *err)
+{
+    d->errs.append(err);
+}
+
 void PackageList::setWrong(bool wrong)
 {
     d->wrong = wrong;
@@ -132,9 +138,20 @@ int PackageList::count() const
     return d->packages.count();
 }
 
+int PackageList::errors() const
+{
+    return d->errs.count();
+}
+
 Package *PackageList::at(int i) const
 {
     return d->packages.at(i);
+}
+
+
+PackageList::Error *PackageList::error(int i) const
+{
+    return d->errs.at(i);
 }
 
 bool PackageList::wrong() const

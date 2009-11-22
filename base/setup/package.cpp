@@ -69,8 +69,104 @@ void App::add(const QStringList &packages)
     delete solver;
 }
 
+static QString actionString(Solver::Action act)
+{
+    switch (act)
+    {
+        case Solver::Install:
+            return App::tr("installé");
+            
+        case Solver::Remove:
+            return App::tr("supprimé");
+            
+        case Solver::Purge:
+            return App::tr("supprimé complètement");
+            
+        case Solver::Update:
+            return App::tr("mis à jour");
+            
+        default:
+            return QString();
+    }
+}
+
 void App::manageResults(Solver *solver)
 {
+    // Boucle pour demander son avis à l'utilisateur
+    PackageList *packages;
+    int index = 0;
+    int tot = solver->results();
+    int dlSize, instSize;
+    bool allempty = true;
+    bool oneok = false;
+    char in;
+
+    // Vérifier qu'au moins une solution est bonne
+    for (int i=0; i<tot; ++i)
+    {
+        packages = solver->result(i);
+        
+        if (!packages->wrong())
+        {
+            oneok = true;
+            break;
+        }
+    }
+    
+    // Si aucune des solutions n'est bonne, présenter le problème à l'utilisateur
+    if (!oneok)
+    {
+        cout << COLOR(tr("Setup n'a pas trouvé comment appliquer les changements que vous souhaitez"), "31") << endl;
+        cout << qPrintable(tr("Voici la liste des tentatives et les raisons pour lesquelles elles ont échoué")) << endl;
+        cout << endl;
+        
+        for (int i=0; i<tot; ++i)
+        {
+            packages = solver->result(i);
+            
+            cout << COLOR(tr("Tentative numéro %1 :").arg(i+1), "33") << endl;;
+            
+            for (int j=0; j<packages->errors(); ++j)
+            {
+                PackageList::Error *err = packages->error(j);
+                
+                cout << "  * ";
+                
+                switch (err->type)
+                {
+                    case PackageList::Error::SameNameSameVersionDifferentAction:
+                        cout << qPrintable(tr("Le paquet %1 à la version %2 devait être %3,\n    mais un autre paquet lui a demandé d'être %4")
+                            .arg(err->package)
+                            .arg(err->version)
+                            .arg(actionString(err->action))
+                            .arg(actionString(err->otherAction)));
+                        break;
+                        
+                    case PackageList::Error::SameNameDifferentVersionSameAction:
+                        cout << qPrintable(tr("Le paquet %1 doit être %2\n    à la version %3 ET à la version %4")
+                            .arg(err->package)
+                            .arg(actionString(err->action))
+                            .arg(err->version)
+                            .arg(err->otherVersion));
+                        break;
+                        
+                    case PackageList::Error::NoPackagesMatchingPattern:
+                        cout << qPrintable(tr("Le paquet %1 à la version %2\n    dépend de «%3», qui est introuvable")
+                            .arg(err->package)
+                            .arg(err->version)
+                            .arg(err->pattern));
+                        break;
+                }
+                
+                cout << endl;
+            }
+        }
+        
+        cout << endl;
+        return;
+    }
+    
+    // Sinon, lui montrer le choix
     cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "32") << endl;
     cout << qPrintable(tr("    Légende : "))
          << COLOR(tr("I: Installer "), "34")
@@ -78,20 +174,6 @@ void App::manageResults(Solver *solver)
          << COLOR(tr("U: Mettre à jour "), "33")
          << COLOR(tr("P: Supprimer totalement "), "35")
          << endl;
-
-    // Boucle pour demander son avis à l'utilisateur
-    PackageList *packages;
-    int index = 0;
-    int tot = solver->results();
-    int dlSize, instSize;
-    bool allempty = true;
-    char in;
-
-    if (tot == 0)
-    {
-        cout << endl << COLOR(tr("Aucune solution d'installation n'a été trouvée. Vérifiez que ce que vous demandez est possible"), "31") << endl << endl;
-        return;
-    }
     
     while (true)
     {

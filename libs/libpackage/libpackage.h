@@ -84,6 +84,7 @@ class PackageSystem : public QObject
         static bool matchVersion(const QByteArray &v1, const QByteArray &v2, int op);
         static int parseVersion(const QString &verStr, QString &name, QString &version);
         static QString fileSizeFormat(int size);
+        static QString dependString(const QString &name, const QString &version, int op);
 
         // API utilisée par des éléments de liblpackages
         bool download(const QString &type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs);

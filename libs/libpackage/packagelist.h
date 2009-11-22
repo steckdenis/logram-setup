@@ -25,6 +25,8 @@
 
 #include <QObject>
 
+#include "solver.h"
+
 class PackageSystem;
 class Package;
 class Communication;
@@ -38,12 +40,33 @@ class PackageList : public QObject
         ~PackageList();
         bool error() const;
         
+        struct Error
+        {
+            enum Type
+            {
+                SameNameSameVersionDifferentAction,
+                SameNameDifferentVersionSameAction,
+                NoPackagesMatchingPattern
+            };
+            
+            Type type;
+            
+            QString package, otherPackage;
+            QString version, otherVersion;
+            Solver::Action action, otherAction;
+            
+            QString pattern;
+        };
+        
         void addPackage(Package *pkg);
+        void addError(Error *err);
         void setWrong(bool wrong);
         
         int count() const;
         Package *at(int i) const;
         Package *installingPackage() const;
+        int errors() const;
+        Error *error(int i) const;
         bool wrong() const;
         int weight() const;
         

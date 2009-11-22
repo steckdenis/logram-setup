@@ -619,6 +619,40 @@ QString PackageSystem::fileSizeFormat(int size)
     }
 }
 
+QString PackageSystem::dependString(const QString &name, const QString &version, int op)
+{
+    QString rs(name);
+
+    if (op != DEPEND_OP_NOVERSION)
+    {
+        switch (op)
+        {
+            case DEPEND_OP_EQ:
+                rs += " (= ";
+                break;
+            case DEPEND_OP_GREQ:
+                rs += " (>= ";
+                break;
+            case DEPEND_OP_GR:
+                rs += " (> ";
+                break;
+            case DEPEND_OP_LOEQ:
+                rs += " (<= ";
+                break;
+            case DEPEND_OP_LO:
+                rs += " (< ";
+                break;
+            case DEPEND_OP_NE:
+                rs += " (!= ";
+                break;
+        }
+
+        rs += version + ")";
+    }
+    
+    return rs;
+}
+
 /* Options */
 
 bool PackageSystem::installSuggests() const

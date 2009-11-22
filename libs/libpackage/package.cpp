@@ -359,35 +359,8 @@ QString Package::dependsToString(const QList<Depend *> &deps, int type)
         {
             rs += "; ";
         }
-
-        rs += dep->name();
-
-        if (dep->op() != DEPEND_OP_NOVERSION)
-        {
-            switch (dep->op())
-            {
-                case DEPEND_OP_EQ:
-                    rs += " (= ";
-                    break;
-                case DEPEND_OP_GREQ:
-                    rs += " (>= ";
-                    break;
-                case DEPEND_OP_GR:
-                    rs += " (> ";
-                    break;
-                case DEPEND_OP_LOEQ:
-                    rs += " (<= ";
-                    break;
-                case DEPEND_OP_LO:
-                    rs += " (< ";
-                    break;
-                case DEPEND_OP_NE:
-                    rs += " (!= ";
-                    break;
-            }
-
-            rs += dep->version() + ")";
-        }
+        
+        rs += PackageSystem::dependString(dep->name(), dep->version(), dep->op());
     }
 
     return rs;
