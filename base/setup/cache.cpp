@@ -250,11 +250,11 @@ void App::showpkg(const QString &name, bool changelog)
     {
         if (ver->status() == PACKAGE_STATE_INSTALLED)
         {
-            cout << COLOR("  I ", "34");
+            cout << COLORC("  I ", "34");
         }
         else if (ver->status() == PACKAGE_STATE_REMOVED)
         {
-            cout << COLOR("  R ", "31");
+            cout << COLORC("  R ", "31");
         }
         else
         {

@@ -38,6 +38,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     
     // Ouvrir le système de paquets
     ps = new PackageSystem(this);
+    colored = true;
 
     connect(ps, SIGNAL(progress(PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(PackageSystem::Progress, int, int, const QString &)));
     
@@ -67,6 +68,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             }
 
             ps->setInstallSuggests(isug);
+        }
+        else if (opt == "-W")
+        {
+            colored = false;
         }
         else if (opt == "-I")
         {
@@ -195,71 +200,82 @@ void App::help()
     version();
 
     cout << endl;
+    
+    QString rs;
 
-    cout << "Usage : setup [options] <action> [arguments]" << endl;
-    cout << "    help               Show help" << endl;
-    cout << "    version            Show version" << endl;
-    cout << "    search <pattern>   Show all the packages matching <pattern>" << endl;
-    cout << "    showpkg <name>     Show the informations of the package <name>" << endl;
-    cout << "    update             Update the packages' database" << endl;
-    cout << "    add <packages>     Add packages (prepend them with \"-\" to remove)" << endl;
-    cout << "    files <pkg>        Show the list of the files in the installed package <pkg>" << endl;
-
-    cout << endl;
-    cout << "Options :" << endl;
-    cout << "    -S [off]           Enable (or disable) the installation of the suggests" << endl;
-    cout << "    -I <num>           Number of parallel installs" << endl;
-    cout << "    -D <num>           Number of parallel downloads" << endl;
-    cout << "    -iR <install root> Root path of the installation (usually /, but it can be anything, for example to build a Logram From Scratch)" << endl;
-    cout << "    -cR <conf root>    Root path of the installation files (usually /, the configuration files are read in <conf root>etc/lgrpkg)" << endl;
-    cout << "    -vR <var root>     Root path of the temporary files and the database (usually /)" << endl;
-    cout << "    -C                 Show changelog in showpkg" << endl;
+    rs = tr("Utilisation : setup [options] <action> [arguments]\n"
+            "    help               Afficher l'aide\n"
+            "    version            Afficher la version\n"
+            "    search <pattern>   Afficher tous les paquets dont le nom\n"
+            "                       correspond à <pattern>\n"
+            "    showpkg <name>     Affiche les informations du paquet <name>\n"
+            "    update             Met à jour la base de donnée des paquets\n"
+            "    add <packages>     Ajoute des paquets (préfixés de \"-\" pour les supprimer)\n"
+            "    files <pkg>        Affiche la liste des fichiers installés par <pkg>\n"
+            "\n"
+            "Options :\n"
+            "    -S [off]           Active (on) ou pas (off) l'installation des suggestions\n"
+            "    -I <num>           Définit le nombre de téléchargements en parallèle\n"
+            "    -D <num>           Définit le nombre d'installations en parallèle\n"
+            "    -iR <install root> Chemin d'installation racine (\"/\" par défaut).\n"
+            "                       Sert à installer un «Logram dans le Logram»\n"
+            "    -cR <conf root>    Chemin racine de la configuration (\"/\" par défaut).\n"
+            "    -vR <var root>     Chemin racine des fichiers temporaires (\"/\" par défaut)\n"
+            "    -C                 Affiche l'historique des modifications d'un paquet\n"
+            "                       quand utilisé avec showpkg\n"
+            "    -W                 Désactive les couleurs dans la sortie de Setup\n");
+   
+    cout << qPrintable(rs);
 }
 
 void App::version()
 {
-    cout << "Logram Setup " VERSION << endl;
-    cout << endl;
-    cout << "Logram is free software; you can redistribute it and/or modify" << endl;
-    cout << "it under the terms of the GNU General Public License as published by" << endl;
-    cout << "the Free Software Foundation; either version 3 of the License, or" << endl;
-    cout << "(at your option) any later version." << endl;
+    QString rs;
+    
+    rs = tr("Logram Setup " VERSION "\n"
+            "\n"
+            "Logram is free software; you can redistribute it and/or modify\n"
+            "it under the terms of the GNU General Public License as published by\n"
+            "the Free Software Foundation; either version 3 of the License, or\n"
+            "(at your option) any later version.\n");
+  
+    cout << qPrintable(rs);
 }
 
 void App::error()
 {
-    cout << COLOR("ERROR : ", "31");
+    cout << COLOR(tr("ERREUR : "), "31");
     
     PackageError *err = ps->lastError();
 
     switch (err->type)
     {
         case PackageError::OpenFileError:
-            cout << "Cannot open file ";
+            cout << qPrintable(tr("Impossible d'ouvrir le fichier "));
             break;
         case PackageError::MapFileError:
-            cout << "Cannot map file ";
+            cout << qPrintable(tr("Impossible de mapper le fichier "));
             break;
         case PackageError::ProcessError:
-            cout << "Error when executing command ";
+            cout << qPrintable(tr("Erreur dans la commande "));
             break;
         case PackageError::DownloadError:
-            cout << "Error when downloading file ";
+            cout << qPrintable(tr("Impossible de télécharger "));
             break;
         case PackageError::ScriptException:
-            cout << "Error in the QtScript ";
+            cout << qPrintable(tr("Erreur dans le QtScript "));
             break;
         case PackageError::SignatureError:
-            cout << "Invalid GPG signature of file ";
+            cout << qPrintable(tr("Mauvaise signature GPG du fichier "));
             break;
         case PackageError::SHAError:
-            cout << "Bad SHA1 sum, file corrupted ";
+            cout << qPrintable(tr("Mauvaise somme SHA1, fichier corrompu : "));
             break;
         case PackageError::PackageNotFound:
-            cout << "Package not found ";
+            cout << qPrintable(tr("Paquet inexistant : "));
             break;
         case PackageError::BadDownloadType:
-            cout << "Bad download type, please report the bug ";
+            cout << qPrintable(tr("Mauvais type de téléchargement, vérifier sources.list : "));
             break;
     }
     

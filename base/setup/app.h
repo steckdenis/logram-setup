@@ -30,7 +30,10 @@
 #include <logram/libpackage.h>
 
 #define VERSION "0.0.1"
-#define COLOR(text, color) qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m")
+
+#define COLOR(text, color) (colored ? qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m") : qPrintable(text))
+
+#define COLORC(text, color) (colored ? qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m") : text)
 
 class Solver;
 class Package;
@@ -60,6 +63,7 @@ class App : public QCoreApplication
 
     private:
         PackageSystem *ps;
+        bool colored;
 
         void manageResults(Solver *solver);
 };
