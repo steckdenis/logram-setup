@@ -52,12 +52,12 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     }
 
     // Explorer les options
-    QString opt = args.at(1);
+    QString opt = args.at(1).toLower();
     bool changelog = false;
 
     while (opt.startsWith('-'))
     {
-        if (opt == "-S")
+        if (opt == "-s")
         {
             bool isug = true;
 
@@ -69,19 +69,19 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 
             ps->setInstallSuggests(isug);
         }
-        else if (opt == "-W")
+        else if (opt == "-w")
         {
             colored = false;
         }
-        else if (opt == "-I")
+        else if (opt == "-i")
         {
             ps->setParallelInstalls(args.takeAt(2).toInt());
         }
-        else if (opt == "-D")
+        else if (opt == "-d")
         {
             ps->setParallelDownloads(args.takeAt(2).toInt());
         }
-        else if (opt == "-R")
+        else if (opt == "-r")
         {
             QString root = args.takeAt(2);
             
@@ -89,19 +89,19 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             ps->setConfRoot(root);
             ps->setVarRoot(root);
         }
-        else if (opt == "-iR")
+        else if (opt == "-ir")
         {
             ps->setInstallRoot(args.takeAt(2));
         }
-        else if (opt == "-cR")
+        else if (opt == "-cr")
         {
             ps->setConfRoot(args.takeAt(2));
         }
-        else if (opt == "-vR")
+        else if (opt == "-vr")
         {
             ps->setVarRoot(args.takeAt(2));
         }
-        else if (opt == "-C")
+        else if (opt == "-c")
         {
             changelog = true;
         }
@@ -112,7 +112,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         }
 
         args.removeAt(1);
-        opt = args.at(1);
+        opt = args.at(1).toLower();
     }
     
     ps->loadConfig();
@@ -213,7 +213,7 @@ void App::help()
             "    add <packages>     Ajoute des paquets (préfixés de \"-\" pour les supprimer)\n"
             "    files <pkg>        Affiche la liste des fichiers installés par <pkg>\n"
             "\n"
-            "Options :\n"
+            "Options (insensible à la casse) :\n"
             "    -S [off]           Active (on) ou pas (off) l'installation des suggestions\n"
             "    -I <num>           Définit le nombre de téléchargements en parallèle\n"
             "    -D <num>           Définit le nombre d'installations en parallèle\n"
