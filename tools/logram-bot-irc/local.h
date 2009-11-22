@@ -36,7 +36,10 @@ void *xmalloc (size_t size);
 void stack_delete (void);
 
 /* rss.c */
-void *thread_rss (void *data);
+void get_rss (int s);
+
+/* svn.c */
+void get_svn (int s);
 
 /* irc.c */
 int connection (char *server, int port);

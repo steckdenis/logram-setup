@@ -1,4 +1,4 @@
-SRC = main.c garbage.c config.c irc.c rss.c cmd.c
+SRC = main.c garbage.c config.c irc.c rss.c svn.c cmd.c
 OBJ = $(SRC:.c=.o)
 EXEC = logram-bot
 

@@ -34,6 +34,11 @@ void init (void)
 	global->link.msg     = NULL;
 	global->link.wiki    = NULL;
 	global->link.pkg     = NULL;
+
+	/* SVN */
+	global->svn.rev  = NULL;
+	global->svn.nick = NULL;
+	global->svn.msg  = NULL;
 }
 
 void release (void)
@@ -44,6 +49,20 @@ void release (void)
 	stack_delete ();
 
 	exit (EXIT_SUCCESS);
+}
+
+void *thread_cb (void *data)
+{
+	int sock = global->sock;
+
+	while (1)
+	{
+		get_rss (sock);
+		get_svn (sock);
+		sleep (300); /* Wait 5 minutes */
+	}
+
+	return NULL;
 }
 
 int main (int argc, char **argv)
@@ -72,7 +91,7 @@ int main (int argc, char **argv)
 			message (s, "JOIN %s\r\n", global->config.channel);
 
 			global->sock = s;
-			pthread_create (&thread, NULL, thread_rss, NULL);
+			pthread_create (&thread, NULL, thread_cb, NULL);
 
 			for (;;)
 			{

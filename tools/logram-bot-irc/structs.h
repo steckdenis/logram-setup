@@ -26,6 +26,13 @@ struct global_t
 		char *pkg;
 	} title, link;
 
+	struct
+	{
+		char *rev;
+		char *nick;
+		char *msg;
+	} svn;
+
 	int sock;
 };
 

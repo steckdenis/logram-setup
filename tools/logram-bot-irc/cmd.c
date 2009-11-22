@@ -8,6 +8,7 @@ void handle_ask     (int sock, struct msg_t *data, int argc, char **argv);
 void handle_forum   (int sock, struct msg_t *data, int argc, char **argv);
 void handle_wiki    (int sock, struct msg_t *data, int argc, char **argv);
 void handle_pkg     (int sock, struct msg_t *data, int argc, char **argv);
+void handle_svn     (int sock, struct msg_t *data, int argc, char **argv);
 void handle_quit    (int sock, struct msg_t *data, int argc, char **argv);
 
 struct cmd_t commands[] =
@@ -20,6 +21,7 @@ struct cmd_t commands[] =
 	{ "!forum",   handle_forum,   "Affiche le dernier message du forum" },
 	{ "!wiki",    handle_wiki,    "Affiche la dernière page de wiki créée" },
 	{ "!pkg",     handle_pkg,     "Affiche le dernier paquet publié" },
+	{ "!svn",     handle_svn,     "Affiche le dernier commit SVN" },
 	{ "!quit",    handle_quit,    "Ferme le bot" },
 	{ NULL, NULL, NULL }
 };
@@ -112,6 +114,7 @@ void handle_rss (int sock, struct msg_t *data, int argc, char **argv)
 	handle_forum (sock, data, argc, argv);
 	handle_wiki (sock, data, argc, argv);
 	handle_pkg (sock, data, argc, argv);
+	handle_svn (sock, data, argc, argv);
 }
 
 void handle_news (int sock, struct msg_t *data, int argc, char **argv)
@@ -164,4 +167,11 @@ void handle_pkg (int sock, struct msg_t *data, int argc, char **argv)
 
 }
 
-
+void handle_svn (int sock, struct msg_t *data, int argc, char **argv)
+{
+	message (sock, "PRIVMSG %s :SVN: %s (%s): %s\r\n",
+			data->channel,
+			global->svn.nick,
+			global->svn.rev,
+			global->svn.msg);
+}

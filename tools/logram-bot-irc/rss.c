@@ -30,9 +30,9 @@ void get_rss (int s)
 {
 	FILE *feeds = NULL;
 	
-	system ("sh ./script.sh");
+	system ("sh ./rss.sh");
 	
-	if ((feeds = fopen ("feeds.txt", "r")) != NULL)
+	if ((feeds = fopen ("rss.txt", "r")) != NULL)
 	{
 		parse_rss (feeds, &global->title.news,    &global->link.news,    "News",    s);	
 		parse_rss (feeds, &global->title.journal, &global->link.journal, "Journal", s);
@@ -44,17 +44,6 @@ void get_rss (int s)
 	}
 }
 
-void *thread_rss (void *data)
-{
-	int sock = global->sock;
 
-	while (1)
-	{
-		get_rss (sock);
-		sleep (300); /* Wait 5 minutes */
-	}
-
-	return NULL;
-}
 
 
