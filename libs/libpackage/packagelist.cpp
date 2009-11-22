@@ -53,6 +53,8 @@ struct PackageList::Private
     QScriptValue weightFunction;
 };
 
+Q_DECLARE_METATYPE(Package *)
+
 PackageList::PackageList(PackageSystem *ps) : QObject(ps)
 {
     d = new Private;
@@ -65,7 +67,7 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps)
     d->parallelDownloads = ps->parallelDownloads();
     
     // Lire le programme QtScript
-    QFile fl(d->ps->confRoot() + "etc/lgrpkg/scripts/weight.qs");
+    QFile fl(d->ps->confRoot() + "/etc/lgrpkg/scripts/weight.qs");
 
     if (!fl.open(QIODevice::ReadOnly))
     {
@@ -165,7 +167,7 @@ int PackageList::weight() const
     {
         QScriptValueList args;
 
-        args << qScriptValueFromSequence(d->weightFunction.engine(), *(QObjectList *)(&d->packages));
+        args << qScriptValueFromSequence(d->weightFunction.engine(), d->packages);
         args << 0; // TODO: savoir si on installe, supprime, etc
         
         d->weight = d->weightFunction.call(QScriptValue(), args).toInt32();

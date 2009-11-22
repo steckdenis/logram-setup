@@ -170,6 +170,11 @@ bool Solver::solve()
     {
         PackageList *plist = new PackageList(d->ps);
         
+        if (plist->error())
+        {
+            return false;
+        }
+        
         plist->setWrong(d->wrongLists.contains(i));
 
         // La liste est bonne, créer les paquets
