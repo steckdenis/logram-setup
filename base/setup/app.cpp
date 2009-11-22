@@ -117,7 +117,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     
     ps->loadConfig();
 
-    QString cmd = args.at(1);
+    QString cmd = args.at(1).toLower();
 
     // Initialiser le système de paquet si on en a besoin
     if (cmd != "update")
