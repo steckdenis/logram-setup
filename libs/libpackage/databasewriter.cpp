@@ -393,6 +393,7 @@ bool DatabaseWriter::rebuild()
             _Package *pkg = 0;
             int index;
             int linelength;
+            bool ignorepackage = false;
             
             int flength, fpos;
             
@@ -415,6 +416,7 @@ bool DatabaseWriter::rebuild()
                 char *cline = buffer;
                 bool containsequal = false;
                 int indexofequal;
+                int hasquote = 0;   // int car utilisé dans des opérations de pointeurs
                 linelength = 0;
                 indexofequal = 0;
                 
@@ -428,6 +430,10 @@ bool DatabaseWriter::rebuild()
                         {
                             containsequal = true;
                             indexofequal = linelength;
+                        }
+                        else if (*buffer == '"')
+                        {
+                            hasquote = 1;
                         }
                             
                         linelength++;
@@ -474,6 +480,7 @@ bool DatabaseWriter::rebuild()
                         // Initialisations
                         pkgname.clear();
                         pkgver.clear();
+                        ignorepackage = false;
                         
                         // Lire la ligne suivante
                         continue;
@@ -485,160 +492,167 @@ bool DatabaseWriter::rebuild()
 
                     // Lire les clefs et les valeurs
                     QByteArray key = QByteArray::fromRawData(cline, indexofequal);
-                    QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1, linelength - indexofequal - 1);
+                    QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1 + hasquote, 
+                                                               linelength - indexofequal - 1 - hasquote - hasquote);
 
-                    if (key == "Name")
+                    if (!ignorepackage)
                     {
-                        pkgname = value;
-                    }
-                    else if (key == "Version")
-                    {
-                        pkgver = value;
-
-                        // Vérifier que ce paquet à cette version n'existe pas déjà
-                        bool found = false;
-                        
-                        if (isInstalledPackages)
+                        if (key == "Name")
                         {
-                            if (knownPackages.contains(pkgname))
-                            {
-                                const QList<knownEntry *> &entries = knownPackages.value(pkgname);
+                            pkgname = value;
+                        }
+                        else if (key == "Version")
+                        {
+                            pkgver = value;
 
-                                foreach(knownEntry *entry, entries)
+                            // Vérifier que ce paquet à cette version n'existe pas déjà
+                            bool found = false;
+                            
+                            if (isInstalledPackages)
+                            {
+                                if (knownPackages.contains(pkgname))
                                 {
-                                    if (entry->version == value)
+                                    const QList<knownEntry *> &entries = knownPackages.value(pkgname);
+
+                                    foreach(knownEntry *entry, entries)
                                     {
-                                        found = true;
-                                        delete pkg;
-                                        pkg = entry->pkg;
-                                        index = entry->index;
-                                        
-                                        break;
+                                        if (entry->version == value)
+                                        {
+                                            found = true;
+                                            delete pkg;
+                                            pkg = entry->pkg;
+                                            index = entry->index;
+                                            entry->ignore = true;
+                                            ignorepackage = true;
+                                            
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        
-                        // Si le nom est aussi ok, ajouter le couple clef/valeur
-                        if (!found)
-                        {
-                            // Ajouter le paquet aux listes, on peut maintenant
-                            pkg->deps = depends.count();
-
-                            depends.append(QList<_Depend *>());
-
-                            // Ajouter le paquet
-                            packages.append(pkg);
-                            index = packages.count()-1;
-
-                            // Clef utiles
-                            if (!isInstalledPackages)
+                            
+                            // Si le nom est aussi ok, ajouter le couple clef/valeur
+                            if (!found)
                             {
-                                pkg->repo = stringIndex(reponame.toUtf8(), index, false, false);
-                                pkg->idate = 0;
-                                pkg->iby = 0;
-                                pkg->state = PACKAGE_STATE_NOTINSTALLED;
+                                // Ajouter le paquet aux listes, on peut maintenant
+                                pkg->deps = depends.count();
+
+                                depends.append(QList<_Depend *>());
+
+                                // Ajouter le paquet
+                                packages.append(pkg);
+                                index = packages.count()-1;
+
+                                // Clef utiles
+                                if (!isInstalledPackages)
+                                {
+                                    pkg->repo = stringIndex(reponame.toUtf8(), index, false, false);
+                                    pkg->idate = 0;
+                                    pkg->iby = 0;
+                                    pkg->state = PACKAGE_STATE_NOTINSTALLED;
+                                }
+                                
+                                knownEntry *entry = new knownEntry;
+                                knownEntries.append(entry);
+                                
+                                entry->pkg = pkg;
+                                entry->version = value;
+                                entry->index = index;
+                                entry->ignore = false;
+                                
+                                knownPackages[pkgname].append(entry);
                             }
                             
-                            knownEntry *entry = new knownEntry;
-                            knownEntries.append(entry);
-                            
-                            entry->pkg = pkg;
-                            entry->version = value;
-                            entry->index = index;
-                            
-                            knownPackages[pkgname].append(entry);
+                            pkg->version = stringIndex(value, index, false, false);
+                            pkg->name = stringIndex(pkgname, index, false, !found);
                         }
-
-                        pkg->version = stringIndex(value, index, false, false);
-                        pkg->name = stringIndex(pkgname, index, false, !found);
-                    }
-                    else if (key == "Source")
-                    {
-                        pkg->source = stringIndex(value, index, false, false);
-                    }
-                    else if (key == "Maintainer")
-                    {
-                        pkg->maintainer = stringIndex(value, index, false, false);
-                    }
-                    else if (key == "Distribution")
-                    {
-                        pkg->distribution = stringIndex(value, index, false, false);
-                    }
-                    else if (key == "Section")
-                    {
-                        pkg->section = stringIndex(value, index, false, false);
-                    }
-                    else if (key == "License")
-                    {
-                        pkg->license = stringIndex(value, index, false, false);
-                    }
-                    else if (key == "PackageHash")
-                    {
-                        pkg->pkg_hash = stringIndex(value, index, false, false);
-                    }
-                    else if (key == "MetadataHash")
-                    {
-                        pkg->mtd_hash = stringIndex(value, index, false, false);
-                    }
-                    else if (key == "DownloadSize")
-                    {
-                        pkg->dsize = value.toInt();
-                    }
-                    else if (key == "InstallSize")
-                    {
-                        pkg->isize = value.toInt();
-                    }
-                    else if (key == "Arch")
-                    {
-                        pkg->arch = stringIndex(value, index, false, false);
-                    }
-                    else if (key == "Gui")
-                    {
-                        pkg->is_gui = (value == "true");
-                    }
-                    else if (key == "Provides")
-                    {
-                        // Insérer des knownPackages pour chaque provide
-                        if (value.isEmpty())
+                        else if (key == "Source")
                         {
-                            continue;
+                            pkg->source = stringIndex(value, index, false, false);
                         }
-
-                        // Parser la chaîne
-                        QList<QByteArray> deps = value.split(';');
-                        QByteArray dep;
-                        QByteArray version(pkgver);
-                        
-
-                        foreach (const QByteArray &_dep, deps)
+                        else if (key == "Maintainer")
                         {
-                            dep = _dep.trimmed();
-
-                            bool pa = dep.contains('(');
-
-                            if (pa)
+                            pkg->maintainer = stringIndex(value, index, false, false);
+                        }
+                        else if (key == "Distribution")
+                        {
+                            pkg->distribution = stringIndex(value, index, false, false);
+                        }
+                        else if (key == "Section")
+                        {
+                            pkg->section = stringIndex(value, index, false, false);
+                        }
+                        else if (key == "License")
+                        {
+                            pkg->license = stringIndex(value, index, false, false);
+                        }
+                        else if (key == "PackageHash")
+                        {
+                            pkg->pkg_hash = stringIndex(value, index, false, false);
+                        }
+                        else if (key == "MetadataHash")
+                        {
+                            pkg->mtd_hash = stringIndex(value, index, false, false);
+                        }
+                        else if (key == "DownloadSize")
+                        {
+                            pkg->dsize = value.toInt();
+                        }
+                        else if (key == "InstallSize")
+                        {
+                            pkg->isize = value.toInt();
+                        }
+                        else if (key == "Arch")
+                        {
+                            pkg->arch = stringIndex(value, index, false, false);
+                        }
+                        else if (key == "Gui")
+                        {
+                            pkg->is_gui = (value == "true");
+                        }
+                        else if (key == "Provides")
+                        {
+                            // Insérer des knownPackages pour chaque provide
+                            if (value.isEmpty())
                             {
-                                // Provide avec version
-                                // Parser la chaîne "nom (= version)"
-                                dep.replace('(', "");           // machin >= version)
-                                dep.replace(')', "");           // machin >= version
-
-                                // Splitter avec les espaces
-                                QList<QByteArray> parts = dep.split(' ');
-                                dep = parts.at(0);
-                                version = parts.at(2);
+                                continue;
                             }
 
-                            // Ajouter <dep>=<version> dans knownPackages
-                            knownEntry *entry = new knownEntry;
-                            knownEntries.append(entry);
+                            // Parser la chaîne
+                            QList<QByteArray> deps = value.split(';');
+                            QByteArray dep;
+                            QByteArray version(pkgver);
                             
-                            entry->pkg = pkg;
-                            entry->version = version;
-                            entry->index = index;
-                            
-                            knownPackages[dep].append(entry);
+
+                            foreach (const QByteArray &_dep, deps)
+                            {
+                                dep = _dep.trimmed();
+
+                                bool pa = dep.contains('(');
+
+                                if (pa)
+                                {
+                                    // Provide avec version
+                                    // Parser la chaîne "nom (= version)"
+                                    dep.replace('(', "");           // machin >= version)
+                                    dep.replace(')', "");           // machin >= version
+
+                                    // Splitter avec les espaces
+                                    QList<QByteArray> parts = dep.split(' ');
+                                    dep = parts.at(0);
+                                    version = parts.at(2);
+                                }
+
+                                // Ajouter <dep>=<version> dans knownPackages
+                                knownEntry *entry = new knownEntry;
+                                knownEntries.append(entry);
+                                
+                                entry->pkg = pkg;
+                                entry->version = version;
+                                entry->index = index;
+                                
+                                knownPackages[dep].append(entry);
+                            }
                         }
                     }
 
@@ -662,10 +676,7 @@ bool DatabaseWriter::rebuild()
                         }
                         else if (key == "ShortDesc")
                         {
-                            QByteArray v = value;
-                            v.replace('"', "");
-                            
-                            pkg->short_desc = stringIndex(QByteArray::fromBase64(v), index, true, false);
+                            pkg->short_desc = stringIndex(QByteArray::fromBase64(value), index, true, false);
                         }
                     }
                 }
@@ -702,14 +713,17 @@ bool DatabaseWriter::rebuild()
                         {
                             // On commence un paquet
                             name = QByteArray::fromRawData(cline + 1, linelength - 2); // -2 : sauter le ] et le [
+                            ignorepackage = false;
                         }
 
                         // Si la ligne ne contient pas un égal, on passe à la suivante (marche aussi quand la ligne commence par [)
                         if (!containsequal) continue;
+                        if (ignorepackage) continue;
 
                         // Lire les clefs et les valeurs
                         QByteArray key = QByteArray::fromRawData(cline, indexofequal);
-                        QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1, linelength - indexofequal - 1);
+                        QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1 + hasquote,
+                                                                   linelength - indexofequal - 1 - hasquote - hasquote);
 
                         if (key == "Version")
                         {
@@ -722,6 +736,7 @@ bool DatabaseWriter::rebuild()
                                 {
                                     pkg = entry->pkg;
                                     index = entry->index;
+                                    ignorepackage = (entry->ignore && isInstalledPackages);
                                     
                                     break;
                                 }

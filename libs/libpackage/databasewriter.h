@@ -45,6 +45,7 @@ struct knownEntry
     QByteArray version;
     _Package *pkg;
     int index;
+    bool ignore;        // True si c'est un paquet présent dans les dépôts et installé à la même version
 };
 
 class DatabaseWriter : public QObject

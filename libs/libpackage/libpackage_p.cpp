@@ -171,8 +171,8 @@ bool PackageSystemPrivate::package(const QString &name, const QString &version, 
             }
             else if (version == packageVersion(i))
             {
-                return true;
                 rs = i;
+                return true;
             }
         }
     }

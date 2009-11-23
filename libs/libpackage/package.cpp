@@ -345,6 +345,7 @@ QList<Depend *> Package::depends()
 QString Package::dependsToString(const QList<Depend *> &deps, int type)
 {
     QString rs;
+    bool first = true;
     
     for (int i=0; i<deps.count(); ++i)
     {
@@ -355,10 +356,12 @@ QString Package::dependsToString(const QList<Depend *> &deps, int type)
             continue;
         }
 
-        if (i != 0)
+        if (!first)
         {
             rs += "; ";
         }
+        
+        first = false;
         
         rs += PackageSystem::dependString(dep->name(), dep->version(), dep->op());
     }
