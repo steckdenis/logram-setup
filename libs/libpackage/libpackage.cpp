@@ -47,6 +47,11 @@ PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
 
+PackageSystem::~PackageSystem()
+{
+    delete d;
+}
+
 void PackageSystem::loadConfig()
 {
     d->set = new QSettings(confRoot() + "/etc/lgrpkg/sources.list", QSettings::IniFormat, this);

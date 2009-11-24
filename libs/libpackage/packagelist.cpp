@@ -95,6 +95,7 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps)
         d->ps->setLastError(err);
         
         d->error = true;
+        delete engine;
         return;
     }
 

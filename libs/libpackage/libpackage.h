@@ -68,6 +68,7 @@ class PackageSystem : public QObject
     
     public:
         PackageSystem(QObject *parent = 0);
+        ~PackageSystem();
         bool init();
         void loadConfig();
 
