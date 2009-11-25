@@ -67,6 +67,11 @@ class Communication : public QObject
         QString title() const;
         QString description() const;
         
+        QString defaultString() const;
+        int defaultInt() const;
+        double defaultDouble() const;
+        int defaultIndex() const;
+        
         int choicesCount();
         Choice choice(int i);
         void enableChoice(int i, bool enable);

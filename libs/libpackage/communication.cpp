@@ -213,6 +213,62 @@ void Communication::setValue(double value)
     d->fValue = value;
 }
 
+QString Communication::defaultString() const
+{
+    if (returnType() != String)
+    {
+        return QString();
+    }
+    
+    QDomElement ret = d->element.firstChildElement("return");
+    
+    return templateString(ret.attribute("default"));
+}
+
+int Communication::defaultInt() const
+{
+    return defaultString().toInt();
+}
+
+double Communication::defaultDouble() const
+{
+    return defaultString().toDouble();
+}
+
+int Communication::defaultIndex() const
+{
+    int rs;
+    
+    // Lire les choix
+    if (returnType() != SingleChoice && returnType() != MultiChoice)
+    {
+        return -1;
+    }
+    
+    QDomElement ret = d->element.firstChildElement("return");
+    
+    if (ret.isNull())
+    {
+        return -1;
+    }
+    
+    QDomElement c = ret.firstChildElement("choice");
+    
+    rs = 0;
+    while (!c.isNull())
+    {
+        if (templateString(c.attribute("selected", "false")) == "true")
+        {
+            return rs;
+        }
+        
+        c = c.nextSiblingElement("choice");
+        rs++;
+    }
+    
+    return -1;
+}
+
 int Communication::choicesCount()
 {
     if (d->choicesFetched)
@@ -240,8 +296,8 @@ int Communication::choicesCount()
         Choice choice;
         
         choice.title = templateString(d->md->stringOfKey(c));
-        choice.value = c.attribute("value");
-        choice.selected = (c.attribute("selected", "false") == "true");
+        choice.value = templateString(c.attribute("value"));
+        choice.selected = (templateString(c.attribute("selected", "false")) == "true");
         
         d->choices.append(choice);
         
@@ -322,9 +378,9 @@ bool Communication::isEntryValid() const
             {
                 // Max-Min des entiers et de la taille des chaînes
                 bool hasMin = rule.hasAttribute("min");
-                int min = rule.attribute("min").toInt();
+                int min = templateString(rule.attribute("min")).toInt();
                 bool hasMax = rule.hasAttribute("max");
-                int max = rule.attribute("max").toInt();
+                int max = templateString(rule.attribute("max")).toInt();
                 
                 if (returnType() == String)
                 {

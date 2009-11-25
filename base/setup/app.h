@@ -56,6 +56,8 @@ class App : public QCoreApplication
         void showFiles(const QString &packageName);
         
         void error();
+        
+        void getString(char *buffer, int max_length, const char *def, bool append_return);
 
     public slots:
         void progress(PackageSystem::Progress type, int done, int total, const QString &msg);

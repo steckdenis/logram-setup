@@ -53,7 +53,7 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     QString fname = ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + pkg->name() + "_" + pkg->version() + "/metadata.xml";
     
     // Si le paquet n'est pas téléchargé, télécharger les métadonnées
-    if (!QFile::exists(fname))
+    if (pkg->status() != PACKAGE_STATE_INSTALLED || !QFile::exists(fname))
     {
         // Télécharger les métadonnées
         QString repo = pkg->repo();

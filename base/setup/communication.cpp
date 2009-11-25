@@ -32,6 +32,8 @@ using namespace std;
 
 void App::communication(Package *sender, Communication *comm)
 {
+    char *buffer = new char[4000]; // 96 bytes perdus, mais qui peuvent éviter d'allouer une 2eme page sur un OS nécessitant des infos supplémentaires pour chaque allocation
+    
     cout << endl;
     
     if (comm->type() == Communication::Question)
@@ -60,11 +62,12 @@ void App::communication(Package *sender, Communication *comm)
     {
         cout << COLOR(tr("Appuyez sur Entrée pour continuer "), "34");
         
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getString(buffer, 2, 0, true);
     }
     else if (comm->type() == Communication::Question)
     {
-        string s;
+        QString defStr, rs;
+        bool ok;
         int i;
         double d;
         
@@ -74,24 +77,73 @@ void App::communication(Package *sender, Communication *comm)
             {
                 case Communication::String:
                     cout << COLOR(tr("Entrez une chaîne de caractères : "), "34");
-                    while (s.size() == 0)
+                    
+                    defStr = comm->defaultString();
+                    
+                    do
                     {
-                        getline(cin, s);
-                    }
-                    comm->setValue(QString::fromStdString(s));
-                    s.clear();
+                        if (!defStr.isEmpty())
+                        {
+                            getString(buffer, 4000, qPrintable(defStr), true);
+                        }
+                        else
+                        {
+                            getString(buffer, 4000, 0, true);
+                        }
+                        
+                        rs = QString(buffer);
+                    } while (rs.length() == 0);
+                    
+                    comm->setValue(rs);
+                    
                     break;
                     
                 case Communication::Integer:
                     cout << COLOR(tr("Entrez un nombre entier : "), "34");
-                    cin >> i; cin.get();
+                    
+                    defStr = comm->defaultString();
+                    
+                    do
+                    {
+                        if (!defStr.isEmpty())
+                        {
+                            getString(buffer, 4000, qPrintable(defStr), true);
+                        }
+                        else
+                        {
+                            getString(buffer, 4000, 0, true);
+                        }
+                        
+                        rs = QString(buffer);
+                        i = rs.toInt(&ok);
+                    } while (rs.length() == 0 || !ok);
+                    
                     comm->setValue(i);
+                    
                     break;
                     
                 case Communication::Float:
                     cout << COLOR(tr("Entrez un nombre décimal : "), "34");
-                    cin >> d; cin.get();
+                    
+                    defStr = comm->defaultString();
+                    
+                    do
+                    {
+                        if (!defStr.isEmpty())
+                        {
+                            getString(buffer, 4000, qPrintable(defStr), true);
+                        }
+                        else
+                        {
+                            getString(buffer, 4000, 0, true);
+                        }
+                        
+                        rs = QString(buffer);
+                        d = rs.toDouble(&ok);
+                    } while (rs.length() == 0 || !ok);
+                    
                     comm->setValue(d);
+                    
                     break;
                     
                 case Communication::SingleChoice:
@@ -121,20 +173,35 @@ void App::communication(Package *sender, Communication *comm)
                     
                     if (comm->returnType() == Communication::SingleChoice)
                     {
+                        defStr = QString::number(comm->defaultIndex() + 1);
+                        
                         do
                         {
                             cout << COLOR(tr("Entrez le numéro du choix que vous voulez : "), "34");
-                            cin >> i; cin.get();
-                        } while (i < 1 || i > comm->choicesCount());
+                            
+                            if (!defStr.isEmpty())
+                            {
+                                getString(buffer, 4000, qPrintable(defStr), true);
+                            }
+                            else
+                            {
+                                getString(buffer, 4000, 0, true);
+                            }
+                            
+                            rs = QString(buffer);
+                            i = rs.toInt(&ok);
+                        } while (!ok || i < 1 || i > comm->choicesCount());
                         
                         comm->enableChoice(i - 1, true);
                     }
                     else
                     {
                         cout << COLOR(tr("Entrez les numéros des choix, séparés par des virgules, sans espaces : "), "34");
-                        cin >> s; cin.get();
                         
-                        QStringList choices = QString::fromStdString(s).split(',');
+                        getString(buffer, 4000, 0, true);
+                        rs = QString(buffer);
+                        
+                        QStringList choices = rs.split(',');
                         
                         foreach (const QString &c, choices)
                         {
@@ -150,7 +217,6 @@ void App::communication(Package *sender, Communication *comm)
                 default:
                     break;
             }
-            // TODO: SingleChoice et MultiChoice
             
             // Vérifier l'entrée
             if (comm->isEntryValid())
@@ -172,4 +238,6 @@ void App::communication(Package *sender, Communication *comm)
             }
         }
     }
+    
+    delete buffer;
 }

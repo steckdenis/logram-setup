@@ -99,7 +99,7 @@ void App::manageResults(Solver *solver)
     int dlSize, instSize;
     bool allempty = true;
     bool oneok = false;
-    char in;
+    char in[2];
 
     // Vérifier qu'au moins une solution est bonne
     for (int i=0; i<tot; ++i)
@@ -254,7 +254,7 @@ void App::manageResults(Solver *solver)
         if (instSize >= 0)
         {
             cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, installation de %5\n"
-                                "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
+                                "Accepter (y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
                                     .arg(QString::number(index+1))
                                     .arg(QString::number(tot))
                                     .arg(packages->weight())
@@ -264,16 +264,17 @@ void App::manageResults(Solver *solver)
         else
         {
             cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, libération de %5\n"
-                              "Accepter (Y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
+                              "Accepter (y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
                                   .arg(QString::number(index+1))
                                   .arg(QString::number(tot))
                                   .arg(packages->weight())
                                   .arg(PackageSystem::fileSizeFormat(dlSize))
                                   .arg(PackageSystem::fileSizeFormat(-instSize)));
         }
-        cin >> in; cin.get();
+        
+        getString(in, 2, "y", true);
 
-        if (in == 'y')
+        if (in[0] == 'y')
         {
             if (packages->count() == 0)
             {
@@ -282,15 +283,15 @@ void App::manageResults(Solver *solver)
             
             break;
         }
-        else if (in == 'n')
+        else if (in[0] == 'n')
         {
             index = qMin(index + 1, tot - 1);
         }
-        else if (in == 'p')
+        else if (in[0] == 'p')
         {
             index = qMax(index - 1, 0);
         }
-        else if (in == 'c')
+        else if (in[0] == 'c')
         {
             return;
         }

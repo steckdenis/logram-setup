@@ -90,7 +90,7 @@ binaries()
     fi
     
     # Trouver la version
-    if [ "$devel" = "true" ]; then
+    if [ "$DEVEL" = "true" ]; then
         mv=$(cd src && version)
         export v=$(echo $VERSION | sed -e "s/{{VERSION}}/$mv/g")
     else
