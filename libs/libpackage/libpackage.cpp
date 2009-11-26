@@ -183,6 +183,8 @@ bool PackageSystem::update()
         {
             return false;
         }
+        
+        delete enrg;
     }
 
     endProgress(GlobalDownload, count*2);
@@ -375,6 +377,7 @@ void PackageSystem::downloadFinished(QNetworkReply *reply)
         else
         {
             md->error = true;
+            emit downloadEnded(md);
             return;
         }
     }

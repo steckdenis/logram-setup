@@ -826,9 +826,6 @@ bool DatabaseWriter::rebuild()
             QFile::remove(fname);
         }
     }
-    
-    // Nettoyer
-    qDeleteAll(knownEntries);
 
     //qDebug() << packages;
     //qDebug() << packagesIndexes;
@@ -866,6 +863,8 @@ bool DatabaseWriter::rebuild()
     {
         // Écrire le paquet
         fl.write((const char *)pkg, sizeof(_Package));
+        
+        delete pkg;
     }
 
     // Chaînes de caractères
@@ -890,6 +889,8 @@ bool DatabaseWriter::rebuild()
     {
         // Ecrire la chaine
         fl.write((const char *)str, sizeof(_String));
+        
+        delete str;
     }
 
     for (int i=0; i<strings.count(); ++i)
@@ -922,6 +923,8 @@ bool DatabaseWriter::rebuild()
     {
         // Ecrire la chaine
         fl.write((const char *)str, sizeof(_String));
+        
+        delete str;
     }
 
     for (int i=0; i<translate.count(); ++i)
@@ -973,6 +976,8 @@ bool DatabaseWriter::rebuild()
     foreach(_Depend *dep, alldeps)
     {
         fl.write((const char *)dep, sizeof(_Depend));
+        
+        delete dep;
     }
 
     // StrPackages
@@ -1016,6 +1021,8 @@ bool DatabaseWriter::rebuild()
     foreach(_StrPackage *sp, allsp)
     {
         fl.write((const char *)sp, sizeof(_StrPackage));
+        
+        delete sp;
     }
 
     // Fermer le fichier
@@ -1024,8 +1031,11 @@ bool DatabaseWriter::rebuild()
     // Librérer les buffers
     foreach(char *buf, buffers)
     {
-        delete buf;
+        delete[] buf;
     }
+    
+    // Nettoyer
+    qDeleteAll(knownEntries);
 
     // On a fini ! :-)
     parent->endProgress(PackageSystem::UpdateDatabase, 6);

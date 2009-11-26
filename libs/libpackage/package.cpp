@@ -82,6 +82,7 @@ Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver
     d->depok = false;
     d->action = _action;
     d->md = 0;
+    d->installProcess = 0;
 
     connect(ps, SIGNAL(downloadEnded(ManagedDownload *)), this, SLOT(downloadEnded(ManagedDownload *)));
 }
@@ -89,6 +90,12 @@ Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver
 Package::~Package()
 {
     qDeleteAll(d->deps);
+    
+    if (d->installProcess != 0)
+    {
+        delete d->installProcess;
+    }
+    
     delete d;
 }
 
@@ -223,6 +230,9 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     pkg->iby = QString(getenv("UID")).toInt();
     pkg->state = PACKAGE_STATE_INSTALLED;
 
+    // Supprimer le processus
+    d->installProcess->deleteLater();
+    
     // L'installation est finie
     emit installed(true);
 }
@@ -237,11 +247,9 @@ bool Package::download()
 
     d->waitingDest = fname;
     
-    ManagedDownload *md = new ManagedDownload;
+    ManagedDownload *md;
 
     return d->ps->download(type, u, fname, false, md); // Non-bloquant
-    
-    // Ne pas deleter md, on en a besoin dans downloadEnded (il est passé en paramètre)
 }
 
 void Package::downloadEnded(ManagedDownload *md)
@@ -250,6 +258,16 @@ void Package::downloadEnded(ManagedDownload *md)
     {
         if (md->destination == d->waitingDest)
         {
+            if (md->error)
+            {
+                delete md;
+                
+                emit downloaded(false);
+                return;
+            }
+            
+            delete md;  // On ne l'utilise pas
+            
             // Vérifier le sha1sum du paquet
             QFile fl(d->waitingDest);
             
@@ -260,7 +278,7 @@ void Package::downloadEnded(ManagedDownload *md)
                 err->info = d->waitingDest;
                 
                 d->ps->setLastError(err);
-                
+            
                 emit downloaded(false);
                 return;
             }

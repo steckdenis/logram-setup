@@ -285,6 +285,9 @@ void App::error()
     {
         cout << qPrintable(err->more) << endl;
     }
+    
+    // Plus besoin de l'erreur
+    delete err;
 }
 
 void App::progress(PackageSystem::Progress type, int done, int total, const QString &msg)
