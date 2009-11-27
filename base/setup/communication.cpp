@@ -179,7 +179,7 @@ void App::communication(Package *sender, Communication *comm)
                         {
                             cout << COLOR(tr("Entrez le numéro du choix que vous voulez : "), "34");
                             
-                            if (!defStr.isEmpty())
+                            if (defStr != "0")
                             {
                                 getString(buffer, 4000, qPrintable(defStr), true);
                             }

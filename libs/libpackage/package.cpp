@@ -266,8 +266,6 @@ void Package::downloadEnded(ManagedDownload *md)
                 return;
             }
             
-            delete md;  // On ne l'utilise pas
-            
             // Vérifier le sha1sum du paquet
             QFile fl(d->waitingDest);
             
@@ -279,6 +277,7 @@ void Package::downloadEnded(ManagedDownload *md)
                 
                 d->ps->setLastError(err);
             
+                delete md;
                 emit downloaded(false);
                 return;
             }
@@ -298,11 +297,13 @@ void Package::downloadEnded(ManagedDownload *md)
                 
                 d->ps->setLastError(err);
                 
+                delete md;
                 emit downloaded(false);
                 return;
             }
             
             // On a téléchargé le paquet !
+            delete md;
             emit downloaded(true);
         }
     }
