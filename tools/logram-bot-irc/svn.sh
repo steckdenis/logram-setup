@@ -2,7 +2,7 @@
 
 rm -f /tmp/svnlog.txt
 
-svn log -rHEAD svn://localhost/logram/trunk > /tmp/svnlog.txt
+svn log -rHEAD svn://logram-project.org/logram/trunk > /tmp/svnlog.txt
 
 rev=$(cat /tmp/svnlog.txt | grep -P '^r' | cut -d ' ' -f 1)
 auth=$(cat /tmp/svnlog.txt | grep -P '^r' | cut -d ' ' -f 3)
