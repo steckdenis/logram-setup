@@ -232,6 +232,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 
     // Supprimer le processus
     d->installProcess->deleteLater();
+    d->installProcess = 0;
     
     // L'installation est finie
     emit installed(true);
