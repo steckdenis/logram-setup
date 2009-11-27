@@ -29,7 +29,7 @@
 
 #include <logram/libpackage.h>
 
-#define VERSION "0.0.1"
+#define VERSION "0.1-alpha0"
 
 #define COLOR(text, color) (colored ? qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m") : qPrintable(text))
 
