@@ -160,6 +160,32 @@ include()
         # Copier les métadonnées
         cat $INCOMING/$name.metadata.xml | lzma > $metadir/$name~$version.metadata.xml.lzma
         
+        # Trouver, si elle existe, l'ancienne version de ce paquet dans le dépôt
+        if [ -f "$cdir/$name.control" ]; then
+            oldversion=$(cat $cdir/$name.control | grep Version | cut -d '=' -f 2-)
+            
+            # Calculer la différence entre l'ancien et le nouveau fichier .tar (.tlz décompressé)
+            oldfile="$dir/$name~$oldversion.$arch.tlz"
+            newfile="$dir/$name~$version.$arch.tlz"
+            patchfile="$dir/$name~${oldversion}_${version}.$arch.bsdiff"
+            
+            if [[ ( -f "$oldfile" ) && ( "$oldfile" != "$newfile" ) ]]; then
+                lzma -dc "$oldfile" > oldfile.tar
+                lzma -dc "$newfile" > newfile.tar
+                
+                # Supprimer les anciens bsdiffs
+                rm -f $dir/$name~*.$arch.bsdiff
+                
+                # Créer le nouveau diff
+                bsdiff oldfile.tar newfile.tar "$patchfile"
+                
+                # Supprimer l'ancien fichier et les fichiers temporaires
+                rm -f "$oldfile"
+                rm -f "$oldfile.files"
+                rm -f oldfile.tar newfile.tar
+            fi
+        fi
+        
         # Fichier .control
         echo "[$name]" > $cdir/$name.control
         echo -ne "$content" >> $cdir/$name.control
