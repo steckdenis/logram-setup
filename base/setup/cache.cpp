@@ -144,12 +144,18 @@ void App::showpkg(const QString &name, bool changelog)
     cout << COLOR(tr("Section             : "), "33") << qPrintable(pkg->section()) << endl;
     cout << COLOR(tr("Distribution        : "), "33") << qPrintable(pkg->distribution()) << endl;
     cout << COLOR(tr("Status              : "), "33") << qPrintable(status) << endl;
+    
     if (pkg->status() == PACKAGE_STATE_INSTALLED)
     {
         cout << COLOR(tr("Date d'installation : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
         // TODO: Uid vers nom d'utilisateur
-        //cout << COLOR(tr("Installé par        : "), "33") << qPrintable(pkg->installedBy()) << endl;
     }
+    else if (pkg->status() == PACKAGE_STATE_REMOVED)
+    {
+        cout << COLOR(tr("Date de suppression : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
+        // TODO: Uid vers nom d'utilisateur
+    }
+    
     cout << COLOR(tr("Téléchargement      : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->downloadSize())) << endl;
     cout << COLOR(tr("Taille installée    : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->installSize())) << endl;
     cout << COLOR(tr("Dépôt d'origine     : "), "33") << qPrintable(pkg->repo()) << endl;

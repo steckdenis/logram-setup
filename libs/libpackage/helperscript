@@ -3,8 +3,8 @@
 # $1 = action (install, remove, purge)
 # $2 = nom du paquet
 # $3 = version du paquet
-# $4 = chemin du .tlz (absolu, dans le cache)
-# $5 = Préfixe d'installation
+# $4 = chemin du .tlz (absolu, dans le cache), si installation, sinon, préfixe d'installation
+# $5 = Préfixe d'installation, si installation, sinon, "true" si on purge, "false" sinon
 
 #################
 #### Fonctions d'aide pour le pkgbuild
@@ -45,16 +45,16 @@ depack()
     # $4 = préfixe d'installation
 
     # Créer le dossier temporaire de l'extraction
-    tempdir=$4/var/cache/lgrpkg/temp/$1_$2
-    mkdir -p $tempdir || exit 1
+    tempdir="$4/var/cache/lgrpkg/temp/$1_$2"
+    mkdir -p "$tempdir" || exit 1
 
     # Se placer dedans et y extraire l'archive
-    pwd=$PWD
+    pwd="$PWD"
     
-    cd $tempdir || exit 1
-    tar --lzma -xf $3 || exit 1
+    cd "$tempdir" || exit 1
+    tar --lzma -xf "$3" || exit 1
 
-    cd $pwd || exit 1
+    cd "$pwd" || exit 1
 }
 
 inst()
@@ -64,30 +64,30 @@ inst()
     # $3 = chemin du .tlz
     # $4 = préfixe d'installation
 
-    tempdir=$4/var/cache/lgrpkg/temp/$1_$2
-    pwd=$PWD
-    cd $tempdir || exit 1
+    tempdir="$4/var/cache/lgrpkg/temp/$1_$2"
+    pwd="$PWD"
+    cd "$tempdir" || exit 1
 
     # Trouver la liste des fichiers à copier, et les copier
-    find -not -type d | grep -v __LOGRAM > /tmp/$1$2_files || exit 1
+    find -not -type d | grep -v __LOGRAM > "/tmp/$1$2_files" || exit 1
 
-    cat /tmp/$1$2_files | xargs "-d\n" cp -a --parents -t "$4" || exit 1
+    cat "/tmp/$1$2_files" | xargs "-d\n" cp -a --parents -t "$4" || exit 1
 
     # Enregistrer la liste des fichiers dans la base de donnée (format texte)
-    dbdir=$4/var/cache/lgrpkg/db/pkgs/$1_$2
-    mkdir -p $dbdir || exit 1
+    dbdir="$4/var/cache/lgrpkg/db/pkgs/$1_$2"
+    mkdir -p "$dbdir" || exit 1
     
-    mv /tmp/$1$2_files $dbdir/files.list || exit 1
+    mv "/tmp/$1$2_files" "$dbdir/files.list" || exit 1
 
     # Enregistrer le pkgbuild dans cette même base de donnée
-    cp __LOGRAM/pkgbuild.sh $dbdir || exit 1
-    cp __LOGRAM/metadata.xml $dbdir || exit 1
+    cp __LOGRAM/pkgbuild.sh "$dbdir" || exit 1
+    cp __LOGRAM/metadata.xml "$dbdir" || exit 1
 
     # Revenir au dossier
-    cd $pwd || exit 1
+    cd "$pwd" || exit 1
 
     # Supprimer le dossier temporaire
-    rm -rf $tempdir || exit 1
+    rm -rf "$tempdir" || exit 1
 }
 
 remove()
@@ -95,34 +95,60 @@ remove()
     # $1 = nom du paquet
     # $2 = version du paquet
     # $3 = préfixe d'installation
+    # $4 = true si on purge, false sinon
 
-    /bin/echo "remove"
-}
-
-purge()
-{
-    # $1 = nom du paquet
-    # $2 = version du paquet
-    # $3 = préfixe d'installation
+    dbdir="$3/var/cache/lgrpkg/db/pkgs/$1_$2"
     
-    /bin/echo "remove"
+    # Si on ne purge pas, ne pas supprimer les fichiers dans /etc
+    if [ "$4" = "false" ]; then
+        grepfilter="| grep -v ./etc"
+    fi
+    
+    # Explorer les fichiers installés pour les supprimer
+    cat "$dbdir/files.list" $grepfilter | (while read line; do
+        line="$3/$line"
+        
+        rm -f "$line"
+        
+        # Supprimer tous les dossiers parents vides
+        pdir=$(dirname "$line")
+        
+        while [[ ( -d "$pdir" ) && ( "$pdir" != "$4" ) && ( "$pdir/" != "$4" ) ]]; do
+            numfiles=$(ls "$pdir" | wc -l)
+            
+            if [ "$numfiles" == "0" ]; then
+                rmdir "$pdir"
+            else
+                break
+            fi
+            
+            # Essayer avec le dossier parent
+            pdir=$(dirname "$pdir")
+        done
+    done)
+    
+    # Supprimer le dossier contenant les informations sur ce fichier
+    rm -rf "$dbdir"
 }
 
 case "$1" in
     install)
-        depack $2 $3 $4 $5 || exit 1
+        depack "$2" "$3" "$4" "$5" || exit 1
         
-        source $5/var/cache/lgrpkg/temp/$2_$3/__LOGRAM/pkgbuild.sh || exit 1
+        source "$5/var/cache/lgrpkg/temp/$2_$3/__LOGRAM/pkgbuild.sh" || exit 1
 
-        preinst $2 $3 $5 || exit 1
-        inst $2 $3 $4 $5 || exit 1
-        postinst $2 $3 $5 || exit 1
+        preinst "$2" "$3" "$5" || exit 1
+        inst "$2" "$3" "$4" "$5" || exit 1
+        postinst "$2" "$3" "$5" || exit 1
         ;;
     remove)
-        remove $2 $3 $5 || exit 1
-        ;;
-    purge)
-        purge $2 $3 $5 || exit 1
+        dbdir="$4/var/cache/lgrpkg/db/pkgs/$2_$3"
+        
+        source "$dbdir/pkgbuild.sh" || exit 1
+        
+        prerm "$2" "$3" "$4" "$5" || exit 1
+        remove "$2" "$3" "$4" "$5" || exit 1
+        postrm "$2" "$3" "$4" "$5" || exit 1
         ;;
 esac
 

@@ -73,7 +73,7 @@ class PackageList : public QObject
         bool process();
         
     private slots:
-        void packageInstalled(bool success);
+        void packageProceeded(bool success);
         void packageDownloaded(bool success);
         
     signals:

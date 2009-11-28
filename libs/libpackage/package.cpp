@@ -115,7 +115,7 @@ PackageMetaData *Package::metadata()
     return d->md;
 }
 
-void Package::install()
+void Package::process()
 {
     d->installProcess = new QProcess();
     
@@ -124,11 +124,29 @@ void Package::install()
     connect(d->installProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processEnd(int, QProcess::ExitStatus)));
     connect(d->installProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(processOut()));
 
-    d->installCommand = QString("/usr/bin/helperscript install %1 %2 %3 %4")
-        .arg(name())
-        .arg(version())
-        .arg(d->waitingDest)
-        .arg(d->ps->installRoot());
+    // En fonction de l'action qui nous est demandée, faire ce qui convient
+    if (action() == Solver::Install)
+    {
+        d->installCommand = QString("/usr/bin/helperscript install \"%1\" \"%2\" \"%3\" \"%4\"")
+            .arg(name())
+            .arg(version())
+            .arg(d->waitingDest)
+            .arg(d->ps->installRoot());
+    }
+    else if (action() == Solver::Remove)
+    {
+        d->installCommand = QString("/usr/bin/helperscript remove \"%1\" \"%2\" \"%3\" false")
+            .arg(name())
+            .arg(version())
+            .arg(d->ps->installRoot());
+    }
+    else if (action() == Solver::Purge)
+    {
+        d->installCommand = QString("/usr/bin/helperscript remove \"%1\" \"%2\" \"%3\" true")
+            .arg(name())
+            .arg(version())
+            .arg(d->ps->installRoot());
+    }
         
     d->installProcess->start(d->installCommand);
 }
@@ -154,7 +172,7 @@ void Package::processOut()
         if (comm->error())
         {
             // Erreur survenue
-            emit installed(false);
+            emit proceeded(false);
             return;
         }
         
@@ -187,7 +205,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         d->readBuf.clear();
         
         d->ps->setLastError(err);
-        emit installed(false);
+        emit proceeded(false);
         return;
     }
     
@@ -195,51 +213,81 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     
     // Enregistrer le paquet dans la liste des paquets installés pour le prochain setup update
     QSettings *set = d->ps->installedPackagesList();
-    
-    set->beginGroup(name());
-    set->setValue("Name", name());
-    set->setValue("Version", version());
-    set->setValue("Source", source());
-    set->setValue("Maintainer", maintainer());
-    set->setValue("Section", section());
-    set->setValue("Distribution", distribution());
-    set->setValue("License", license());
-    set->setValue("Depends", dependsToString(depends(), DEPEND_TYPE_DEPEND));
-    set->setValue("Provides", dependsToString(depends(), DEPEND_TYPE_PROVIDE));
-    set->setValue("Suggest", dependsToString(depends(), DEPEND_TYPE_SUGGEST));
-    set->setValue("Replaces", dependsToString(depends(), DEPEND_TYPE_REPLACE));
-    set->setValue("Conflicts", dependsToString(depends(), DEPEND_TYPE_CONFLICT));
-    set->setValue("DownloadSize", downloadSize());
-    set->setValue("InstallSize", installSize());
-    set->setValue("MetadataHash", metadataHash());
-    set->setValue("PackageHash", packageHash());
-
-    set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
-    
-    set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
-    set->setValue("InstalledRepo", repo());
-    set->setValue("InstalledBy", QString(getenv("UID")).toInt());
-    set->setValue("State", PACKAGE_STATE_INSTALLED);
-    set->setValue("InstallRoot", d->ps->installRoot());
-    set->endGroup();
-
-    // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé 
     _Package *pkg = d->psd->package(d->index);
     
-    pkg->idate = QDateTime::currentDateTime().toTime_t();
-    pkg->iby = QString(getenv("UID")).toInt();
-    pkg->state = PACKAGE_STATE_INSTALLED;
+    if (action() == Solver::Install)
+    {
+        set->beginGroup(name());
+        set->setValue("Name", name());
+        set->setValue("Version", version());
+        set->setValue("Source", source());
+        set->setValue("Maintainer", maintainer());
+        set->setValue("Section", section());
+        set->setValue("Distribution", distribution());
+        set->setValue("License", license());
+        set->setValue("Depends", dependsToString(depends(), DEPEND_TYPE_DEPEND));
+        set->setValue("Provides", dependsToString(depends(), DEPEND_TYPE_PROVIDE));
+        set->setValue("Suggest", dependsToString(depends(), DEPEND_TYPE_SUGGEST));
+        set->setValue("Replaces", dependsToString(depends(), DEPEND_TYPE_REPLACE));
+        set->setValue("Conflicts", dependsToString(depends(), DEPEND_TYPE_CONFLICT));
+        set->setValue("DownloadSize", downloadSize());
+        set->setValue("InstallSize", installSize());
+        set->setValue("MetadataHash", metadataHash());
+        set->setValue("PackageHash", packageHash());
+
+        set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
+        
+        set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
+        set->setValue("InstalledRepo", repo());
+        set->setValue("InstalledBy", QString(getenv("UID")).toInt());
+        set->setValue("State", PACKAGE_STATE_INSTALLED);
+        set->setValue("InstallRoot", d->ps->installRoot());
+        set->endGroup();
+
+        // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
+        pkg->idate = QDateTime::currentDateTime().toTime_t();
+        pkg->iby = QString(getenv("UID")).toInt();
+        pkg->state = PACKAGE_STATE_INSTALLED;
+    }
+    else if (action() == Solver::Remove)
+    {
+        // Enregistrer le paquet comme supprimé
+        set->beginGroup(name());
+        set->setValue("State", PACKAGE_STATE_REMOVED);
+        set->endGroup();
+        
+        // Également dans la base de donnée binaire, avec l'heure et l'UID de celui qui a supprimé le paquet
+        pkg->state = PACKAGE_STATE_REMOVED;
+        pkg->idate = QDateTime::currentDateTime().toTime_t();
+        pkg->iby = QString(getenv("UID")).toInt();
+    }
+    else if (action() == Solver::Purge)
+    {
+        // Effacer toute trace du paquet
+        set->remove(name());
+        
+        pkg->state = PACKAGE_STATE_NOTINSTALLED;
+        pkg->idate = 0;
+        pkg->iby = 0;
+    }
 
     // Supprimer le processus
     d->installProcess->deleteLater();
     d->installProcess = 0;
     
     // L'installation est finie
-    emit installed(true);
+    emit proceeded(true);
 }
 
 bool Package::download()
 {
+    if (action() == Solver::Remove || action() == Solver::Purge)
+    {
+        // Pas besoin de télécharger
+        emit downloaded(true);
+        return true;
+    }
+    
     // Télécharger le paquet
     QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
     QString r = repo();

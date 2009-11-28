@@ -196,7 +196,7 @@ bool PackageList::process()
     {
         Package *pkg = at(i);
 
-        connect(pkg, SIGNAL(installed(bool)), this, SLOT(packageInstalled(bool)));
+        connect(pkg, SIGNAL(proceeded(bool)), this, SLOT(packageProceeded(bool)));
         connect(pkg, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
         connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
 
@@ -214,7 +214,7 @@ bool PackageList::process()
     int rs = d->loop.exec();
 
     // Nettoyage
-    disconnect(this, SLOT(packageInstalled(bool)));
+    disconnect(this, SLOT(packageProceeded(bool)));
     disconnect(this, SLOT(packageDownloaded(bool)));
     
     d->downloadedPackages.clear();
@@ -222,7 +222,7 @@ bool PackageList::process()
     return (rs == 0);
 }
 
-void PackageList::packageInstalled(bool success)
+void PackageList::packageProceeded(bool success)
 {
     if (!success)
     {
@@ -237,13 +237,13 @@ void PackageList::packageInstalled(bool success)
         Package *next = d->downloadedPackages.takeAt(0);
 
         // Progression
-        d->ps->sendProgress(PackageSystem::Install, d->ipackages, count(), next->name());
+        d->ps->sendProgress(PackageSystem::PackageProcess, d->ipackages, count(), next->name() + "~" + next->version());
 
         // Installation
         d->ipackages++;
         d->installingPackage = next;
 
-        next->install();
+        next->process();
     }
     else if (d->ipackages < count())
     {
@@ -260,7 +260,7 @@ void PackageList::packageInstalled(bool success)
     else
     {
         // On a tout installé et fini
-        d->ps->endProgress(PackageSystem::Install, count());
+        d->ps->endProgress(PackageSystem::PackageProcess, count());
 
         d->loop.exit(0);
     }
@@ -281,13 +281,13 @@ void PackageList::packageDownloaded(bool success)
     if (d->pipackages < d->parallelInstalls)
     {
         // Progression
-        d->ps->sendProgress(PackageSystem::Install, d->ipackages, count(), pkg->name());
+        d->ps->sendProgress(PackageSystem::PackageProcess, d->ipackages, count(), pkg->name() + "~" + pkg->version());
         
         // Installer
         d->ipackages++;
         d->pipackages++;
         d->installingPackage = pkg;
-        pkg->install();
+        pkg->process();
     }
     else
     {
@@ -301,7 +301,7 @@ void PackageList::packageDownloaded(bool success)
         Package *next = at(d->dpackages);
 
         // Connexion de signaux
-        connect(next, SIGNAL(installed(bool)), this, SLOT(packageInstalled(bool)));
+        connect(next, SIGNAL(proceeded(bool)), this, SLOT(packageProceeded(bool)));
         connect(next, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
         connect(next, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
         

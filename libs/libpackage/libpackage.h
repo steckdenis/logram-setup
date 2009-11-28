@@ -119,7 +119,7 @@ class PackageSystem : public QObject
             GlobalDownload,
             Download,
             UpdateDatabase,
-            Install
+            PackageProcess
         };
 
         void sendProgress(Progress type, int num, int tot, const QString &msg);

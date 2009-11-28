@@ -316,8 +316,8 @@ void App::progress(PackageSystem::Progress type, int done, int total, const QStr
             cout << COLOR(tr("Mise à jour de la base de donnée : "), "34");
             break;
             
-        case PackageSystem::Install:
-            cout << COLOR(tr("Installation de "), "34");
+        case PackageSystem::PackageProcess:
+            cout << COLOR(tr("Opération sur "), "34");
             break;
     }
     

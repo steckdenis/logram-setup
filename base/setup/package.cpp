@@ -316,6 +316,6 @@ void App::manageResults(Solver *solver)
     }   
 
     cout << endl;
-    cout << COLOR(tr("Paquets installés !"), "32") << endl;
+    cout << COLOR(tr("Opérations sur les paquets appliquées !"), "32") << endl;
     cout << endl;
 }
