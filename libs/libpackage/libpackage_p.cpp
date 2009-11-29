@@ -281,6 +281,48 @@ QList<int> PackageSystemPrivate::packagesOfString(int stringIndex, int nameIndex
     return rs;
 }
 
+QList<UpgradeInfo> PackageSystemPrivate::upgradePackages()
+{
+    int32_t npkgs = *(int *)m_packages;
+    QList<int> otherVersions;
+    QList<UpgradeInfo> rs;
+    UpgradeInfo ui;
+    
+    // Explorer chaque paquet
+    for (int i=0; i<npkgs; ++i)
+    {
+        _Package *pkg = package(i);
+        
+        // Voir si le paquet est installé
+        if (pkg != 0 && pkg->state == PACKAGE_STATE_INSTALLED)
+        {
+            // Trouver les autres versions de ce paquet
+            otherVersions = packagesOfString(0, pkg->name, DEPEND_OP_NOVERSION);
+            
+            for (int j=0; j<otherVersions.count(); ++j)
+            {
+                // Si l'autre version a une version différente, et la même distribution, alors mettre le paquet à jour
+                // Vérifier aussi qu'ils aient le même nom, pour éviter les ennuis avec les provides
+                _Package *opkg = package(otherVersions.at(j));
+                
+                if (opkg != 0 &&
+                    pkg->version != opkg->version && 
+                    pkg->distribution == opkg->distribution &&
+                    pkg->name == opkg->name)
+                {
+                    ui.installedPackage = i;
+                    ui.newPackage = j;
+                    
+                    rs.append(ui);
+                }
+            }
+        }
+    }
+    
+    // Renvoyer la liste des paquets qu'on peut mettre à jour
+    return rs;
+}
+
 _Depend *PackageSystemPrivate::depend(int32_t ptr)
 {
     int numdepsptr = *(int *)m_depends;

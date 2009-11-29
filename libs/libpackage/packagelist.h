@@ -24,6 +24,7 @@
 #define __PACKAGELIST_H__
 
 #include <QObject>
+#include <QList>
 
 #include "solver.h"
 
@@ -31,7 +32,7 @@ class PackageSystem;
 class Package;
 class Communication;
 
-class PackageList : public QObject
+class PackageList : public QObject, public QList<Package *>
 {
     Q_OBJECT
     
@@ -62,8 +63,6 @@ class PackageList : public QObject
         void addError(Error *err);
         void setWrong(bool wrong);
         
-        int count() const;
-        Package *at(int i) const;
         Package *installingPackage() const;
         int errors() const;
         Error *error(int i) const;

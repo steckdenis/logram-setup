@@ -52,12 +52,15 @@ class App : public QCoreApplication
         void find(const QString &pattern);
         void showpkg(const QString &name, bool changelog);
         void update();
+        void upgrade();
         void add(const QStringList &packages);
         void showFiles(const QString &packageName);
         
         void error();
         
         void getString(char *buffer, int max_length, const char *def, bool append_return);
+        
+        void displayPackages(QList<Package *> *packages, int &instSize, int &dlSize, bool showType);
 
     public slots:
         void progress(PackageSystem::Progress type, int done, int total, const QString &msg);

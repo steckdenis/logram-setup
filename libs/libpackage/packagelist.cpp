@@ -37,7 +37,6 @@ struct PackageList::Private
     
     bool wrong, weighted;
     int weight;
-    QList<Package *> packages;
     QList<PackageList::Error *> errs;
     int parallelInstalls, parallelDownloads;
     
@@ -55,7 +54,7 @@ struct PackageList::Private
 
 Q_DECLARE_METATYPE(Package *)
 
-PackageList::PackageList(PackageSystem *ps) : QObject(ps)
+PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
 {
     d = new Private;
     
@@ -112,7 +111,11 @@ PackageList::~PackageList()
         delete d->weightFunction.engine();
     }
     
-    qDeleteAll(d->packages);
+    for (int i=0; i<count(); ++i)
+    {
+        delete at(i);
+    }
+    
     delete d;
 }
 
@@ -123,7 +126,7 @@ bool PackageList::error() const
         
 void PackageList::addPackage(Package *pkg)
 {
-    d->packages.append(pkg);
+    append(pkg);
 }
 
 void PackageList::addError(Error *err)
@@ -136,21 +139,10 @@ void PackageList::setWrong(bool wrong)
     d->wrong = wrong;
 }
 
-int PackageList::count() const
-{
-    return d->packages.count();
-}
-
 int PackageList::errors() const
 {
     return d->errs.count();
 }
-
-Package *PackageList::at(int i) const
-{
-    return d->packages.at(i);
-}
-
 
 PackageList::Error *PackageList::error(int i) const
 {
@@ -167,8 +159,10 @@ int PackageList::weight() const
     if (!d->weighted)
     {
         QScriptValueList args;
+        
+        const QList<Package *> *l = this;
 
-        args << qScriptValueFromSequence(d->weightFunction.engine(), d->packages);
+        args << qScriptValueFromSequence(d->weightFunction.engine(), *l);
         args << 0; // TODO: savoir si on installe, supprime, etc
         
         d->weight = d->weightFunction.call(QScriptValue(), args).toInt32();

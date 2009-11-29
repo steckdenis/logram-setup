@@ -179,13 +179,48 @@ bool Solver::solve()
 
         // La liste est bonne, créer les paquets
         const QVector<Pkg> &pkgs = d->packages.at(i);
+        QList<int> updatedPackages; // Liste des paquets à ignorer car faisant partie d'une mise à jour
 
         foreach(const Pkg &pkg, pkgs)
         {
             // Un paquet peut ne pas être voulu (paquet non-installé sélectionné pour suppression histoire de faire échouer la liste si un paquet nécessitant de l'installer est installé, mais ça l'utilisateur n'a pas à savoir)
-            if (pkg.reallyWanted)
+            if (pkg.reallyWanted && !updatedPackages.contains(pkg.index))
             {
-                Package *package = new Package(pkg.index, d->ps, d->psd, pkg.action);
+                Package *package = 0;
+                
+                // Explorer à nouveau les paquets pour voir si ce n'est pas une mise à jour
+                foreach(const Pkg &opkg, pkgs)
+                {
+                    _Package *my = d->psd->package(pkg.index);
+                    _Package *other = d->psd->package(opkg.index);
+                    
+                    if (my->name == other->name && my->version != other->version)
+                    {
+                        updatedPackages.append(opkg.index);
+                        
+                        // Savoir quel paquet est l'ancien, et quel paquet est le nouveau
+                        if (opkg.action == Solver::Install)
+                        {
+                            // Nous sommes l'ancien, l'autre le nouveau    
+                            package = new Package(pkg.index, d->ps, d->psd, Solver::Update);
+                            package->setUpgradePackage(opkg.index);
+                        }
+                        else
+                        {
+                            // Nous sommes le nouveau, l'autre l'ancien
+                            package = new Package(opkg.index, d->ps, d->psd, Solver::Update);
+                            package->setUpgradePackage(pkg.index);
+                        }
+                        
+                        break;
+                    }
+                }
+                
+                if (package == 0)
+                {
+                    // Pas de mise à jour
+                    package = new Package(pkg.index, d->ps, d->psd, pkg.action);
+                }
 
                 plist->addPackage(package);
             }

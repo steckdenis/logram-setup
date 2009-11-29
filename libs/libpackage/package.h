@@ -81,6 +81,7 @@ class Package : public QObject
         
         QString name();
         QString version();
+        QString newerVersion();
         QString maintainer();
         QString shortDesc();
         QString source();
@@ -103,9 +104,13 @@ class Package : public QObject
         
         PackageMetaData *metadata();
 
+        Package *upgradePackage();
         QList<Package *> versions();
         QList<Depend *> depends();
         QString dependsToString(const QList<Depend *> &deps, int type);
+        
+        // Interne, à usage de libpackage
+        void setUpgradePackage(int i);
 
     signals:
         void proceeded(bool success);

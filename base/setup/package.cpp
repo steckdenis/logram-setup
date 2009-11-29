@@ -69,6 +69,57 @@ void App::add(const QStringList &packages)
     delete solver;
 }
 
+void App::upgrade()
+{
+    QList<Package *> pkgs = ps->upgradePackages();
+    int instSize, dlSize;
+    char in[2];
+    
+    // Vérifier qu'il y a bien quelque-chose à faire
+    if (pkgs.count() == 0)
+    {
+        cout << COLOR(tr("Aucune mise à jour n'est disponible. En cas de doutes, essayez de lancer l'opération «update»."), "34") << endl << endl;
+        
+        qDeleteAll(pkgs);
+        return;
+    }
+    
+    // Afficher la liste des paquets
+    cout << COLOR(tr("Paquets dont une mise à jour est disponible :"), "32") << endl << endl;
+    
+    displayPackages(&pkgs, instSize, dlSize, false);
+    
+    // Demander si ça convient
+    cout << endl;
+    
+    if (instSize >= 0)
+    {
+        cout << qPrintable(tr("Mise à jour de %1 paquets, téléchargement de %2, installation de %3\n"
+                              "Accepter (y) ou Annuler (c) ? ")
+                                .arg(pkgs.count())
+                                .arg(PackageSystem::fileSizeFormat(dlSize))
+                                .arg(PackageSystem::fileSizeFormat(instSize)));
+    }
+    else
+    {
+        cout << qPrintable(tr("Mise à jour de %1 paquets, téléchargement de %2, libération de %3\n"
+                              "Accepter (y) ou Annuler (c) ? ")
+                                .arg(pkgs.count())
+                                .arg(PackageSystem::fileSizeFormat(dlSize))
+                                .arg(PackageSystem::fileSizeFormat(-instSize)));
+    }
+    
+    getString(in, 2, "y", true);
+
+    if (in[0] != 'y')
+    {
+        // Abandonner
+        return;
+    }
+    
+    // TODO: Mise à jour proprement dite
+}
+
 static QString actionString(Solver::Action act)
 {
     switch (act)
@@ -87,6 +138,109 @@ static QString actionString(Solver::Action act)
             
         default:
             return QString();
+    }
+}
+
+void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize, bool showType)
+{
+    instSize = 0;
+    dlSize = 0;
+    
+    for (int i=0; i<packages->count(); ++i)
+    {
+        Package *pkg = packages->at(i);
+        
+        QString name = pkg->name().leftJustified(20, ' ', false);
+
+        if (pkg->action() == Solver::Install)
+        {
+            if (showType)
+            {
+                cout << " I: ";
+            }
+            else
+            {
+                cout << "  * ";
+            }
+            
+            dlSize += pkg->downloadSize();
+            instSize += pkg->installSize();
+            cout << COLOR(name, "34");
+        }
+        else if (pkg->action() == Solver::Remove)
+        {
+            if (showType)
+            {
+                cout << " R: ";
+            }
+            else
+            {
+                cout << "  * ";
+            }
+            
+            instSize -= pkg->installSize();
+            cout << COLOR(name, "31");
+        }
+        else if (pkg->action() == Solver::Update)
+        {
+            if (showType)
+            {
+                cout << " U: ";
+            }
+            else
+            {
+                cout << "  * ";
+            }
+            
+            dlSize += pkg->downloadSize();
+            
+            // Différence entre la version installée et la version qu'on va télécharger
+            Package *other = pkg->upgradePackage();
+            
+            if (other != 0)
+            {
+                instSize += other->installSize() - pkg->installSize();
+                
+                delete other;
+            }
+            
+            cout << COLOR(name, "33");
+        }
+        else if (pkg->action() == Solver::Purge)
+        {
+            if (showType)
+            {
+                cout << " P: ";
+            }
+            else
+            {
+                cout << "  * ";
+            }
+            
+            instSize -= pkg->installSize();
+            cout << COLOR(name, "35");
+        }
+
+        if (pkg->action() != Solver::Update)
+        {
+            cout << ' '
+                 << COLOR(pkg->version(), "32")
+                 << endl
+                 << "        "
+                 << qPrintable(pkg->shortDesc())
+                 << endl;
+        }
+        else
+        {
+            cout << ' '
+                 << COLOR(pkg->version(), "32")
+                 << " → "
+                 << COLOR(pkg->newerVersion(), "32")
+                 << endl
+                 << "        "
+                 << qPrintable(pkg->shortDesc())
+                 << endl;
+        }
     }
 }
 
@@ -179,8 +333,6 @@ void App::manageResults(Solver *solver)
     {
         cout << endl;
 
-        dlSize = 0;
-        instSize = 0;
         packages = solver->result(index);
         
         // Si la liste est vide, c'est qu'on n'a rien à faire
@@ -209,44 +361,7 @@ void App::manageResults(Solver *solver)
         
         allempty = false;
 
-        for (int i=0; i<packages->count(); ++i)
-        {
-            Package *pkg = packages->at(i);
-            
-            QString name = pkg->name().leftJustified(15, ' ', true);
-
-            if (pkg->action() == Solver::Install)
-            {
-                cout << " I: ";
-                dlSize += pkg->downloadSize();
-                instSize += pkg->installSize();
-                cout << COLOR(name, "34");
-            }
-            else if (pkg->action() == Solver::Remove)
-            {
-                cout << " R: ";
-                instSize -= pkg->installSize();
-                cout << COLOR(name, "31");
-            }
-            else if (pkg->action() == Solver::Update)
-            {
-                cout << " U: ";
-                dlSize += pkg->downloadSize();
-                // TODO: Différence entre la version installée et la version qu'on va télécharger
-                cout << COLOR(name, "33");
-            }
-            else if (pkg->action() == Solver::Purge)
-            {
-                cout << " P: ";
-                instSize -= pkg->installSize();
-                cout << COLOR(name, "35");
-            }
-
-            cout << ' '
-                 << COLOR(pkg->version().leftJustified(15, ' ', true), "32") << ' '
-                 << qPrintable(pkg->shortDesc())
-                 << endl;
-        }
+        displayPackages(packages, instSize, dlSize, true);
 
         cout << endl;
 

@@ -62,6 +62,8 @@ struct PackageError
     QString more;    // Facultatif : informations supplémentaires (sortie du script qui a planté)
 };
 
+struct UpgradeInfo;
+
 class PackageSystem : public QObject
 {
     Q_OBJECT
@@ -77,6 +79,7 @@ class PackageSystem : public QObject
         bool package(const QString &name, const QString &version, Package* &rs);
         Package *package(int id);
         bool update();
+        QList<Package *> upgradePackages();
         Solver *newSolver();
 
         // Fonctions statiques

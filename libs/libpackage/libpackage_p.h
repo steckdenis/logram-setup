@@ -99,6 +99,12 @@ class QSettings;
 class PackageSystem;
 struct ManagedDownload;
 
+struct UpgradeInfo
+{
+    int installedPackage;
+    int newPackage;
+};
+
 class PackageSystemPrivate
 {
     public:
@@ -111,6 +117,7 @@ class PackageSystemPrivate
         QList<int> packagesByVString(const QString &verStr);
         QList<_Depend *> depends(int pkgIndex);
         QList<int> packagesOfString(int stringIndex, int nameIndex, int op);
+        QList<UpgradeInfo> upgradePackages();
 
         QString packageName(int index);
         QString packageVersion(int index);

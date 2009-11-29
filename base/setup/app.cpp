@@ -161,6 +161,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     {
         update();
     }
+    else if (cmd == "upgrade")
+    {
+        upgrade();
+    }
     else if (cmd == "add")
     {
         if (args.count() < 3)
@@ -212,6 +216,7 @@ void App::help()
             "    update             Met à jour la base de donnée des paquets\n"
             "    add <packages>     Ajoute des paquets (préfixés de \"-\" pour les supprimer)\n"
             "    files <pkg>        Affiche la liste des fichiers installés par <pkg>\n"
+            "    upgrade            Mise à jour des paquets. Lancez update avant.\n"
             "\n"
             "Options (insensible à la casse) :\n"
             "    -S [off]           Active (on) ou pas (off) l'installation des suggestions\n"

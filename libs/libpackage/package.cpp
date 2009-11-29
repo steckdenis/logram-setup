@@ -40,7 +40,7 @@
 
 struct Package::Private
 {
-    int index;
+    int index, upgradeIndex;
     PackageSystem *ps;
     PackageSystemPrivate *psd;
 
@@ -77,6 +77,7 @@ Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver
 {
     d = new Private;
     d->index = index;
+    d->upgradeIndex = -1;
     d->ps = ps;
     d->psd = psd;
     d->depok = false;
@@ -447,6 +448,16 @@ QString Package::version()
     return d->psd->packageVersion(d->index);
 }
 
+QString Package::newerVersion()
+{
+    if (d->upgradeIndex == -1)
+    {
+        return QString();
+    }
+    
+    return d->psd->packageVersion(d->upgradeIndex);
+}
+
 QString Package::maintainer()
 {
     return d->psd->packageMaintainer(d->index);
@@ -557,6 +568,21 @@ int Package::installedBy()
 int Package::status()
 {
     return d->psd->package(d->index)->state;
+}
+
+void Package::setUpgradePackage(int i)
+{
+    d->upgradeIndex = i;
+}
+
+Package *Package::upgradePackage()
+{
+    if (d->upgradeIndex == -1)
+    {
+        return 0;
+    }
+    
+    return new Package(d->upgradeIndex, d->ps, d->psd, Solver::Install);
 }
 
 /*************************************

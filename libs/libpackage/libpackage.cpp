@@ -198,6 +198,24 @@ bool PackageSystem::update()
     return true;
 }
 
+QList<Package *> PackageSystem::upgradePackages()
+{
+    QList<UpgradeInfo> upds = d->upgradePackages();
+    QList<Package *> rs;
+    
+    // Créer les paquets à mettre à jour
+    foreach(const UpgradeInfo &inf, upds)
+    {
+        Package *pkg = new Package(inf.installedPackage, this, d, Solver::Update);
+        
+        pkg->setUpgradePackage(inf.newPackage);
+        
+        rs.append(pkg);
+    }
+    
+    return rs;
+}
+
 bool PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
 {
     return d->packagesByName(regex, rs);
