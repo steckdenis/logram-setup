@@ -84,7 +84,7 @@ void App::upgrade()
     }
     
     // Afficher la liste des paquets
-    cout << COLOR(tr("Paquets dont une mise à jour est disponible :"), "32") << endl << endl;
+    cout << COLOR(tr("Paquets pour lesquels une mise à jour est disponible :"), "32") << endl << endl;
     
     displayPackages(&pkgs, instSize, dlSize, false);
     
@@ -377,10 +377,10 @@ void App::manageResults(Solver *solver)
     // Sinon, lui montrer le choix
     cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "32") << endl;
     cout << qPrintable(tr("    Légende : "))
-         << COLOR(tr("I: Installer "), "34")
-         << COLOR(tr("R: Supprimer "), "31")
-         << COLOR(tr("U: Mettre à jour "), "33")
-         << COLOR(tr("P: Supprimer totalement "), "35")
+         << COLOR(tr("I: Installé "), "34")
+         << COLOR(tr("R: Supprimé "), "31")
+         << COLOR(tr("U: Mis à jour "), "33")
+         << COLOR(tr("P: Supprimé totalement "), "35")
          << endl;
     
     while (true)
