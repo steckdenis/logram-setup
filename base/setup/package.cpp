@@ -73,7 +73,6 @@ void App::upgrade()
 {
     QList<Package *> pkgs = ps->upgradePackages();
     int instSize, dlSize;
-    char in[2];
     
     // Vérifier qu'il y a bien quelque-chose à faire
     if (pkgs.count() == 0)
@@ -92,32 +91,89 @@ void App::upgrade()
     // Demander si ça convient
     cout << endl;
     
-    if (instSize >= 0)
+    cout << qPrintable(tr("Entrez la liste des paquets à mettre à jour, ou \"n\" pour abandonner"))
+         << endl;
+         
+    // Créer la liste des nombres
+    QByteArray nums;
+    
+    for (int i=0; i<pkgs.count(); ++i)
     {
-        cout << qPrintable(tr("Mise à jour de %1 paquets, téléchargement de %2, installation de %3\n"
-                              "Accepter (y) ou Annuler (c) ? ")
-                                .arg(pkgs.count())
-                                .arg(PackageSystem::fileSizeFormat(dlSize))
-                                .arg(PackageSystem::fileSizeFormat(instSize)));
-    }
-    else
-    {
-        cout << qPrintable(tr("Mise à jour de %1 paquets, téléchargement de %2, libération de %3\n"
-                              "Accepter (y) ou Annuler (c) ? ")
-                                .arg(pkgs.count())
-                                .arg(PackageSystem::fileSizeFormat(dlSize))
-                                .arg(PackageSystem::fileSizeFormat(-instSize)));
+        if (i != 0)
+        {
+            nums += ',';
+        }
+        
+        nums += QByteArray::number(i + 1);
     }
     
-    getString(in, 2, "y", true);
-
-    if (in[0] != 'y')
+    // Demander l'entrée
+    char *buffer = new char[nums.size() + 1];
+    bool ok = false;
+    QList<int> numPkgs;
+    
+    while (!ok)
     {
-        // Abandonner
+        cout << "> ";
+        cout.flush();
+        
+        getString(buffer, nums.size() + 1, nums.data(), true);
+        
+        // Lire l'entrée
+        QString in(buffer);
+
+        if (in == "n")
+        {
+            // Abandonner
+            return;
+        }
+        
+        // Créer la liste des nombres
+        ok = true;
+        foreach(const QString &s, in.split(','))
+        {
+            int n = s.toInt(&ok);
+            
+            if (!ok || n < 1 || n > pkgs.count())
+            {
+                // Redemander l'entrée
+                numPkgs.clear();
+                ok = false;
+                break;
+            }
+            
+            numPkgs.append(n - 1);
+        }
+    }
+    
+    delete[] buffer;
+    
+    // Remplir la liste des paquets
+    Solver *solver = ps->newSolver();
+    
+    foreach(int index, numPkgs)
+    {
+        Package *pkg = pkgs.at(index);
+        Package *other = pkg->upgradePackage();
+            
+        if (other != 0)
+        {
+            solver->addPackage(other->name() + "=" + other->version(), Solver::Install);
+        }
+    }
+    
+    if (!solver->solve())
+    {
+        error();
+        delete solver;
         return;
     }
+
+    // Afficher et gérer les résultats
+    cout << endl;
+    manageResults(solver);
     
-    // TODO: Mise à jour proprement dite
+    delete solver;
 }
 
 static QString actionString(Solver::Action act)
@@ -160,7 +216,7 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
             }
             else
             {
-                cout << "  * ";
+                cout << ' ' << (i+1) << ". ";
             }
             
             dlSize += pkg->downloadSize();
@@ -175,7 +231,7 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
             }
             else
             {
-                cout << "  * ";
+                cout << ' ' << (i+1) << ". ";
             }
             
             instSize -= pkg->installSize();
@@ -189,7 +245,7 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
             }
             else
             {
-                cout << "  * ";
+                cout << ' ' << (i+1) << ". ";
             }
             
             dlSize += pkg->downloadSize();
@@ -200,8 +256,6 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
             if (other != 0)
             {
                 instSize += other->installSize() - pkg->installSize();
-                
-                delete other;
             }
             
             cout << COLOR(name, "33");
@@ -214,7 +268,7 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
             }
             else
             {
-                cout << "  * ";
+                cout << ' ' << (i+1) << ". ";
             }
             
             instSize -= pkg->installSize();

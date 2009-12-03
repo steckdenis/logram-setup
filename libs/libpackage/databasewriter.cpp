@@ -329,6 +329,7 @@ bool DatabaseWriter::rebuild()
             QString fname = file;
             QStringList parts;
             QString reponame, distroname, arch, method;
+            int strDistro, strRepo;
             bool istr;
 
             bool isInstalledPackages = (numFile == cacheFiles.count() && hasInstalledPackages);
@@ -373,6 +374,13 @@ bool DatabaseWriter::rebuild()
 
             // Pas de passe 1 pour translate
             if (pass == 0 && istr) continue;
+            
+            // Préparation pour les traductions
+            if (istr)
+            {
+                strDistro = stringsIndexes.value(distroname.toAscii());
+                strRepo = stringsIndexes.value(reponame.toAscii());
+            }
 
             // Lire toutes les lignes de ce fichier
             ifstream fd;
@@ -691,11 +699,10 @@ bool DatabaseWriter::rebuild()
                         
                         // Trouver le bon paquet
                         const QList<knownEntry *> &entries = knownPackages.value(name);
-                        int strDistro = stringsIndexes.value(distroname.toAscii());
 
                         foreach(knownEntry *entry, entries)
                         {
-                            if (entry->pkg->distribution == strDistro)
+                            if (entry->pkg->distribution == strDistro && entry->pkg->repo == strRepo)
                             {
                                 index = entry->index;
                                 

@@ -56,6 +56,7 @@ struct Package::Private
     QProcess *installProcess;
     QString installCommand;
     QString readBuf;
+    Package *upd;
     
     // Métadonnées
     PackageMetaData *md;
@@ -84,6 +85,7 @@ Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver
     d->action = _action;
     d->md = 0;
     d->installProcess = 0;
+    d->upd = 0;
 
     connect(ps, SIGNAL(downloadEnded(ManagedDownload *)), this, SLOT(downloadEnded(ManagedDownload *)));
 }
@@ -147,6 +149,15 @@ void Package::process()
             .arg(name())
             .arg(version())
             .arg(d->ps->installRoot());
+    }
+    else if (action() == Solver::Update)
+    {
+        d->installCommand = QString("/usr/bin/helperscript update \"%1\" \"%2\" \"%3\" \"%4\" \"%5\"")
+            .arg(name())
+            .arg(newerVersion())
+            .arg(d->waitingDest)
+            .arg(d->ps->installRoot())
+            .arg(version());
     }
         
     d->installProcess->start(d->installCommand);
@@ -250,6 +261,48 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         pkg->iby = QString(getenv("UID")).toInt();
         pkg->state = PACKAGE_STATE_INSTALLED;
     }
+    else if (action() == Solver::Update)
+    {
+        Package *other = upgradePackage();
+        
+        set->beginGroup(name());
+        set->setValue("Name", name());
+        set->setValue("Version", other->version());
+        set->setValue("Source", other->source());
+        set->setValue("Maintainer", other->maintainer());
+        set->setValue("Section", other->section());
+        set->setValue("Distribution", other->distribution());
+        set->setValue("License", other->license());
+        set->setValue("Depends", dependsToString(other->depends(), DEPEND_TYPE_DEPEND));
+        set->setValue("Provides", dependsToString(other->depends(), DEPEND_TYPE_PROVIDE));
+        set->setValue("Suggest", dependsToString(other->depends(), DEPEND_TYPE_SUGGEST));
+        set->setValue("Replaces", dependsToString(other->depends(), DEPEND_TYPE_REPLACE));
+        set->setValue("Conflicts", dependsToString(other->depends(), DEPEND_TYPE_CONFLICT));
+        set->setValue("DownloadSize", other->downloadSize());
+        set->setValue("InstallSize", other->installSize());
+        set->setValue("MetadataHash", other->metadataHash());
+        set->setValue("PackageHash", other->packageHash());
+
+        set->setValue("ShortDesc", QString(other->shortDesc().toUtf8().toBase64()));
+        
+        set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
+        set->setValue("InstalledRepo", other->repo());
+        set->setValue("InstalledBy", QString(getenv("UID")).toInt());
+        set->setValue("State", PACKAGE_STATE_INSTALLED);
+        set->setValue("InstallRoot", d->ps->installRoot());
+        set->endGroup();
+
+        // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
+        pkg->idate = QDateTime::currentDateTime().toTime_t();
+        pkg->iby = QString(getenv("UID")).toInt();
+        pkg->state = PACKAGE_STATE_NOTINSTALLED;
+        
+        // Également pour l'autre paquet (le C++ autorise l'accès aux membres privés d'autres instances)
+        _Package *opkg = d->psd->package(other->d->index);
+        opkg->idate = pkg->idate;
+        opkg->iby = pkg->iby;
+        opkg->state = PACKAGE_STATE_INSTALLED;
+    }
     else if (action() == Solver::Remove)
     {
         // Enregistrer le paquet comme supprimé
@@ -282,24 +335,38 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 
 bool Package::download()
 {
+    QString fname, r, type, u;
+    
     if (action() == Solver::Remove || action() == Solver::Purge)
     {
         // Pas besoin de télécharger
         emit downloaded(true);
         return true;
     }
+    else if (action() == Solver::Install)
+    {
+        // Télécharger le paquet
+        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
+        r = repo();
+        type = d->ps->repoType(r);
+        u = d->ps->repoUrl(r) + "/" + url();
+    }
+    else /* Update */
+    {
+        Package *other = upgradePackage();
+        
+        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + other->url().section('/', -1, -1);
+        r = other->repo();
+        type = d->ps->repoType(r);
+        u = d->ps->repoUrl(r) + "/" + other->url();
+    }
     
-    // Télécharger le paquet
-    QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
-    QString r = repo();
-    QString type = d->ps->repoType(r);
-    QString u = d->ps->repoUrl(r) + "/" + url();
-
     d->waitingDest = fname;
-    
+        
     ManagedDownload *md;
 
     return d->ps->download(type, u, fname, false, md); // Non-bloquant
+        
 }
 
 void Package::downloadEnded(ManagedDownload *md)
@@ -338,7 +405,18 @@ void Package::downloadEnded(ManagedDownload *md)
             QString sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
             
             // Comparer les hashs
-            if (sha1sum != packageHash())
+            QString myHash;
+            
+            if (action() == Solver::Update)
+            {
+                myHash = upgradePackage()->packageHash();
+            }
+            else
+            {
+                myHash = packageHash();
+            }
+            
+            if (sha1sum != myHash)
             {
                 PackageError *err = new PackageError;
                 err->type = PackageError::SHAError;
@@ -582,7 +660,12 @@ Package *Package::upgradePackage()
         return 0;
     }
     
-    return new Package(d->upgradeIndex, d->ps, d->psd, Solver::Install);
+    if (d->upd == 0)
+    {
+        d->upd = new Package(d->upgradeIndex, d->ps, d->psd, Solver::Install);
+    }
+    
+    return d->upd;
 }
 
 /*************************************

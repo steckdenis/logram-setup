@@ -311,7 +311,7 @@ QList<UpgradeInfo> PackageSystemPrivate::upgradePackages()
                     pkg->name == opkg->name)
                 {
                     ui.installedPackage = i;
-                    ui.newPackage = j;
+                    ui.newPackage = otherVersions.at(j);
                     
                     rs.append(ui);
                 }
