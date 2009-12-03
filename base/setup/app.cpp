@@ -44,8 +44,8 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     
     //Parser les arguments
     QStringList args = arguments();
-
-    if (args.count() == 1)
+    
+    if (args.count() < 2)
     {
         help();
         return;
@@ -57,6 +57,13 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 
     while (opt.startsWith('-'))
     {
+        if (args.count() < 3)
+        {
+            // Soit un paramètre, ou alors la commande, mais toujours minimum 3
+            help();
+            return;
+        }
+        
         if (opt == "-s")
         {
             bool isug = true;
@@ -112,10 +119,25 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         }
 
         args.removeAt(1);
-        opt = args.at(1).toLower();
+        
+        if (args.count() >= 2)
+        {
+            opt = args.at(1).toLower();
+        }
+        else
+        {
+            help();
+            return;
+        }
     }
     
     ps->loadConfig();
+    
+    if (args.count() < 2)
+    {
+        help();
+        return;
+    }
 
     QString cmd = args.at(1).toLower();
 
