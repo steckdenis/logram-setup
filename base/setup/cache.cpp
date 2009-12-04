@@ -30,6 +30,8 @@
 #include <iostream>
 using namespace std;
 
+using namespace Logram;
+
 void App::update()
 {
     // Mettre à jour la base de donnée

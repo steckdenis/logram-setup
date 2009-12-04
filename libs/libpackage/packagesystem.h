@@ -1,5 +1,5 @@
 /*
- * libpackage.h
+ * packagesystem.h
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -27,12 +27,15 @@
 #include <QString>
 #include <QList>
 
+class QNetworkReply;
+class QSettings;
+
+namespace Logram
+{
+
 class Package;
 class Solver;
 class PackageSystemPrivate;
-
-class QNetworkReply;
-class QSettings;
 
 struct ManagedDownload
 {
@@ -129,15 +132,18 @@ class PackageSystem : public QObject
         void endProgress(Progress type, int tot);
 
     signals:
-        void progress(PackageSystem::Progress type, int num, int tot, const QString &msg);
-        void downloadEnded(ManagedDownload *reply);
+        void progress(Logram::PackageSystem::Progress type, int num, int tot, const QString &msg);
+        void downloadEnded(Logram::ManagedDownload *reply);
 
     private slots:
         void downloadFinished(QNetworkReply *reply);
         void dlProgress(qint64 done, qint64 total);
 
     protected:
-        PackageSystemPrivate *d;
+        struct Private;
+        Private *d;
 };
+
+} /* Namespace */
 
 #endif

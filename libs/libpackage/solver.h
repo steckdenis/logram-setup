@@ -25,15 +25,18 @@
 
 #include <QObject>
 
+namespace Logram
+{
+
 class Package;
 class PackageSystem;
-class PackageSystemPrivate;
+class DatabaseReader;
 class PackageList;
 
 class Solver : public QObject
 {
     public:
-        Solver(PackageSystem *ps, PackageSystemPrivate *psd);
+        Solver(PackageSystem *ps, DatabaseReader *psd);
         ~Solver();
 
         enum Action
@@ -56,5 +59,7 @@ class Solver : public QObject
         struct Private;
         Private *d;
 };
+
+} /* Namespace */
 
 #endif

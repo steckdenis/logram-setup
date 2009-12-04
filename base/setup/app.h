@@ -27,17 +27,20 @@
 #include <QStringList>
 #include <QtDebug>
 
-#include <logram/libpackage.h>
+#include <logram/packagesystem.h>
 
-#define VERSION "0.1-alpha0"
+#define VERSION "0.1-alpha1"
 
 #define COLOR(text, color) (colored ? qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m") : qPrintable(text))
 
 #define COLORC(text, color) (colored ? qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m") : text)
 
-class Solver;
-class Package;
-class Communication;
+namespace Logram
+{
+    class Solver;
+    class Package;
+    class Communication;
+}
 
 class App : public QCoreApplication
 {
@@ -60,17 +63,17 @@ class App : public QCoreApplication
         
         void getString(char *buffer, int max_length, const char *def, bool append_return);
         
-        void displayPackages(QList<Package *> *packages, int &instSize, int &dlSize, bool showType);
+        void displayPackages(QList<Logram::Package *> *packages, int &instSize, int &dlSize, bool showType);
 
     public slots:
-        void progress(PackageSystem::Progress type, int done, int total, const QString &msg);
-        void communication(Package *sender, Communication *comm);
+        void progress(Logram::PackageSystem::Progress type, int done, int total, const QString &msg);
+        void communication(Logram::Package *sender, Logram::Communication *comm);
 
     private:
-        PackageSystem *ps;
+        Logram::PackageSystem *ps;
         bool colored;
 
-        void manageResults(Solver *solver);
+        void manageResults(Logram::Solver *solver);
 };
 
 #endif

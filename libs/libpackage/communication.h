@@ -25,6 +25,9 @@
 
 #include <QObject>
 
+namespace Logram
+{
+    
 class PackageSystem;
 class Package;
 
@@ -90,5 +93,7 @@ class Communication : public QObject
         struct Private;
         Private *d;
 };
+
+} /* Namespace */
 
 #endif

@@ -21,8 +21,8 @@
  */
 
 #include "solver.h"
-#include "libpackage.h"
-#include "libpackage_p.h"
+#include "packagesystem.h"
+#include "databasereader.h"
 #include "package.h"
 #include "packagelist.h"
 
@@ -33,6 +33,8 @@
 
 #include <QtDebug>
 #include <QtAlgorithms>
+
+using namespace Logram;
 
 struct Pkg
 {
@@ -52,7 +54,7 @@ bool Pkg::operator==(const Pkg &other)
 struct Solver::Private
 {
     PackageSystem *ps;
-    PackageSystemPrivate *psd;
+    DatabaseReader *psd;
     bool installSuggests;
     bool error;
 
@@ -73,7 +75,7 @@ struct Solver::Private
     void addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists);
 };
 
-Solver::Solver(PackageSystem *ps, PackageSystemPrivate *psd)
+Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
 {
     d = new Private;
     
@@ -191,6 +193,8 @@ bool Solver::solve()
                 // Explorer à nouveau les paquets pour voir si ce n'est pas une mise à jour
                 foreach(const Pkg &opkg, pkgs)
                 {
+                    if (!opkg.reallyWanted) continue;
+                    
                     _Package *my = d->psd->package(pkg.index);
                     _Package *other = d->psd->package(opkg.index);
                     
@@ -283,12 +287,12 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
                     PackageList::Error *err = new PackageList::Error;
                     err->type = PackageList::Error::SameNameSameVersionDifferentAction;
                     
-                    err->package = psd->string(0, mpkg->name);
-                    err->version = psd->string(0, mpkg->version);
+                    err->package = psd->string(false, mpkg->name);
+                    err->version = psd->string(false, mpkg->version);
                     err->action = pkg.action;
                     
-                    err->otherPackage = psd->string(0, lpkg->name);
-                    err->otherVersion = psd->string(0, lpkg->version);
+                    err->otherPackage = psd->string(false, lpkg->name);
+                    err->otherVersion = psd->string(false, lpkg->version);
                     err->otherAction = pk.action;
                     
                     listErrors[listIndex].append(err);
@@ -306,12 +310,12 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
                     PackageList::Error *err = new PackageList::Error;
                     err->type = PackageList::Error::SameNameDifferentVersionSameAction;
                     
-                    err->package = psd->string(0, mpkg->name);
-                    err->version = psd->string(0, mpkg->version);
+                    err->package = psd->string(false, mpkg->name);
+                    err->version = psd->string(false, mpkg->version);
                     err->action = pkg.action;
                     
-                    err->otherPackage = psd->string(0, lpkg->name);
-                    err->otherVersion = psd->string(0, lpkg->version);
+                    err->otherPackage = psd->string(false, lpkg->name);
+                    err->otherVersion = psd->string(false, lpkg->version);
                     err->action = pk.action;
                     
                     listErrors[listIndex].append(err);
@@ -448,12 +452,12 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
             err->type = PackageList::Error::NoPackagesMatchingPattern;
             
             err->pattern = PackageSystem::dependString(
-                psd->string(0, dep->pkgname),
-                psd->string(0, dep->pkgver),
+                psd->string(false, dep->pkgname),
+                psd->string(false, dep->pkgver),
                 dep->op);
                 
-            err->package = psd->string(0, mpkg->name);
-            err->version = psd->string(0, mpkg->version);
+            err->package = psd->string(false, mpkg->name);
+            err->version = psd->string(false, mpkg->version);
             
             listErrors[listIndex].append(err);
             

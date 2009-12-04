@@ -29,6 +29,7 @@
 
 #include <iostream>
 using namespace std;
+using namespace Logram;
 
 App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 {
@@ -40,7 +41,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     ps = new PackageSystem(this);
     colored = true;
 
-    connect(ps, SIGNAL(progress(PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(PackageSystem::Progress, int, int, const QString &)));
+    connect(ps, SIGNAL(progress(Logram::PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(Logram::PackageSystem::Progress, int, int, const QString &)));
     
     //Parser les arguments
     QStringList args = arguments();

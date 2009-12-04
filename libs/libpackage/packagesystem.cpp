@@ -20,10 +20,10 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include "libpackage.h"
-#include "libpackage_p.h"
-#include "package.h"
+#include "packagesystem.h"
+#include "databasereader.h"
 #include "databasewriter.h"
+#include "package.h"
 #include "solver.h"
 
 #include <QSettings>
@@ -37,22 +37,46 @@
 
 #include <QtDebug>
 
-PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
-{
-    d = new PackageSystemPrivate(this);
+using namespace Logram;
 
+struct Logram::PackageSystem::Private
+{
+    DatabaseReader *dr;
+    
+    QEventLoop loop;
+    QNetworkAccessManager *nmanager;
+    QString dlDest;
+    QHash<QNetworkReply *, ManagedDownload *> managedDls;
+    QSettings *set, *ipackages;
+    
+    PackageError *lastError;
+
+    // Options
+    bool installSuggests;
+    int parallelInstalls, parallelDownloads;
+    QString installRoot, confRoot, varRoot;
+    int setParams;
+};
+
+Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
+{
+    d = new Private;
+    
+    d->dr = new DatabaseReader(this);
     d->nmanager = new QNetworkAccessManager(this);
     d->setParams = 0;
     d->lastError = 0;
+    
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
 
-PackageSystem::~PackageSystem()
+Logram::PackageSystem::~PackageSystem()
 {
+    delete d->dr;
     delete d;
 }
 
-void PackageSystem::loadConfig()
+void Logram::PackageSystem::loadConfig()
 {
     d->set = new QSettings(confRoot() + "/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
     
@@ -84,9 +108,9 @@ void PackageSystem::loadConfig()
     d->ipackages = new QSettings(varRoot() + "/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
 }
 
-bool PackageSystem::init()
+bool Logram::PackageSystem::init()
 {
-    return d->init();
+    return d->dr->init();
 }
 
 struct Enrg
@@ -94,7 +118,7 @@ struct Enrg
     QString url, distroName, arch, sourceName, type;
 };
 
-QString PackageSystem::repoType(const QString &repoName)
+QString Logram::PackageSystem::repoType(const QString &repoName)
 {
     QString rs;
     
@@ -105,7 +129,7 @@ QString PackageSystem::repoType(const QString &repoName)
     return rs;
 }
 
-QString PackageSystem::repoUrl(const QString &repoName)
+QString Logram::PackageSystem::repoUrl(const QString &repoName)
 {
     QString rs;
 
@@ -116,12 +140,12 @@ QString PackageSystem::repoUrl(const QString &repoName)
     return rs;
 }
 
-QSettings *PackageSystem::installedPackagesList() const
+QSettings *Logram::PackageSystem::installedPackagesList() const
 {
     return d->ipackages;
 }
 
-bool PackageSystem::update()
+bool Logram::PackageSystem::update()
 {
     // Explorer la liste des mirroirs dans /etc/setup/sources.list, format QSettings
     QString lang = d->set->value("Language", tr("fr", "Langue par défaut pour les paquets")).toString();
@@ -198,15 +222,15 @@ bool PackageSystem::update()
     return true;
 }
 
-QList<Package *> PackageSystem::upgradePackages()
+QList<Logram::Package *> Logram::PackageSystem::upgradePackages()
 {
-    QList<UpgradeInfo> upds = d->upgradePackages();
+    QList<UpgradeInfo> upds = d->dr->upgradePackages();
     QList<Package *> rs;
     
     // Créer les paquets à mettre à jour
     foreach(const UpgradeInfo &inf, upds)
     {
-        Package *pkg = new Package(inf.installedPackage, this, d, Solver::Update);
+        Package *pkg = new Package(inf.installedPackage, this, d->dr, Solver::Update);
         
         pkg->setUpgradePackage(inf.newPackage);
         
@@ -216,31 +240,31 @@ QList<Package *> PackageSystem::upgradePackages()
     return rs;
 }
 
-bool PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
+bool Logram::PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
 {
-    return d->packagesByName(regex, rs);
+    return d->dr->packagesByName(regex, rs);
 }
 
-bool PackageSystem::package(const QString &name, const QString &version, Package* &rs)
+bool Logram::PackageSystem::package(const QString &name, const QString &version, Package* &rs)
 {
     int i;
     
-    if (!d->package(name, version, i))
+    if (!d->dr->package(name, version, i))
     {
         return false;
     }
     
-    rs = new Package(i, this, d);
+    rs = new Package(i, this, d->dr);
 
     return true;
 }
 
-Package *PackageSystem::package(int id)
+Package *Logram::PackageSystem::package(int id)
 {
-    return new Package(id, this, d);
+    return new Package(id, this, d->dr);
 }
 
-bool PackageSystem::filesOfPackage(const QString &packageName, QStringList &rs)
+bool Logram::PackageSystem::filesOfPackage(const QString &packageName, QStringList &rs)
 {
     rs = QStringList();
     
@@ -283,12 +307,12 @@ bool PackageSystem::filesOfPackage(const QString &packageName, QStringList &rs)
     return true;
 }
 
-Solver *PackageSystem::newSolver()
+Solver *Logram::PackageSystem::newSolver()
 {
-    return new Solver(this, d);
+    return new Solver(this, d->dr);
 }
 
-bool PackageSystem::download(const QString &type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs)
+bool Logram::PackageSystem::download(const QString &type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs)
 {
     // Ne pas télécharger un fichier en cache
     if (QFile::exists(dest))
@@ -373,7 +397,7 @@ bool PackageSystem::download(const QString &type, const QString &url, const QStr
     return false;
 }
 
-void PackageSystem::downloadFinished(QNetworkReply *reply)
+void Logram::PackageSystem::downloadFinished(QNetworkReply *reply)
 {
     // Savoir si on bloquait
     ManagedDownload *md = d->managedDls.value(reply, 0);
@@ -450,7 +474,7 @@ void PackageSystem::downloadFinished(QNetworkReply *reply)
     }
 }
 
-void PackageSystem::dlProgress(qint64 done, qint64 total)
+void Logram::PackageSystem::dlProgress(qint64 done, qint64 total)
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
@@ -462,7 +486,7 @@ void PackageSystem::dlProgress(qint64 done, qint64 total)
 
 /* Erreurs */
 
-void PackageSystem::setLastError(PackageError *err)
+void Logram::PackageSystem::setLastError(PackageError *err)
 {
     if (d->lastError != 0)
     {
@@ -472,14 +496,14 @@ void PackageSystem::setLastError(PackageError *err)
     d->lastError = err;
 }
 
-PackageError *PackageSystem::lastError()
+PackageError *Logram::PackageSystem::lastError()
 {
     return d->lastError;
 }
 
 /* Utilitaires */
 
-int PackageSystem::parseVersion(const QString &verStr, QString &name, QString &version)
+int Logram::PackageSystem::parseVersion(const QString &verStr, QString &name, QString &version)
 {
     QStringList parts;
     int rs;
@@ -527,7 +551,7 @@ int PackageSystem::parseVersion(const QString &verStr, QString &name, QString &v
     return rs;
 }
 
-bool PackageSystem::matchVersion(const QByteArray &v1, const QByteArray &v2, int op)
+bool Logram::PackageSystem::matchVersion(const QByteArray &v1, const QByteArray &v2, int op)
 {
     // Comparer les versions
     int rs = compareVersions(v1, v2);
@@ -552,12 +576,12 @@ bool PackageSystem::matchVersion(const QByteArray &v1, const QByteArray &v2, int
     return true;
 }
 
-int PackageSystem::compareVersions(const QByteArray &v1, const QByteArray &v2)
+int Logram::PackageSystem::compareVersions(const QByteArray &v1, const QByteArray &v2)
 {
     return compareVersions(v1.constData(), v2.constData());
 }
 
-int PackageSystem::compareVersions(const char *a, const char *b)
+int Logram::PackageSystem::compareVersions(const char *a, const char *b)
 {
     if (strcmp(a, b) == 0) return 0;
     
@@ -625,7 +649,7 @@ int PackageSystem::compareVersions(const char *a, const char *b)
     return 0;   // Les mêmes
 }
 
-QString PackageSystem::fileSizeFormat(int size)
+QString Logram::PackageSystem::fileSizeFormat(int size)
 {
     if (size < 1024)
     {
@@ -645,7 +669,7 @@ QString PackageSystem::fileSizeFormat(int size)
     }
 }
 
-QString PackageSystem::dependString(const QString &name, const QString &version, int op)
+QString Logram::PackageSystem::dependString(const QString &name, const QString &version, int op)
 {
     QString rs(name);
 
@@ -681,72 +705,72 @@ QString PackageSystem::dependString(const QString &name, const QString &version,
 
 /* Options */
 
-bool PackageSystem::installSuggests() const
+bool Logram::PackageSystem::installSuggests() const
 {
     return d->installSuggests;
 }
 
-int PackageSystem::parallelDownloads() const
+int Logram::PackageSystem::parallelDownloads() const
 {
     return d->parallelDownloads;
 }
 
-int PackageSystem::parallelInstalls() const
+int Logram::PackageSystem::parallelInstalls() const
 {
     return d->parallelInstalls;
 }
 
-QString PackageSystem::installRoot() const
+QString Logram::PackageSystem::installRoot() const
 {
     return d->installRoot;
 }
 
-QString PackageSystem::confRoot() const
+QString Logram::PackageSystem::confRoot() const
 {
     return d->confRoot;
 }
 
-QString PackageSystem::varRoot() const
+QString Logram::PackageSystem::varRoot() const
 {
     return d->varRoot;
 }
 
-void PackageSystem::setConfRoot(const QString &root)
+void Logram::PackageSystem::setConfRoot(const QString &root)
 {
     d->setParams |= PACKAGESYSTEM_OPT_CONFROOT;
     
     d->confRoot = root;
 }
 
-void PackageSystem::setVarRoot(const QString &root)
+void Logram::PackageSystem::setVarRoot(const QString &root)
 {
     d->setParams |= PACKAGESYSTEM_OPT_VARROOT;
     
     d->varRoot = root;
 }
 
-void PackageSystem::setInstallSuggests(bool enable)
+void Logram::PackageSystem::setInstallSuggests(bool enable)
 {
     d->setParams |= PACKAGESYSTEM_OPT_INSTALLSUGGESTS;
     
     d->installSuggests = enable;
 }
 
-void PackageSystem::setParallelDownloads(int num)
+void Logram::PackageSystem::setParallelDownloads(int num)
 {
     d->setParams |= PACKAGESYSTEM_OPT_PARALLELDOWNLOADS;
     
     d->parallelDownloads = num;
 }
 
-void PackageSystem::setParallelInstalls(int num)
+void Logram::PackageSystem::setParallelInstalls(int num)
 {
     d->setParams |= PACKAGESYSTEM_OPT_PARALLELINSTALLS;
     
     d->parallelInstalls = num;
 }
 
-void PackageSystem::setInstallRoot(const QString &root)
+void Logram::PackageSystem::setInstallRoot(const QString &root)
 {
     d->setParams |= PACKAGESYSTEM_OPT_INSTALLROOT;
     
@@ -754,12 +778,12 @@ void PackageSystem::setInstallRoot(const QString &root)
 }
 
 /* Signaux */
-void PackageSystem::sendProgress(Progress type, int num, int tot, const QString &msg)
+void Logram::PackageSystem::sendProgress(Progress type, int num, int tot, const QString &msg)
 {
     emit progress(type, num, tot, msg);
 }
 
-void PackageSystem::endProgress(Progress type, int tot)
+void Logram::PackageSystem::endProgress(Progress type, int tot)
 {
     emit progress(type, tot, tot, QString());
 }

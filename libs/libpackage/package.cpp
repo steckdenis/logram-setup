@@ -21,8 +21,8 @@
  */
 
 #include "package.h"
-#include "libpackage.h"
-#include "libpackage_p.h"
+#include "packagesystem.h"
+#include "databasereader.h"
 #include "packagemetadata.h"
 #include "communication.h"
 
@@ -34,6 +34,8 @@
 #include <QFile>
 #include <QCryptographicHash>
 
+using namespace Logram;
+
 /*************************************
 ******* Privates *********************
 *************************************/
@@ -42,7 +44,7 @@ struct Package::Private
 {
     int index, upgradeIndex;
     PackageSystem *ps;
-    PackageSystemPrivate *psd;
+    DatabaseReader *psd;
 
     bool depok;
     QList<Depend *> deps;
@@ -65,7 +67,7 @@ struct Package::Private
 struct Depend::Private
 {
     _Depend *dep;
-    PackageSystemPrivate *psd;
+    DatabaseReader *psd;
 
     QList<Depend *> subdeps;
 };
@@ -74,7 +76,7 @@ struct Depend::Private
 ******* Package **********************
 *************************************/
 
-Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver::Action _action) : QObject(ps)
+Package::Package(int index, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action) : QObject(ps)
 {
     d = new Private;
     d->index = index;
@@ -87,7 +89,7 @@ Package::Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver
     d->installProcess = 0;
     d->upd = 0;
 
-    connect(ps, SIGNAL(downloadEnded(ManagedDownload *)), this, SLOT(downloadEnded(ManagedDownload *)));
+    connect(ps, SIGNAL(downloadEnded(Logram::ManagedDownload *)), this, SLOT(downloadEnded(Logram::ManagedDownload *)));
 }
 
 Package::~Package()
@@ -518,12 +520,20 @@ QString Package::dependsToString(const QList<Depend *> &deps, int type)
 
 QString Package::name()
 {
-    return d->psd->packageName(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->name));
 }
 
 QString Package::version()
 {
-    return d->psd->packageVersion(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->version));
 }
 
 QString Package::newerVersion()
@@ -533,57 +543,101 @@ QString Package::newerVersion()
         return QString();
     }
     
-    return d->psd->packageVersion(d->upgradeIndex);
+    _Package *pkg = d->psd->package(d->upgradeIndex);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->version));
 }
 
 QString Package::maintainer()
 {
-    return d->psd->packageMaintainer(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->maintainer));
 }
 
 QString Package::shortDesc()
 {
-    return d->psd->packageShortDesc(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(true, pkg->short_desc));
 }
 
 QString Package::source()
 {
-    return d->psd->packageSource(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->source));
 }
 
 QString Package::repo()
 {
-    return d->psd->packageRepo(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->repo));
 }
 
 QString Package::section()
 {
-    return d->psd->packageSection(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->section));
 }
 
 QString Package::distribution()
 {
-    return d->psd->packageDistribution(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->distribution));
 }
 
 QString Package::license()
 {
-    return d->psd->packageLicense(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->license));
 }
 
 QString Package::arch()
 {
-    return d->psd->packageArch(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->arch));
 }
 
 QString Package::packageHash()
 {
-    return d->psd->packagePkgHash(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->pkg_hash));
 }
 
 QString Package::metadataHash()
 {
-    return d->psd->packageMtdHash(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return QString();
+    
+    return QString(d->psd->string(false, pkg->mtd_hash));
 }
 
 QString Package::url(UrlType type)
@@ -614,17 +668,29 @@ QString Package::url(UrlType type)
 
 bool Package::isGui()
 {
-    return d->psd->packageGui(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return false;
+    
+    return pkg->is_gui;
 }
 
 int Package::downloadSize()
 {
-    return d->psd->packageDownloadSize(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return false;
+    
+    return pkg->dsize;
 }
 
 int Package::installSize()
 {
-    return d->psd->packageInstallSize(d->index);
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return false;
+    
+    return pkg->isize;
 }
 
 
@@ -640,12 +706,20 @@ QDateTime Package::installedDate()
 
 int Package::installedBy()
 {
-    return d->psd->package(d->index)->iby;
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return false;
+    
+    return pkg->iby;
 }
 
 int Package::status()
 {
-    return d->psd->package(d->index)->state;
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return false;
+    
+    return pkg->state;
 }
 
 void Package::setUpgradePackage(int i)
@@ -672,7 +746,7 @@ Package *Package::upgradePackage()
 ******* Depend ***********************
 *************************************/
 
-Depend::Depend(_Depend *dep, PackageSystemPrivate *psd)
+Depend::Depend(_Depend *dep, DatabaseReader *psd)
 {
     d = new Private;
     d->dep = dep;
@@ -687,12 +761,12 @@ Depend::~Depend()
 
 QString Depend::name()
 {
-    return d->psd->string(0, d->dep->pkgname);
+    return d->psd->string(false, d->dep->pkgname);
 }
 
 QString Depend::version()
 {
-    return d->psd->string(0, d->dep->pkgver);
+    return d->psd->string(false, d->dep->pkgver);
 }
 
 int8_t Depend::type()

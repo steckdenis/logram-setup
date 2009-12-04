@@ -30,10 +30,13 @@
 #include <QHash>
 #include <QByteArray>
 
-class PackageSystem;
 class QNetworkAccessManager;
 class QNetworkReply;
 class QIODevice;
+
+namespace Logram {
+    
+class PackageSystem;
 
 struct _String;
 struct _Package;
@@ -85,5 +88,7 @@ class DatabaseWriter : public QObject
         void setDepends(_Package *pkg, const QByteArray &str, int type);
         void revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op, int type);
 };
+
+} /* Namespace */
 
 #endif

@@ -29,6 +29,8 @@
 #include <iostream>
 using namespace std;
 
+using namespace Logram;
+
 void App::add(const QStringList &packages)
 {
     Solver *solver = ps->newSolver();
@@ -475,7 +477,8 @@ void App::manageResults(Solver *solver)
     cout << endl;
     
     // Connecter un signal
-    connect(packages, SIGNAL(communication(Package *, Communication *)), this, SLOT(communication(Package *, Communication *)));
+    connect(packages, SIGNAL(communication(Logram::Package *, Logram::Communication *)), this, 
+                        SLOT(communication(Logram::Package *, Logram::Communication *)));
 
     // Installer les paquets
     if (!packages->process())

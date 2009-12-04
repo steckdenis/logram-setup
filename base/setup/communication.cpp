@@ -30,6 +30,8 @@
 #include <limits>
 using namespace std;
 
+using namespace Logram;
+
 void App::communication(Package *sender, Communication *comm)
 {
     char *buffer = new char[4000]; // 96 bytes perdus, mais qui peuvent éviter d'allouer une 2eme page sur un OS nécessitant des infos supplémentaires pour chaque allocation

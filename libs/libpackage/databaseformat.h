@@ -1,5 +1,5 @@
 /*
- * libpackage_p.h
+ * databaseformat.h
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,10 +20,13 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __PACKAGESYSTEM_P_H__
-#define __PACKAGESYSTEM_P_H__
+#ifndef __DATABASEFORMAT_H__
+#define __DATABASEFORMAT_H__
 
 #include <stdint.h>
+
+namespace Logram
+{
 
 struct _Package
 {
@@ -83,88 +86,7 @@ struct _StrPackagePtr
     int32_t count;      // Nombre de StrPackages dedans
 };
 
-/**********************************************
-******* Classe ********************************
-**********************************************/
-
-#include <QString>
-#include <QList>
-#include <QEventLoop>
-#include <QHash>
-
-class QFile;
-class QNetworkAccessManager;
-class QSettings;
-
-class PackageSystem;
-struct ManagedDownload;
-
-struct UpgradeInfo
-{
-    int installedPackage;
-    int newPackage;
-};
-
-class PackageSystemPrivate
-{
-    public:
-        PackageSystemPrivate(PackageSystem *_ps);
-        ~PackageSystemPrivate();
-        bool init();
-
-        bool package(const QString &name, const QString &version, int &rs);
-        bool packagesByName(const QString &regex, QList<int> &rs);
-        QList<int> packagesByVString(const QString &verStr);
-        QList<_Depend *> depends(int pkgIndex);
-        QList<int> packagesOfString(int stringIndex, int nameIndex, int op);
-        QList<UpgradeInfo> upgradePackages();
-
-        QString packageName(int index);
-        QString packageVersion(int index);
-        QString packageMaintainer(int index);
-        QString packageShortDesc(int index);
-        QString packageSource(int index);
-        QString packageRepo(int index);
-        QString packageSection(int index);
-        QString packageDistribution(int index);
-        QString packageLicense(int index);
-        QString packageArch(int index);
-        QString packageUrl(int index);
-        QString packagePkgHash(int index);
-        QString packageMtdHash(int index);
-        bool packageGui(int index);
-        int packageDownloadSize(int index);
-        int packageInstallSize(int index);
-
-        const char *string(uchar *map, int index);
-        _Package *package(int index);
-        _Depend *depend(int32_t ptr);
-        
-    private:
-        bool mapFile(const QString &file, QFile **ptr, uchar **map);
-
-    private:
-        QFile *f_packages, *f_strings, *f_translate, *f_depends, *f_strpackages;
-        uchar *m_packages, *m_strings, *m_translate, *m_depends, *m_strpackages;
-
-        PackageSystem *ps;
-
-    public:
-        // Réellement privé à PackageSystem
-        QEventLoop loop;
-        QNetworkAccessManager *nmanager;
-        QString dlDest;
-        QHash<QNetworkReply *, ManagedDownload *> managedDls;
-        QSettings *set, *ipackages;
-        
-        PackageError *lastError;
-
-        // Options
-        bool installSuggests;
-        int parallelInstalls, parallelDownloads;
-        QString installRoot, confRoot, varRoot;
-        int setParams;
-};
+} /* Namespace */
 
 #define PACKAGESYSTEM_OPT_INSTALLSUGGESTS    1
 #define PACKAGESYSTEM_OPT_PARALLELINSTALLS   2

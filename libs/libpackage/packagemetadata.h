@@ -28,6 +28,9 @@
 #include <QObject>
 #include <QDateTime>
 
+namespace Logram
+{
+
 class Package;
 class PackageSystem;
 
@@ -61,5 +64,7 @@ class PackageMetaData : public QDomDocument, public QObject
         struct Private;
         Private *d;
 };
+
+} /* Namespace */
 
 #endif

@@ -21,8 +21,8 @@
  */
 
 #include "databasewriter.h"
-#include "libpackage.h"
-#include "libpackage_p.h"
+#include "databaseformat.h"
+#include "packagesystem.h"
 #include "package.h"
 
 #include <QNetworkAccessManager>
@@ -37,7 +37,9 @@
 
 #include <iostream>
 #include <fstream>
+
 using namespace std;
+using namespace Logram;
 
 DatabaseWriter::DatabaseWriter(PackageSystem *_parent)
 {

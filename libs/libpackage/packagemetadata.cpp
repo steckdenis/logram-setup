@@ -21,7 +21,7 @@
  */
 
 #include "packagemetadata.h"
-#include "libpackage.h"
+#include "packagesystem.h"
 #include "package.h"
 
 #include <QProcess>
@@ -32,6 +32,8 @@
 
 #include <QtXml>
 #include <QtDebug>
+
+using namespace Logram;
 
 struct PackageMetaData::Private
 {

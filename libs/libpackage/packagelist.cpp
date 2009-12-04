@@ -21,14 +21,15 @@
  */
 
 #include "packagelist.h"
-#include "libpackage.h"
+#include "packagesystem.h"
 #include "package.h"
-
 
 #include <QtScript>
 #include <QList>
 #include <QEventLoop>
 #include <QFile>
+
+using namespace Logram;
 
 struct PackageList::Private
 {
@@ -192,7 +193,8 @@ bool PackageList::process()
 
         connect(pkg, SIGNAL(proceeded(bool)), this, SLOT(packageProceeded(bool)));
         connect(pkg, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
-        connect(pkg, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
+        connect(pkg, SIGNAL(communication(Logram::Package *, Logram::Communication *)), this,
+                     SIGNAL(communication(Logram::Package *, Logram::Communication *)));
 
         // Progression
         d->ps->sendProgress(PackageSystem::GlobalDownload, i, count(), pkg->name());
@@ -297,7 +299,8 @@ void PackageList::packageDownloaded(bool success)
         // Connexion de signaux
         connect(next, SIGNAL(proceeded(bool)), this, SLOT(packageProceeded(bool)));
         connect(next, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
-        connect(next, SIGNAL(communication(Package *, Communication *)), this, SIGNAL(communication(Package *, Communication *)));
+        connect(next, SIGNAL(communication(Logram::Package *, Logram::Communication *)), this, 
+                      SIGNAL(communication(Logram::Package *, Logram::Communication *)));
         
         // Progression
         d->ps->sendProgress(PackageSystem::GlobalDownload, d->dpackages, count(), next->name());

@@ -31,8 +31,11 @@
 
 #include <stdint.h>
 
+namespace Logram
+{
+
 class PackageSystem;
-class PackageSystemPrivate;
+class DatabaseReader;
 class PackageMetaData;
 class Communication;
 struct ManagedDownload;
@@ -45,7 +48,7 @@ class Package : public QObject
 {
     Q_OBJECT
     
-    Q_PROPERTY(Solver::Action action READ action)
+    Q_PROPERTY(Logram::Solver::Action action READ action)
     
     Q_PROPERTY(QString name READ name)
     Q_PROPERTY(QString version READ version)
@@ -65,7 +68,7 @@ class Package : public QObject
     Q_PROPERTY(int installSize READ installSize)
     
     public:
-        Package(int index, PackageSystem *ps, PackageSystemPrivate *psd, Solver::Action _action = Solver::None);
+        Package(int index, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
         ~Package();
 
         void process();
@@ -116,10 +119,10 @@ class Package : public QObject
         void proceeded(bool success);
         void downloaded(bool success);
         
-        void communication(Package *sender, Communication *comm);
+        void communication(Logram::Package *sender, Logram::Communication *comm);
 
     private slots:
-        void downloadEnded(ManagedDownload *md);
+        void downloadEnded(Logram::ManagedDownload *md);
         void processOut();
         void processEnd(int exitCode, QProcess::ExitStatus exitStatus);
 
@@ -131,7 +134,7 @@ class Package : public QObject
 class Depend
 {
     public:
-        Depend(_Depend *dep, PackageSystemPrivate *psd);
+        Depend(_Depend *dep, DatabaseReader *psd);
         ~Depend();
 
         QString name();
@@ -143,6 +146,8 @@ class Depend
         struct Private;
         Private *d;
 };
+
+} /* Namespace */
 
 // Constantes
 

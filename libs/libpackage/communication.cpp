@@ -24,13 +24,15 @@
 
 #include "package.h"
 #include "packagemetadata.h"
-#include "libpackage.h"
+#include "packagesystem.h"
 
 #include <QtXml>
 #include <QtDebug>
 
 #include <QRegExp>
 #include <QList>
+
+using namespace Logram;
 
 struct Communication::Private
 {

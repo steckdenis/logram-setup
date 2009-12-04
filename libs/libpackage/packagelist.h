@@ -28,6 +28,9 @@
 
 #include "solver.h"
 
+namespace Logram
+{
+
 class PackageSystem;
 class Package;
 class Communication;
@@ -76,11 +79,13 @@ class PackageList : public QObject, public QList<Package *>
         void packageDownloaded(bool success);
         
     signals:
-        void communication(Package *sender, Communication *comm);
+        void communication(Logram::Package *sender, Logram::Communication *comm);
         
     private:
         struct Private;
         Private *d;
 };
+
+} /* Namespace */
 
 #endif

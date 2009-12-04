@@ -1,5 +1,5 @@
 /*
- * libpackage_p.cpp
+ * databasereader.cpp
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,15 +20,17 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include "libpackage.h"
-#include "libpackage_p.h"
+#include "packagesystem.h"
+#include "databasereader.h"
 #include "package.h"
 
 #include <QFile>
 #include <QRegExp>
 #include <QDebug>
 
-PackageSystemPrivate::PackageSystemPrivate(PackageSystem *_ps)
+using namespace Logram;
+
+DatabaseReader::DatabaseReader(PackageSystem *_ps)
 {
     ps = _ps;
     
@@ -39,7 +41,7 @@ PackageSystemPrivate::PackageSystemPrivate(PackageSystem *_ps)
     f_strpackages = 0;
 }
 
-bool PackageSystemPrivate::init()
+bool DatabaseReader::init()
 {
     // Ouvrir les fichiers
     if (!mapFile("packages", &f_packages, &m_packages)) return false;
@@ -51,7 +53,7 @@ bool PackageSystemPrivate::init()
     return true;
 }
 
-PackageSystemPrivate::~PackageSystemPrivate()
+DatabaseReader::~DatabaseReader()
 {
     if (f_packages != 0)
     {
@@ -90,7 +92,7 @@ PackageSystemPrivate::~PackageSystemPrivate()
     }
 }
 
-bool PackageSystemPrivate::packagesByName(const QString &regex, QList<int> &rs)
+bool DatabaseReader::packagesByName(const QString &regex, QList<int> &rs)
 {
     // Explorer le contenu de packages à la recherche d'un paquet dont le nom est bon
     rs = QList<int>();
@@ -102,7 +104,7 @@ bool PackageSystemPrivate::packagesByName(const QString &regex, QList<int> &rs)
     // Explorer les paquets
     for (int i=0; i<count; ++i)
     {
-        pkgname = packageName(i);
+        pkgname = QString(string(false, package(i)->name));
         
         // Voir si ça correspond à la regex
         if (exp.exactMatch(pkgname))
@@ -115,7 +117,7 @@ bool PackageSystemPrivate::packagesByName(const QString &regex, QList<int> &rs)
     return true;
 }
 
-QList<int> PackageSystemPrivate::packagesByVString(const QString &verStr)
+QList<int> DatabaseReader::packagesByVString(const QString &verStr)
 {
     QList<int> rs;
     int32_t count = *(int32_t *)m_packages;
@@ -129,7 +131,7 @@ QList<int> PackageSystemPrivate::packagesByVString(const QString &verStr)
     for (int i=0; i<count; ++i)
     {
         _Package *pkg = package(i);
-        pname = QString(string(0, pkg->name));
+        pname = QString(string(false, pkg->name));
 
         if (pname != name) continue;
 
@@ -139,7 +141,7 @@ QList<int> PackageSystemPrivate::packagesByVString(const QString &verStr)
         }
         else
         {
-            pver = QString(string(0, pkg->version));
+            pver = QString(string(false, pkg->version));
 
             // Voir si la version correspond
             if (PackageSystem::matchVersion(pver.toUtf8(), version.toUtf8(), op))
@@ -152,14 +154,16 @@ QList<int> PackageSystemPrivate::packagesByVString(const QString &verStr)
     return rs;
 }
 
-bool PackageSystemPrivate::package(const QString &name, const QString &version, int &rs)
+bool DatabaseReader::package(const QString &name, const QString &version, int &rs)
 {
     QString pkgname;
     int32_t count = *(int32_t *)m_packages;
 
     for (int i=0; i<count; ++i)
     {
-        pkgname = packageName(i);
+        _Package *pkg = package(i);
+        
+        pkgname = QString(string(false, pkg->name));
 
         if (pkgname == name)
         {
@@ -169,7 +173,7 @@ bool PackageSystemPrivate::package(const QString &name, const QString &version, 
                 rs = i;
                 return true;
             }
-            else if (version == packageVersion(i))
+            else if (version == QString(string(false, pkg->version)))
             {
                 rs = i;
                 return true;
@@ -193,7 +197,7 @@ bool PackageSystemPrivate::package(const QString &name, const QString &version, 
     return false;
 }
 
-QList<_Depend *> PackageSystemPrivate::depends(int pkgIndex)
+QList<_Depend *> DatabaseReader::depends(int pkgIndex)
 {
     _Package *pkg = package(pkgIndex);
     QList<_Depend *> rs;
@@ -228,7 +232,7 @@ QList<_Depend *> PackageSystemPrivate::depends(int pkgIndex)
     return rs;
 }
 
-QList<int> PackageSystemPrivate::packagesOfString(int stringIndex, int nameIndex, int op)
+QList<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, int op)
 {
     QList<int> rs;
     QString cmpVersion = QString(string(0, stringIndex));
@@ -281,7 +285,7 @@ QList<int> PackageSystemPrivate::packagesOfString(int stringIndex, int nameIndex
     return rs;
 }
 
-QList<UpgradeInfo> PackageSystemPrivate::upgradePackages()
+QList<UpgradeInfo> DatabaseReader::upgradePackages()
 {
     int32_t npkgs = *(int *)m_packages;
     QList<int> otherVersions;
@@ -323,7 +327,7 @@ QList<UpgradeInfo> PackageSystemPrivate::upgradePackages()
     return rs;
 }
 
-_Depend *PackageSystemPrivate::depend(int32_t ptr)
+_Depend *DatabaseReader::depend(int32_t ptr)
 {
     int numdepsptr = *(int *)m_depends;
     
@@ -335,142 +339,7 @@ _Depend *PackageSystemPrivate::depend(int32_t ptr)
     return (_Depend *)dep;
 }
 
-int PackageSystemPrivate::packageDownloadSize(int index)
-{
-    _Package *pkg = package(index);
-    
-    if (pkg == 0) return 0;
-    
-    return pkg->dsize;
-}
-
-int PackageSystemPrivate::packageInstallSize(int index)
-{
-    _Package *pkg = package(index);
-    
-    if (pkg == 0) return 0;
-    
-    return pkg->isize;
-}
-
-QString PackageSystemPrivate::packageName(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->name));
-}
-
-QString PackageSystemPrivate::packageVersion(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->version));
-}
-
-QString PackageSystemPrivate::packageMaintainer(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->maintainer));
-}
-
-QString PackageSystemPrivate::packageShortDesc(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_translate, pkg->short_desc));
-}
-
-QString PackageSystemPrivate::packageSource(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->source));
-}
-
-QString PackageSystemPrivate::packageRepo(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->repo));
-}
-
-QString PackageSystemPrivate::packageSection(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->section));
-}
-
-QString PackageSystemPrivate::packageDistribution(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->distribution));
-}
-
-QString PackageSystemPrivate::packageLicense(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->license));
-}
-
-QString PackageSystemPrivate::packageArch(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->arch));
-}
-
-QString PackageSystemPrivate::packagePkgHash(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->pkg_hash));
-}
-
-QString PackageSystemPrivate::packageMtdHash(int index)
-{
-    _Package *pkg = package(index);
-
-    if (pkg == 0) return QString();
-
-    return QString(string(m_strings, pkg->mtd_hash));
-}
-
-bool PackageSystemPrivate::packageGui(int index)
-{
-    _Package *pkg = package(index);
-    
-    if (pkg == 0) return false;
-    
-    return pkg->is_gui;
-}
-
-_Package *PackageSystemPrivate::package(int index)
+_Package *DatabaseReader::package(int index)
 {
     // Trouver l'adresse du paquet
     if (index >= *(int *)m_packages)
@@ -488,12 +357,17 @@ _Package *PackageSystemPrivate::package(int index)
     return (_Package *)pkg;
 }
 
-const char *PackageSystemPrivate::string(uchar *map, int index)
+const char *DatabaseReader::string(bool translate, int index)
 {
-    // Si map == 0, on prend m_strings (c'est qu'on a été appelé d'ailleurs)
-    if (map == 0)
+    uchar *map;
+    
+    if (!translate)
     {
         map = m_strings;
+    }
+    else
+    {
+        map = m_translate;
     }
     
     // Vérifier l'index
@@ -520,7 +394,7 @@ const char *PackageSystemPrivate::string(uchar *map, int index)
     return ptr;
 }
 
-bool PackageSystemPrivate::mapFile(const QString &file, QFile **ptr, uchar **map)
+bool DatabaseReader::mapFile(const QString &file, QFile **ptr, uchar **map)
 {
     *ptr = new QFile(ps->varRoot() + "/var/cache/lgrpkg/db/" + file);
     QFile *f = *ptr;
