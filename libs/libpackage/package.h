@@ -35,14 +35,12 @@ namespace Logram
 {
 
 class PackageSystem;
-class DatabaseReader;
 class PackageMetaData;
 class Communication;
-struct ManagedDownload;
-
-class _Depend;
+class DatabaseReader;
 
 class Depend;
+class DatabasePackage;
 
 class Package : public QObject
 {
@@ -60,7 +58,7 @@ class Package : public QObject
     Q_PROPERTY(QString distribution READ distribution)
     Q_PROPERTY(QString license READ license)
     Q_PROPERTY(QString arch READ arch)
-    Q_PROPERTY(QString url READ url)
+    Q_PROPERTY(Origin origin READ origin)
     
     Q_PROPERTY(bool gui READ isGui)
     
@@ -68,51 +66,55 @@ class Package : public QObject
     Q_PROPERTY(int installSize READ installSize)
     
     public:
-        Package(int index, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
+        Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
         ~Package();
-
-        void process();
-        bool download();
-        bool isValid();
-        Solver::Action action();
-
-        enum UrlType
+        
+        enum Origin
         {
-            Binary,
-            Metadata
+            Database,
+            File
         };
+
+        // Interface
+        virtual bool download() = 0;
+        virtual QString tlzFileName() = 0;
+        virtual bool isValid() = 0;
+        virtual Origin origin() = 0;
         
-        QString name();
-        QString version();
-        QString newerVersion();
-        QString maintainer();
-        QString shortDesc();
-        QString source();
-        QString repo();
-        QString section();
-        QString distribution();
-        QString license();
-        QString arch();
-        QString url(UrlType type = Package::Binary);
-        QString packageHash();
-        QString metadataHash();
-        bool isGui();
+        virtual QString name() = 0;
+        virtual QString version() = 0;
+        virtual QString maintainer() = 0;
+        virtual QString shortDesc() = 0;
+        virtual QString source() = 0;
+        virtual QString repo() = 0;
+        virtual QString section() = 0;
+        virtual QString distribution() = 0;
+        virtual QString license() = 0;
+        virtual QString arch() = 0;
+        virtual QString metadataHash() = 0;
+        virtual QString packageHash() = 0;
+        virtual bool isGui() = 0;
+        virtual int status() = 0;
         
-        QDateTime installedDate();
-        int installedBy();
-        int status();
+        virtual int downloadSize() = 0;
+        virtual int installSize() = 0;
         
-        int downloadSize();
-        int installSize();
+        virtual QList<Depend *> depends() = 0;
+        virtual QDateTime installedDate() = 0;
+        virtual int installedBy() = 0;
         
+        virtual void registerState(int idate, int iby, int state) = 0;
+        
+        // Commun à tous les types de paquets
+        void process();
+        Solver::Action action();
         PackageMetaData *metadata();
 
-        Package *upgradePackage();
-        QList<Package *> versions();
-        QList<Depend *> depends();
-        QString dependsToString(const QList<Depend *> &deps, int type);
+        // Utilitaire
+        static QString dependsToString(const QList<Depend *> &deps, int type);
         
-        // Interne, à usage de libpackage
+        // Mise à jour
+        DatabasePackage *upgradePackage();
         void setUpgradePackage(int i);
 
     signals:
@@ -122,7 +124,6 @@ class Package : public QObject
         void communication(Logram::Package *sender, Logram::Communication *comm);
 
     private slots:
-        void downloadEnded(Logram::ManagedDownload *md);
         void processOut();
         void processEnd(int exitCode, QProcess::ExitStatus exitStatus);
 
@@ -134,17 +135,12 @@ class Package : public QObject
 class Depend
 {
     public:
-        Depend(_Depend *dep, DatabaseReader *psd);
-        ~Depend();
+        Depend();
 
-        QString name();
-        QString version();
-        int8_t type();
-        int8_t op();
-
-    private:
-        struct Private;
-        Private *d;
+        virtual QString name() = 0;
+        virtual QString version() = 0;
+        virtual int8_t type() = 0;
+        virtual int8_t op() = 0;
 };
 
 } /* Namespace */

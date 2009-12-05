@@ -23,7 +23,7 @@
 #include "solver.h"
 #include "packagesystem.h"
 #include "databasereader.h"
-#include "package.h"
+#include "databasepackage.h"
 #include "packagelist.h"
 
 #include <QVector>
@@ -206,13 +206,13 @@ bool Solver::solve()
                         if (opkg.action == Solver::Install)
                         {
                             // Nous sommes l'ancien, l'autre le nouveau    
-                            package = new Package(pkg.index, d->ps, d->psd, Solver::Update);
+                            package = new DatabasePackage(pkg.index, d->ps, d->psd, Solver::Update);
                             package->setUpgradePackage(opkg.index);
                         }
                         else
                         {
                             // Nous sommes le nouveau, l'autre l'ancien
-                            package = new Package(opkg.index, d->ps, d->psd, Solver::Update);
+                            package = new DatabasePackage(opkg.index, d->ps, d->psd, Solver::Update);
                             package->setUpgradePackage(pkg.index);
                         }
                         
@@ -223,7 +223,7 @@ bool Solver::solve()
                 if (package == 0)
                 {
                     // Pas de mise à jour
-                    package = new Package(pkg.index, d->ps, d->psd, pkg.action);
+                    package = new DatabasePackage(pkg.index, d->ps, d->psd, pkg.action);
                 }
 
                 plist->addPackage(package);

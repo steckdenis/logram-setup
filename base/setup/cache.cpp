@@ -22,7 +22,7 @@
 
 #include "app.h"
 
-#include <logram/package.h>
+#include <logram/databasepackage.h>
 #include <logram/packagemetadata.h>
 
 #include <QString>
@@ -56,7 +56,7 @@ void App::find(const QString &pattern)
     {
         int id = pkgs.at(i);
         
-        Package *pkg = ps->package(id);
+        DatabasePackage *pkg = ps->package(id);
         
         int sz = 0;
         
@@ -103,7 +103,7 @@ void App::showpkg(const QString &name, bool changelog)
         v = name.section('=', 1, -1);
     }
 
-    Package *pkg;
+    DatabasePackage *pkg;
     
     if (!ps->package(n, v, pkg))
     {

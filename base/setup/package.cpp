@@ -23,7 +23,7 @@
 #include "app.h"
 
 #include <logram/solver.h>
-#include <logram/package.h>
+#include <logram/databasepackage.h>
 #include <logram/packagelist.h>
 
 #include <iostream>
@@ -73,7 +73,7 @@ void App::add(const QStringList &packages)
 
 void App::upgrade()
 {
-    QList<Package *> pkgs = ps->upgradePackages();
+    QList<DatabasePackage *> pkgs = ps->upgradePackages();
     int instSize, dlSize;
     
     // Vérifier qu'il y a bien quelque-chose à faire
@@ -155,8 +155,8 @@ void App::upgrade()
     
     foreach(int index, numPkgs)
     {
-        Package *pkg = pkgs.at(index);
-        Package *other = pkg->upgradePackage();
+        DatabasePackage *pkg = pkgs.at(index);
+        DatabasePackage *other = pkg->upgradePackage();
             
         if (other != 0)
         {
@@ -197,6 +197,18 @@ static QString actionString(Solver::Action act)
         default:
             return QString();
     }
+}
+
+void App::displayPackages(QList<Logram::DatabasePackage *> *packages, int &instSize, int &dlSize, bool showType)
+{
+    QList<Package *> pkgs;
+    
+    for (int i=0; i<packages->count(); ++i)
+    {
+        pkgs.append(packages->at(i));
+    }
+    
+    displayPackages(&pkgs, instSize, dlSize, showType);
 }
 
 void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize, bool showType)
@@ -288,10 +300,12 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
         }
         else
         {
+            Package *opkg = pkg->upgradePackage();
+            
             cout << ' '
                  << COLOR(pkg->version(), "32")
                  << " → "
-                 << COLOR(pkg->newerVersion(), "32")
+                 << COLOR(opkg->version(), "32")
                  << endl
                  << "        "
                  << qPrintable(pkg->shortDesc())

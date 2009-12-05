@@ -26,6 +26,8 @@
 #include "packagemetadata.h"
 #include "communication.h"
 
+#include "databasepackage.h"
+
 #include <QtDebug>
 
 #include <QCoreApplication>
@@ -42,60 +44,40 @@ using namespace Logram;
 
 struct Package::Private
 {
-    int index, upgradeIndex;
+    int upgradeIndex;
     PackageSystem *ps;
     DatabaseReader *psd;
 
-    bool depok;
-    QList<Depend *> deps;
-
     Solver::Action action;
-
-    // Téléchargement
-    QString waitingDest;
 
     // Installation
     QProcess *installProcess;
     QString installCommand;
     QString readBuf;
-    Package *upd;
+    DatabasePackage *upd;
     
     // Métadonnées
     PackageMetaData *md;
-};
-
-struct Depend::Private
-{
-    _Depend *dep;
-    DatabaseReader *psd;
-
-    QList<Depend *> subdeps;
 };
 
 /*************************************
 ******* Package **********************
 *************************************/
 
-Package::Package(int index, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action) : QObject(ps)
+Package::Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action) : QObject(ps)
 {
     d = new Private;
-    d->index = index;
     d->upgradeIndex = -1;
     d->ps = ps;
     d->psd = psd;
-    d->depok = false;
     d->action = _action;
     d->md = 0;
     d->installProcess = 0;
     d->upd = 0;
-
-    connect(ps, SIGNAL(downloadEnded(Logram::ManagedDownload *)), this, SLOT(downloadEnded(Logram::ManagedDownload *)));
 }
 
 Package::~Package()
 {
-    qDeleteAll(d->deps);
-    
     if (d->installProcess != 0)
     {
         delete d->installProcess;
@@ -135,7 +117,7 @@ void Package::process()
         d->installCommand = QString("/usr/bin/helperscript install \"%1\" \"%2\" \"%3\" \"%4\"")
             .arg(name())
             .arg(version())
-            .arg(d->waitingDest)
+            .arg(tlzFileName())
             .arg(d->ps->installRoot());
     }
     else if (action() == Solver::Remove)
@@ -156,8 +138,8 @@ void Package::process()
     {
         d->installCommand = QString("/usr/bin/helperscript update \"%1\" \"%2\" \"%3\" \"%4\" \"%5\"")
             .arg(name())
-            .arg(newerVersion())
-            .arg(d->waitingDest)
+            .arg(upgradePackage()->version())
+            .arg(tlzFileName())
             .arg(d->ps->installRoot())
             .arg(version());
     }
@@ -227,7 +209,6 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     
     // Enregistrer le paquet dans la liste des paquets installés pour le prochain setup update
     QSettings *set = d->ps->installedPackagesList();
-    _Package *pkg = d->psd->package(d->index);
     
     if (action() == Solver::Install)
     {
@@ -259,9 +240,9 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         set->endGroup();
 
         // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
-        pkg->idate = QDateTime::currentDateTime().toTime_t();
-        pkg->iby = QString(getenv("UID")).toInt();
-        pkg->state = PACKAGE_STATE_INSTALLED;
+        registerState(QDateTime::currentDateTime().toTime_t(), 
+                      QString(getenv("UID")).toInt(),
+                      PACKAGE_STATE_INSTALLED);
     }
     else if (action() == Solver::Update)
     {
@@ -295,15 +276,14 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         set->endGroup();
 
         // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
-        pkg->idate = QDateTime::currentDateTime().toTime_t();
-        pkg->iby = QString(getenv("UID")).toInt();
-        pkg->state = PACKAGE_STATE_NOTINSTALLED;
+        registerState(QDateTime::currentDateTime().toTime_t(), 
+                      QString(getenv("UID")).toInt(),
+                      PACKAGE_STATE_NOTINSTALLED);
         
-        // Également pour l'autre paquet (le C++ autorise l'accès aux membres privés d'autres instances)
-        _Package *opkg = d->psd->package(other->d->index);
-        opkg->idate = pkg->idate;
-        opkg->iby = pkg->iby;
-        opkg->state = PACKAGE_STATE_INSTALLED;
+        // Également pour l'autre paquet
+        other->registerState(QDateTime::currentDateTime().toTime_t(), 
+                             QString(getenv("UID")).toInt(),
+                             PACKAGE_STATE_INSTALLED);
     }
     else if (action() == Solver::Remove)
     {
@@ -313,18 +293,18 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         set->endGroup();
         
         // Également dans la base de donnée binaire, avec l'heure et l'UID de celui qui a supprimé le paquet
-        pkg->state = PACKAGE_STATE_REMOVED;
-        pkg->idate = QDateTime::currentDateTime().toTime_t();
-        pkg->iby = QString(getenv("UID")).toInt();
+        registerState(QDateTime::currentDateTime().toTime_t(), 
+                      QString(getenv("UID")).toInt(),
+                      PACKAGE_STATE_REMOVED);
     }
     else if (action() == Solver::Purge)
     {
         // Effacer toute trace du paquet
         set->remove(name());
         
-        pkg->state = PACKAGE_STATE_NOTINSTALLED;
-        pkg->idate = 0;
-        pkg->iby = 0;
+        registerState(0, 
+                      0,
+                      PACKAGE_STATE_NOTINSTALLED);
     }
 
     // Supprimer le processus
@@ -335,160 +315,9 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
     emit proceeded(true);
 }
 
-bool Package::download()
-{
-    QString fname, r, type, u;
-    
-    if (action() == Solver::Remove || action() == Solver::Purge)
-    {
-        // Pas besoin de télécharger
-        emit downloaded(true);
-        return true;
-    }
-    else if (action() == Solver::Install)
-    {
-        // Télécharger le paquet
-        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
-        r = repo();
-        type = d->ps->repoType(r);
-        u = d->ps->repoUrl(r) + "/" + url();
-    }
-    else /* Update */
-    {
-        Package *other = upgradePackage();
-        
-        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + other->url().section('/', -1, -1);
-        r = other->repo();
-        type = d->ps->repoType(r);
-        u = d->ps->repoUrl(r) + "/" + other->url();
-    }
-    
-    d->waitingDest = fname;
-        
-    ManagedDownload *md;
-
-    return d->ps->download(type, u, fname, false, md); // Non-bloquant
-        
-}
-
-void Package::downloadEnded(ManagedDownload *md)
-{
-    if (md != 0)
-    {
-        if (md->destination == d->waitingDest)
-        {
-            if (md->error)
-            {
-                delete md;
-                
-                emit downloaded(false);
-                return;
-            }
-            
-            // Vérifier le sha1sum du paquet
-            QFile fl(d->waitingDest);
-            
-            if (!fl.open(QIODevice::ReadOnly))
-            {
-                PackageError *err = new PackageError;
-                err->type = PackageError::OpenFileError;
-                err->info = d->waitingDest;
-                
-                d->ps->setLastError(err);
-            
-                delete md;
-                emit downloaded(false);
-                return;
-            }
-            
-            QByteArray contents = fl.readAll();
-            fl.close();
-            
-            QString sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
-            
-            // Comparer les hashs
-            QString myHash;
-            
-            if (action() == Solver::Update)
-            {
-                myHash = upgradePackage()->packageHash();
-            }
-            else
-            {
-                myHash = packageHash();
-            }
-            
-            if (sha1sum != myHash)
-            {
-                PackageError *err = new PackageError;
-                err->type = PackageError::SHAError;
-                err->info = name();
-                err->more = md->url;
-                
-                d->ps->setLastError(err);
-                
-                delete md;
-                emit downloaded(false);
-                return;
-            }
-            
-            // On a téléchargé le paquet !
-            delete md;
-            emit downloaded(true);
-        }
-    }
-}
-
 Solver::Action Package::action()
 {
     return d->action;
-}
-
-bool Package::isValid()
-{
-    return d->index != -1;
-}
-
-QList<Package *> Package::versions()
-{
-    QList<int> pkgs = d->psd->packagesOfString(0, d->psd->package(d->index)->name, DEPEND_OP_NOVERSION);
-    QList<Package *> rs;
-
-    foreach(int pkg, pkgs)
-    {
-        Package *pk = new Package(pkg, d->ps, d->psd);
-        rs.append(pk);
-    }
-
-    return rs;
-}
-
-QList<Depend *> Package::depends()
-{
-    if (d->depok)
-    {
-        // On a les dépendances en cache
-        return d->deps;
-    }
-
-    // Trouver les dépendances
-    QList<_Depend *> mdeps = d->psd->depends(d->index);
-    QList<Depend *> rs;
-    
-    // Créer les dépendances pour tout ça
-    Depend *dep;
-    
-    for (int i=0; i<mdeps.count(); ++i)
-    {
-        dep = new Depend(mdeps.at(i), d->psd);
-        rs.append(dep);
-    }
-
-    // Mettre en cache
-    d->deps = rs;
-    d->depok = true;
-
-    return rs;
 }
 
 QString Package::dependsToString(const QList<Depend *> &deps, int type)
@@ -518,216 +347,12 @@ QString Package::dependsToString(const QList<Depend *> &deps, int type)
     return rs;
 }
 
-QString Package::name()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->name));
-}
-
-QString Package::version()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->version));
-}
-
-QString Package::newerVersion()
-{
-    if (d->upgradeIndex == -1)
-    {
-        return QString();
-    }
-    
-    _Package *pkg = d->psd->package(d->upgradeIndex);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->version));
-}
-
-QString Package::maintainer()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->maintainer));
-}
-
-QString Package::shortDesc()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(true, pkg->short_desc));
-}
-
-QString Package::source()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->source));
-}
-
-QString Package::repo()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->repo));
-}
-
-QString Package::section()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->section));
-}
-
-QString Package::distribution()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->distribution));
-}
-
-QString Package::license()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->license));
-}
-
-QString Package::arch()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->arch));
-}
-
-QString Package::packageHash()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->pkg_hash));
-}
-
-QString Package::metadataHash()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return QString();
-    
-    return QString(d->psd->string(false, pkg->mtd_hash));
-}
-
-QString Package::url(UrlType type)
-{
-    // Construire la partie premières_lettres/nom
-    QString n = name();
-    QString d;
-    
-    if (n.startsWith("lib"))
-    {
-        d = n.left(4);
-    }
-    else
-    {
-        d = n.left(1);
-    }
-    
-    // Compléter en fonction du type demandé
-    if (type == Binary)
-    {
-        return "pool/" + d + "/" + n + "/" + n + "~" + version() + "." + arch() + ".tlz";
-    }
-    else
-    {
-        return "metadata/" + d + "/" + n + "/" + n + "~" + version() + ".metadata.xml.lzma";
-    }
-}
-
-bool Package::isGui()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return false;
-    
-    return pkg->is_gui;
-}
-
-int Package::downloadSize()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return false;
-    
-    return pkg->dsize;
-}
-
-int Package::installSize()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return false;
-    
-    return pkg->isize;
-}
-
-
-QDateTime Package::installedDate()
-{
-    QDateTime rs;
-    _Package *pkg = d->psd->package(d->index);
-
-    rs.setTime_t(pkg->idate);
-    
-    return rs;
-}
-
-int Package::installedBy()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return false;
-    
-    return pkg->iby;
-}
-
-int Package::status()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return false;
-    
-    return pkg->state;
-}
-
 void Package::setUpgradePackage(int i)
 {
     d->upgradeIndex = i;
 }
 
-Package *Package::upgradePackage()
+DatabasePackage *Package::upgradePackage()
 {
     if (d->upgradeIndex == -1)
     {
@@ -736,7 +361,7 @@ Package *Package::upgradePackage()
     
     if (d->upd == 0)
     {
-        d->upd = new Package(d->upgradeIndex, d->ps, d->psd, Solver::Install);
+        d->upd = new DatabasePackage(d->upgradeIndex, d->ps, d->psd, Solver::Install);
     }
     
     return d->upd;
@@ -746,35 +371,7 @@ Package *Package::upgradePackage()
 ******* Depend ***********************
 *************************************/
 
-Depend::Depend(_Depend *dep, DatabaseReader *psd)
+Depend::Depend()
 {
-    d = new Private;
-    d->dep = dep;
-    d->psd = psd;
-}
-
-Depend::~Depend()
-{
-    qDeleteAll(d->subdeps);
-    delete d;
-}
-
-QString Depend::name()
-{
-    return d->psd->string(false, d->dep->pkgname);
-}
-
-QString Depend::version()
-{
-    return d->psd->string(false, d->dep->pkgver);
-}
-
-int8_t Depend::type()
-{
-    return d->dep->type;
-}
-
-int8_t Depend::op()
-{
-    return d->dep->op;
+    // rien
 }

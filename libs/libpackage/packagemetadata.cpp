@@ -23,6 +23,7 @@
 #include "packagemetadata.h"
 #include "packagesystem.h"
 #include "package.h"
+#include "databasepackage.h"
 
 #include <QProcess>
 #include <QFile>
@@ -54,8 +55,16 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     
     QString fname = ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + pkg->name() + "_" + pkg->version() + "/metadata.xml";
     
-    // Si le paquet n'est pas téléchargé, télécharger les métadonnées
-    if (pkg->status() != PACKAGE_STATE_INSTALLED || !QFile::exists(fname))
+    if (pkg->origin() == Package::File)
+    {
+        fname = pkg->tlzFileName();
+    }
+    else if (pkg->status() == PACKAGE_STATE_INSTALLED && QFile::exists(fname))
+    {
+        // Déjà téléchargé
+        ;
+    }
+    else
     {
         // Télécharger les métadonnées
         QString repo = pkg->repo();
@@ -64,7 +73,12 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
         
         ManagedDownload *md = new ManagedDownload;
         
-        if (!ps->download(type, ps->repoUrl(repo) + "/" + pkg->url(Package::Metadata), fname, true, md))
+        DatabasePackage *dpkg = (DatabasePackage *)pkg;
+        
+        if (!ps->download(type, ps->repoUrl(repo) 
+                                + "/" 
+                                + dpkg->url(DatabasePackage::Metadata),
+                          fname, true, md))
         {
             d->error = true;
             return;

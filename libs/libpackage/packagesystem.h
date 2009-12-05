@@ -33,6 +33,7 @@ class QSettings;
 namespace Logram
 {
 
+class DatabasePackage;
 class Package;
 class Solver;
 class PackageSystemPrivate;
@@ -79,10 +80,10 @@ class PackageSystem : public QObject
 
         // API publique
         bool packagesByName(const QString &regex, QList<int> &rs);
-        bool package(const QString &name, const QString &version, Package* &rs);
-        Package *package(int id);
+        bool package(const QString &name, const QString &version, DatabasePackage* &rs);
+        DatabasePackage *package(int id);
         bool update();
-        QList<Package *> upgradePackages();
+        QList<DatabasePackage *> upgradePackages();
         Solver *newSolver();
 
         // Fonctions statiques

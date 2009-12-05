@@ -23,7 +23,7 @@
 #include "packagesystem.h"
 #include "databasereader.h"
 #include "databasewriter.h"
-#include "package.h"
+#include "databasepackage.h"
 #include "solver.h"
 
 #include <QSettings>
@@ -222,15 +222,15 @@ bool Logram::PackageSystem::update()
     return true;
 }
 
-QList<Logram::Package *> Logram::PackageSystem::upgradePackages()
+QList<Logram::DatabasePackage *> Logram::PackageSystem::upgradePackages()
 {
     QList<UpgradeInfo> upds = d->dr->upgradePackages();
-    QList<Package *> rs;
+    QList<DatabasePackage *> rs;
     
     // Créer les paquets à mettre à jour
     foreach(const UpgradeInfo &inf, upds)
     {
-        Package *pkg = new Package(inf.installedPackage, this, d->dr, Solver::Update);
+        DatabasePackage *pkg = new DatabasePackage(inf.installedPackage, this, d->dr, Solver::Update);
         
         pkg->setUpgradePackage(inf.newPackage);
         
@@ -245,7 +245,7 @@ bool Logram::PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
     return d->dr->packagesByName(regex, rs);
 }
 
-bool Logram::PackageSystem::package(const QString &name, const QString &version, Package* &rs)
+bool Logram::PackageSystem::package(const QString &name, const QString &version, DatabasePackage* &rs)
 {
     int i;
     
@@ -254,14 +254,14 @@ bool Logram::PackageSystem::package(const QString &name, const QString &version,
         return false;
     }
     
-    rs = new Package(i, this, d->dr);
+    rs = new DatabasePackage(i, this, d->dr);
 
     return true;
 }
 
-Package *Logram::PackageSystem::package(int id)
+DatabasePackage *Logram::PackageSystem::package(int id)
 {
-    return new Package(id, this, d->dr);
+    return new DatabasePackage(id, this, d->dr);
 }
 
 bool Logram::PackageSystem::filesOfPackage(const QString &packageName, QStringList &rs)
