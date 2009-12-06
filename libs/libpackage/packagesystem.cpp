@@ -367,6 +367,7 @@ bool Logram::PackageSystem::download(const QString &type, const QString &url, co
             PackageError *err = new PackageError;
             err->type = PackageError::DownloadError;
             err->info = url;
+            err->more = dest;
             
             setLastError(err);
             
@@ -401,13 +402,24 @@ void Logram::PackageSystem::downloadFinished(QNetworkReply *reply)
 {
     // Savoir si on bloquait
     ManagedDownload *md = d->managedDls.value(reply, 0);
+    QString dlDest;
+
+    if (md != 0)
+    {
+        dlDest = md->destination;
+    }
+    else
+    {
+        dlDest = d->dlDest;
+    }
     
     // Voir s'il y a eu des erreurs
     if (reply->error() != QNetworkReply::NoError)
     {
         PackageError *err = new PackageError;
         err->type = PackageError::DownloadError;
-        err->info = d->dlDest;
+        err->info = reply->url().toString();
+        err->more = dlDest;
         
         setLastError(err);
         
@@ -425,17 +437,6 @@ void Logram::PackageSystem::downloadFinished(QNetworkReply *reply)
     }
 
     // Téléchargement
-    QString dlDest;
-
-    if (md != 0)
-    {
-        dlDest = md->destination;
-    }
-    else
-    {
-        dlDest = d->dlDest;
-    }
-    
     QFile fl(dlDest);
 
     if (!fl.open(QIODevice::WriteOnly))
