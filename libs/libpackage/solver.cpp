@@ -24,6 +24,7 @@
 #include "packagesystem.h"
 #include "databasereader.h"
 #include "databasepackage.h"
+#include "filepackage.h"
 #include "packagelist.h"
 
 #include <QVector>
@@ -66,6 +67,7 @@ struct Solver::Private
     
     // Permet de gérer correctement les suggestions
     QList<int> topLevelPackages;
+    QList<FilePackage *> filePackages;
 
     // Liste publique
     QList<PackageList *> lists;
@@ -115,6 +117,7 @@ bool Solver::solve()
 {
     QList<int> lists;
     QVector<Pkg> pkgsToAdd;
+    QList<int> pkgsIndexes;
     Pkg p;
 
     // Créer la première liste
@@ -124,33 +127,109 @@ bool Solver::solve()
     // Explorer les paquets voulus
     foreach(const QString &pkg, d->wantedPackages.keys())
     {
-        Action act = d->wantedPackages.value(pkg);
-        d->topLevelPackages = d->psd->packagesByVString(pkg);
-        
-        if (d->topLevelPackages.count() == 0)
+        if (pkg.endsWith(".tlz"))
         {
-            // Aucun paquet ne correspond
-            PackageError *err = new PackageError;
-            err->type = PackageError::PackageNotFound;
-            err->info = pkg;
-            
-            d->ps->setLastError(err);
-            
-            return false;
-        }
+            // Paquet local
+            FilePackage *fpkg = new FilePackage(pkg, d->ps, d->psd, Solver::None);
         
-        foreach(int i, d->topLevelPackages)
-        {
-            p.index = i;
-            p.action = act;
-            p.reallyWanted = true;
+            if (!fpkg->isValid())
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::PackageNotFound;
+                err->info = pkg;
+                
+                d->ps->setLastError(err);
+                
+                return false;
+            }
             
-            pkgsToAdd.append(p);
-        }
+            // Explorer les dépendances du paquet
+            foreach (Depend *dep, fpkg->depends())
+            {   
+                // Mapper les DEPEND_TYPE en Action
+                Solver::Action act = Solver::None;
 
-        d->addPkgs(pkgsToAdd, lists);
-        
-        pkgsToAdd.clear();
+                if (dep->type() == DEPEND_TYPE_DEPEND
+                || (dep->type() == DEPEND_TYPE_SUGGEST && d->installSuggests))
+                {
+                    act = Solver::Install;
+                }
+                else if (dep->type() == DEPEND_TYPE_CONFLICT || dep->type() == DEPEND_TYPE_REPLACE)
+                {
+                    act = Solver::Remove;
+                }
+                else
+                {
+                    continue;
+                }
+                
+                pkgsIndexes = d->psd->packagesByVString(dep->name(), dep->version(), dep->op());
+
+                if (pkgsIndexes.count() == 0)
+                {
+                    // Aucun paquet ne correspond
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::PackageNotFound;
+                    err->info = pkg;
+                    
+                    d->ps->setLastError(err);
+                    
+                    return false;
+                }
+                
+                // Créer le pkgsToAdd
+                Pkg p;
+                
+                foreach(int i, pkgsIndexes)
+                {
+                    p.index = i;
+                    p.action = act;
+                    p.reallyWanted = true;
+                    
+                    pkgsToAdd.append(p);
+                }
+                
+                d->addPkgs(pkgsToAdd, lists);
+                
+                pkgsToAdd.clear();
+            }
+            
+            // Ajouter le paquet aux paquets à ajouter dans toutes les listes
+            fpkg->setAction(Solver::Install);
+            d->filePackages.append(fpkg);
+        }
+        else
+        {
+            Action act = d->wantedPackages.value(pkg);
+            pkgsIndexes = d->psd->packagesByVString(pkg);
+            
+            if (pkgsIndexes.count() == 0)
+            {
+                // Aucun paquet ne correspond
+                PackageError *err = new PackageError;
+                err->type = PackageError::PackageNotFound;
+                err->info = pkg;
+                
+                d->ps->setLastError(err);
+                
+                return false;
+            }
+            
+            foreach(int i, pkgsIndexes)
+            {
+                p.index = i;
+                p.action = act;
+                p.reallyWanted = true;
+                
+                pkgsToAdd.append(p);
+            }
+
+            d->addPkgs(pkgsToAdd, lists);
+            
+            pkgsToAdd.clear();
+            
+            d->topLevelPackages << pkgsIndexes;
+        }
     }
 
 #if 0
@@ -178,6 +257,12 @@ bool Solver::solve()
         }
         
         plist->setWrong(d->wrongLists.contains(i));
+        
+        // Ajouter les éventuels paquets fichiers enregistrés comme tel
+        foreach(FilePackage *fpkg, d->filePackages)
+        {
+            plist->addPackage(new FilePackage(*fpkg));
+        }
 
         // La liste est bonne, créer les paquets
         const QVector<Pkg> &pkgs = d->packages.at(i);
@@ -250,6 +335,7 @@ bool Solver::solve()
     d->wrongLists.clear();
     d->wantedPackages.clear();
     d->packages.clear();
+    qDeleteAll(d->filePackages);
     
     return true;
 }

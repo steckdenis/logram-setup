@@ -89,7 +89,7 @@ void App::showFiles(const QString &packageName)
 
     foreach(const QString &file, files)
     {
-        cout << qPrintable(file);
+        cout << qPrintable(file) << endl;
     }
 }
 
@@ -103,7 +103,7 @@ void App::showpkg(const QString &name, bool changelog)
         v = name.section('=', 1, -1);
     }
 
-    DatabasePackage *pkg;
+    Package *pkg;
     
     if (!ps->package(n, v, pkg))
     {
@@ -249,31 +249,36 @@ void App::showpkg(const QString &name, bool changelog)
     }
 
     // Versions disponibles
-    cout << endl << COLOR(tr("Versions disponibles : "), "35") << endl;
-    cout << qPrintable(tr("Légende : * = Disponible, I = installée, R = supprimée")) << endl << endl;
-
-    QList<Package *> vers = pkg->versions();
-
-    foreach(Package *ver, vers)
+    if (pkg->origin() == Package::Database)
     {
-        if (ver->status() == PACKAGE_STATE_INSTALLED)
+        DatabasePackage *dpkg = (DatabasePackage*)pkg;
+        
+        cout << endl << COLOR(tr("Versions disponibles : "), "35") << endl;
+        cout << qPrintable(tr("Légende : * = Disponible, I = installée, R = supprimée")) << endl << endl;
+
+        QList<Package *> vers = dpkg->versions();
+
+        foreach(Package *ver, vers)
         {
-            cout << COLORC("  I ", "34");
-        }
-        else if (ver->status() == PACKAGE_STATE_REMOVED)
-        {
-            cout << COLORC("  R ", "31");
-        }
-        else
-        {
-            cout << "  * ";
+            if (ver->status() == PACKAGE_STATE_INSTALLED)
+            {
+                cout << COLORC("  I ", "34");
+            }
+            else if (ver->status() == PACKAGE_STATE_REMOVED)
+            {
+                cout << COLORC("  R ", "31");
+            }
+            else
+            {
+                cout << "  * ";
+            }
+
+            cout << COLOR(ver->version().leftJustified(26, ' ', true), "32") << ' '
+                << qPrintable(ver->shortDesc()) << endl;
         }
 
-        cout << COLOR(ver->version().leftJustified(26, ' ', true), "32") << ' '
-             << qPrintable(ver->shortDesc()) << endl;
+        cout << endl;
     }
-
-    cout << endl;
     
     if (changelog)
     {

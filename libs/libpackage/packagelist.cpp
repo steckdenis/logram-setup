@@ -114,7 +114,10 @@ PackageList::~PackageList()
     
     for (int i=0; i<count(); ++i)
     {
-        delete at(i);
+        if (at(i)->origin() != Package::File)
+        {
+            delete at(i);
+        }
     }
     
     delete d;

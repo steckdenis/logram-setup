@@ -80,7 +80,7 @@ class PackageSystem : public QObject
 
         // API publique
         bool packagesByName(const QString &regex, QList<int> &rs);
-        bool package(const QString &name, const QString &version, DatabasePackage* &rs);
+        bool package(const QString &name, const QString &version, Package* &rs);
         DatabasePackage *package(int id);
         bool update();
         QList<DatabasePackage *> upgradePackages();

@@ -76,6 +76,19 @@ Package::Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action)
     d->upd = 0;
 }
 
+Package::Package(const Package &other) : QObject(other.d->ps)
+{
+    d = new Private;
+    
+    d->upgradeIndex = other.d->upgradeIndex;
+    d->ps = other.d->ps;
+    d->psd = other.d->psd;
+    d->action = other.d->action;
+    d->md = 0;
+    d->installProcess = 0;
+    d->upd = 0;
+}
+
 Package::~Package()
 {
     if (d->installProcess != 0)
@@ -318,6 +331,11 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
 Solver::Action Package::action()
 {
     return d->action;
+}
+
+void Package::setAction(Solver::Action act)
+{
+    d->action = act;
 }
 
 QString Package::dependsToString(const QList<Depend *> &deps, int type)

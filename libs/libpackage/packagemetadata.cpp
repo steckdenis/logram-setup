@@ -24,6 +24,7 @@
 #include "packagesystem.h"
 #include "package.h"
 #include "databasepackage.h"
+#include "filepackage.h"
 
 #include <QProcess>
 #include <QFile>
@@ -57,7 +58,10 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
     
     if (pkg->origin() == Package::File)
     {
-        fname = pkg->tlzFileName();
+        FilePackage *fpkg = (FilePackage *)pkg;
+        
+        setContent(fpkg->metadataContents());
+        return;
     }
     else if (pkg->status() == PACKAGE_STATE_INSTALLED && QFile::exists(fname))
     {

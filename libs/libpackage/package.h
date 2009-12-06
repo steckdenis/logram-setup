@@ -67,6 +67,7 @@ class Package : public QObject
     
     public:
         Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
+        Package(const Package &other);
         ~Package();
         
         enum Origin
@@ -108,6 +109,7 @@ class Package : public QObject
         // Commun à tous les types de paquets
         void process();
         Solver::Action action();
+        void setAction(Solver::Action act);
         PackageMetaData *metadata();
 
         // Utilitaire

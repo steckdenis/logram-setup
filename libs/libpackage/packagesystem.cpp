@@ -24,6 +24,7 @@
 #include "databasereader.h"
 #include "databasewriter.h"
 #include "databasepackage.h"
+#include "filepackage.h"
 #include "solver.h"
 
 #include <QSettings>
@@ -245,18 +246,41 @@ bool Logram::PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
     return d->dr->packagesByName(regex, rs);
 }
 
-bool Logram::PackageSystem::package(const QString &name, const QString &version, DatabasePackage* &rs)
+bool Logram::PackageSystem::package(const QString &name, const QString &version, Package* &rs)
 {
-    int i;
-    
-    if (!d->dr->package(name, version, i))
+    // Si le nom se termine par .tlz, c'est un paquet local
+    if (name.endsWith(".tlz"))
     {
-        return false;
+        FilePackage *pkg = new FilePackage(name, this, d->dr, Solver::None);
+        
+        if (!pkg->isValid())
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::PackageNotFound;
+            err->info = name;
+            
+            setLastError(err);
+            
+            return false;
+        }
+        
+        rs = pkg;
+        return true;
     }
-    
-    rs = new DatabasePackage(i, this, d->dr);
+    else
+    {
+        // Paquet dans la base de donnée
+        int i;
+        
+        if (!d->dr->package(name, version, i))
+        {
+            return false;
+        }
+        
+        rs = new DatabasePackage(i, this, d->dr);
 
-    return true;
+        return true;
+    }
 }
 
 DatabasePackage *Logram::PackageSystem::package(int id)
@@ -266,45 +290,70 @@ DatabasePackage *Logram::PackageSystem::package(int id)
 
 bool Logram::PackageSystem::filesOfPackage(const QString &packageName, QStringList &rs)
 {
-    rs = QStringList();
-    
-    // Vérifier que le paquet existe
-    if (!d->ipackages->childGroups().contains(packageName))
+    if (packageName.endsWith(".tlz"))
     {
-        PackageError *err = new PackageError;
-        err->type = PackageError::PackageNotFound;
-        err->info = packageName;
+        // Paquet local
+        FilePackage *pkg = new FilePackage(packageName, this, d->dr, Solver::None);
         
-        setLastError(err);
+        if (!pkg->isValid())
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::PackageNotFound;
+            err->info = packageName;
+            
+            setLastError(err);
+            
+            return false;
+        }
         
-        return false;
+        rs = pkg->files();
+        
+        delete pkg;
+        
+        return true;
     }
-
-    // La liste des fichiers se trouve dans /var/cache/lgrpkg/db/pkgs/<nom>_<version>/files.list
-    QString version = d->ipackages->value(packageName + "/Version").toString();
-    QString iroot = d->ipackages->value(packageName + "/InstallRoot").toString();
-    QString fileName = varRoot() + "/var/cache/lgrpkg/db/pkgs/" + packageName + "_" + version + "/files.list";
-
-    QFile fl(fileName);
-
-    if (!fl.open(QIODevice::ReadOnly))
+    else
     {
-        PackageError *err = new PackageError;
-        err->type = PackageError::OpenFileError;
-        err->info = fileName;
+        rs = QStringList();
         
-        setLastError(err);
-        
-        return false;
-    }
+        // Vérifier que le paquet existe
+        if (!d->ipackages->childGroups().contains(packageName))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::PackageNotFound;
+            err->info = packageName;
+            
+            setLastError(err);
+            
+            return false;
+        }
 
-    // Lire les lignes et les ajouter au résultat
-    while (!fl.atEnd())
-    {
-        rs.append(fl.readLine().replace("./", iroot.toAscii() + "/"));
+        // La liste des fichiers se trouve dans /var/cache/lgrpkg/db/pkgs/<nom>_<version>/files.list
+        QString version = d->ipackages->value(packageName + "/Version").toString();
+        QString iroot = d->ipackages->value(packageName + "/InstallRoot").toString();
+        QString fileName = varRoot() + "/var/cache/lgrpkg/db/pkgs/" + packageName + "_" + version + "/files.list";
+
+        QFile fl(fileName);
+
+        if (!fl.open(QIODevice::ReadOnly))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::OpenFileError;
+            err->info = fileName;
+            
+            setLastError(err);
+            
+            return false;
+        }
+
+        // Lire les lignes et les ajouter au résultat
+        while (!fl.atEnd())
+        {
+            rs.append(fl.readLine().replace("./", iroot.toAscii() + "/").trimmed());
+        }
+        
+        return true;
     }
-    
-    return true;
 }
 
 Solver *Logram::PackageSystem::newSolver()

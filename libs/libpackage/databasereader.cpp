@@ -117,17 +117,13 @@ bool DatabaseReader::packagesByName(const QString &regex, QList<int> &rs)
     return true;
 }
 
-QList<int> DatabaseReader::packagesByVString(const QString &verStr)
+QList<int> DatabaseReader::packagesByVString(const QString &name, const QString &version, int op)
 {
     QList<int> rs;
     int32_t count = *(int32_t *)m_packages;
-
-    // Parser la version
-    QString name, version, pver, pname;
-    int op;
-
-    op = PackageSystem::parseVersion(verStr, name, version);
-
+    
+    QString pname, pver;
+    
     for (int i=0; i<count; ++i)
     {
         _Package *pkg = package(i);
@@ -152,6 +148,17 @@ QList<int> DatabaseReader::packagesByVString(const QString &verStr)
     }
 
     return rs;
+}
+
+QList<int> DatabaseReader::packagesByVString(const QString &verStr)
+{
+    // Parser la version
+    QString name, version;
+    int op;
+
+    op = PackageSystem::parseVersion(verStr, name, version);
+
+    return packagesByVString(name, version, op);
 }
 
 bool DatabaseReader::package(const QString &name, const QString &version, int &rs)

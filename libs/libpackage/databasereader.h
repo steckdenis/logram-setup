@@ -61,6 +61,7 @@ class DatabaseReader
         bool package(const QString &name, const QString &version, int &rs);
         bool packagesByName(const QString &regex, QList<int> &rs);
         QList<int> packagesByVString(const QString &verStr);
+        QList<int> packagesByVString(const QString &name, const QString &version, int op);
         QList<_Depend *> depends(int pkgIndex);
         QList<int> packagesOfString(int stringIndex, int nameIndex, int op);
         QList<UpgradeInfo> upgradePackages();
