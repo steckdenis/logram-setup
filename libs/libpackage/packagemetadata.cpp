@@ -40,58 +40,32 @@ using namespace Logram;
 struct PackageMetaData::Private
 {
     PackageSystem *ps;
-    Package *pkg;
     
     QDomElement currentPackage;
     
     bool error;
 };
 
-PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument(), QObject(pkg)
+PackageMetaData::PackageMetaData(PackageSystem *ps)
+    : QDomDocument(), QObject(ps)
 {
     d = new Private;
-    d->error = false;
+    d->error = true;    // Encore invalide
     d->ps = ps;
-    d->pkg = pkg;
+}
+
+void PackageMetaData::loadFile(const QString &fileName, const QByteArray &sha1hash, bool decompress)
+{    
+    // Décompresser les métadonnées
+    QString fname = fileName;
     
-    QString fname = ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + pkg->name() + "_" + pkg->version() + "/metadata.xml";
-    
-    if (pkg->origin() == Package::File)
+    if (decompress)
     {
-        FilePackage *fpkg = (FilePackage *)pkg;
+        QString cmd = "unlzma";
+        QStringList args;
         
-        setContent(fpkg->metadataContents());
-        return;
-    }
-    else if (pkg->status() == PACKAGE_STATE_INSTALLED && QFile::exists(fname))
-    {
-        // Déjà téléchargé
-        ;
-    }
-    else
-    {
-        // Télécharger les métadonnées
-        QString repo = pkg->repo();
-        QString type = ps->repoType(repo);
-        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.lzma";
+        args << fname;
         
-        ManagedDownload *md = new ManagedDownload;
-        
-        DatabasePackage *dpkg = (DatabasePackage *)pkg;
-        
-        if (!ps->download(type, ps->repoUrl(repo) 
-                                + "/" 
-                                + dpkg->url(DatabasePackage::Metadata),
-                          fname, true, md))
-        {
-            d->error = true;
-            return;
-        }
-        
-        delete md;
-        
-        // Décompresser les métadonnées
-        QString cmd = "unlzma " + fname;
         fname.remove(".lzma");
         
         if (QFile::exists(fname))
@@ -99,11 +73,11 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
             QFile::remove(fname);
         }
         
-        if (QProcess::execute(cmd) != 0)
+        if (QProcess::execute(cmd, args) != 0)
         {
             PackageError *err = new PackageError;
             err->type = PackageError::ProcessError;
-            err->info = cmd;
+            err->info = cmd + " \"" + fname + '"';
             
             d->ps->setLastError(err);
             
@@ -127,26 +101,80 @@ PackageMetaData::PackageMetaData(Package *pkg, PackageSystem *ps) : QDomDocument
         return;
     }
     
-    QByteArray contents = fl.readAll();
+    QByteArray data = fl.readAll();
     fl.close();
     
     // Vérifier le hash
-    QByteArray sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
-    
-    if (sha1sum != pkg->metadataHash())
+    if (!sha1hash.isNull())
     {
-        PackageError *err = new PackageError;
-        err->type = PackageError::SHAError;
-        err->info = pkg->name();
-        err->more = fname;
+        QByteArray fileSha1 = QCryptographicHash::hash(data, QCryptographicHash::Sha1).toHex();
         
-        d->ps->setLastError(err);
-        
-        d->error = true;
-        return;
+        if (fileSha1 != sha1hash)
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::SHAError;
+            err->info = fname;
+            
+            d->ps->setLastError(err);
+            
+            d->error = true;
+            return;
+        }
     }
     
-    setContent(contents);
+    loadData(data);
+}
+
+void PackageMetaData::loadData(const QByteArray &data)
+{
+    setContent(data);
+    
+    d->error = false;
+}
+
+void PackageMetaData::bindPackage(Package *pkg)
+{
+    QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + pkg->name() + "_" + pkg->version() + "/metadata.xml";
+    
+    if (pkg->origin() == Package::File)
+    {
+        FilePackage *fpkg = (FilePackage *)pkg;
+        
+        loadData(fpkg->metadataContents());
+        return;
+    }
+    else if (pkg->status() == PACKAGE_STATE_INSTALLED && QFile::exists(fname))
+    {
+        // Déjà téléchargé
+        loadFile(fname, QByteArray(), false);
+    }
+    else
+    {
+        // Télécharger les métadonnées
+        QString repo = pkg->repo();
+        QString type = d->ps->repoType(repo);
+        ManagedDownload *md = new ManagedDownload;
+        DatabasePackage *dpkg = (DatabasePackage *)pkg;
+        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.lzma";
+        
+        QString url = d->ps->repoUrl(repo) + "/" + dpkg->url(DatabasePackage::Metadata);
+        
+        if (!d->ps->download(type, url, fname, true, md))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::DownloadError;
+            err->info = url;
+            
+            d->ps->setLastError(err);
+            
+            d->error = true;
+            return;
+        }
+        
+        delete md;
+        
+        loadFile(fname, pkg->metadataHash(), true);
+    }
 }
 
 PackageMetaData::~PackageMetaData()

@@ -24,7 +24,6 @@
 #include "packagesystem.h"
 
 // Qt
-#include <QCryptographicHash>
 #include <QFile>
 #include <QFileInfo>
 #include <QByteArray>
@@ -516,14 +515,14 @@ QString FilePackage::arch()
     return d->arch;
 }
 
-QString FilePackage::packageHash()
+QByteArray FilePackage::packageHash()
 {
-    return QString();
+    return QByteArray();
 }
 
-QString FilePackage::metadataHash()
+QByteArray FilePackage::metadataHash()
 {
-    return QString();
+    return QByteArray();
 }
 
 bool FilePackage::isGui()

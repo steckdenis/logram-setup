@@ -34,7 +34,6 @@
 #include <QProcess>
 #include <QSettings>
 #include <QFile>
-#include <QCryptographicHash>
 
 using namespace Logram;
 
@@ -104,7 +103,9 @@ PackageMetaData *Package::metadata()
     if (d->md == 0)
     {
         // On doit récupérer les métadonnées
-        d->md = new PackageMetaData(this, d->ps);
+        d->md = new PackageMetaData(d->ps);
+        
+        d->md->bindPackage(this);
         
         if (d->md->error())
         {

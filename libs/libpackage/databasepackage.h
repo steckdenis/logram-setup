@@ -72,8 +72,8 @@ class DatabasePackage : public Package
         QString license();
         QString arch();
         QString url(UrlType type = DatabasePackage::Binary);
-        QString packageHash();
-        QString metadataHash();
+        QByteArray packageHash();
+        QByteArray metadataHash();
         bool isGui();
         
         QDateTime installedDate();

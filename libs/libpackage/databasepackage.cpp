@@ -261,6 +261,13 @@ QList<Depend *> DatabasePackage::depends()
     \
     return QString(d->psd->string(translate, pkg->attr));
 
+#define PKG_QBA_ATTR(translate, attr) \
+    _Package *pkg = d->psd->package(d->index); \
+    \
+    if (pkg == 0) return QByteArray(); \
+    \
+    return QByteArray(d->psd->string(translate, pkg->attr));
+
 QString DatabasePackage::name()
 {
     PKG_STR_ATTR(false, name)
@@ -311,14 +318,14 @@ QString DatabasePackage::arch()
     PKG_STR_ATTR(false, arch)
 }
 
-QString DatabasePackage::packageHash()
+QByteArray DatabasePackage::packageHash()
 {
-    PKG_STR_ATTR(false, pkg_hash)
+    PKG_QBA_ATTR(false, pkg_hash)
 }
 
-QString DatabasePackage::metadataHash()
+QByteArray DatabasePackage::metadataHash()
 {
-    PKG_STR_ATTR(false, mtd_hash)
+    PKG_QBA_ATTR(false, mtd_hash)
 }
 
 QString DatabasePackage::url(UrlType type)

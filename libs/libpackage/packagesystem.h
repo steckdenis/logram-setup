@@ -126,7 +126,8 @@ class PackageSystem : public QObject
             GlobalDownload,
             Download,
             UpdateDatabase,
-            PackageProcess
+            PackageProcess,
+            ProcessOut
         };
 
         void sendProgress(Progress type, int num, int tot, const QString &msg);

@@ -143,7 +143,11 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     QString cmd = args.at(1).toLower();
 
     // Initialiser le système de paquet si on en a besoin
-    if (cmd != "update")
+    QStringList noInitCommand;
+    
+    noInitCommand << "update" << "download";
+    
+    if (!noInitCommand.contains(cmd))
     {
         if (!ps->init())
         {
@@ -215,6 +219,16 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         showFiles(args.at(2));
     }
+    else if (cmd == "download")
+    {
+        if (args.count() != 3)
+        {
+            help();
+            return;
+        }
+        
+        sourceDownload(args.at(2));
+    }
     else
     {
         help();
@@ -240,6 +254,10 @@ void App::help()
             "    add <packages>     Ajoute des paquets (préfixés de \"-\" pour les supprimer)\n"
             "    files <pkg>        Affiche la liste des fichiers installés par <pkg>\n"
             "    upgrade            Mise à jour des paquets. Lancez update avant.\n"
+            "\n"
+            "Commandes pour la gestion des sources :\n"
+            "    download <src>     Télécharge la source du paquet dont <src> est le\n"
+            "                       metadata.xml.\n"
             "\n"
             "Options (insensible à la casse) :\n"
             "    -S [off]           Active (on) ou pas (off) l'installation des suggestions\n"
@@ -346,6 +364,10 @@ void App::progress(PackageSystem::Progress type, int done, int total, const QStr
             
         case PackageSystem::PackageProcess:
             cout << COLOR(tr("Opération sur "), "34");
+            break;
+            
+        case PackageSystem::ProcessOut:
+            cout << COLOR(tr("Sortie du processus : "), "34");
             break;
     }
     

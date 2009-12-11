@@ -1,5 +1,5 @@
 /*
- * packagemetadata.h
+ * packagesource.h
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,56 +20,49 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __PACKAGEMETADATA_H__
-#define __PACKAGEMETADATA_H__
-
-#include <QtXml/QDomDocument>
+#ifndef __PACKAGESOURCE_H__
+#define __PACKAGESOURCE_H__
 
 #include <QObject>
-#include <QDateTime>
+#include <QVariant>
+#include <QProcess>
+#include <QStringList>
 
 namespace Logram
 {
 
-class Package;
 class PackageSystem;
+class FilePackage;
+class PackageMetaData;
 
-struct ChangeLogEntry
+class PackageSource : public QObject
 {
-    QString version;
-    QString author, email;
-    QString distribution;
-    QDateTime date;
-    QString text;
-};
-
-class PackageMetaData : public QDomDocument, public QObject
-{
+    Q_OBJECT
+    
     public:
-        PackageMetaData(PackageSystem *ps);
-        ~PackageMetaData();
-        bool error() const;
+        PackageSource(PackageSystem *ps);
+        ~PackageSource();
         
-        void loadFile(const QString &fileName, const QByteArray &sha1hash, bool decompress);
-        void loadData(const QByteArray &data);
-        void bindPackage(Package *pkg);
+        enum Option
+        {
+            SourceDir
+        };
         
+        bool setMetaData(const QString &fileName);
+        void setOption(Option opt, const QVariant &value);
+        QVariant option(Option opt, const QVariant &defaultValue);
         
-        QString primaryLang() const;
-        QString stringOfKey(const QDomElement &element) const;
-        QString packageDescription() const;
-        QString packageTitle() const;
-        QString currentPackage() const;
+        bool getSource(bool block = true);
         
-        QList<ChangeLogEntry *> changelog() const;
-        
-        void setCurrentPackage(const QString &name);
+    private slots:
+        void processDataOut();
+        void processTerminated(int exitCode, QProcess::ExitStatus exitStatus);
         
     private:
         struct Private;
         Private *d;
 };
-
+    
 } /* Namespace */
 
 #endif

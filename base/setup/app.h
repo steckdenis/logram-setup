@@ -59,6 +59,9 @@ class App : public QCoreApplication
         void add(const QStringList &packages);
         void showFiles(const QString &packageName);
         
+        // Gestion des sources
+        void sourceDownload(const QString &fileName);
+        
         void error();
         
         void getString(char *buffer, int max_length, const char *def, bool append_return);

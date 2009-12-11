@@ -58,8 +58,8 @@ class FilePackage : public Package
         QString distribution();
         QString license();
         QString arch();
-        QString packageHash();
-        QString metadataHash();
+        QByteArray packageHash();
+        QByteArray metadataHash();
         bool isGui();
         
         QDateTime installedDate();

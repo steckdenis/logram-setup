@@ -12,8 +12,8 @@ QT += xml network script
 LIBS += -larchive
 
 # Input
-HEADERS += packagesystem.h databasereader.h package.h databasewriter.h solver.h packagemetadata.h communication.h packagelist.h databasepackage.h filepackage.h
-SOURCES += packagesystem.cpp databasereader.cpp package.cpp databasewriter.cpp solver.cpp packagemetadata.cpp communication.cpp packagelist.cpp databasepackage.cpp filepackage.cpp
+HEADERS += packagesystem.h databasereader.h package.h databasewriter.h solver.h packagemetadata.h communication.h packagelist.h databasepackage.h filepackage.h packagesource.h
+SOURCES += packagesystem.cpp databasereader.cpp package.cpp databasewriter.cpp solver.cpp packagemetadata.cpp communication.cpp packagelist.cpp databasepackage.cpp filepackage.cpp packagesource.cpp
 
 includes.files = *.h
 includes.path = /usr/include/logram
@@ -26,7 +26,7 @@ scripts.path = /etc/lgrpkg/scripts
 slist.files = sources.list.sample
 slist.path = /etc/lgrpkg
 
-hscript.files = helperscript
-hscript.path = /usr/bin
+hscript.files = scriptapi
+hscript.path = /usr/libexec
 
 INSTALLS += includes target scripts hscript

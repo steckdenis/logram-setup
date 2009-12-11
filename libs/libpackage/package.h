@@ -92,8 +92,8 @@ class Package : public QObject
         virtual QString distribution() = 0;
         virtual QString license() = 0;
         virtual QString arch() = 0;
-        virtual QString metadataHash() = 0;
-        virtual QString packageHash() = 0;
+        virtual QByteArray metadataHash() = 0;
+        virtual QByteArray packageHash() = 0;
         virtual bool isGui() = 0;
         virtual int status() = 0;
         

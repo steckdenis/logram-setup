@@ -80,6 +80,7 @@ Communication::Communication(PackageSystem *ps, Package *pkg, const QString &nam
         if (comm.attribute("name") == name)
         {
             d->element = comm;
+            break;
         }
         comm = comm.nextSiblingElement("communication");
     }
