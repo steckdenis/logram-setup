@@ -52,6 +52,7 @@ struct DatabasePackage::Private
 
     // Téléchargement
     QString waitingDest;
+    ManagedDownload *waitingMd;
 };
 
 struct DatabaseDepend::Private
@@ -74,7 +75,7 @@ DatabasePackage::DatabasePackage(int index, PackageSystem *ps, DatabaseReader *p
     d->ps = ps;
     d->psd = psd;
     d->depok = false;
-
+    
     connect(ps, SIGNAL(downloadEnded(Logram::ManagedDownload *)), this, SLOT(downloadEnded(Logram::ManagedDownload *)));
 }
 
@@ -132,78 +133,73 @@ bool DatabasePackage::download()
     }
     
     d->waitingDest = fname;
-        
-    ManagedDownload *md;
-
-    return d->ps->download(type, u, fname, false, md); // Non-bloquant
-        
+    
+    return d->ps->download(type, u, d->waitingDest, false, d->waitingMd); // Non-bloquant
 }
 
 void DatabasePackage::downloadEnded(ManagedDownload *md)
 {
-    if (md != 0)
+    if (md == d->waitingMd)
     {
-        if (md->destination == d->waitingDest)
+        if (md->error)
         {
-            if (md->error)
-            {
-                delete md;
-                
-                emit downloaded(false);
-                return;
-            }
-            
-            // Vérifier le sha1sum du paquet
-            QFile fl(d->waitingDest);
-            
-            if (!fl.open(QIODevice::ReadOnly))
-            {
-                PackageError *err = new PackageError;
-                err->type = PackageError::OpenFileError;
-                err->info = d->waitingDest;
-                
-                d->ps->setLastError(err);
-            
-                delete md;
-                emit downloaded(false);
-                return;
-            }
-            
-            QByteArray contents = fl.readAll();
-            fl.close();
-            
-            QString sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
-            
-            // Comparer les hashs
-            QString myHash;
-            
-            if (action() == Solver::Update)
-            {
-                myHash = upgradePackage()->packageHash();
-            }
-            else
-            {
-                myHash = packageHash();
-            }
-            
-            if (sha1sum != myHash)
-            {
-                PackageError *err = new PackageError;
-                err->type = PackageError::SHAError;
-                err->info = name();
-                err->more = md->url;
-                
-                d->ps->setLastError(err);
-                
-                delete md;
-                emit downloaded(false);
-                return;
-            }
-            
-            // On a téléchargé le paquet !
             delete md;
-            emit downloaded(true);
+            
+            emit downloaded(false);
+            return;
         }
+        
+        // Vérifier le sha1sum du paquet
+        QFile fl(d->waitingDest);
+        
+        if (!fl.open(QIODevice::ReadOnly))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::OpenFileError;
+            err->info = d->waitingDest;
+            
+            d->ps->setLastError(err);
+        
+            delete md;
+            emit downloaded(false);
+            return;
+        }
+        
+        QByteArray contents = fl.readAll();
+        fl.close();
+        
+        QString sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
+        
+        // Comparer les hashs
+        QString myHash;
+        
+        if (action() == Solver::Update)
+        {
+            myHash = upgradePackage()->packageHash();
+        }
+        else
+        {
+            myHash = packageHash();
+        }
+        
+        if (sha1sum != myHash)
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::SHAError;
+            err->info = name();
+            err->more = md->url;
+            
+            d->ps->setLastError(err);
+            
+            delete md;
+            emit downloaded(false);
+            return;
+        }
+        
+        // On a téléchargé le paquet !
+        delete md;
+        d->waitingMd = 0;
+        emit downloaded(true);
     }
 }
 
