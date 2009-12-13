@@ -145,7 +145,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     // Initialiser le système de paquet si on en a besoin
     QStringList noInitCommand;
     
-    noInitCommand << "update" << "download";
+    noInitCommand << "update" << "download" << "build" << "binaries" << "include";
     
     if (!noInitCommand.contains(cmd))
     {
@@ -229,6 +229,39 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         sourceDownload(args.at(2));
     }
+    else if (cmd == "build")
+    {
+        if (args.count() != 3)
+        {
+            help();
+            return;
+        }
+        
+        sourceBuild(args.at(2));
+    }
+    else if (cmd == "binaries")
+    {
+        if (args.count() != 3)
+        {
+            help();
+            return;
+        }
+        
+        sourceBinaries(args.at(2));
+    }
+    else if (cmd == "include")
+    {
+        if (args.count() < 3)
+        {
+            help();
+            return;
+        }
+        
+        args.removeAt(0);   // retirer le 0
+        args.removeAt(0);   // retirer le 1
+        
+        include(args);      // Envoyer à partir du 2
+    }
     else
     {
         help();
@@ -258,6 +291,10 @@ void App::help()
             "Commandes pour la gestion des sources :\n"
             "    download <src>     Télécharge la source du paquet dont <src> est le\n"
             "                       metadata.xml.\n"
+            "    build <src>        Compile la source spécifiée par le metadata.xml <src>.\n"
+            "\n"
+            "Commandes pour la gestion des dépôts :\n"
+            "    include <pkg>      Inclus le paquet <pkg> dans le dépôt config/repo.conf\n"
             "\n"
             "Options (insensible à la casse) :\n"
             "    -S [off]           Active (on) ou pas (off) l'installation des suggestions\n"
@@ -299,29 +336,45 @@ void App::error()
         case PackageError::OpenFileError:
             cout << qPrintable(tr("Impossible d'ouvrir le fichier "));
             break;
+            
         case PackageError::MapFileError:
             cout << qPrintable(tr("Impossible de mapper le fichier "));
             break;
+            
         case PackageError::ProcessError:
             cout << qPrintable(tr("Erreur dans la commande "));
             break;
+            
         case PackageError::DownloadError:
             cout << qPrintable(tr("Impossible de télécharger "));
             break;
+            
         case PackageError::ScriptException:
             cout << qPrintable(tr("Erreur dans le QtScript "));
             break;
+            
         case PackageError::SignatureError:
             cout << qPrintable(tr("Mauvaise signature GPG du fichier "));
             break;
+            
         case PackageError::SHAError:
             cout << qPrintable(tr("Mauvaise somme SHA1, fichier corrompu : "));
             break;
+            
         case PackageError::PackageNotFound:
             cout << qPrintable(tr("Paquet inexistant : "));
             break;
+            
         case PackageError::BadDownloadType:
             cout << qPrintable(tr("Mauvais type de téléchargement, vérifier sources.list : "));
+            break;
+            
+        case PackageError::OpenDatabaseError:
+            cout << qPrintable(tr("Impossible d'ouvrir la base de donnée : "));
+            break;
+            
+        case PackageError::QueryError:
+            cout << qPrintable(tr("Erreur dans la requête : "));
             break;
     }
     
@@ -341,7 +394,7 @@ void App::progress(PackageSystem::Progress type, int done, int total, const QStr
     if (done == total) return;
     
     // Afficher le message
-    cout << COLOR("[" + QString::number(done) + "/" + QString::number(total) + "] ", "33");
+    cout << COLOR("[" + QString::number(done + 1) + "/" + QString::number(total) + "] ", "33");
 
     // Type
     switch (type)
@@ -368,6 +421,18 @@ void App::progress(PackageSystem::Progress type, int done, int total, const QStr
             
         case PackageSystem::ProcessOut:
             cout << COLOR(tr("Sortie du processus : "), "34");
+            break;
+            
+        case PackageSystem::GlobalCompressing:
+            cout << COLOR(tr("Création du paquet "), "34");
+            break;
+            
+        case PackageSystem::Compressing:
+            cout << COLOR(tr("Compression de "), "34");
+            break;
+            
+        case PackageSystem::Including:
+            cout << COLOR(tr("Inclusion de "), "34");
             break;
     }
     

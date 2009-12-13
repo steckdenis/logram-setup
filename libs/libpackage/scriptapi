@@ -23,10 +23,14 @@ communicate()
 
 gitco()
 {
-    git clone --depth 1 $1 src
+    (cd "$2" && git pull)
+    
+    if [ ! $? -eq 0 ]; then
+        git clone --depth 1 "$1" "$2"
+    fi
 }
 
 gitversion()
 {
-    git log --pretty=format:'%ai' -1 | cut -d ' ' -f 1 | sed -e 's/-//g'
+    (cd "$1" && git log --pretty=format:'%ai' -1 | cut -d ' ' -f 1 | sed -e 's/-//g')
 }

@@ -1,5 +1,5 @@
 /*
- * source.cpp
+ * repoma.cpp
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -22,40 +22,37 @@
 
 #include "app.h"
 
-#include <logram/packagesource.h>
+#include <logram/repositorymanager.h>
 
 using namespace Logram;
 
-#define CALL_PACKAGESOURCE(function) \
-    PackageSource *src = new PackageSource(ps); \
-    \
-    if (!src->setMetaData(fileName)) \
-    { \
-        error(); \
-        return; \
-    } \
-    \
-    src->loadKeys(); \
-    \
-    if (!src->function(true)) \
-    { \
-        error(); \
-        return; \
-    } \
-    \
-    delete src;
-
-void App::sourceDownload(const QString &fileName)
+void App::include(const QStringList &lpkFileNames)
 {
-    CALL_PACKAGESOURCE(getSource);
-}
-
-void App::sourceBuild(const QString &fileName)
-{
-    CALL_PACKAGESOURCE(build);
-}
-
-void App::sourceBinaries(const QString &fileName)
-{
-    CALL_PACKAGESOURCE(binaries);
+    RepositoryManager *mg = new RepositoryManager(ps);
+    
+    if (!mg->loadConfig("config/repo.conf"))
+    {
+        error();
+        return;
+    }
+    
+    // Inclure les paquets
+    int numPkg = 0;
+    
+    foreach (const QString &fileName, lpkFileNames)
+    {
+        // C'est nous qui envoyons la progression, car nous savons combien de paquets sont à importer
+        ps->sendProgress(PackageSystem::Including, numPkg, lpkFileNames.count(), fileName);
+        
+        if (!mg->includePackage(fileName))
+        {
+            error();
+            return;
+        }
+    }
+    
+    ps->endProgress(PackageSystem::Including, lpkFileNames.count());
+    
+    // Plus besoin
+    delete mg;
 }

@@ -23,10 +23,11 @@
 #ifndef __PACKAGESOURCE_H__
 #define __PACKAGESOURCE_H__
 
-#include <QObject>
 #include <QVariant>
 #include <QProcess>
 #include <QStringList>
+
+#include "templatable.h"
 
 namespace Logram
 {
@@ -35,7 +36,7 @@ class PackageSystem;
 class FilePackage;
 class PackageMetaData;
 
-class PackageSource : public QObject
+class PackageSource : public Templatable
 {
     Q_OBJECT
     
@@ -45,14 +46,22 @@ class PackageSource : public QObject
         
         enum Option
         {
-            SourceDir
+            SourceDir,
+            BuildDir,
+            ControlDir
         };
         
         bool setMetaData(const QString &fileName);
+        bool setMetaData(const QByteArray &data);
         void setOption(Option opt, const QVariant &value);
         QVariant option(Option opt, const QVariant &defaultValue);
         
+        void loadKeys();     // Une fois toutes les options définies
+        
         bool getSource(bool block = true);
+        bool checkSource(const QString &dir, bool fail, bool block = true);
+        bool build(bool block = true);
+        bool binaries(bool block = true);
         
     private slots:
         void processDataOut();

@@ -22,6 +22,8 @@
 
 #include "filepackage.h"
 #include "packagesystem.h"
+#include "templatable.h"
+#include "packagemetadata.h"
 
 // Qt
 #include <QFile>
@@ -30,7 +32,8 @@
 #include <QLocale>
 #include <QDir>
 
-#include <QDebug>
+#include <QtDebug>
+#include <QtXml>
 
 // LibArchive
 #include <archive.h>
@@ -45,7 +48,7 @@ struct FilePackage::Private
     bool valid;
     
     bool isGui;
-    qint64 size;
+    qint64 size, isize;
     QString name;
     QString version;
     QString maintainer;
@@ -65,92 +68,13 @@ struct FilePackage::Private
     void addDeps(const QByteArray &str, int8_t type);
 };
 
-struct KeyValue
-{
-    QByteArray key, value;
-};
-
-static QList<KeyValue> keyValues(const char *data, char sep, int size)
-{
-    // Explorer les ligne
-    int pos = 0;
-    const char *keystart, *valuestart;
-    int keylen, valuelen;
-    
-    QList<KeyValue> rs;
-    
-    while (pos < size)
-    {
-        // Si la ligne commence par '[' ou est vide, continuer
-        if (*data == '[')
-        {
-            while (pos < size && *data != '\n')
-            {
-                data++;
-                pos++;
-            }
-            
-            data++;
-            pos++;
-            
-            continue;
-        }
-        
-        if (*data == '\n')
-        {
-            data++;
-            pos++;
-            
-            continue;
-        }
-        
-        // Lire la clef
-        keystart = data;
-        keylen = 0;
-        
-        while (pos < size && *data != sep)
-        {
-            data++;
-            pos++;
-            keylen++;
-        }
-        
-        // Sauter le égal
-        data++;
-        pos++;
-        
-        if (pos >= size)
-        {
-            break;
-        }
-        
-        // Lire la valeur
-        valuestart = data;
-        valuelen = 0;
-        
-        while (pos < size && *data != '\n')
-        {
-            data++;
-            pos++;
-            valuelen++;
-        }
-        
-        // Interpréter la clef et la valeur
-        KeyValue kv;
-        kv.key = QByteArray(keystart, keylen);
-        kv.value = QByteArray(valuestart, valuelen);
-        
-        rs.append(kv);
-    }
-    
-    return rs;
-}
-
 FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action)
     : Package(ps, psd, _action)
 {
     d = new Private;
     d->ps = ps;
+    d->isize = 0;
+    
     if (QDir::isAbsolutePath(fileName))
     {
         d->fileName = fileName;
@@ -166,7 +90,8 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     QFileInfo fi(fileName);
     d->size = fi.size();
     
-    QString name = fileName.section('~', 0, 0);
+    d->name = fileName.section('/', -1, -1).section('~', 0, 0);
+    d->version = fileName.section('/', -1, -1).section('~', 1, -1).section('.', 0, -3);
     
     // Lire l'archive .tar.tlz qu'est un paquet, et récupérer les métadonnées et le fichier .control
     struct archive *a;
@@ -196,6 +121,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     while (archive_read_next_header(a, &entry) == ARCHIVE_OK)
     {
         path = QByteArray(archive_entry_pathname(entry));
+        d->isize += archive_entry_size(entry);
         
         if (!path.startsWith("__LOGRAM"))
         {
@@ -203,7 +129,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         }
         
         // Savoir quel type de fichier on a lu
-        if (path == "__LOGRAM/metadata.xml")
+        if (path == "control/metadata.xml")
         {
             // Lire le fichier
             size = archive_entry_size(entry);
@@ -214,107 +140,6 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
             
             delete[] buffer;
         }
-        else if (path == "__LOGRAM/control")
-        {
-            // Lire le fichier
-            size = archive_entry_size(entry);
-            buffer = new char[size];
-            archive_read_data(a, buffer, size);
-            
-            QList<KeyValue> kvs = keyValues(buffer, '=', size);
-            
-            foreach (const KeyValue &kv, kvs)
-            {
-                if (kv.key == "Name")
-                {
-                    d->name = kv.value;
-                }
-                else if (kv.key == "Version")
-                {
-                    d->version = kv.value;
-                }
-                else if (kv.key == "Source")
-                {
-                    d->source = kv.value;
-                }
-                else if (kv.key == "Maintainer")
-                {
-                    d->maintainer = kv.value;
-                }
-                else if (kv.key == "Section")
-                {
-                    d->section = kv.value;
-                }
-                else if (kv.key == "Distribution")
-                {
-                    d->distribution = kv.value;
-                }
-                else if (kv.key == "License")
-                {
-                    d->license = kv.value;
-                }
-                else if (kv.key == "PrimaryLang")
-                {
-                    d->primaryLang = kv.value;
-                }
-                else if (kv.key == "Gui")
-                {
-                    d->isGui = (kv.value == "true");
-                }
-                else if (kv.key == "Depends")
-                {
-                    d->addDeps(kv.value, DEPEND_TYPE_DEPEND);
-                }
-                else if (kv.key == "Provides")
-                {
-                    d->addDeps(kv.value, DEPEND_TYPE_PROVIDE);
-                }
-                else if (kv.key == "Replaces")
-                {
-                    d->addDeps(kv.value, DEPEND_TYPE_REPLACE);
-                }
-                else if (kv.key == "Suggest")
-                {
-                    d->addDeps(kv.value, DEPEND_TYPE_SUGGEST);
-                }
-                else if (kv.key == "Conflicts")
-                {
-                    d->addDeps(kv.value, DEPEND_TYPE_CONFLICT);
-                }
-            }
-            
-            delete[] buffer;
-        }
-        else if (path.startsWith("__LOGRAM/descriptions."))
-        {
-            // Trouver l'extension de langue
-            QList<QByteArray> parts = path.split('.');
-            QByteArray loc = parts.at(parts.count()-1);
-            
-            // Lire le fichier
-            size = archive_entry_size(entry);
-            buffer = new char[size];
-            archive_read_data(a, buffer, size);
-            
-            QList<KeyValue> kvs = keyValues(buffer, ':', size);
-            
-            foreach (const KeyValue &kv, kvs)
-            {
-                if (kv.key == name)
-                {
-                    // Bon paquet
-                    d->shortDesc = kv.value;
-                    
-                    // Si on a la langue préférée de l'utilisateur, alors on peut partir
-                    if (loc == lang)
-                    {
-                        break;
-                    }
-                }
-            }
-            
-            delete[] buffer;
-        }
     }
     
     r = archive_read_finish(a);
@@ -322,6 +147,96 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     if (r != ARCHIVE_OK)
     {
         d->valid = false;
+    }
+    
+    // Créer la template qui sera utilisée pour la suite
+    Templatable tpl(0);
+    
+    tpl.addKey("version", d->version);
+    tpl.addKey("package", d->name);
+    tpl.addKey("arch", d->arch);
+    
+    // Charger les informations contenues dans les métadonnées
+    QDomDocument doc;
+    doc.setContent(d->metadataContents);
+    
+    d->primaryLang = doc.documentElement().attribute("primarylang");
+    
+    QDomElement package = doc.documentElement().firstChildElement();
+    
+    while (!package.isNull())
+    {
+        if (package.tagName() == "package" && package.attribute("name") == d->name)
+        {
+            // Le bon paquet
+            
+            d->section = package.attribute("section");
+            
+            // Explorer ses enfants, qui contiennent ce qu'on veut
+            QDomElement el = package.firstChildElement();
+            
+            while (!el.isNull())
+            {
+                if (el.tagName() == "depend")
+                {
+                    // Dépendance
+                    int8_t type;
+                    QString stype = el.attribute("type", "depend");
+                    
+                    if (stype == "depend")
+                    {
+                        type = DEPEND_TYPE_DEPEND;
+                    }
+                    else if (stype == "suggest")
+                    {
+                        type = DEPEND_TYPE_SUGGEST;
+                    }
+                    else if (stype == "conflict")
+                    {
+                        type = DEPEND_TYPE_CONFLICT;
+                    }
+                    else if (stype == "provide")
+                    {
+                        type = DEPEND_TYPE_PROVIDE;
+                    }
+                    else if (stype == "replace")
+                    {
+                        type = DEPEND_TYPE_REPLACE;
+                    }
+                    
+                    d->addDeps(tpl.templateString(el.attribute("string")).toUtf8(), type);
+                }
+                else if (el.tagName() == "flag")
+                {
+                    if (el.attribute("name") == "gui")
+                    {
+                        d->isGui = (el.attribute("value", "true") == "true");
+                    }
+                }
+                else if (el.tagName() == "shortdesc")
+                {
+                    d->shortDesc = PackageMetaData::stringOfKey(el, d->primaryLang);
+                }
+                
+                el = el.nextSiblingElement();
+            }
+        }
+        else if (package.tagName() == "source")
+        {
+            d->license = package.attribute("license");
+            d->source = package.attribute("name");
+            
+            QDomElement maintainer = package.firstChildElement("maintainer");
+            
+            d->maintainer = maintainer.attribute("name") + " <" 
+                          + maintainer.attribute("email") + '>';
+        }
+        else if (package.tagName() == "changelog")
+        {
+            d->distribution = package.firstChildElement("entry").attribute("distribution");
+        }
+        
+        package = package.nextSiblingElement();
     }
 }
 
@@ -492,7 +407,7 @@ QString FilePackage::source()
 
 QString FilePackage::repo()
 {
-    return "local";
+    return "filesystem";
 }
 
 QString FilePackage::section()
@@ -547,12 +462,12 @@ int FilePackage::status()
 
 int FilePackage::downloadSize()
 {
-    return 0;
+    return d->size;
 }
 
 int FilePackage::installSize()
 {
-    return d->size;
+    return d->isize;
 }
 
 QList<Depend *> FilePackage::depends()

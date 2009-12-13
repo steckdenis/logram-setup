@@ -8,12 +8,37 @@ TARGET = lgrpkg
 DEPENDPATH += .
 INCLUDEPATH += .
 QT -= gui
-QT += xml network script
+QT += xml network script sql
 LIBS += -larchive
 
 # Input
-HEADERS += packagesystem.h databasereader.h package.h databasewriter.h solver.h packagemetadata.h communication.h packagelist.h databasepackage.h filepackage.h packagesource.h
-SOURCES += packagesystem.cpp databasereader.cpp package.cpp databasewriter.cpp solver.cpp packagemetadata.cpp communication.cpp packagelist.cpp databasepackage.cpp filepackage.cpp packagesource.cpp
+HEADERS +=  packagesystem.h \
+            databasereader.h \
+            package.h \
+            databasewriter.h \
+            solver.h \
+            packagemetadata.h \
+            communication.h \
+            packagelist.h \
+            databasepackage.h \
+            filepackage.h \
+            packagesource.h \
+            templatable.h \
+            repositorymanager.h
+            
+SOURCES +=  packagesystem.cpp \
+            databasereader.cpp \
+            package.cpp \
+            databasewriter.cpp \
+            solver.cpp \
+            packagemetadata.cpp \
+            communication.cpp \
+            packagelist.cpp \
+            databasepackage.cpp \
+            filepackage.cpp \
+            templatable.cpp \
+            packagesource.cpp \
+            repositorymanager.cpp
 
 includes.files = *.h
 includes.path = /usr/include/logram

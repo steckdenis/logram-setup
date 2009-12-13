@@ -248,8 +248,8 @@ bool Logram::PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
 
 bool Logram::PackageSystem::package(const QString &name, const QString &version, Package* &rs)
 {
-    // Si le nom se termine par .tlz, c'est un paquet local
-    if (name.endsWith(".tlz"))
+    // Si le nom se termine par .lpk, c'est un paquet local
+    if (name.endsWith(".lpk"))
     {
         FilePackage *pkg = new FilePackage(name, this, d->dr, Solver::None);
         
@@ -290,7 +290,7 @@ DatabasePackage *Logram::PackageSystem::package(int id)
 
 bool Logram::PackageSystem::filesOfPackage(const QString &packageName, QStringList &rs)
 {
-    if (packageName.endsWith(".tlz"))
+    if (packageName.endsWith(".lpk"))
     {
         // Paquet local
         FilePackage *pkg = new FilePackage(packageName, this, d->dr, Solver::None);

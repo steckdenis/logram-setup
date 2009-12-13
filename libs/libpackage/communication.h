@@ -23,7 +23,7 @@
 #ifndef __COMMUNICATION_H__
 #define __COMMUNICATION_H__
 
-#include <QObject>
+#include "templatable.h"
 
 namespace Logram
 {
@@ -31,14 +31,12 @@ namespace Logram
 class PackageSystem;
 class Package;
 
-class Communication : public QObject
+class Communication : public Templatable
 {
     public:
         Communication(PackageSystem *ps, Package *pkg, const QString &name);
         ~Communication();
         bool error() const;
-        
-        void addKey(const QString &key, const QString &value);
         
         enum Type
         {
@@ -86,8 +84,6 @@ class Communication : public QObject
         bool isEntryValid() const;   // Indique si ce que l'utilisateur a entré correspond à la règle de vérification
         QString entryValidationErrorString() const;
         QString processData() const; // Valeur à renvoyer au processus helperscript
-        
-        QString templateString(const QString &tpl) const;
         
     private:
         struct Private;

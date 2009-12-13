@@ -1,5 +1,5 @@
 /*
- * cache.cpp
+ * repositorymanager.h
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,4 +20,31 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include "app.h"
+#ifndef __REPOSITORYMANAGER_H__
+#define __REPOSITORYMANAGER_H__
+
+#include <QObject>
+
+namespace Logram
+{
+    
+class PackageSystem;
+
+class RepositoryManager : public QObject
+{
+    public:
+        RepositoryManager(PackageSystem *ps);
+        ~RepositoryManager();
+        
+        bool loadConfig(const QString &fileName);
+        
+        bool includePackage(const QString &fileName);
+        
+    private:
+        struct Private;
+        Private *d;
+};
+
+} /* Namespace */
+
+#endif

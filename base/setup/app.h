@@ -61,6 +61,11 @@ class App : public QCoreApplication
         
         // Gestion des sources
         void sourceDownload(const QString &fileName);
+        void sourceBuild(const QString &fileName);
+        void sourceBinaries(const QString &fileName);
+        
+        // Gestion du dépôt
+        void include(const QStringList &lpkFileNames);
         
         void error();
         

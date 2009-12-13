@@ -233,7 +233,10 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
                 cout << ' ' << (i+1) << ". ";
             }
             
-            dlSize += pkg->downloadSize();
+            if (pkg->origin() != Package::File)
+            {
+                dlSize += pkg->downloadSize();
+            }
             instSize += pkg->installSize();
             cout << COLOR(name, "34");
         }
@@ -262,7 +265,10 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
                 cout << ' ' << (i+1) << ". ";
             }
             
-            dlSize += pkg->downloadSize();
+            if (pkg->origin() != Package::File)
+            {
+                dlSize += pkg->downloadSize();
+            }
             
             // Différence entre la version installée et la version qu'on va télécharger
             Package *other = pkg->upgradePackage();

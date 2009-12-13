@@ -95,6 +95,11 @@ Package::~Package()
         delete d->installProcess;
     }
     
+    if (d->md != 0)
+    {
+        delete d->md;
+    }
+    
     delete d;
 }
 

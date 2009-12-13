@@ -127,7 +127,7 @@ bool Solver::solve()
     // Explorer les paquets voulus
     foreach(const QString &pkg, d->wantedPackages.keys())
     {
-        if (pkg.endsWith(".tlz"))
+        if (pkg.endsWith(".lpk"))
         {
             // Paquet local
             FilePackage *fpkg = new FilePackage(pkg, d->ps, d->psd, Solver::None);

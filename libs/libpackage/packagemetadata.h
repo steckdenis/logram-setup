@@ -56,7 +56,6 @@ class PackageMetaData : public QDomDocument, public QObject
         
         
         QString primaryLang() const;
-        QString stringOfKey(const QDomElement &element) const;
         QString packageDescription() const;
         QString packageTitle() const;
         QString currentPackage() const;
@@ -64,6 +63,10 @@ class PackageMetaData : public QDomDocument, public QObject
         QList<ChangeLogEntry *> changelog() const;
         
         void setCurrentPackage(const QString &name);
+        QDomElement currentPackageElement() const;
+        
+        static QString stringOfKey(const QDomElement &element, const QString &primaryLang);
+        QString stringOfKey(const QDomElement &element) const;
         
     private:
         struct Private;

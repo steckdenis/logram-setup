@@ -43,8 +43,6 @@ struct Communication::Private
     
     QDomElement element;
     
-    QStringList keys;
-    
     // Valeurs
     QString sValue;
     int iValue;
@@ -55,7 +53,7 @@ struct Communication::Private
     QString validateErrorString;
 };
 
-Communication::Communication(PackageSystem *ps, Package *pkg, const QString &name) : QObject(pkg)
+Communication::Communication(PackageSystem *ps, Package *pkg, const QString &name) : Templatable(pkg)
 {
     d = new Private;
     
@@ -94,11 +92,6 @@ Communication::~Communication()
 bool Communication::error() const
 {
     return d->error;
-}
-
-void Communication::addKey(const QString &key, const QString &value)
-{
-    d->keys.append(key + "|" + value);
 }
 
 Communication::Type Communication::type() const
@@ -159,22 +152,6 @@ Communication::ReturnType Communication::returnType() const
     {
         return Invalid;
     }
-}
-
-QString Communication::templateString(const QString &tpl) const
-{
-    // Explorer les clefs et remplacer le motif {{clef}} dans tpl par la valeur de la clef
-    QString rs = tpl;
-    
-    foreach(const QString &k, d->keys)
-    {
-        QString key = k.section('|', 0, 0);
-        QString value = k.section('|', 1, 1);
-        
-        rs.replace("{{" + key + "}}", value);
-    }
-    
-    return rs;
 }
 
 QString Communication::title() const

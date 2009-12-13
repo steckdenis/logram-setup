@@ -1,5 +1,5 @@
 /*
- * source.cpp
+ * templatable.h
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,42 +20,34 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include "app.h"
+#ifndef __TEMPLATABLE_H__
+#define __TEMPLATABLE_H__
 
-#include <logram/packagesource.h>
+#include <QObject>
+#include <QByteArray>
 
-using namespace Logram;
-
-#define CALL_PACKAGESOURCE(function) \
-    PackageSource *src = new PackageSource(ps); \
-    \
-    if (!src->setMetaData(fileName)) \
-    { \
-        error(); \
-        return; \
-    } \
-    \
-    src->loadKeys(); \
-    \
-    if (!src->function(true)) \
-    { \
-        error(); \
-        return; \
-    } \
-    \
-    delete src;
-
-void App::sourceDownload(const QString &fileName)
+namespace Logram
 {
-    CALL_PACKAGESOURCE(getSource);
-}
 
-void App::sourceBuild(const QString &fileName)
+class Templatable : public QObject
 {
-    CALL_PACKAGESOURCE(build);
-}
+    public:
+        Templatable(QObject *parent);
+        ~Templatable();
+        
+        void addKey(const QString &key, const QString &value);
+        QString getKey(const QString &key) const;
+        bool contains(const QString &key) const;
+        void removeKey(const QString &key);
+        
+        QString templateString(const QString &tpl) const;
+        QByteArray templateString(const QByteArray &tpl) const;
+        
+    private:
+        struct Private;
+        Private *d;
+};
 
-void App::sourceBinaries(const QString &fileName)
-{
-    CALL_PACKAGESOURCE(binaries);
-}
+} /* Namespace */
+
+#endif

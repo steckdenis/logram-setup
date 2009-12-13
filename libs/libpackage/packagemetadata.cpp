@@ -194,6 +194,11 @@ QString PackageMetaData::primaryLang() const
 
 QString PackageMetaData::stringOfKey(const QDomElement &element) const
 {
+    return stringOfKey(element, primaryLang());
+}
+
+QString PackageMetaData::stringOfKey(const QDomElement &element, const QString &primaryLang)
+{
     // element contient des sous-éléments du type <fr>, <en>, <nl>, <de>, <es>, etc. Prendre celui qui correspond à la langue de l'utilisateur, ou au primarylang du paquet
     QString userLang = QLocale::system().name().section("_", 0, 0);
     
@@ -207,8 +212,13 @@ QString PackageMetaData::stringOfKey(const QDomElement &element) const
             retained = child;
             break;
         }
-        else if (child.tagName() == primaryLang())
+        else if (child.tagName() == primaryLang)
         {
+            retained = child;
+        }
+        else if (retained.isNull())
+        {
+            // On doit au moins en avoir un, même si ce n'est ni le primaryLang, ni la locale
             retained = child;
         }
         child = child.nextSiblingElement();
@@ -247,6 +257,11 @@ void PackageMetaData::setCurrentPackage(const QString &name)
         
         package = package.nextSiblingElement("package");
     }
+}
+
+QDomElement PackageMetaData::currentPackageElement() const
+{
+    return d->currentPackage;
 }
 
 QList<ChangeLogEntry *> PackageMetaData::changelog() const
