@@ -66,6 +66,7 @@ class App : public QCoreApplication
         
         // Gestion du dépôt
         void include(const QStringList &lpkFileNames);
+        void exp(const QStringList &distros);
         
         void error();
         

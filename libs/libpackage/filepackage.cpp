@@ -31,6 +31,7 @@
 #include <QByteArray>
 #include <QLocale>
 #include <QDir>
+#include <QCryptographicHash>
 
 #include <QtDebug>
 #include <QtXml>
@@ -63,6 +64,8 @@ struct FilePackage::Private
     QStringList fileList;
     QByteArray metadataContents;
     
+    QByteArray packageHash, metadataHash;
+    
     QList<Depend *> depends;
     
     void addDeps(const QByteArray &str, int8_t type);
@@ -92,6 +95,16 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     
     d->name = fileName.section('/', -1, -1).section('~', 0, 0);
     d->version = fileName.section('/', -1, -1).section('~', 1, -1).section('.', 0, -3);
+    
+    // Hash du paquet
+    QFile fl(fileName);
+    
+    if (fl.open(QIODevice::ReadOnly))
+    {
+        d->packageHash = QCryptographicHash::hash(fl.readAll(), QCryptographicHash::Sha1).toHex();
+        
+        fl.close();
+    }
     
     // Lire l'archive .tar.tlz qu'est un paquet, et récupérer les métadonnées et le fichier .control
     struct archive *a;
@@ -238,6 +251,9 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         
         package = package.nextSiblingElement();
     }
+    
+    // Hash des métadonnées non-compressées
+    d->metadataHash = QCryptographicHash::hash(d->metadataContents, QCryptographicHash::Sha1).toHex();
 }
 
 FilePackage::FilePackage(const FilePackage &other) : Package(other)
@@ -432,12 +448,12 @@ QString FilePackage::arch()
 
 QByteArray FilePackage::packageHash()
 {
-    return QByteArray();
+    return d->packageHash;
 }
 
 QByteArray FilePackage::metadataHash()
 {
-    return QByteArray();
+    return d->metadataHash;
 }
 
 bool FilePackage::isGui()

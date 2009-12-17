@@ -9,7 +9,7 @@ DEPENDPATH += .
 INCLUDEPATH += .
 QT -= gui
 QT += xml network script sql
-LIBS += -larchive
+LIBS += -larchive -lgpgme
 
 # Input
 HEADERS +=  packagesystem.h \

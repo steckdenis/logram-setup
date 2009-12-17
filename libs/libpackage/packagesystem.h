@@ -60,7 +60,8 @@ struct PackageError
         PackageNotFound,
         BadDownloadType,
         OpenDatabaseError,
-        QueryError
+        QueryError,
+        SignError
     };
     
     Error type;
@@ -132,7 +133,8 @@ class PackageSystem : public QObject
             ProcessOut,
             GlobalCompressing,
             Compressing,
-            Including
+            Including,
+            Exporting
         };
 
         void sendProgress(Progress type, int num, int tot, const QString &msg);

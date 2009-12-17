@@ -56,3 +56,22 @@ void App::include(const QStringList &lpkFileNames)
     // Plus besoin
     delete mg;
 }
+
+void App::exp(const QStringList &distros)
+{
+    RepositoryManager *mg = new RepositoryManager(ps);
+    
+    if (!mg->loadConfig("config/repo.conf"))
+    {
+        error();
+        return;
+    }
+    
+    if (!mg->exp(distros))
+    {
+        error();
+        return;
+    }
+    
+    delete mg;
+}

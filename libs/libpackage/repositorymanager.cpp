@@ -35,6 +35,9 @@
 #include <QtXml>
 #include <QtDebug>
 
+#include <gpgme.h>
+#include <unistd.h>
+
 using namespace Logram;
 
 struct RepositoryManager::Private
@@ -48,6 +51,7 @@ struct RepositoryManager::Private
     
     // Fonctions
     bool registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type);
+    bool writeXZ(const QString &fileName, const QByteArray &data);
 };
 
 RepositoryManager::RepositoryManager(PackageSystem *ps) : QObject(ps)
@@ -104,6 +108,86 @@ bool RepositoryManager::loadConfig(const QString &fileName)
 
 #define DEPEND(type) fpkg->dependsToString(fpkg->depends(), type)
 
+#define LANGPKGKEY(pkid, langindex) (((pkid) << 8) + (langindex))
+
+static QString e(const QString &str)
+{
+    QString rs(str);
+    
+    rs.replace('\\', "\\\\");
+    rs.replace('"', "\\\"");
+    rs.replace('\'', "\\'");
+    rs.replace('%', "\\%");
+    
+    return rs;
+}
+
+static gpgme_error_t passphrase_cb(void *hook, const char *uid_hint, const char *passphrase_info, int prev_was_bad, int fd)
+{
+    // TODO: Pas très sécurisé tout ça !
+    RepositoryManager::Private *d = (RepositoryManager::Private *)hook;
+    
+    QString pass = d->set->value("Sign/Passphrase").toString();
+    
+    write(fd, pass.toUtf8().constData(), pass.length());
+    write(fd, "\n", 1);
+    
+    return 0;
+    
+    (void) uid_hint;
+    (void) passphrase_info;
+    (void) prev_was_bad;
+}
+
+bool RepositoryManager::Private::writeXZ(const QString &fileName, const QByteArray &data)
+{
+    QProcess xz;
+    xz.start("xz", QStringList() << "-c");
+        
+    if (!xz.waitForStarted())
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::ProcessError;
+        err->info = "xz -c";
+       
+        ps->setLastError(err);
+       
+        return false;
+    }
+        
+    xz.write(data);
+    xz.closeWriteChannel();
+        
+    if (!xz.waitForFinished())
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::ProcessError;
+        err->info = "xz -c";
+            
+        ps->setLastError(err);
+            
+        return false;
+    }
+        
+    QFile fl(fileName);
+        
+    if (!fl.open(QIODevice::WriteOnly))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fileName;
+          
+        ps->setLastError(err);
+           
+        return false;
+    }
+        
+    fl.write(xz.readAll());
+    fl.close();
+    
+    return true;
+}
+
 bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type)
 {
     // Récupérer l'id de la chaîne
@@ -121,7 +205,7 @@ bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id
             
     if (!query.exec(sql
                     .arg(package_id)
-                    .arg(lang)
+                    .arg(e(lang))
                     .arg(type)
                     ))
     {
@@ -146,7 +230,7 @@ bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id
                     WHERE id=%2;";
            
             if (!query.exec(sql
-                            .arg(content.replace(regex, "\n"))
+                            .arg(e(content.replace(regex, "\n")))
                             .arg(str_id)
                             ))
             {
@@ -167,9 +251,9 @@ bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id
         
         if (!query.exec(sql
                         .arg(package_id)
-                        .arg(lang)
+                        .arg(e(lang))
                         .arg(type)
-                        .arg(content.replace(regex, "\n"))
+                        .arg(e(content.replace(regex, "\n")))
                         ))
         {
             PackageError *err = new PackageError;
@@ -248,7 +332,9 @@ bool RepositoryManager::includePackage(const QString &fileName)
             AND arch.name = '%3';";
             
     // Sélectionner le (ou zéro) paquet qui correspond.
-    if (!query.exec(sql.arg(fpkg->name(), fpkg->distribution(), fpkg->arch())))
+    if (!query.exec(sql.arg(e(fpkg->name()), 
+                            e(fpkg->distribution()), 
+                            e(fpkg->arch()))))
     {
         PackageError *err = new PackageError;
         err->type = PackageError::QueryError;
@@ -283,7 +369,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
             // La section a changé
             sql = "SELECT id FROM packages_section WHERE name='%1';";
             
-            TRY_QUERY(sql.arg(fpkg->section()))
+            TRY_QUERY(sql.arg(e(fpkg->section())))
             
             section_id = query.value(0).toInt();
         }
@@ -292,15 +378,15 @@ bool RepositoryManager::includePackage(const QString &fileName)
     {
         // Trouver les ID de la distribution, architecture et section
         sql = "SELECT id FROM packages_section WHERE name='%1';";
-        TRY_QUERY(sql.arg(fpkg->section()))
+        TRY_QUERY(sql.arg(e(fpkg->section())))
         section_id = query.value(0).toInt();
         
         sql = "SELECT id FROM packages_arch WHERE name='%1';";
-        TRY_QUERY(sql.arg(fpkg->arch()))
+        TRY_QUERY(sql.arg(e(fpkg->arch())))
         arch_id = query.value(0).toInt();
         
         sql = "SELECT id FROM packages_distribution WHERE name='%1';";
-        TRY_QUERY(sql.arg(fpkg->distribution()))
+        TRY_QUERY(sql.arg(e(fpkg->distribution())))
         distro_id = query.value(0).toInt();
     }
     
@@ -341,26 +427,26 @@ bool RepositoryManager::includePackage(const QString &fileName)
     
     // Lancer la requête
     if (!query.exec(sql
-            .arg(fpkg->name(), fpkg->maintainer())
+            .arg(e(fpkg->name()), e(fpkg->maintainer()))
             .arg(section_id)
-            .arg(fpkg->version())
+            .arg(e(fpkg->version()))
             .arg(arch_id)
             .arg(distro_id)
-            .arg(md->primaryLang())
+            .arg(e(md->primaryLang()))
             .arg(fpkg->downloadSize())
             .arg(fpkg->installSize())
-            .arg(DEPEND(DEPEND_TYPE_DEPEND))
-            .arg(DEPEND(DEPEND_TYPE_SUGGEST))
-            .arg(DEPEND(DEPEND_TYPE_CONFLICT))
-            .arg(DEPEND(DEPEND_TYPE_PROVIDE))
-            .arg(DEPEND(DEPEND_TYPE_REPLACE))
-            .arg(fpkg->source())
-            .arg(fpkg->license())
+            .arg(e(DEPEND(DEPEND_TYPE_DEPEND)))
+            .arg(e(DEPEND(DEPEND_TYPE_SUGGEST)))
+            .arg(e(DEPEND(DEPEND_TYPE_CONFLICT)))
+            .arg(e(DEPEND(DEPEND_TYPE_PROVIDE)))
+            .arg(e(DEPEND(DEPEND_TYPE_REPLACE)))
+            .arg(e(fpkg->source()))
+            .arg(e(fpkg->license()))
             .arg(int(fpkg->isGui()))
-            .arg(QString(fpkg->packageHash()))
-            .arg(QString(fpkg->metadataHash()))
-            .arg(download_url)
-            )) // TODO: Récupérer l'id
+            .arg(e(QString(fpkg->packageHash())))
+            .arg(e(QString(fpkg->metadataHash())))
+            .arg(e(download_url))
+            ))
     {
         PackageError *err = new PackageError;
         err->type = PackageError::QueryError;
@@ -370,6 +456,8 @@ bool RepositoryManager::includePackage(const QString &fileName)
         
         return false;
     }
+    
+    package_id = query.lastInsertId().toInt();
     
     // Chaînes
     QDomElement package = md->currentPackageElement();
@@ -454,50 +542,400 @@ bool RepositoryManager::includePackage(const QString &fileName)
             return false;
         }
         
-        QProcess xz;
-        xz.start("xz", QStringList() << "-c");
-        
-        if (!xz.waitForStarted())
+        if (!d->writeXZ(metadata_url, fpkg->metadataContents()))
         {
-            PackageError *err = new PackageError;
-            err->type = PackageError::ProcessError;
-            err->info = "xz -c";
-            
-            d->ps->setLastError(err);
-            
             return false;
         }
-        
-        xz.write(fpkg->metadataContents());
-        xz.closeWriteChannel();
-        
-        if (!xz.waitForFinished())
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::ProcessError;
-            err->info = "xz -c";
-            
-            d->ps->setLastError(err);
-            
-            return false;
-        }
-        
-        QFile fl(metadata_url);
-        
-        if (!fl.open(QIODevice::WriteOnly))
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::OpenFileError;
-            err->info = metadata_url;
-            
-            d->ps->setLastError(err);
-            
-            return false;
-        }
-        
-        fl.write(xz.readAll());
-        fl.close();
     }
+    
+    return true;
+}
+
+bool RepositoryManager::exp(const QStringList &distros)
+{
+    QSqlQuery query;
+    QString sql;
+    QStringList distributions = distros;
+    QStringList archs, langs;
+    
+    // Si pas de distribs, alors les prendre toutes
+    if (distributions.empty())
+    {
+        distributions = d->set->value("Distributions").toString().split(' ', QString::SkipEmptyParts);
+    }
+    
+    // Sélectionner les architectures
+    sql = "SELECT name FROM packages_arch;";
+    
+    if (!query.exec(sql))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::QueryError;
+        err->info = query.lastQuery();
+            
+        d->ps->setLastError(err);
+            
+        return false;
+    }
+    
+    while (query.next())
+    {
+        archs.append(query.value(0).toString());
+    }
+    
+    // Langues
+    langs = d->set->value("Languages", "en").toString().split(' ', QString::SkipEmptyParts);
+    
+    // QByteArrays nécessaires à l'écriture
+    QList<QByteArray> streams;
+    
+    for (int i=0; i<=langs.count(); ++i)
+    {
+        // un tour en plus, parce qu'on a aussi la liste des paquets à écrire
+        streams.append(QByteArray());
+    }
+    
+    QByteArray &pkgstream = streams[langs.count()];
+    
+    // Initialiser GPGME
+    QString skey = d->set->value("Sign/Key").toString();
+    const char *key_id = skey.toUtf8().constData();
+    
+    gpgme_ctx_t ctx;
+    gpgme_key_t gpgme_key;
+    
+    gpgme_new(&ctx);
+    gpgme_set_armor(ctx, 0);
+    
+    gpgme_set_passphrase_cb(ctx, passphrase_cb, d);
+    
+    if (gpgme_get_key(ctx, key_id, &gpgme_key, 1) != GPG_ERR_NO_ERROR)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::SignError;
+        err->info = tr("Impossible de trouver la clef %1").arg(key_id);
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    if (gpgme_signers_add(ctx, gpgme_key) != GPG_ERR_NO_ERROR)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::SignError;
+        err->info = tr("Impossible d'ajouter la clef %1 pour signature").arg(key_id);
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    gpgme_key_unref(gpgme_key);
+    
+    // Explorer les distributions
+    int arch_id, distro_id;
+    int eNum = 0;
+    int eTot = distributions.count() * archs.count();
+    
+    foreach (const QString &distro, distributions)
+    {
+        sql = "SELECT id FROM packages_distribution WHERE name='%1';";
+        TRY_QUERY(sql.arg(e(distro)))
+        distro_id = query.value(0).toInt();
+        
+        // Explorer les architectures
+        foreach (const QString &arch, archs)
+        {
+            // Progression
+            d->ps->sendProgress(PackageSystem::Exporting, eNum, eTot, distro + '.' + arch);
+            eNum++;
+            
+            sql = "SELECT id FROM packages_arch WHERE name='%1';";
+            TRY_QUERY(sql.arg(e(arch)))
+            arch_id = query.value(0).toInt();
+            
+            // Obtenir les traductions
+            QHash<int, QString> trads;
+            
+            sql = " SELECT \
+                    package_id, \
+                    language, \
+                    content \
+                    \
+                    FROM packages_string \
+                    \
+                    WHERE type = 1;";
+                    
+            if (!query.exec(sql))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                    
+                d->ps->setLastError(err);
+                    
+                return false;
+            }
+            
+            int lindex;
+            
+            while (query.next())
+            {
+                lindex = langs.indexOf(query.value(1).toString());
+                
+                if (lindex != -1)
+                {
+                    trads.insert(
+                        LANGPKGKEY(query.value(0).toInt(), lindex),
+                        query.value(2).toString()
+                    );
+                }
+            }
+            
+            // Sélectionner tous les paquets qu'il y a dedans
+            sql = " SELECT \
+                    pkg.name, \
+                    pkg.version, \
+                    pkg.source, \
+                    pkg.maintainer, \
+                    pkg.license, \
+                    pkg.primarylang, \
+                    pkg.flags, \
+                    pkg.depends, \
+                    pkg.provides, \
+                    pkg.replaces, \
+                    pkg.suggests, \
+                    pkg.conflicts, \
+                    pkg.download_size, \
+                    pkg.install_size, \
+                    pkg.packageHash, \
+                    pkg.metadataHash, \
+                    \
+                    section.name, \
+                    pkg.id \
+                    \
+                    FROM packages_package pkg \
+                    LEFT JOIN packages_section section ON section.id = pkg.section_id \
+                    \
+                    WHERE pkg.distribution_id='%1' \
+                    AND pkg.arch_id='%2';";
+                    
+            if (!query.exec(sql
+                            .arg(distro_id)
+                            .arg(arch_id)))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                    
+                d->ps->setLastError(err);
+                    
+                return false;
+            }
+            
+            // Explorer les paquets
+            bool first = true;
+            QString rs, pkname, pkprimlang, trad;
+            int i, key, pkid, primlangid;
+            
+            while (query.next())
+            {
+                pkname = query.value(0).toString();
+                pkprimlang = query.value(5).toString();
+                pkid = query.value(17).toInt();
+                primlangid = -1;
+                
+                rs = '[' + pkname + "]\n";
+                rs += "Name=" + pkname + '\n';
+                rs += "Version=" + query.value(1).toString() + '\n';
+                rs += "Source=" + query.value(2).toString() + '\n';
+                rs += "Maintainer=" + query.value(3).toString() + '\n';
+                rs += "Section=" + query.value(16).toString() + '\n';
+                rs += "Distribution=" + distro + '\n';
+                rs += "License=" + query.value(4).toString() + '\n';
+                rs += "PrimaryLang=" + pkprimlang + '\n';
+                rs += "Flags=" + query.value(6).toString() + '\n';
+                rs += "Depends=" + query.value(7).toString() + '\n';
+                rs += "Provides=" + query.value(8).toString() + '\n';
+                rs += "Replaces=" + query.value(9).toString() + '\n';
+                rs += "Suggest=" + query.value(10).toString() + '\n';
+                rs += "Conflicts=" + query.value(11).toString() + '\n';
+                rs += "DownloadSize=" + query.value(12).toString() + '\n';
+                rs += "InstallSize=" + query.value(13).toString() + '\n';
+                rs += "Arch=" + arch + '\n';
+                rs += "PackageHash=" + query.value(14).toString() + '\n';
+                rs += "MetadataHash=" + query.value(15).toString() + '\n';
+                
+                if (!first)
+                {
+                    pkgstream += '\n';
+                }
+                else
+                {
+                    first = false;
+                }
+                
+                pkgstream += rs;
+                
+                // Enregistrer les traductions
+                for (i=0; i<langs.count(); ++i)
+                {
+                    key = LANGPKGKEY(pkid, i);
+                    
+                    if (trads.contains(key))
+                    {
+                        trad = trads.value(key);
+                    }
+                    else
+                    {
+                        // Astuce pour avoir du O(pk) au lieu de O(pk*lang)
+                        if (primlangid == -1)
+                        {
+                            primlangid = langs.indexOf(pkprimlang);
+                        }
+                        
+                        trad = trads.value(LANGPKGKEY(pkid, primlangid));
+                    }
+                    
+                    streams[i] += pkname + ':' + trad + '\n';
+                }
+            }
+            
+            // Écrire les flux
+            QString fileName, filePath;
+            
+            filePath = "dists/" + distro + '/' + arch;
+            
+            for (int i=0; i<streams.count(); ++i)
+            {
+                const QByteArray &stream = streams.at(i);
+                
+                if (i < langs.count())
+                {
+                    // Traductions
+                    fileName = filePath + "/translate." + langs.at(i) + ".xz";
+                }
+                else
+                {
+                    // Liste des paquets
+                    fileName = filePath + "/packages.xz";
+                }
+                
+                // Créer le dossier s'il le fait
+                if (!QFile::exists(filePath))
+                {
+                    QDir::current().mkpath(filePath);
+                }
+                
+                // Supprimer l'ancien fichier si nécessaire
+                if (QFile::exists(fileName))
+                {
+                    QFile::remove(fileName);
+                }
+                
+                // Écrire et compresser
+                d->writeXZ(fileName, stream);
+                
+                // Écrire la signature du flux non-compressé
+                gpgme_data_t in, out;
+                gpgme_sign_result_t result;
+                char *userret;
+                size_t retsize;
+                
+                if (gpgme_data_new_from_mem(&in, stream.constData(), stream.size(), 0) != GPG_ERR_NO_ERROR)
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::SignError;
+                    err->info = tr("Impossible de créer le tampon mémoire pour la signature.");
+                    
+                    d->ps->setLastError(err);
+                    
+                    return false;
+                }
+                
+                if (gpgme_data_new(&out) != GPG_ERR_NO_ERROR)
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::SignError;
+                    err->info = tr("Impossible de créer le tampon mémoire de sortie.");
+                    
+                    d->ps->setLastError(err);
+                    
+                    gpgme_data_release(in);
+                    return false;
+                }
+                
+                if (gpgme_op_sign(ctx, in, out, GPGME_SIG_MODE_DETACH) != GPG_ERR_NO_ERROR)
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::SignError;
+                    err->info = tr("Impossible de signer le fichier %1").arg(fileName);
+                    
+                    d->ps->setLastError(err);
+                    
+                    gpgme_data_release(in);
+                    gpgme_data_release(out);
+                    return false;
+                }
+                
+                result = gpgme_op_sign_result(ctx);
+                
+                if (result->invalid_signers)
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::SignError;
+                    err->info = tr("Mauvais signataires");
+                    
+                    d->ps->setLastError(err);
+                    
+                    gpgme_data_release(in);
+                    gpgme_data_release(out);
+                    return false;
+                }
+                
+                if (!result->signatures)
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::SignError;
+                    err->info = tr("Pas de signatures dans le résultat");
+                    
+                    d->ps->setLastError(err);
+                    
+                    gpgme_data_release(in);
+                    gpgme_data_release(out);
+                    return false;
+                }
+                
+                userret = gpgme_data_release_and_get_mem(out, &retsize);
+                
+                // Écrire le fichier
+                QFile signFile(fileName + ".sig");
+                
+                if (!signFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::OpenFileError;
+                    err->info = signFile.fileName();
+                    
+                    d->ps->setLastError(err);
+                    
+                    gpgme_data_release(in);
+                    return false;
+                }
+                
+                signFile.write(userret, retsize);
+                
+                gpgme_data_release(in);
+                free(userret);
+                
+                // Supprimer le flux
+                streams[i].clear();
+            }
+        }
+    }
+    
+    d->ps->endProgress(PackageSystem::Exporting, eTot);
     
     return true;
 }

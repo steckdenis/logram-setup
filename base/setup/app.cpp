@@ -31,6 +31,13 @@
 using namespace std;
 using namespace Logram;
 
+#define CHECK_ARGS(cond) \
+    if (args.count() cond) \
+    { \
+        help(); \
+        return; \
+    }
+
 App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 {
     // Initialiser
@@ -46,11 +53,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     //Parser les arguments
     QStringList args = arguments();
     
-    if (args.count() < 2)
-    {
-        help();
-        return;
-    }
+    CHECK_ARGS(< 2)
 
     // Explorer les options
     QString opt = args.at(1).toLower();
@@ -134,18 +137,15 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     
     ps->loadConfig();
     
-    if (args.count() < 2)
-    {
-        help();
-        return;
-    }
+    CHECK_ARGS(< 2)
 
     QString cmd = args.at(1).toLower();
 
     // Initialiser le système de paquet si on en a besoin
     QStringList noInitCommand;
     
-    noInitCommand << "update" << "download" << "build" << "binaries" << "include";
+    noInitCommand << "update" << "download" << "build" << "binaries" << "include"
+                  << "export";
     
     if (!noInitCommand.contains(cmd))
     {
@@ -166,39 +166,31 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     }
     else if (cmd == "search")
     {
-        if (args.count() != 3)
-        {
-            help();
-            return;
-        }
+        CHECK_ARGS(!= 3)
         
         find(args.at(2));
     }
     else if (cmd == "showpkg")
     {
-        if (args.count() != 3)
-        {
-            help();
-            return;
-        }
+        CHECK_ARGS(!= 3)
         
         showpkg(args.at(2), changelog);
     }
     else if (cmd == "update")
     {
+        CHECK_ARGS(!= 2)
+        
         update();
     }
     else if (cmd == "upgrade")
     {
+        CHECK_ARGS(!= 2)
+        
         upgrade();
     }
     else if (cmd == "add")
     {
-        if (args.count() < 3)
-        {
-            help();
-            return;
-        }
+        CHECK_ARGS(< 3)
         
         QStringList packages;
 
@@ -211,56 +203,46 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     }
     else if (cmd == "files")
     {
-        if (args.count() != 3)
-        {
-            help();
-            return;
-        }
+        CHECK_ARGS(!= 3)
         
         showFiles(args.at(2));
     }
     else if (cmd == "download")
     {
-        if (args.count() != 3)
-        {
-            help();
-            return;
-        }
+        CHECK_ARGS(!= 3)
         
         sourceDownload(args.at(2));
     }
     else if (cmd == "build")
     {
-        if (args.count() != 3)
-        {
-            help();
-            return;
-        }
+        CHECK_ARGS(!= 3)
         
         sourceBuild(args.at(2));
     }
     else if (cmd == "binaries")
     {
-        if (args.count() != 3)
-        {
-            help();
-            return;
-        }
+        CHECK_ARGS(!= 3)
         
         sourceBinaries(args.at(2));
     }
     else if (cmd == "include")
     {
-        if (args.count() < 3)
-        {
-            help();
-            return;
-        }
+        CHECK_ARGS(< 3)
         
         args.removeAt(0);   // retirer le 0
         args.removeAt(0);   // retirer le 1
         
         include(args);      // Envoyer à partir du 2
+    }
+    else if (cmd == "export")
+    {
+        args.removeAt(0);
+        args.removeAt(0);
+        
+        // Pas de vérifications, on peut parfaitement ne rien envoyer, et donc
+        // exporter toutes les distributions
+        
+        exp(args);
     }
     else
     {
@@ -295,6 +277,9 @@ void App::help()
             "\n"
             "Commandes pour la gestion des dépôts :\n"
             "    include <pkg>      Inclus le paquet <pkg> dans le dépôt config/repo.conf\n"
+            "    export <distros>   Exporte la liste des paquets et créer les fichiers\n"
+            "                       packages.lzma et translate.lang.lzma pour les\n"
+            "                       distributions spécifiées.\n"
             "\n"
             "Options (insensible à la casse) :\n"
             "    -S [off]           Active (on) ou pas (off) l'installation des suggestions\n"
@@ -433,6 +418,10 @@ void App::progress(PackageSystem::Progress type, int done, int total, const QStr
             
         case PackageSystem::Including:
             cout << COLOR(tr("Inclusion de "), "34");
+            break;
+            
+        case PackageSystem::Exporting:
+            cout << COLOR(tr("Export de la distribution "), "34");
             break;
     }
     
