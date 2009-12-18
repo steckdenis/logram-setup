@@ -87,6 +87,8 @@ class DatabaseWriter : public QObject
         int stringIndex(const QByteArray &str, int pkg, bool isTr, bool create = true);
         void setDepends(_Package *pkg, const QByteArray &str, int type);
         void revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op, int type);
+        
+        bool verifySign(const QString &signFileName, const QByteArray &sigtext, bool &rs);
 };
 
 } /* Namespace */

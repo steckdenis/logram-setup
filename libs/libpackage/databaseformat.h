@@ -43,7 +43,7 @@ struct _Package
     int32_t license;    // Licence
     int32_t pkg_hash;   // Index de la chaîne représentant le hash sha1 du paquet .tlz
     int32_t mtd_hash;   // Index de la chaîne représentant le hash sha1 du fichier de métadonnées
-    int32_t is_gui;     // Programme en GUI (NOTE: 32 bits disponibles, on peut en faire des flags)
+    int32_t flags;      // Flags
     int32_t deps;       // Index du tableau de dépendances
     int32_t isize;      // Taille de l'installation
     int32_t dsize;      // Taille du téléchargement
@@ -94,5 +94,11 @@ struct _StrPackagePtr
 #define PACKAGESYSTEM_OPT_INSTALLROOT        8
 #define PACKAGESYSTEM_OPT_CONFROOT          16
 #define PACKAGESYSTEM_OPT_VARROOT           32
+
+#define PACKAGE_FLAG_KDEINTEGRATION         0b00000011
+#define PACKAGE_FLAG_GUI                    0b00000100
+#define PACKAGE_FLAG_DONTUPDATE             0b00001000
+#define PACKAGE_FLAG_DONTINSTALL            0b00010000
+#define PACKAGE_FLAG_DONTREMOVE             0b00100000
 
 #endif

@@ -60,7 +60,7 @@ class FilePackage : public Package
         QString arch();
         QByteArray packageHash();
         QByteArray metadataHash();
-        bool isGui();
+        int flags();
         
         QDateTime installedDate();
         int installedBy();

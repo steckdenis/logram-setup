@@ -346,17 +346,17 @@ QString DatabasePackage::url(UrlType type)
     }
     else
     {
-        return "metadata/" + d + "/" + n + "/" + n + "~" + version() + ".metadata.xml.lzma";
+        return "metadata/" + d +  "/" + n + "~" + version() + ".metadata.xml.xz";
     }
 }
 
-bool DatabasePackage::isGui()
+int DatabasePackage::flags()
 {
     _Package *pkg = d->psd->package(d->index);
     
     if (pkg == 0) return false;
     
-    return pkg->is_gui;
+    return pkg->flags;
 }
 
 int DatabasePackage::downloadSize()

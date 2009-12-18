@@ -48,7 +48,7 @@ struct FilePackage::Private
     QString fileName;
     bool valid;
     
-    bool isGui;
+    int flags;
     qint64 size, isize;
     QString name;
     QString version;
@@ -223,7 +223,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                 {
                     if (el.attribute("name") == "gui")
                     {
-                        d->isGui = (el.attribute("value", "true") == "true");
+                        d->flags = el.attribute("value").toInt();
                     }
                 }
                 else if (el.tagName() == "shortdesc")
@@ -264,7 +264,7 @@ FilePackage::FilePackage(const FilePackage &other) : Package(other)
     d->fileName = other.d->fileName;
     d->valid = other.d->valid;
     
-    d->isGui = other.d->isGui;
+    d->flags = other.d->flags;
     d->size = other.d->size;
     d->name = other.d->name;
     d->version = other.d->version;
@@ -456,9 +456,9 @@ QByteArray FilePackage::metadataHash()
     return d->metadataHash;
 }
 
-bool FilePackage::isGui()
+int FilePackage::flags()
 {
-    return d->isGui;
+    return d->flags;
 }
 
 QDateTime FilePackage::installedDate()

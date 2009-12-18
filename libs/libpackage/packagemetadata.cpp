@@ -61,12 +61,12 @@ void PackageMetaData::loadFile(const QString &fileName, const QByteArray &sha1ha
     
     if (decompress)
     {
-        QString cmd = "unlzma";
+        QString cmd = "unxz";
         QStringList args;
         
         args << fname;
         
-        fname.remove(".lzma");
+        fname.remove(".xz");
         
         if (QFile::exists(fname))
         {
@@ -155,7 +155,7 @@ void PackageMetaData::bindPackage(Package *pkg)
         QString type = d->ps->repoType(repo);
         ManagedDownload *md = new ManagedDownload;
         DatabasePackage *dpkg = (DatabasePackage *)pkg;
-        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.lzma";
+        fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.xz";
         
         QString url = d->ps->repoUrl(repo) + "/" + dpkg->url(DatabasePackage::Metadata);
         

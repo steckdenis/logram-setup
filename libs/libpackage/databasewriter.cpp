@@ -35,6 +35,8 @@
 #include <QProcess>
 #include <QtDebug>
 
+#include <gpgme.h>
+
 #include <iostream>
 #include <fstream>
 
@@ -52,7 +54,7 @@ bool DatabaseWriter::download(const QString &source, const QString &url, const Q
     QString arch = url.section('/', -2, -2);
     QString distro = url.section('/', -3, -3);
 
-    QString fname = QString("%1.%2.%3.%4.%5.lzma").arg(source).arg(distro).arg(arch).arg(isTranslations).arg(type);
+    QString fname = QString("%1.%2.%3.%4.%5.xz").arg(source).arg(distro).arg(arch).arg(isTranslations).arg(type);
     QString fileName(parent->varRoot() + "/var/cache/lgrpkg/download/");
 
     fileName += fname;
@@ -74,20 +76,94 @@ bool DatabaseWriter::download(const QString &source, const QString &url, const Q
     
     delete unused;
     
-    // Vérifier la signature
-    QString cmd = "gpg --verify " + fileName + ".sig " + fileName;
-    if (QProcess::execute(cmd) != 0)
+    return true;
+}
+
+bool DatabaseWriter::verifySign(const QString &signFileName, const QByteArray &sigtext, bool &rs)
+{
+    // Ouvrir les fichiers de signature
+    QByteArray signature;
+    QFile fl(signFileName);
+    
+    rs = false;
+    
+    if (!fl.open(QIODevice::ReadOnly))
     {
-        // Signature pas bonne
         PackageError *err = new PackageError;
-        err->type = PackageError::SignatureError;
-        err->info = url;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
         
         parent->setLastError(err);
+        
         return false;
     }
     
-    QFile::remove(fileName + ".sig");
+    signature = fl.readAll();
+    fl.close();
+    
+    // Vérifier la signature
+    gpgme_ctx_t ctx;
+    gpgme_data_t gpgme_text, gpgme_sig;
+    gpgme_verify_result_t gpgme_result;
+    
+    gpgme_new(&ctx);
+    gpgme_set_armor(ctx, 0);
+    
+    if (gpgme_data_new_from_mem(&gpgme_sig, signature.constData(), signature.size(), 0) != GPG_ERR_NO_ERROR)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::SignError;
+        err->info = tr("Impossible de créer le tampon pour la signature.");
+        
+        parent->setLastError(err);
+        
+        gpgme_release(ctx);
+        return false;
+    }
+    
+    if (gpgme_data_new_from_mem(&gpgme_text, sigtext.constData(), sigtext.size(), 0) != GPG_ERR_NO_ERROR)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::SignError;
+        err->info = tr("Impossible de créer le tampon pour les données.");
+        
+        parent->setLastError(err);
+        
+        gpgme_data_release(gpgme_sig);
+        gpgme_data_release(gpgme_text);
+        gpgme_release(ctx);
+        return false;
+    }
+    
+    if (gpgme_op_verify(ctx, gpgme_sig, gpgme_text, NULL) != GPG_ERR_NO_ERROR)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::SignError;
+        err->info = tr("Impossible de vérifier la signature.");
+        
+        parent->setLastError(err);
+        
+        gpgme_data_release(gpgme_sig);
+        gpgme_data_release(gpgme_text);
+        gpgme_release(ctx);
+        return false;
+    }
+    
+    gpgme_result = gpgme_op_verify_result(ctx);
+    
+    
+    if (gpgme_result->signatures && gpgme_result->signatures->summary != GPGME_SIGSUM_RED)
+    {
+        // Signature pas bonne
+        rs = true;
+    }
+    
+    QFile::remove(signFileName);
+    
+    // Nettoyage
+    gpgme_data_release(gpgme_sig);
+    gpgme_data_release(gpgme_text);
+    gpgme_release(ctx);
     
     return true;
 }
@@ -338,7 +414,7 @@ bool DatabaseWriter::rebuild()
             
             if (!isInstalledPackages)
             {
-                fname.remove(".lzma");
+                fname.remove(".xz");
 
                 if (pass == 0)
                 {
@@ -348,7 +424,7 @@ bool DatabaseWriter::rebuild()
                         QFile::remove(fname);
                     }
 
-                    QString cmd = QString("unlzma ") + file;
+                    QString cmd = QString("unxz ") + file;
 
                     if (QProcess::execute(cmd) != 0)
                     {
@@ -418,6 +494,28 @@ bool DatabaseWriter::rebuild()
             fd.read(buffer, flength);
             
             fd.close();
+            
+            // Vérifier la signature
+            bool signvalid;
+            
+            if (!isInstalledPackages && pass == 0)
+            {
+                if (!verifySign(file + ".sig", QByteArray::fromRawData(buffer, flength), signvalid))
+                {
+                    return false;
+                }
+                
+                if (!signvalid)
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::SignatureError;
+                    err->info = file;
+                    
+                    //parent->setLastError(err);
+                    
+                    return false;
+                }
+            }
 
             // Lire le fichier
             while (fpos < flength)
@@ -485,6 +583,7 @@ bool DatabaseWriter::rebuild()
                     {
                         // On commence un paquet
                         pkg = new _Package;
+                        pkg->flags = 0;
                         name = QByteArray::fromRawData(cline + 1, linelength - 2); // -2 : sauter le ] et le [
                         
                         // Initialisations
@@ -616,9 +715,9 @@ bool DatabaseWriter::rebuild()
                         {
                             pkg->arch = stringIndex(value, index, false, false);
                         }
-                        else if (key == "Gui")
+                        else if (key == "Flags")
                         {
-                            pkg->is_gui = (value == "true");
+                            pkg->flags = value.toInt();
                         }
                         else if (key == "Provides")
                         {
@@ -830,7 +929,7 @@ bool DatabaseWriter::rebuild()
         if (numFile != cacheFiles.count())
         {
             QString fname = file;
-            fname.replace(".lzma", "");
+            fname.replace(".xz", "");
 
             QFile::remove(fname);
         }

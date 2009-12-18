@@ -248,6 +248,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         set->setValue("InstallSize", installSize());
         set->setValue("MetadataHash", metadataHash());
         set->setValue("PackageHash", packageHash());
+        set->setValue("Flags", flags());
 
         set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
         
@@ -284,6 +285,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         set->setValue("InstallSize", other->installSize());
         set->setValue("MetadataHash", other->metadataHash());
         set->setValue("PackageHash", other->packageHash());
+        set->setValue("Flags", other->flags());
 
         set->setValue("ShortDesc", QString(other->shortDesc().toUtf8().toBase64()));
         

@@ -442,7 +442,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
             .arg(e(DEPEND(DEPEND_TYPE_REPLACE)))
             .arg(e(fpkg->source()))
             .arg(e(fpkg->license()))
-            .arg(int(fpkg->isGui()))
+            .arg(fpkg->flags())
             .arg(e(QString(fpkg->packageHash())))
             .arg(e(QString(fpkg->metadataHash())))
             .arg(e(download_url))
@@ -936,6 +936,8 @@ bool RepositoryManager::exp(const QStringList &distros)
     }
     
     d->ps->endProgress(PackageSystem::Exporting, eTot);
+    
+    gpgme_release(ctx);
     
     return true;
 }

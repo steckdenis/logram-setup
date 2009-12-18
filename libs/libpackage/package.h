@@ -60,7 +60,7 @@ class Package : public QObject
     Q_PROPERTY(QString arch READ arch)
     Q_PROPERTY(Origin origin READ origin)
     
-    Q_PROPERTY(bool gui READ isGui)
+    Q_PROPERTY(int flags READ flags)
     
     Q_PROPERTY(int downloadSize READ downloadSize)
     Q_PROPERTY(int installSize READ installSize)
@@ -94,7 +94,7 @@ class Package : public QObject
         virtual QString arch() = 0;
         virtual QByteArray metadataHash() = 0;
         virtual QByteArray packageHash() = 0;
-        virtual bool isGui() = 0;
+        virtual int flags() = 0;
         virtual int status() = 0;
         
         virtual int downloadSize() = 0;

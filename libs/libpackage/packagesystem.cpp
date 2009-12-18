@@ -190,7 +190,7 @@ bool Logram::PackageSystem::update()
     {
         Enrg *enrg = enrgs.at(i);
 
-        QString u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/packages.lzma";
+        QString u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/packages.xz";
         
         sendProgress(GlobalDownload, i*2, count*2, u);
         
@@ -200,7 +200,7 @@ bool Logram::PackageSystem::update()
         }
 
         // Traductions
-        u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/translate." + lang + ".lzma";
+        u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/translate." + lang + ".xz";
         
         sendProgress(GlobalDownload, i*2+1, count*2, u);
         
