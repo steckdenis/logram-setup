@@ -48,7 +48,7 @@ DatabaseWriter::DatabaseWriter(PackageSystem *_parent)
     parent = _parent;
 }
 
-bool DatabaseWriter::download(const QString &source, const QString &url, const QString &type, bool isTranslations)
+bool DatabaseWriter::download(const QString &source, const QString &url, Repository::Type type, bool isTranslations, bool gpgCheck)
 {
     // Calculer le nom du fichier
     QString arch = url.section('/', -2, -2);
@@ -59,6 +59,7 @@ bool DatabaseWriter::download(const QString &source, const QString &url, const Q
 
     fileName += fname;
     cacheFiles.append(fileName);
+    checkFiles.append(gpgCheck);
 
     // Le télécharger
     ManagedDownload *unused = new ManagedDownload;
@@ -400,8 +401,9 @@ bool DatabaseWriter::rebuild()
     for (pass=0; pass<2; ++pass)
     {
         numFile = 0;
-        foreach (const QString &file, cacheFiles)
+        for (int cfIndex=0; cfIndex < cacheFiles.count(); ++cfIndex)
         {
+            const QString &file = cacheFiles.at(cfIndex);
             numFile++;
             
             QString fname = file;
@@ -498,7 +500,7 @@ bool DatabaseWriter::rebuild()
             // Vérifier la signature
             bool signvalid;
             
-            if (!isInstalledPackages && pass == 0)
+            if (checkFiles.at(cfIndex) && !isInstalledPackages && pass == 0)
             {
                 if (!verifySign(file + ".sig", QByteArray::fromRawData(buffer, flength), signvalid))
                 {

@@ -106,7 +106,11 @@ void DatabasePackage::registerState(int idate, int iby, int state)
 
 bool DatabasePackage::download()
 {
-    QString fname, r, type, u;
+    QString fname, u;
+    Repository::Type type;
+    Repository r;
+    
+    // TODO: Utiliser le meilleur mirroir (garder une liste des mirroirs qu'on utilise déjà et prendre le moins utilisé, pour optimiser les téléchargements en parallèle)
     
     if (action() == Solver::Remove || action() == Solver::Purge)
     {
@@ -118,18 +122,18 @@ bool DatabasePackage::download()
     {
         // Télécharger le paquet
         fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
-        r = repo();
-        type = d->ps->repoType(r);
-        u = d->ps->repoUrl(r) + "/" + url();
+        d->ps->repository(repo(), r);
+        type = r.type;
+        u = r.mirrors.at(0) + "/" + url();
     }
     else /* Update */
     {
         DatabasePackage *other = upgradePackage();
         
         fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + other->url().section('/', -1, -1);
-        r = other->repo();
-        type = d->ps->repoType(r);
-        u = d->ps->repoUrl(r) + "/" + other->url();
+        d->ps->repository(repo(), r);
+        type = r.type;
+        u = r.mirrors.at(0) + "/" + other->url();
     }
     
     d->waitingDest = fname;
@@ -342,7 +346,7 @@ QString DatabasePackage::url(UrlType type)
     // Compléter en fonction du type demandé
     if (type == Binary)
     {
-        return "pool/" + d + "/" + n + "/" + n + "~" + version() + "." + arch() + ".tlz";
+        return "pool/" + d + "/" + n + "/" + n + "~" + version() + "." + arch() + ".lpk";
     }
     else
     {

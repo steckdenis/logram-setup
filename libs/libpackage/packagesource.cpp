@@ -50,16 +50,6 @@ struct PackageSource::Private
     QString metaFileName;
     
     QHash<Option, QVariant> options;
-    
-    // Processus
-    QEventLoop loop;
-    QString commandLine;
-    QByteArray buffer;
-    
-    // Fonctions
-    QByteArray script(const QString &key, const QString &type);
-    bool runScript(const QByteArray &script, const QStringList &args, bool block = true);
-    bool runScript(const QString &key, const QString &type, const QString &currentDir, const QStringList &args, bool block = true);
 };
 
 static void listFiles(const QString &dir, const QString &prefix, QStringList &list)
@@ -143,17 +133,17 @@ void PackageSource::loadKeys()
     addKey("controldir", controlDir);
 }
 
-bool PackageSource::getSource(bool block)
+bool PackageSource::getSource()
 {
     // Récupérer les sources du paquet, donc les télécharger (plus précisément lancer le script source)
     QString sourceDir = getKey("sourcedir");
     
-    if (!checkSource(sourceDir, true, block))
+    if (!checkSource(sourceDir, true))
     {
         return false;
     }
     
-    if (!d->runScript("source", "download", sourceDir, QStringList(), block))
+    if (!d->md->runScript("source", "download", sourceDir, QStringList()))
     {
         return false;
     }
@@ -161,17 +151,17 @@ bool PackageSource::getSource(bool block)
     return true;
 }
 
-bool PackageSource::build(bool block)
+bool PackageSource::build()
 {
     // Construire la source. Le script est lancé dans sourceDir, {{destdir}} est BuildDir
     QString sourceDir = getKey("sourcedir");
     
-    if (!checkSource(sourceDir, false, block))
+    if (!checkSource(sourceDir, false))
     {
         return false;
     }
     
-    if (!d->runScript("source", "build", sourceDir, QStringList(), block))
+    if (!d->md->runScript("source", "build", sourceDir, QStringList()))
     {
         return false;
     }
@@ -185,7 +175,7 @@ struct PackageFile
     QString to;
 };
 
-bool PackageSource::binaries(bool block)
+bool PackageSource::binaries()
 {   
     // Créer la liste des fichiers dans le dossier de construction
     QStringList files;
@@ -208,17 +198,17 @@ bool PackageSource::binaries(bool block)
         {
             QString sourceDir = getKey("sourcedir");
     
-            if (!checkSource(sourceDir, false, block))
+            if (!checkSource(sourceDir, false))
             {
                 return false;
             }
             
-            if (!d->runScript("source", "version", sourceDir, QStringList(), block))
+            if (!d->md->runScript("source", "version", sourceDir, QStringList()))
             {
                 return false;
             }
             
-            addKey("develver", d->buffer.trimmed());
+            addKey("develver", d->md->scriptOut().trimmed());
         }
         
         // Templater la version
@@ -323,6 +313,7 @@ bool PackageSource::binaries(bool block)
         
         // Créer l'archive .lpk (tar + xz) (code largement inspiré de l'exemple de "man archive_write")
         struct archive *a;
+        struct archive *disk;
         struct archive_entry *entry;
         struct stat st;
         char *buff = new char[8192];
@@ -334,6 +325,10 @@ bool PackageSource::binaries(bool block)
         archive_write_set_format_ustar(a);
         archive_write_open_filename(a, qPrintable(packageFile));
         
+        disk = archive_read_disk_new();
+        archive_read_disk_set_symlink_logical(disk);
+        archive_read_disk_set_standard_lookup(disk);
+        
         for (int i=0; i<packageFiles.count(); ++i)
         {
             const PackageFile &pf = packageFiles.at(i);
@@ -342,9 +337,11 @@ bool PackageSource::binaries(bool block)
             
             // Ajouter l'élément
             stat(qPrintable(pf.from), &st);
+            
             entry = archive_entry_new();
-            archive_entry_copy_stat(entry, &st);
             archive_entry_set_pathname(entry, qPrintable(pf.to));
+            archive_read_disk_entry_from_file(disk, entry, -1, &st);
+            
             archive_write_header(a, entry);
             fd = open(qPrintable(pf.from), O_RDONLY);
             len = read(fd, buff, 8192);
@@ -353,9 +350,11 @@ bool PackageSource::binaries(bool block)
                 archive_write_data(a, buff, len);
                 len = read(fd, buff, 8192);
             }
+            close(fd);
             archive_entry_free(entry);
         }
         
+        archive_write_close(a);
         archive_write_finish(a);
         delete[] buff;
         
@@ -367,7 +366,7 @@ bool PackageSource::binaries(bool block)
     return true;
 }
 
-bool PackageSource::checkSource(const QString &dir, bool fail, bool block)
+bool PackageSource::checkSource(const QString &dir, bool fail)
 {
     if (!QFile::exists(dir))
     {
@@ -377,190 +376,10 @@ bool PackageSource::checkSource(const QString &dir, bool fail, bool block)
         
             root.mkpath(dir);
         }
-        else if (!getSource(block))
+        else if (!getSource())
         {
             return false;
         }
-    }
-    
-    return true;
-}
-
-/*****************************************************************************/
-
-void PackageSource::processDataOut()
-{
-    QProcess *sh = static_cast<QProcess *>(sender());
-    
-    if (sh == 0)
-    {
-        return;
-    }
-    
-    // Lire les lignes
-    QByteArray line;
-    
-    while (sh->bytesAvailable() > 0)
-    {
-        line = sh->readLine().trimmed();
-        
-        d->buffer += line + '\n';
-        
-        // Envoyer la progression
-        d->ps->sendProgress(PackageSystem::ProcessOut, 0, 1, line);
-        
-        // NOTE: Après le refactoring, on gèrera ici les communications
-    }
-}
-
-void PackageSource::processTerminated(int exitCode, QProcess::ExitStatus exitStatus)
-{
-    // Plus besoin du processus
-    QProcess *sh = static_cast<QProcess *>(sender());
-    
-    if (sh != 0)
-    {
-        sh->deleteLater();
-    }
-    
-    // Savoir si tout est ok
-    int rs = 0;
-    
-    if (exitCode != 0 || exitStatus != QProcess::NormalExit)
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::ProcessError;
-        err->info = d->commandLine;
-        err->more = d->buffer;
-        
-        d->ps->setLastError(err);
-        
-        rs = 1;
-    }
-    
-    // Mettre un terme à la progression
-    d->ps->endProgress(PackageSystem::ProcessOut, 1);
-    
-    // Quitter la boucle, si nécessaire
-    if (d->loop.isRunning())
-    {
-        d->loop.exit(rs);
-    }
-}
-
-/*****************************************************************************/
-
-bool PackageSource::Private::runScript(const QString &key, const QString &type, const QString &currentDir, const QStringList &args, bool block)
-{
-    QString cDir = QDir::currentPath();
-    
-    QByteArray s = script(key, type);
-    
-    if (s.isNull())
-    {
-        return false;
-    }
-    
-    QDir::setCurrent(currentDir);
-    
-    if (!runScript(s, args, block))
-    {
-        QDir::setCurrent(cDir);
-        return false;
-    }
-     
-    QDir::setCurrent(cDir);
-    
-    return true;
-}
-
-QByteArray PackageSource::Private::script(const QString &key, const QString &type)
-{
-    QDomElement package = md->documentElement().firstChildElement(key);
-    
-    if (package.isNull())
-    {
-        return QByteArray();
-    }
-    
-    // Lire les éléments <script>, et voir si leur type correspond
-    QDomElement script = package.firstChildElement("script");
-    
-    while (!script.isNull())
-    {
-        if (script.attribute("type") == type)
-        {
-            return script.text().toUtf8();
-        }
-        
-        script = script.nextSiblingElement("script");
-    }
-    
-    return QByteArray();
-}
-
-bool PackageSource::Private::runScript(const QByteArray &script, const QStringList &args, bool block)
-{
-    // Charger le script
-    QFile scriptapi("/usr/libexec/scriptapi");
-    
-    if (!scriptapi.open(QIODevice::ReadOnly))
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::OpenFileError;
-        err->info = scriptapi.fileName();
-        
-        ps->setLastError(err);
-        
-        return false;
-    }
-    
-    QByteArray header = scriptapi.readAll();
-    header += script;
-    scriptapi.close();
-    
-    // Lancer bash, en lui envoyant comme entrée le script ainsi que scriptapi
-    QProcess *sh = new QProcess(src);
-    
-    QStringList arguments;
-    arguments << "-s";
-    arguments << "--";
-    arguments << args;
-    
-    connect(sh, SIGNAL(readyReadStandardOutput()), 
-            src, SLOT(processDataOut()));
-    connect(sh, SIGNAL(finished(int, QProcess::ExitStatus)),
-            src, SLOT(processTerminated(int, QProcess::ExitStatus)));
-    
-    buffer.clear();
-    
-    commandLine = "/bin/sh " + arguments.join(" ");
-    sh->setProcessChannelMode(QProcess::MergedChannels);
-    sh->start("/bin/sh", arguments);
-    
-    if (!sh->waitForStarted())
-    {
-        delete sh;
-        
-        PackageError *err = new PackageError;
-        err->type = PackageError::ProcessError;
-        err->info = commandLine;
-        
-        ps->setLastError(err);
-        
-        return false;
-    }
-    
-    // Écrire le script, d'abord /usr/libexec/scriptapi, puis script
-    sh->write(src->templateString(header));
-    sh->write("\nexit 0\n");
-    
-    // Si on bloque, attendre
-    if (block)
-    {
-        int rs = loop.exec();
-        
-        return (rs == 0);
     }
     
     return true;

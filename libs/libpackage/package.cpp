@@ -25,6 +25,7 @@
 #include "databasereader.h"
 #include "packagemetadata.h"
 #include "communication.h"
+#include "processthread.h"
 
 #include "databasepackage.h"
 
@@ -50,9 +51,7 @@ struct Package::Private
     Solver::Action action;
 
     // Installation
-    QProcess *installProcess;
-    QString installCommand;
-    QString readBuf;
+    ProcessThread *processThread;
     DatabasePackage *upd;
     
     // Métadonnées
@@ -71,7 +70,7 @@ Package::Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action)
     d->psd = psd;
     d->action = _action;
     d->md = 0;
-    d->installProcess = 0;
+    d->processThread = 0;
     d->upd = 0;
 }
 
@@ -84,15 +83,15 @@ Package::Package(const Package &other) : QObject(other.d->ps)
     d->psd = other.d->psd;
     d->action = other.d->action;
     d->md = 0;
-    d->installProcess = 0;
+    d->processThread = 0;
     d->upd = 0;
 }
 
 Package::~Package()
 {
-    if (d->installProcess != 0)
+    if (d->processThread != 0)
     {
-        delete d->installProcess;
+        delete d->processThread;
     }
     
     if (d->md != 0)
@@ -123,50 +122,15 @@ PackageMetaData *Package::metadata()
 
 void Package::process()
 {
-    d->installProcess = new QProcess();
+    d->processThread = new ProcessThread(d->ps, this);
     
-    d->installProcess->setProcessChannelMode(QProcess::MergedChannels);
 
-    connect(d->installProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processEnd(int, QProcess::ExitStatus)));
-    connect(d->installProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(processOut()));
+    connect(d->processThread, SIGNAL(finished()), this, SLOT(processEnd()));
 
-    // En fonction de l'action qui nous est demandée, faire ce qui convient
-    if (action() == Solver::Install)
-    {
-        d->installCommand = QString("/usr/bin/helperscript install \"%1\" \"%2\" \"%3\" \"%4\"")
-            .arg(name())
-            .arg(version())
-            .arg(tlzFileName())
-            .arg(d->ps->installRoot());
-    }
-    else if (action() == Solver::Remove)
-    {
-        d->installCommand = QString("/usr/bin/helperscript remove \"%1\" \"%2\" \"%3\" false")
-            .arg(name())
-            .arg(version())
-            .arg(d->ps->installRoot());
-    }
-    else if (action() == Solver::Purge)
-    {
-        d->installCommand = QString("/usr/bin/helperscript remove \"%1\" \"%2\" \"%3\" true")
-            .arg(name())
-            .arg(version())
-            .arg(d->ps->installRoot());
-    }
-    else if (action() == Solver::Update)
-    {
-        d->installCommand = QString("/usr/bin/helperscript update \"%1\" \"%2\" \"%3\" \"%4\" \"%5\"")
-            .arg(name())
-            .arg(upgradePackage()->version())
-            .arg(tlzFileName())
-            .arg(d->ps->installRoot())
-            .arg(version());
-    }
-        
-    d->installProcess->start(d->installCommand);
+    d->processThread->start();
 }
 
-void Package::processOut()
+/*void Package::processOut()
 {
     QString buf = d->installProcess->readAll();
     d->readBuf += buf;
@@ -206,25 +170,20 @@ void Package::processOut()
         // Retourner le résultat au processus
         d->installProcess->write(comm->processData().toUtf8() + "\n");
     }
-}
+}*/
 
-void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
+void Package::processEnd()
 {
-    if (exitCode != 0 || exitStatus != QProcess::NormalExit)
+    if (d->processThread->error())
     {
         PackageError *err = new PackageError;
-        err->type = PackageError::ProcessError;
-        err->info = d->installCommand;
-        err->more = d->readBuf;
-        
-        d->readBuf.clear();
+        err->type = PackageError::InstallError;
+        err->info = name() + '~' + version();
         
         d->ps->setLastError(err);
         emit proceeded(false);
         return;
     }
-    
-    d->readBuf.clear();
     
     // Enregistrer le paquet dans la liste des paquets installés pour le prochain setup update
     QSettings *set = d->ps->installedPackagesList();
@@ -246,8 +205,8 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         set->setValue("Conflicts", dependsToString(depends(), DEPEND_TYPE_CONFLICT));
         set->setValue("DownloadSize", downloadSize());
         set->setValue("InstallSize", installSize());
-        set->setValue("MetadataHash", metadataHash());
-        set->setValue("PackageHash", packageHash());
+        set->setValue("MetadataHash", metadataHash().constData());
+        set->setValue("PackageHash", packageHash().constData());
         set->setValue("Flags", flags());
 
         set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
@@ -264,7 +223,7 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
                       QString(getenv("UID")).toInt(),
                       PACKAGE_STATE_INSTALLED);
     }
-    else if (action() == Solver::Update)
+    /*else if (action() == Solver::Update)
     {
         Package *other = upgradePackage();
         
@@ -283,8 +242,8 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         set->setValue("Conflicts", dependsToString(other->depends(), DEPEND_TYPE_CONFLICT));
         set->setValue("DownloadSize", other->downloadSize());
         set->setValue("InstallSize", other->installSize());
-        set->setValue("MetadataHash", other->metadataHash());
-        set->setValue("PackageHash", other->packageHash());
+        set->setValue("MetadataHash", other->metadataHash().constData());
+        set->setValue("PackageHash", other->packageHash().constData());
         set->setValue("Flags", other->flags());
 
         set->setValue("ShortDesc", QString(other->shortDesc().toUtf8().toBase64()));
@@ -326,11 +285,11 @@ void Package::processEnd(int exitCode, QProcess::ExitStatus exitStatus)
         registerState(0, 
                       0,
                       PACKAGE_STATE_NOTINSTALLED);
-    }
+    }*/
 
-    // Supprimer le processus
-    d->installProcess->deleteLater();
-    d->installProcess = 0;
+    // Supprimer le thread
+    d->processThread->deleteLater();
+    d->processThread = 0;
     
     // L'installation est finie
     emit proceeded(true);

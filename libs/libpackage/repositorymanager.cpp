@@ -598,14 +598,18 @@ bool RepositoryManager::exp(const QStringList &distros)
     QByteArray &pkgstream = streams[langs.count()];
     
     // Initialiser GPGME
-    QString skey = d->set->value("Sign/Key").toString();
-    const char *key_id = skey.toUtf8().constData();
+    QByteArray skey = d->set->value("Sign/Key").toByteArray();
+    const char *key_id = skey.constData();
     
     gpgme_ctx_t ctx;
     gpgme_key_t gpgme_key;
     
     gpgme_new(&ctx);
     gpgme_set_armor(ctx, 0);
+    
+    gpgme_keylist_mode_t mode = gpgme_get_keylist_mode(ctx);
+    mode |= GPGME_KEYLIST_MODE_LOCAL;
+    gpgme_set_keylist_mode(ctx, mode);
     
     gpgme_set_passphrase_cb(ctx, passphrase_cb, d);
     

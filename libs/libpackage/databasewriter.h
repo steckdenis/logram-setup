@@ -30,6 +30,8 @@
 #include <QHash>
 #include <QByteArray>
 
+#include "packagesystem.h"
+
 class QNetworkAccessManager;
 class QNetworkReply;
 class QIODevice;
@@ -57,13 +59,14 @@ class DatabaseWriter : public QObject
     public:
         DatabaseWriter(PackageSystem *_parent);
 
-        bool download(const QString &source, const QString &url, const QString &type, bool isTranslations);
+        bool download(const QString &source, const QString &url, Repository::Type type, bool isTranslations, bool gpgCheck);
         bool rebuild();
 
     private:
         PackageSystem *parent;
         
         QStringList cacheFiles;
+        QList<bool> checkFiles;
 
         QList<_Package *> packages;
         

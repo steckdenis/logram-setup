@@ -93,6 +93,74 @@ void App::showFiles(const QString &packageName)
     }
 }
 
+static QStringList pkgFlags(Package *pkg)
+{
+    QStringList rs;
+    QString tmp;
+    int flags = pkg->flags();
+    
+    // Intégration KDE
+    int kdeintegration = (flags & PACKAGE_FLAG_KDEINTEGRATION);
+    
+    tmp = App::tr("Intégration à KDE    : ");
+    
+    switch (kdeintegration)
+    {
+        case 0:
+            tmp += App::tr("pas intégré");
+            break;
+        case 1:
+            tmp += App::tr("utilisable");
+            break;
+        case 2:
+            tmp += App::tr("bien intégré");
+            break;
+        case 3:
+            tmp += App::tr("parfaitement intégré");
+            break;
+    }
+    
+    rs.append(tmp);
+    
+    // Graphique
+    bool b = ((flags & PACKAGE_FLAG_GUI) != 0);
+    
+    tmp = App::tr("Paquet graphique     : ");
+    
+    tmp += (b ? App::tr("Oui") : App::tr("Non"));
+    
+    rs.append(tmp);
+    
+    // Ne pas mettre à jour
+    b = ((flags & PACKAGE_FLAG_DONTUPDATE) != 0);
+    
+    tmp = App::tr("Ne pas mettre à jour : ");
+    
+    tmp += (b ? App::tr("Oui") : App::tr("Non"));
+    
+    rs.append(tmp);
+    
+    // Ne pas installer
+    b = ((flags & PACKAGE_FLAG_DONTINSTALL) != 0);
+    
+    tmp = App::tr("Ne pas installer     : ");
+    
+    tmp += (b ? App::tr("Oui") : App::tr("Non"));
+    
+    rs.append(tmp);
+    
+    // Ne pas supprimer
+    b = ((flags & PACKAGE_FLAG_DONTREMOVE) != 0);
+    
+    tmp = App::tr("Ne pas supprimer     : ");
+    
+    tmp += (b ? App::tr("Oui") : App::tr("Non"));
+    
+    rs.append(tmp);
+    
+    return rs;
+}
+
 void App::showpkg(const QString &name, bool changelog)
 {
     QString n = name.section('=', 0, 0);
@@ -142,9 +210,30 @@ void App::showpkg(const QString &name, bool changelog)
     cout << COLOR(tr("Nom                 : "), "33") << COLOR(pkg->name(), "34") << endl;
     cout << COLOR(tr("Version             : "), "33") << qPrintable(pkg->version()) << endl;
     cout << COLOR(tr("Titre               : "), "33") << qPrintable(metadata->packageTitle()) << endl;
-    cout << COLOR(tr("Logiciel graphique  : "), "33") << qPrintable(pkg->isGui() ? tr("Oui") : tr("Non")) << endl;
+    cout << COLOR(tr("Drapeaux            : "), "33");
+    
+    QStringList flags = pkgFlags(pkg);
+    bool fFirst = true;
+    
+    foreach (const QString &flag, flags)
+    {
+        if (!fFirst)
+        {
+            cout << "                      ";
+        }
+        
+        fFirst = false;
+        
+        cout << "o " << qPrintable(flag) << endl;
+    }
+    
     cout << COLOR(tr("Section             : "), "33") << qPrintable(pkg->section()) << endl;
+    
+    Repository repo;
+    ps->repository(pkg->repo(), repo);
+    
     cout << COLOR(tr("Distribution        : "), "33") << qPrintable(pkg->distribution()) << endl;
+    cout << COLOR(tr("Dépôt d'origine     : "), "33") << qPrintable(repo.description) << " (" << qPrintable(pkg->repo()) << ')' << endl;
     cout << COLOR(tr("Status              : "), "33") << qPrintable(status) << endl;
     
     if (pkg->status() == PACKAGE_STATE_INSTALLED)
@@ -160,7 +249,6 @@ void App::showpkg(const QString &name, bool changelog)
     
     cout << COLOR(tr("Téléchargement      : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->downloadSize())) << endl;
     cout << COLOR(tr("Taille installée    : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->installSize())) << endl;
-    cout << COLOR(tr("Dépôt d'origine     : "), "33") << qPrintable(pkg->repo()) << endl;
     cout << COLOR(tr("Paquet source       : "), "33") << qPrintable(pkg->source()) << endl;
     cout << COLOR(tr("Licence             : "), "33") << qPrintable(pkg->license()) << endl;
     cout << COLOR(tr("Mainteneur          : "), "33") << qPrintable(pkg->maintainer()) << endl;

@@ -126,8 +126,7 @@ class Package : public QObject
         void communication(Logram::Package *sender, Logram::Communication *comm);
 
     private slots:
-        void processOut();
-        void processEnd(int exitCode, QProcess::ExitStatus exitStatus);
+        void processEnd();
 
     private:
         struct Private;
@@ -168,5 +167,11 @@ class Depend
 #define PACKAGE_STATE_NOTINSTALLED  0   // Non-installé
 #define PACKAGE_STATE_INSTALLED     1   // Installé
 #define PACKAGE_STATE_REMOVED       2   // Supprimé
+
+#define PACKAGE_FLAG_KDEINTEGRATION         0b00000011
+#define PACKAGE_FLAG_GUI                    0b00000100
+#define PACKAGE_FLAG_DONTUPDATE             0b00001000
+#define PACKAGE_FLAG_DONTINSTALL            0b00010000
+#define PACKAGE_FLAG_DONTREMOVE             0b00100000
 
 #endif

@@ -33,8 +33,11 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QFile>
+#include <QTextCodec>
 
 #include <cctype>
+
+#include <gpgme.h>
 
 #include <QtDebug>
 
@@ -68,6 +71,9 @@ Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     d->setParams = 0;
     d->lastError = 0;
     
+    // Initialiser GPG
+    gpgme_check_version(NULL);
+    
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
 
@@ -80,6 +86,7 @@ Logram::PackageSystem::~PackageSystem()
 void Logram::PackageSystem::loadConfig()
 {
     d->set = new QSettings(confRoot() + "/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
+    d->set->setIniCodec(QTextCodec::codecForCStrings());
     
     if ((d->setParams & PACKAGESYSTEM_OPT_INSTALLSUGGESTS) == 0)
     {
@@ -116,29 +123,64 @@ bool Logram::PackageSystem::init()
 
 struct Enrg
 {
-    QString url, distroName, arch, sourceName, type;
+    QString url, distroName, arch, sourceName;
+    Repository::Type type;
+    bool gpgCheck;
 };
 
-QString Logram::PackageSystem::repoType(const QString &repoName)
+QList<Repository> Logram::PackageSystem::repositories() const
 {
-    QString rs;
+    QList<Repository> rs;
+    Repository repo;
     
-    d->set->beginGroup(repoName);
-    rs = d->set->value("Type", "remote").toString();
-    d->set->endGroup();
-
+    foreach (const QString &repoName, d->set->childGroups())
+    {
+        if (repository(repoName, repo))
+        {
+            rs.append(repo);
+        }
+    }
+    
     return rs;
 }
 
-QString Logram::PackageSystem::repoUrl(const QString &repoName)
+bool Logram::PackageSystem::repository(const QString &name, Repository &rs) const
 {
-    QString rs;
-
-    d->set->beginGroup(repoName);
-    rs = d->set->value("Url").toString();
+    if (!d->set->contains(name + "/Mirrors"))
+    {
+        return false;
+    }
+    
+    d->set->beginGroup(name);
+        
+    QString t = d->set->value("Type", "remote").toString();
+    
+    if (t == "remote")
+    {
+        rs.type = Repository::Remote;
+    }
+    else if (t == "local")
+    {
+        rs.type = Repository::Local;
+    }
+    else
+    {
+        rs.type = Repository::Unknown;
+    }
+    
+    rs.name = name;
+    rs.description = d->set->value("Description").toString();
+    
+    rs.mirrors = d->set->value("Mirrors").toString().split(' ', QString::SkipEmptyParts);
+    rs.distributions = d->set->value("Distributions").toString().split(' ', QString::SkipEmptyParts);
+    rs.architectures = d->set->value("Archs").toString().split(' ', QString::SkipEmptyParts);
+    
+    rs.active = d->set->value("Active", true).toBool();
+    rs.gpgcheck = d->set->value("Sign", true).toBool();
+    
     d->set->endGroup();
-
-    return rs;
+    
+    return true;
 }
 
 QSettings *Logram::PackageSystem::installedPackagesList() const
@@ -155,33 +197,30 @@ bool Logram::PackageSystem::update()
 
     QList<Enrg *> enrgs;
 
-    foreach (const QString &sourceName, d->set->childGroups())
+    foreach (const Repository &repo, repositories())
     {
-        d->set->beginGroup(sourceName);
-
-        QString type = d->set->value("Type", "remote").toString();
-        QString url = d->set->value("Url").toString();
-        QStringList distros = d->set->value("Distributions").toString().split(' ', QString::SkipEmptyParts);
-        QStringList archs = d->set->value("Archs").toString().split(' ', QString::SkipEmptyParts);
-
         // Explorer chaque distribution, et chaque architecture dedans
-        foreach (const QString &distroName, distros)
+        if (!repo.active)
         {
-            foreach (const QString &arch, archs)
+            continue;
+        }
+        
+        foreach (const QString &distroName, repo.distributions)
+        {
+            foreach (const QString &arch, repo.architectures)
             {
                 Enrg *enrg = new Enrg;
 
-                enrg->url = url;
+                enrg->url = repo.mirrors.at(0);
                 enrg->distroName = distroName;
                 enrg->arch = arch;
-                enrg->sourceName = sourceName;
-                enrg->type = type;
+                enrg->sourceName = repo.name;
+                enrg->type = repo.type;
+                enrg->gpgCheck = repo.gpgcheck;
 
                 enrgs.append(enrg);
             }
         }
-
-        d->set->endGroup();
     }
 
     // Explorer les enregistrements et les télécharger
@@ -194,7 +233,7 @@ bool Logram::PackageSystem::update()
         
         sendProgress(GlobalDownload, i*2, count*2, u);
         
-        if (!db->download(enrg->sourceName, u, enrg->type, false))
+        if (!db->download(enrg->sourceName, u, enrg->type, false, enrg->gpgCheck))
         {
             return false;
         }
@@ -204,7 +243,7 @@ bool Logram::PackageSystem::update()
         
         sendProgress(GlobalDownload, i*2+1, count*2, u);
         
-        if (!db->download(enrg->sourceName, u, enrg->type, true))
+        if (!db->download(enrg->sourceName, u, enrg->type, true, enrg->gpgCheck))
         {
             return false;
         }
@@ -361,7 +400,7 @@ Solver *Logram::PackageSystem::newSolver()
     return new Solver(this, d->dr);
 }
 
-bool Logram::PackageSystem::download(const QString &type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs)
+bool Logram::PackageSystem::download(Repository::Type type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs)
 {
     // Ne pas télécharger un fichier en cache
     if (QFile::exists(dest))
@@ -380,7 +419,7 @@ bool Logram::PackageSystem::download(const QString &type, const QString &url, co
         return true;
     }
     
-    if (type == "remote")
+    if (type == Repository::Remote)
     {
         // Lancer le téléchargement
         QNetworkReply *reply = d->nmanager->get(QNetworkRequest(QUrl(url)));
@@ -409,7 +448,7 @@ bool Logram::PackageSystem::download(const QString &type, const QString &url, co
             return (rs == 0);
         }
     }
-    else if (type == "local")
+    else if (type == Repository::Local)
     {
         if (!QFile::copy(url, dest))
         {

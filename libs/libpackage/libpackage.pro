@@ -9,7 +9,8 @@ DEPENDPATH += .
 INCLUDEPATH += .
 QT -= gui
 QT += xml network script sql
-LIBS += -larchive -lgpgme
+LIBS += -larchive -lgpgme -lgpg-error
+QMAKE_CXXFLAGS += -D_FILE_OFFSET_BITS=64
 
 # Input
 HEADERS +=  packagesystem.h \
@@ -24,7 +25,8 @@ HEADERS +=  packagesystem.h \
             filepackage.h \
             packagesource.h \
             templatable.h \
-            repositorymanager.h
+            repositorymanager.h \
+            processthread.h
             
 SOURCES +=  packagesystem.cpp \
             databasereader.cpp \
@@ -38,7 +40,8 @@ SOURCES +=  packagesystem.cpp \
             filepackage.cpp \
             templatable.cpp \
             packagesource.cpp \
-            repositorymanager.cpp
+            repositorymanager.cpp \
+            processthread.cpp
 
 includes.files = *.h
 includes.path = /usr/include/logram

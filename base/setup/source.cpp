@@ -37,7 +37,7 @@ using namespace Logram;
     \
     src->loadKeys(); \
     \
-    if (!src->function(true)) \
+    if (!src->function()) \
     { \
         error(); \
         return; \

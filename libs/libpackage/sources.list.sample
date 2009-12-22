@@ -2,6 +2,9 @@ Language=fr
 
 [repo]
 Type=remote
-Url=http://archive.logram-project.org
+Mirrors=http://archive.logram-project.org
 Distributions=experimental
 Archs=x86_64 all
+Active=true
+Description=Logram's main archive
+Sign=false

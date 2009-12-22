@@ -26,6 +26,7 @@
 #include <QObject>
 #include <QString>
 #include <QList>
+#include <QStringList>
 
 class QNetworkReply;
 class QSettings;
@@ -61,12 +62,35 @@ struct PackageError
         BadDownloadType,
         OpenDatabaseError,
         QueryError,
-        SignError
+        SignError,
+        InstallError
     };
     
     Error type;
     QString info;    // Informations en une ligne (le nom du fichier qu'on peut pas ouvrir, etc)
     QString more;    // Facultatif : informations supplémentaires (sortie du script qui a planté)
+};
+
+struct Repository
+{
+    enum Type
+    {
+        Unknown,
+        Remote,
+        Local
+    };
+    
+    Type type;
+    
+    QString name;
+    QString description;
+    
+    QStringList mirrors;
+    QStringList distributions;
+    QStringList architectures;
+    
+    bool active;
+    bool gpgcheck;
 };
 
 struct UpgradeInfo;
@@ -98,9 +122,9 @@ class PackageSystem : public QObject
         static QString dependString(const QString &name, const QString &version, int op);
 
         // API utilisée par des éléments de liblpackages
-        bool download(const QString &type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs);
-        QString repoType(const QString &repoName);
-        QString repoUrl(const QString &repoName);
+        bool download(Repository::Type type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs);
+        QList<Repository> repositories() const;
+        bool repository(const QString &name, Repository &rs) const;
         QSettings *installedPackagesList() const;
         bool filesOfPackage(const QString &packageName, QStringList &rs);
 

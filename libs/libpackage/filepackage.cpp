@@ -77,6 +77,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     d = new Private;
     d->ps = ps;
     d->isize = 0;
+    d->flags = 0;
     
     if (QDir::isAbsolutePath(fileName))
     {
@@ -136,8 +137,9 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         path = QByteArray(archive_entry_pathname(entry));
         d->isize += archive_entry_size(entry);
         
-        if (!path.startsWith("__LOGRAM"))
+        if (path.startsWith("data/"))
         {
+            path.remove(0, 5);
             d->fileList.append(path);
         }
         
@@ -221,9 +223,13 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                 }
                 else if (el.tagName() == "flag")
                 {
-                    if (el.attribute("name") == "gui")
+                    if (el.attribute("name") == "kdeintegration")
                     {
-                        d->flags = el.attribute("value").toInt();
+                        d->flags |= (el.attribute("value").toInt() & 3);
+                    }
+                    else if (el.attribute("name") == "gui")
+                    {
+                        d->flags |= ((el.attribute("value").toInt() & 1) << 2);
                     }
                 }
                 else if (el.tagName() == "shortdesc")

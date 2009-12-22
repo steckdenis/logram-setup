@@ -58,14 +58,10 @@ class PackageSource : public Templatable
         
         void loadKeys();     // Une fois toutes les options définies
         
-        bool getSource(bool block = true);
-        bool checkSource(const QString &dir, bool fail, bool block = true);
-        bool build(bool block = true);
-        bool binaries(bool block = true);
-        
-    private slots:
-        void processDataOut();
-        void processTerminated(int exitCode, QProcess::ExitStatus exitStatus);
+        bool getSource();
+        bool checkSource(const QString &dir, bool fail);
+        bool build();
+        bool binaries();
         
     private:
         struct Private;

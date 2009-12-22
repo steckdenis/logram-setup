@@ -274,6 +274,7 @@ void App::help()
             "    download <src>     Télécharge la source du paquet dont <src> est le\n"
             "                       metadata.xml.\n"
             "    build <src>        Compile la source spécifiée par le metadata.xml <src>.\n"
+            "    binaries <src>     Créer les .lpk binaires du metadata.xml <src>.\n"
             "\n"
             "Commandes pour la gestion des dépôts :\n"
             "    include <pkg>      Inclus le paquet <pkg> dans le dépôt config/repo.conf\n"
@@ -360,6 +361,14 @@ void App::error()
             
         case PackageError::QueryError:
             cout << qPrintable(tr("Erreur dans la requête : "));
+            break;
+            
+        case PackageError::SignError:
+            cout << qPrintable(tr("Impossible de vérifier la signature : "));
+            break;
+            
+        case PackageError::InstallError:
+            cout << qPrintable(tr("Impossible d'installer le paquet "));
             break;
     }
     

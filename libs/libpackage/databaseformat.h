@@ -95,10 +95,4 @@ struct _StrPackagePtr
 #define PACKAGESYSTEM_OPT_CONFROOT          16
 #define PACKAGESYSTEM_OPT_VARROOT           32
 
-#define PACKAGE_FLAG_KDEINTEGRATION         0b00000011
-#define PACKAGE_FLAG_GUI                    0b00000100
-#define PACKAGE_FLAG_DONTUPDATE             0b00001000
-#define PACKAGE_FLAG_DONTINSTALL            0b00010000
-#define PACKAGE_FLAG_DONTREMOVE             0b00100000
-
 #endif

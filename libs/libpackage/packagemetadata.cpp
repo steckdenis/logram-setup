@@ -25,8 +25,10 @@
 #include "package.h"
 #include "databasepackage.h"
 #include "filepackage.h"
+#include "templatable.h"
 
 #include <QProcess>
+#include <QEventLoop>
 #include <QFile>
 #include <QLocale>
 #include <QRegExp>
@@ -40,18 +42,30 @@ using namespace Logram;
 struct PackageMetaData::Private
 {
     PackageSystem *ps;
+    Templatable *tpl;
     
     QDomElement currentPackage;
     
     bool error;
+    
+    // Processus
+    QEventLoop loop;
+    QString commandLine;
+    QByteArray buffer;
 };
 
 PackageMetaData::PackageMetaData(PackageSystem *ps)
-    : QDomDocument(), QObject(ps)
+    : QObject(ps), QDomDocument()
 {
     d = new Private;
     d->error = true;    // Encore invalide
     d->ps = ps;
+    d->tpl = 0;
+}
+
+void PackageMetaData::setTemplatable(Templatable *tpl)
+{
+    d->tpl = tpl;
 }
 
 void PackageMetaData::loadFile(const QString &fileName, const QByteArray &sha1hash, bool decompress)
@@ -152,12 +166,16 @@ void PackageMetaData::bindPackage(Package *pkg)
     {
         // Télécharger les métadonnées
         QString repo = pkg->repo();
-        QString type = d->ps->repoType(repo);
+        
+        Repository r;
+        d->ps->repository(repo, r);
+        
+        Repository::Type type = r.type;
         ManagedDownload *md = new ManagedDownload;
         DatabasePackage *dpkg = (DatabasePackage *)pkg;
         fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + pkg->name() + "~" + pkg->version() + ".metadata.xml.xz";
         
-        QString url = d->ps->repoUrl(repo) + "/" + dpkg->url(DatabasePackage::Metadata);
+        QString url = r.mirrors.at(0) + "/" + dpkg->url(DatabasePackage::Metadata);
         
         if (!d->ps->download(type, url, fname, true, md))
         {
@@ -291,4 +309,184 @@ QList<ChangeLogEntry *> PackageMetaData::changelog() const
     }
     
     return rs;
+}
+
+QByteArray PackageMetaData::scriptOut() const
+{
+    return d->buffer;
+}
+
+QByteArray PackageMetaData::script(const QString &key, const QString &type)
+{
+    QDomElement package = documentElement().firstChildElement(key);
+    
+    if (package.isNull())
+    {
+        return QByteArray();
+    }
+    
+    // Lire les éléments <script>, et voir si leur type correspond
+    QDomElement script = package.firstChildElement("script");
+    
+    while (!script.isNull())
+    {
+        if (script.attribute("type") == type)
+        {
+            return script.text().toUtf8();
+        }
+        
+        script = script.nextSiblingElement("script");
+    }
+    
+    return QByteArray();
+}
+
+bool PackageMetaData::runScript(const QByteArray &script, const QStringList &args)
+{
+    // Charger le script
+    QFile scriptapi("/usr/libexec/scriptapi");
+    
+    if (!scriptapi.open(QIODevice::ReadOnly))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = scriptapi.fileName();
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    QByteArray header = scriptapi.readAll();
+    header += script;
+    scriptapi.close();
+    
+    // Lancer bash, en lui envoyant comme entrée le script ainsi que scriptapi
+    QProcess *sh = new QProcess(this);
+    
+    QStringList arguments;
+    arguments << "-s";
+    arguments << "--";
+    arguments << args;
+    
+    connect(sh, SIGNAL(readyReadStandardOutput()), 
+            this, SLOT(processDataOut()));
+    connect(sh, SIGNAL(finished(int, QProcess::ExitStatus)),
+            this, SLOT(processTerminated(int, QProcess::ExitStatus)));
+    
+    d->buffer.clear();
+    
+    d->commandLine = "/bin/sh " + arguments.join(" ");
+    sh->setProcessChannelMode(QProcess::MergedChannels);
+    sh->start("/bin/sh", arguments);
+    
+    if (!sh->waitForStarted())
+    {
+        delete sh;
+        
+        PackageError *err = new PackageError;
+        err->type = PackageError::ProcessError;
+        err->info = d->commandLine;
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    // Écrire le script, d'abord /usr/libexec/scriptapi, puis script
+    if (d->tpl != 0)
+    {
+        sh->write(d->tpl->templateString(header));
+    }
+    else
+    {
+        sh->write(header);
+    }
+    sh->write("\nexit 0\n");
+    
+    // Si on bloque, attendre
+    int rs = d->loop.exec();
+        
+    return (rs == 0);
+}
+
+bool PackageMetaData::runScript(const QString &key, const QString &type, const QString &currentDir, const QStringList &args)
+{
+    QString cDir = QDir::currentPath();
+    
+    QByteArray s = script(key, type);
+    
+    if (s.isNull())
+    {
+        return false;
+    }
+    
+    QDir::setCurrent(currentDir);
+    
+    if (!runScript(s, args))
+    {
+        QDir::setCurrent(cDir);
+        return false;
+    }
+     
+    QDir::setCurrent(cDir);
+    
+    return true;
+}
+
+void PackageMetaData::processDataOut()
+{
+    QProcess *sh = static_cast<QProcess *>(sender());
+    
+    if (sh == 0)
+    {
+        return;
+    }
+    
+    // Lire les lignes
+    QByteArray line;
+    
+    while (sh->bytesAvailable() > 0)
+    {
+        line = sh->readLine().trimmed();
+        
+        d->buffer += line + '\n';
+        
+        // Envoyer la progression
+        d->ps->sendProgress(PackageSystem::ProcessOut, 0, 1, line);
+        
+        // NOTE: Après le refactoring, on gèrera ici les communications
+    }
+}
+
+void PackageMetaData::processTerminated(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    // Plus besoin du processus
+    QProcess *sh = static_cast<QProcess *>(sender());
+    
+    if (sh != 0)
+    {
+        sh->deleteLater();
+    }
+    
+    // Savoir si tout est ok
+    int rs = 0;
+    
+    if (exitCode != 0 || exitStatus != QProcess::NormalExit)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::ProcessError;
+        err->info = d->commandLine;
+        err->more = d->buffer;
+        
+        d->ps->setLastError(err);
+        
+        rs = 1;
+    }
+    
+    // Mettre un terme à la progression
+    d->ps->endProgress(PackageSystem::ProcessOut, 1);
+    
+    // Quitter la boucle
+    d->loop.exit(rs);
 }

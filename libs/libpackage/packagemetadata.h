@@ -27,12 +27,14 @@
 
 #include <QObject>
 #include <QDateTime>
+#include <QProcess>
 
 namespace Logram
 {
 
 class Package;
 class PackageSystem;
+class Templatable;
 
 struct ChangeLogEntry
 {
@@ -43,8 +45,10 @@ struct ChangeLogEntry
     QString text;
 };
 
-class PackageMetaData : public QDomDocument, public QObject
+class PackageMetaData : public QObject, public QDomDocument
 {
+    Q_OBJECT
+    
     public:
         PackageMetaData(PackageSystem *ps);
         ~PackageMetaData();
@@ -53,6 +57,8 @@ class PackageMetaData : public QDomDocument, public QObject
         void loadFile(const QString &fileName, const QByteArray &sha1hash, bool decompress);
         void loadData(const QByteArray &data);
         void bindPackage(Package *pkg);
+        
+        void setTemplatable(Templatable *tpl);
         
         
         QString primaryLang() const;
@@ -67,6 +73,15 @@ class PackageMetaData : public QDomDocument, public QObject
         
         static QString stringOfKey(const QDomElement &element, const QString &primaryLang);
         QString stringOfKey(const QDomElement &element) const;
+        
+        QByteArray script(const QString &key, const QString &type);
+        bool runScript(const QByteArray &script, const QStringList &args);
+        bool runScript(const QString &key, const QString &type, const QString &currentDir, const QStringList &args);
+        QByteArray scriptOut() const;
+        
+    private slots:
+        void processDataOut();
+        void processTerminated(int exitCode, QProcess::ExitStatus exitStatus);
         
     private:
         struct Private;
