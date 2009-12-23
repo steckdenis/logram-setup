@@ -391,9 +391,14 @@ bool Logram::PackageSystem::filesOfPackage(const QString &packageName, QStringLi
         }
 
         // Lire les lignes et les ajouter au résultat
+        if (!iroot.endsWith('/'))
+        {
+            iroot += '/';
+        }
+        
         while (!fl.atEnd())
         {
-            rs.append(fl.readLine().replace("./", iroot.toAscii() + "/").trimmed());
+            rs.append(iroot + fl.readLine().trimmed());
         }
         
         return true;

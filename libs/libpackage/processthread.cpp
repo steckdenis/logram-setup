@@ -202,6 +202,7 @@ void ProcessThread::run()
 {
     QList<QByteArray> files;
     QByteArray metadataContents;
+    QStringList sfiles;
     
     QFile fl;
     QDir rootDir = QDir::root();
@@ -219,6 +220,14 @@ void ProcessThread::run()
     tpl->addKey("version", d->pkg->version());
     tpl->addKey("arch", d->pkg->arch());
     
+    // Métadonnées, chargées quand nécessaire
+    md = new PackageMetaData(d->ps, 0);
+    md->setTemplatable(tpl);
+    md->setPackage(d->pkg);
+    
+    connect(md, SIGNAL(processLineOut(QProcess *, const QByteArray &)), 
+          d->pkg, SLOT(processLineOut(QProcess *, const QByteArray &)));
+    
     switch (d->pkg->action())
     {
         case Solver::Install:
@@ -229,14 +238,7 @@ void ProcessThread::run()
             }
             
             // Lancer le script preinst
-            md = new PackageMetaData(d->ps, 0);
             md->loadData(metadataContents);
-            
-            md->setTemplatable(tpl);
-            md->setPackage(d->pkg);
-            
-            connect(md, SIGNAL(processLineOut(QProcess *, const QByteArray &)), 
-                  d->pkg, SLOT(processLineOut(QProcess *, const QByteArray &)));
             
             if (!md->runScript(d->pkg->name(), "preinst", d->ps->installRoot(), QStringList()))
             {
@@ -314,6 +316,64 @@ void ProcessThread::run()
             
         case Solver::Remove:
         case Solver::Purge:
+            // Charger les métadonnées
+            dir = d->ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + d->pkg->name() + '_' + d->pkg->version();
+            
+            fl.setFileName(dir + "/metadata.xml");
+            
+            if (!fl.open(QIODevice::ReadOnly))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::OpenFileError;
+                err->info = fl.fileName();
+                
+                d->ps->setLastError(err);
+                d->error = true;
+                
+                return;
+            }
+            
+            md->loadData(fl.readAll());
+            fl.close();
+            
+            // Script prerm
+            if (!md->runScript(d->pkg->name(), "prerm", d->ps->installRoot(), QStringList()))
+            {
+                d->error = true;
+                return;
+            }
+            
+            // Obtenir la liste des fichiers
+            if (!d->ps->filesOfPackage(d->pkg->name(), sfiles))
+            {
+                d->error = true;
+                return;
+            }
+            
+            // Explorer ces fichiers et les supprimer
+            foreach (const QString &file, sfiles)
+            {
+                // Si on ne purge pas, sauter les fichiers dans /etc (NOTE: condition fragile)
+                if (d->pkg->action() != Solver::Purge && file.contains("/etc/"))
+                {
+                    continue;
+                }
+                
+                QFile::remove(file);
+            }
+            
+            // Supprimer l'enregistrement en base de donnée
+            QFile::remove(dir + "/metadata.xml");
+            QFile::remove(dir + "/files.list");
+            QFile::remove(dir);
+            
+            // Lancer postrm
+            if (!md->runScript(d->pkg->name(), "postinst", d->ps->installRoot(), QStringList()))
+            {
+                d->error = true;
+                return;
+            }
+            
             break;
             
         case Solver::Update:

@@ -220,7 +220,7 @@ void Package::processEnd()
                       QString(getenv("UID")).toInt(),
                       PACKAGE_STATE_INSTALLED);
     }
-    /*else if (action() == Solver::Update)
+    else if (action() == Solver::Update)
     {
         Package *other = upgradePackage();
         
@@ -282,7 +282,7 @@ void Package::processEnd()
         registerState(0, 
                       0,
                       PACKAGE_STATE_NOTINSTALLED);
-    }*/
+    }
 
     // Supprimer le thread
     d->processThread->deleteLater();
