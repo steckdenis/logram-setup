@@ -500,7 +500,7 @@ bool DatabaseWriter::rebuild()
             // Vérifier la signature
             bool signvalid;
             
-            if (checkFiles.at(cfIndex) && !isInstalledPackages && pass == 0)
+            if (!isInstalledPackages && pass == 0 && checkFiles.at(cfIndex))
             {
                 if (!verifySign(file + ".sig", QByteArray::fromRawData(buffer, flength), signvalid))
                 {

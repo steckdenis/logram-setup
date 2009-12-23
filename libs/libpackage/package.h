@@ -127,6 +127,7 @@ class Package : public QObject
 
     private slots:
         void processEnd();
+        void processLineOut(QProcess *process, const QByteArray &line);
 
     private:
         struct Private;

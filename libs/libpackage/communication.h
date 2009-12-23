@@ -29,12 +29,12 @@ namespace Logram
 {
     
 class PackageSystem;
-class Package;
+class PackageMetaData;
 
 class Communication : public Templatable
 {
     public:
-        Communication(PackageSystem *ps, Package *pkg, const QString &name);
+        Communication(PackageSystem *ps, PackageMetaData *md, const QString &name);
         ~Communication();
         bool error() const;
         

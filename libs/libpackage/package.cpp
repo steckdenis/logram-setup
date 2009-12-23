@@ -123,35 +123,32 @@ PackageMetaData *Package::metadata()
 void Package::process()
 {
     d->processThread = new ProcessThread(d->ps, this);
-    
 
     connect(d->processThread, SIGNAL(finished()), this, SLOT(processEnd()));
 
     d->processThread->start();
 }
 
-/*void Package::processOut()
+void Package::processLineOut(QProcess *process, const QByteArray &line)
 {
-    QString buf = d->installProcess->readAll();
-    d->readBuf += buf;
-    QString out = buf.trimmed();
-
-    // Voir si une communication n'est pas arrivée
-    if (out.startsWith("[[>>|") && out.endsWith("|<<]]"))
+    PackageMetaData *md = static_cast<PackageMetaData *>(sender());
+    
+    // Gérer les communications
+    if (line.startsWith("[[>>|") && line.endsWith("|<<]]"))
     {
-        QStringList parts = out.split('|');
+        QList<QByteArray> parts = line.split('|');
         
         // Trouver le nom de la communication, en enlevant d'abord le premier [[>>
         parts.removeAt(0);
         QString name = parts.takeAt(0);
         
         // Créer la communication
-        Communication *comm = new Communication(d->ps, this, name);
+        Communication *comm = new Communication(d->ps, md, name);
         
         if (comm->error())
         {
             // Erreur survenue
-            emit proceeded(false);
+            process->kill();     // Va émettre processEnded avec une erreur, dans packagemetadata
             return;
         }
         
@@ -168,9 +165,9 @@ void Package::process()
         emit communication(this, comm);
         
         // Retourner le résultat au processus
-        d->installProcess->write(comm->processData().toUtf8() + "\n");
+        process->write(comm->processData().toUtf8() + "\n");
     }
-}*/
+}
 
 void Package::processEnd()
 {

@@ -26,6 +26,7 @@
 #include "databasepackage.h"
 #include "filepackage.h"
 #include "templatable.h"
+#include "communication.h"
 
 #include <QProcess>
 #include <QEventLoop>
@@ -33,6 +34,7 @@
 #include <QLocale>
 #include <QRegExp>
 #include <QCryptographicHash>
+#include <QTemporaryFile>
 
 #include <QtXml>
 #include <QtDebug>
@@ -43,6 +45,7 @@ struct PackageMetaData::Private
 {
     PackageSystem *ps;
     Templatable *tpl;
+    Package *pkg;
     
     QDomElement currentPackage;
     
@@ -61,11 +64,27 @@ PackageMetaData::PackageMetaData(PackageSystem *ps)
     d->error = true;    // Encore invalide
     d->ps = ps;
     d->tpl = 0;
+    d->pkg = 0;
+}
+
+PackageMetaData::PackageMetaData(PackageSystem *ps, QObject *parent)
+    : QObject(parent), QDomDocument()
+{
+    d = new Private;
+    d->error = true;    // Encore invalide
+    d->ps = ps;
+    d->tpl = 0;
+    d->pkg = 0;
 }
 
 void PackageMetaData::setTemplatable(Templatable *tpl)
 {
     d->tpl = tpl;
+}
+
+void PackageMetaData::setPackage(Package *pkg)
+{
+    d->pkg = pkg;
 }
 
 void PackageMetaData::loadFile(const QString &fileName, const QByteArray &sha1hash, bool decompress)
@@ -318,24 +337,26 @@ QByteArray PackageMetaData::scriptOut() const
 
 QByteArray PackageMetaData::script(const QString &key, const QString &type)
 {
-    QDomElement package = documentElement().firstChildElement(key);
+    QDomElement package = documentElement().firstChildElement();
     
-    if (package.isNull())
+    while (!package.isNull())
     {
-        return QByteArray();
-    }
-    
-    // Lire les éléments <script>, et voir si leur type correspond
-    QDomElement script = package.firstChildElement("script");
-    
-    while (!script.isNull())
-    {
-        if (script.attribute("type") == type)
+        if ((package.tagName() == "source" && key == "source") ||
+            (package.tagName() == "package" && package.attribute("name") == key))
         {
-            return script.text().toUtf8();
+            QDomElement script = package.firstChildElement("script");
+            
+            while (!script.isNull())
+            {
+                if (script.attribute("type") == type)
+                {
+                    return script.text().toUtf8();
+                }
+                
+                script = script.nextSiblingElement("script");
+            }
         }
-        
-        script = script.nextSiblingElement("script");
+        package = package.nextSiblingElement();
     }
     
     return QByteArray();
@@ -343,6 +364,12 @@ QByteArray PackageMetaData::script(const QString &key, const QString &type)
 
 bool PackageMetaData::runScript(const QByteArray &script, const QStringList &args)
 {
+    if (script.isNull())
+    {
+        // On ne doit rien lancer
+        return true;
+    }
+    
     // Charger le script
     QFile scriptapi("/usr/libexec/scriptapi");
     
@@ -361,12 +388,37 @@ bool PackageMetaData::runScript(const QByteArray &script, const QStringList &arg
     header += script;
     scriptapi.close();
     
+    // Écrire le fichier de script complet dans un QTemporaryFile
+    QTemporaryFile tfl;
+    
+    if (!tfl.open())
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = tfl.fileName();
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    if (d->tpl != 0)
+    {
+        tfl.write(d->tpl->templateString(header));
+    }
+    else
+    {
+        tfl.write(header);
+    }
+    
+    tfl.write("\nexit 0\n");
+    tfl.close();
+    
     // Lancer bash, en lui envoyant comme entrée le script ainsi que scriptapi
     QProcess *sh = new QProcess(this);
     
     QStringList arguments;
-    arguments << "-s";
-    arguments << "--";
+    arguments << tfl.fileName();
     arguments << args;
     
     connect(sh, SIGNAL(readyReadStandardOutput()), 
@@ -378,7 +430,7 @@ bool PackageMetaData::runScript(const QByteArray &script, const QStringList &arg
     
     d->commandLine = "/bin/sh " + arguments.join(" ");
     sh->setProcessChannelMode(QProcess::MergedChannels);
-    sh->start("/bin/sh", arguments);
+    sh->start("/bin/sh", arguments, QIODevice::ReadWrite);
     
     if (!sh->waitForStarted())
     {
@@ -393,18 +445,7 @@ bool PackageMetaData::runScript(const QByteArray &script, const QStringList &arg
         return false;
     }
     
-    // Écrire le script, d'abord /usr/libexec/scriptapi, puis script
-    if (d->tpl != 0)
-    {
-        sh->write(d->tpl->templateString(header));
-    }
-    else
-    {
-        sh->write(header);
-    }
-    sh->write("\nexit 0\n");
-    
-    // Si on bloque, attendre
+    // attendre
     int rs = d->loop.exec();
         
     return (rs == 0);
@@ -418,7 +459,7 @@ bool PackageMetaData::runScript(const QString &key, const QString &type, const Q
     
     if (s.isNull())
     {
-        return false;
+        return true;
     }
     
     QDir::setCurrent(currentDir);
@@ -455,7 +496,8 @@ void PackageMetaData::processDataOut()
         // Envoyer la progression
         d->ps->sendProgress(PackageSystem::ProcessOut, 0, 1, line);
         
-        // NOTE: Après le refactoring, on gèrera ici les communications
+        // Émettre le bon signal
+        emit processLineOut(sh, line);
     }
 }
 

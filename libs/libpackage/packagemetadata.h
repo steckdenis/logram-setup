@@ -35,6 +35,7 @@ namespace Logram
 class Package;
 class PackageSystem;
 class Templatable;
+class Communication;
 
 struct ChangeLogEntry
 {
@@ -51,12 +52,14 @@ class PackageMetaData : public QObject, public QDomDocument
     
     public:
         PackageMetaData(PackageSystem *ps);
+        PackageMetaData(PackageSystem *ps, QObject *parent);
         ~PackageMetaData();
         bool error() const;
         
         void loadFile(const QString &fileName, const QByteArray &sha1hash, bool decompress);
         void loadData(const QByteArray &data);
         void bindPackage(Package *pkg);
+        void setPackage(Package *pkg);
         
         void setTemplatable(Templatable *tpl);
         
@@ -82,6 +85,9 @@ class PackageMetaData : public QObject, public QDomDocument
     private slots:
         void processDataOut();
         void processTerminated(int exitCode, QProcess::ExitStatus exitStatus);
+        
+    signals:
+        void processLineOut(QProcess *process, const QByteArray &line);
         
     private:
         struct Private;

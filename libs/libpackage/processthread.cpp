@@ -23,6 +23,8 @@
 #include "processthread.h"
 #include "package.h"
 #include "packagesystem.h"
+#include "packagemetadata.h"
+#include "templatable.h"
 
 #include <QDir>
 #include <QFile>
@@ -169,7 +171,6 @@ bool ProcessThread::depack(QList<QByteArray> &files, QByteArray &metadataContent
                 
                 d->ps->setLastError(err);
                 
-                qDebug() << archive_error_string(a) << archive_errno(a);
                 return false; // TODO: Ne pas leaker entry, a et ext
             }
         }
@@ -206,12 +207,41 @@ void ProcessThread::run()
     QDir rootDir = QDir::root();
     QString dir;
     
+    PackageMetaData *md;
+    
+    // On a besoin d'un templatable pour les variables du type instroot, varroot, confroot, package, version, arch, etc
+    Templatable *tpl = new Templatable(0);
+    
+    tpl->addKey("instroot", d->ps->installRoot());
+    tpl->addKey("varroot", d->ps->varRoot());
+    tpl->addKey("confroot", d->ps->confRoot());
+    tpl->addKey("package", d->pkg->name());
+    tpl->addKey("version", d->pkg->version());
+    tpl->addKey("arch", d->pkg->arch());
+    
     switch (d->pkg->action())
     {
         case Solver::Install:
             if (!depack(files, metadataContents))
             {
                 d->error = true;
+                return;
+            }
+            
+            // Lancer le script preinst
+            md = new PackageMetaData(d->ps, 0);
+            md->loadData(metadataContents);
+            
+            md->setTemplatable(tpl);
+            md->setPackage(d->pkg);
+            
+            connect(md, SIGNAL(processLineOut(QProcess *, const QByteArray &)), 
+                  d->pkg, SLOT(processLineOut(QProcess *, const QByteArray &)));
+            
+            if (!md->runScript(d->pkg->name(), "preinst", d->ps->installRoot(), QStringList()))
+            {
+                d->error = true;
+                return;
             }
             
             // Enregistrer la liste des fichiers dans "{{varRoot}}/var/cache/lgrpkg/db/pkgs/{{name}}_{{version}}"
@@ -270,7 +300,15 @@ void ProcessThread::run()
             fl.write(metadataContents);
             fl.close();
             
+            // Lancer postinst
+            if (!md->runScript(d->pkg->name(), "postinst", d->ps->installRoot(), QStringList()))
+            {
+                d->error = true;
+                return;
+            }
+            
             // Fini !
+            delete md;
             d->error = false;
             break;
             
@@ -285,4 +323,6 @@ void ProcessThread::run()
             d->error = true;
             return;
     }
+    
+    delete tpl;
 }

@@ -94,6 +94,7 @@ bool PackageSource::setMetaData(const QString &fileName)
     d->md = new PackageMetaData(d->ps);
     
     d->md->loadFile(fileName, QByteArray(), false);
+    d->md->setTemplatable(this);
     d->metaFileName = fileName;
     
     return !d->md->error();

@@ -143,8 +143,8 @@ class PackageSystem : public QObject
         void setVarRoot(const QString &root);
         
         // Gestion des erreurs
-        void setLastError(PackageError *err);
-        PackageError *lastError();
+        void setLastError(PackageError *err); // Thread-safe
+        PackageError *lastError(); // Thread-safe
 
         // Progression
         enum Progress

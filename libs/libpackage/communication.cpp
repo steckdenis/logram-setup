@@ -37,7 +37,6 @@ using namespace Logram;
 struct Communication::Private
 {
     PackageSystem *ps;
-    Package *pkg;
     PackageMetaData *md;
     bool error;
     
@@ -53,14 +52,13 @@ struct Communication::Private
     QString validateErrorString;
 };
 
-Communication::Communication(PackageSystem *ps, Package *pkg, const QString &name) : Templatable(pkg)
+Communication::Communication(PackageSystem *ps, PackageMetaData *md, const QString &name) : Templatable(ps)
 {
     d = new Private;
     
     d->error = false;
     d->ps = ps;
-    d->pkg = pkg;
-    d->md = pkg->metadata();
+    d->md = md;
     d->choicesFetched = false;
     
     if (d->md == 0)

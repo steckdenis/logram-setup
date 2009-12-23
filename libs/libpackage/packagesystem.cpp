@@ -34,6 +34,7 @@
 #include <QNetworkReply>
 #include <QFile>
 #include <QTextCodec>
+#include <QMutex>
 
 #include <cctype>
 
@@ -54,6 +55,7 @@ struct Logram::PackageSystem::Private
     QSettings *set, *ipackages;
     
     PackageError *lastError;
+    QMutex errorMutex;
 
     // Options
     bool installSuggests;
@@ -73,6 +75,9 @@ Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     
     // Initialiser GPG
     gpgme_check_version(NULL);
+    
+    // Initialiser les MetaTypes
+    qRegisterMetaType<Logram::PackageSystem::Progress>("Logram::PackageSystem::Progress");
     
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
@@ -577,17 +582,27 @@ void Logram::PackageSystem::dlProgress(qint64 done, qint64 total)
 
 void Logram::PackageSystem::setLastError(PackageError *err)
 {
+    d->errorMutex.lock();
+    
     if (d->lastError != 0)
     {
         delete d->lastError;
     }
     
     d->lastError = err;
+    
+    d->errorMutex.unlock();
 }
 
 PackageError *Logram::PackageSystem::lastError()
 {
-    return d->lastError;
+    d->errorMutex.lock();
+    
+    PackageError *le = d->lastError;
+    
+    d->errorMutex.unlock();
+    
+    return le;
 }
 
 /* Utilitaires */

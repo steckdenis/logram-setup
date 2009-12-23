@@ -7,4 +7,4 @@ Distributions=experimental
 Archs=x86_64 all
 Active=true
 Description=Logram's main archive
-Sign=false
+Sign=true
