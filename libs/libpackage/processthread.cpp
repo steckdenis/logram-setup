@@ -125,7 +125,9 @@ bool ProcessThread::depack(Package *pkg, QList<QByteArray> &files, QByteArray &m
         
         d->ps->setLastError(err);
         
-        return false; // TODO: Eviter les leaks
+        archive_read_finish(a);
+        archive_write_finish(ext);
+        return false;
     }
     
     QByteArray path;
@@ -149,7 +151,10 @@ bool ProcessThread::depack(Package *pkg, QList<QByteArray> &files, QByteArray &m
             
             d->ps->setLastError(err);
             
-            return false; // TODO: Ne pas leaker entry, a et ext
+            archive_read_close(a);
+            archive_read_finish(a);
+            archive_write_finish(ext);
+            return false;
         }
         
         // Liste des fichiers et métadonnées
@@ -173,7 +178,10 @@ bool ProcessThread::depack(Package *pkg, QList<QByteArray> &files, QByteArray &m
                 
                 d->ps->setLastError(err);
                 
-                return false; // TODO: Ne pas leaker entry, a et ext
+                archive_read_close(a);
+                archive_read_finish(a);
+                archive_write_finish(ext);
+                return false;
             }
         }
         else if (path == "control/metadata.xml")
@@ -191,6 +199,7 @@ bool ProcessThread::depack(Package *pkg, QList<QByteArray> &files, QByteArray &m
     
     archive_read_close(a);
     archive_read_finish(a);
+    archive_write_finish(ext);
     
     // Se remettre dans le bon dossier
     QDir::setCurrent(cDir);
