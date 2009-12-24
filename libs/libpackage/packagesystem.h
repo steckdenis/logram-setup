@@ -118,7 +118,7 @@ struct Progress
     
     Type type;
     Action action;
-    int current, total;
+    int current, old, total;
     QString info, more;
 };
 

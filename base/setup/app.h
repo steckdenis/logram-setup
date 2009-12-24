@@ -25,6 +25,9 @@
 
 #include <QCoreApplication>
 #include <QStringList>
+#include <QList>
+#include <QTime>
+
 #include <QtDebug>
 
 #include <logram/packagesystem.h>
@@ -85,6 +88,12 @@ class App : public QCoreApplication
         bool colored;
 
         void manageResults(Logram::Solver *solver);
+        void updatePgs(Logram::Progress *p);
+        
+        // Progressions
+        QList<Logram::Progress *> progresses;
+        QList<QTime> tProgresses;
+        int width;
 };
 
 #endif

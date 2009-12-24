@@ -920,6 +920,8 @@ int Logram::PackageSystem::startProgress(Progress::Type type, int tot)
     
     d->progresses.insert(pid, p);
     
+    d->progressCount++;
+    
     emit progress(p);
     
     return pid;
@@ -934,6 +936,7 @@ void Logram::PackageSystem::sendProgress(int id, int num, const QString &msg, co
         return;
     }
     
+    p->old = p->current;
     p->current = num;
     p->info = msg;
     p->more = more;

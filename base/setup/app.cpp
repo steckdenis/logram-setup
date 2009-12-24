@@ -27,9 +27,15 @@
 #include <QStringList>
 #include <QTextCodec>
 
+#include <QThread>
+
 #include <iostream>
 using namespace std;
 using namespace Logram;
+
+#include <sys/ioctl.h>
+#include <stdlib.h> 
+#include <stdio.h> 
 
 #define CHECK_ARGS(cond) \
     if (args.count() cond) \
@@ -146,7 +152,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     QStringList noInitCommand;
     
     noInitCommand << "update" << "download" << "build" << "binaries" << "include"
-                  << "export";
+                  << "export" << "testprogress";
     
     if (!noInitCommand.contains(cmd))
     {
@@ -155,6 +161,18 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             error();
             return;
         }
+    }
+    
+    // Obtenir la taille de la console
+    struct winsize ws;
+    
+    if (ioctl(0, TIOCGWINSZ, &ws) != 0)
+    {
+        width = 80;
+    }
+    else
+    {
+        width = ws.ws_col;
     }
 
     if (cmd == "help")
@@ -244,6 +262,44 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         // exporter toutes les distributions
         
         exp(args);
+    }
+    else if (cmd == "testprogress")
+    {
+        // Envoyer des progressions
+        int p1 = ps->startProgress(Progress::Download, 1024*1024);      // 1Mio
+        int p2 = ps->startProgress(Progress::Download, 1536*1024);      // 1,5Mio
+        
+        int c1 = 0;
+        int c2 = 0;
+        
+        while (true)
+        {
+            ps->sendProgress(p1, c1, "http://archive.logram-project.org/pool/i/initng~0.6.99+git20091223~1.i686.lpk");
+            usleep(50000);
+            ps->sendProgress(p2, c2, "http://archive.logram-project.org/pool/a/amarok~2.2.2~5.i686.lpk");
+            
+            c1 += 20480 + (rand() % 10240);    // entre 200 et 300 Kio/s
+            c2 += 10240 + (rand() % 10240);    // entre 100 et 200 Kio/s
+            
+            if (c1 >= 1024*1024)
+            {
+                c1 = 0;
+                ps->endProgress(p1);
+                
+                p1 = ps->startProgress(Progress::Download, 1024*1024);      // 1Mio
+            }
+            
+            if (c2 >= 1536*1024)
+            {
+                c2 = 0;
+                ps->endProgress(p2);
+                
+                p2 = ps->startProgress(Progress::Download, 1536*1024);      // 1,5Mio
+            }
+            
+            // Attendre une seconde
+            usleep(50000);
+        }
     }
     else
     {
@@ -384,74 +440,263 @@ void App::error()
     delete err;
 }
 
+void App::updatePgs(Progress *p)
+{   
+    // Temps de maintenant
+    QTime now = QTime::currentTime();
+    
+    for (int i=0; i<progresses.count(); ++i)
+    {
+        Progress *progress = progresses.at(i);
+        
+        if (progress == 0)
+        {
+            // Slot vide
+            for (int j=0; j<width; j++)
+            {
+                cout << ' ';
+            }
+            
+            cout << endl;
+            
+            for (int j=0; j<width; j++)
+            {
+                cout << ' ';
+            }
+            
+            cout << endl;
+            
+            continue;
+        }
+        
+        const QTime &oldTime = tProgresses.at(i);
+        
+        // Le pourcentage
+        int percent = progress->current * 100 / progress->total;
+        
+        cout << ' ';
+        cout << COLOR(QString::number(percent).rightJustified(3) + '%', "33");
+        cout << " [";
+        
+        // Obtenir le nombre de caractères, sachant que ça va
+        // de 0 à width-20
+        // Ligne : | 100% [=== .. ===] 1023 Kib/s |
+        
+        int maxcara = width-20;
+        int caracount = progress->current * maxcara / progress->total;
+        
+        if (caracount > maxcara) caracount = maxcara;
+        
+        int j;
+        
+        for (j=0; j<caracount; ++j)
+        {
+            cout << '=';
+        }
+        
+        for (; j<maxcara; ++j)
+        {
+            cout << ' ';
+        }
+        
+        // Vitesse de téléchargement
+        cout << "] ";
+        
+        int timedelta = oldTime.msecsTo(now);
+        int bytedelta = progress->current - progress->old;
+        
+        // Mettre à jour l'heure de dernier passage, si c'est bien nous qui nous sommes mis à jour
+        if (p == progress)
+        {
+            tProgresses[i] = now;
+        }
+        
+        // Nombre de bytes par seconde
+        int bps;
+        
+        if (timedelta == 0)
+        {
+            bps = 0;
+        }
+        else
+        {
+            bps = bytedelta * 1000 / timedelta;
+        }
+        
+        if (bps < 0) bps = 0;
+        
+        QString sdelta = ps->fileSizeFormat(bps);
+        
+        cout << COLOR(sdelta.rightJustified(8, ' ', true) + "/s", "32");
+        
+        cout << endl;
+        
+        // Deuxième ligne : nom de fichier
+        int ln = progress->info.size();
+        
+        if (ln > width)
+        {
+            cout << qPrintable(progress->info.left(width));
+        }
+        else
+        {
+            int before = (width - ln) / 2;
+            
+            for (int j=0; j<before; ++j)
+            {
+                cout << ' ';
+            }
+            
+            cout << qPrintable(progress->info);
+            
+            before += ln;   // Taille totale déjà écrite
+            before = width - before;    // Ce qui reste
+            
+            for (int j=0; j<before; j++)
+            {
+                cout << ' ';
+            }
+        }
+        
+        cout << endl;
+    }
+    
+    cout << "\033[" << (progresses.count() * 2) << "A";
+    cout.flush();
+}
+
 void App::progress(Progress *progress)
 {
     if (progress->action == Progress::Create)
     {
+        // Si le type est un téléchargement, créer une barre de progression
+        if (progress->type == Progress::Download && !progresses.contains(progress))
+        {
+            // Trouver un emplacement libre
+            for (int i=0; i<progresses.count(); ++i)
+            {
+                if (progresses.at(i) == 0)
+                {
+                    progresses[i] = progress;
+                    tProgresses[i] = QTime::currentTime();
+                    
+                    updatePgs(progress);
+                    return;
+                }
+            }
+            
+            // On n'a rien trouvé
+            progresses.append(progress);
+            tProgresses.append(QTime::currentTime());
+            
+            updatePgs(progress);
+        }
+        
         return;
     }
     else if (progress->action == Progress::End)
     {
+        // Si un téléchargement, supprimer la barre de progression
+        if (progress->type == Progress::Download)
+        {
+            int index = progresses.indexOf(progress);
+            
+            if (index != -1)
+            {
+                progresses[index] = 0;
+            }
+            
+            updatePgs(progress);
+        }
+        
         delete progress;
         return;
     }
     
+    if (progress->type == Progress::Download)
+    {
+        updatePgs(progress);
+        return;
+    }
+    
     // Afficher le message
-    cout << COLOR("[" + QString::number(progress->current + 1) + "/" + QString::number(progress->total) + "] ", "33");
+    int usedwidth = 0;
+    QString s = "[" + QString::number(progress->current + 1) + "/" + QString::number(progress->total) + "] ";
+    
+    cout << COLOR(s, "33");
+    
+    usedwidth += s.size();
 
     // Type
     switch (progress->type)
     {
         case Progress::Other:
-            cout << COLOR(tr("Progression : "), "34");
+            s = tr("Progression : ");
             break;
             
         case Progress::GlobalDownload:
-            cout << COLOR(tr("Téléchargement de "), "34");
-            break;
-            
-        case Progress::Download:
-            cout << COLOR(tr("Téléchargement de "), "34");
+            s = tr("Téléchargement de ");
             break;
             
         case Progress::UpdateDatabase:
-            cout << COLOR(tr("Mise à jour de la base de donnée : "), "34");
+            s = tr("Mise à jour de la base de donnée : ");
             break;
             
         case Progress::PackageProcess:
-            cout << COLOR(tr("Opération sur "), "34");
+            s = tr("Opération sur ");
             break;
             
         case Progress::ProcessOut:
-            cout << COLOR(tr("Sortie du processus : "), "34");
+            s = tr("Sortie du processus : ");
             break;
             
         case Progress::GlobalCompressing:
-            cout << COLOR(tr("Création du paquet "), "34");
+            s = tr("Création du paquet ");
             break;
             
         case Progress::Compressing:
-            cout << COLOR(tr("Compression de "), "34");
+            s = tr("Compression de ");
             break;
             
         case Progress::Including:
-            cout << COLOR(tr("Inclusion de "), "34");
+            s = tr("Inclusion de ");
             break;
             
         case Progress::Exporting:
-            cout << COLOR(tr("Export de la distribution "), "34");
+            s = tr("Export de la distribution ");
             break;
+            
+        default:
+            return;
     }
+    
+    cout << COLOR(s, "34");
+    usedwidth += s.size();
     
     // Message
     cout << qPrintable(progress->info);
     
+    usedwidth += progress->info.size();
+    
     if (!progress->more.isNull())
     {
         cout << ", " << qPrintable(progress->more);
+        
+        usedwidth += progress->more.size() + 2;
+    }
+    
+    // Effacer le reste de la largeur de l'écran
+    int diff = width - usedwidth;
+    
+    if (diff < 0) diff = 0;
+    
+    for (int i=0; i<diff; ++i)
+    {
+        cout << ' ';
     }
     
     cout << endl;
 
-    // NOTE: Trouver une manière de ne pas spammer la sortie quand on télécharge quelque-chose (ça émet vraiment beaucoup de progress()). Plusieurs fichiers peuvent être téléchargés en même temps.
+    // Mettre à jour les barres de progression
+    updatePgs(progress);
 }
