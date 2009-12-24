@@ -48,6 +48,10 @@ struct Logram::PackageSystem::Private
 {
     DatabaseReader *dr;
     
+    int progressCount;
+    QHash<int, Progress *> progresses;
+    int processOutProgress;
+    
     QEventLoop loop;
     QNetworkAccessManager *nmanager;
     QString dlDest;
@@ -72,18 +76,20 @@ Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     d->nmanager = new QNetworkAccessManager(this);
     d->setParams = 0;
     d->lastError = 0;
+    d->progressCount = 0;
+    
+    d->processOutProgress = startProgress(Progress::ProcessOut, 1);
     
     // Initialiser GPG
     gpgme_check_version(NULL);
-    
-    // Initialiser les MetaTypes
-    qRegisterMetaType<Logram::PackageSystem::Progress>("Logram::PackageSystem::Progress");
     
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
 
 Logram::PackageSystem::~PackageSystem()
 {
+    endProgress(d->processOutProgress);
+    
     delete d->dr;
     delete d;
 }
@@ -230,13 +236,15 @@ bool Logram::PackageSystem::update()
 
     // Explorer les enregistrements et les télécharger
     int count = enrgs.count();
+    int progress = startProgress(Progress::GlobalDownload, count*2);
+    
     for (int i=0; i<count; ++i)
     {
         Enrg *enrg = enrgs.at(i);
 
         QString u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/packages.xz";
         
-        sendProgress(GlobalDownload, i*2, count*2, u);
+        sendProgress(progress, i*2, u);
         
         if (!db->download(enrg->sourceName, u, enrg->type, false, enrg->gpgCheck))
         {
@@ -246,7 +254,7 @@ bool Logram::PackageSystem::update()
         // Traductions
         u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/translate." + lang + ".xz";
         
-        sendProgress(GlobalDownload, i*2+1, count*2, u);
+        sendProgress(progress, i*2+1, u);
         
         if (!db->download(enrg->sourceName, u, enrg->type, true, enrg->gpgCheck))
         {
@@ -256,7 +264,7 @@ bool Logram::PackageSystem::update()
         delete enrg;
     }
 
-    endProgress(GlobalDownload, count*2);
+    endProgress(progress);
 
     if (!db->rebuild())
     {
@@ -579,7 +587,21 @@ void Logram::PackageSystem::dlProgress(qint64 done, qint64 total)
 
     if (reply != 0)
     {
-        sendProgress(Download, done, total, reply->url().toString());
+        // Mettre à jour la progression, ou la créer si nécessaire
+        int progress;
+        QVariant prop = reply->property("__L_progress");
+        
+        if (prop.isNull())
+        {
+            progress = startProgress(Progress::Download, total);
+            reply->setProperty("__L_progress", progress);
+        }
+        else
+        {
+            progress = prop.toInt();
+        }
+        
+        sendProgress(progress, done, reply->url().toString());
     }
 }
 
@@ -887,12 +909,55 @@ void Logram::PackageSystem::setInstallRoot(const QString &root)
 }
 
 /* Signaux */
-void Logram::PackageSystem::sendProgress(Progress type, int num, int tot, const QString &msg)
+int Logram::PackageSystem::startProgress(Progress::Type type, int tot)
 {
-    emit progress(type, num, tot, msg);
+    int pid = d->progressCount;
+    Progress *p = new Progress;
+    
+    p->action = Progress::Create;
+    p->type = type;
+    p->total = tot;
+    
+    d->progresses.insert(pid, p);
+    
+    emit progress(p);
+    
+    return pid;
 }
 
-void Logram::PackageSystem::endProgress(Progress type, int tot)
+void Logram::PackageSystem::sendProgress(int id, int num, const QString &msg, const QString &more)
 {
-    emit progress(type, tot, tot, QString());
+    Progress *p = d->progresses.value(id);
+    
+    if (p == 0)
+    {
+        return;
+    }
+    
+    p->current = num;
+    p->info = msg;
+    p->more = more;
+    
+    p->action = Progress::Update;
+    
+    emit progress(p);
+}
+
+void Logram::PackageSystem::processOut(const QString &command, const QString &line)
+{
+    sendProgress(d->processOutProgress, 0, command, line);
+}
+
+void Logram::PackageSystem::endProgress(int id)
+{
+    Progress *p = d->progresses.take(id);       // take : plus besoin après, le slot s'occupe du delete
+    
+    if (p == 0)
+    {
+        return;
+    }
+    
+    p->action = Progress::End;
+    
+    emit progress(p);
 }

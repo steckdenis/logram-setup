@@ -36,6 +36,8 @@ struct PackageList::Private
     PackageSystem *ps;
     bool error;
     
+    int downloadProgress, processProgress;
+    
     bool wrong, weighted;
     int weight;
     QList<PackageList::Error *> errs;
@@ -190,6 +192,9 @@ bool PackageList::process()
     int maxdownloads = qMin(d->parallelDownloads, count());
     d->dpackages = maxdownloads;
     
+    d->downloadProgress = d->ps->startProgress(Progress::GlobalDownload, count());
+    d->processProgress = d->ps->startProgress(Progress::PackageProcess, count());
+    
     for(int i=0; i<maxdownloads; ++i)
     {
         Package *pkg = at(i);
@@ -200,7 +205,7 @@ bool PackageList::process()
                      SIGNAL(communication(Logram::Package *, Logram::Communication *)));
 
         // Progression
-        d->ps->sendProgress(PackageSystem::GlobalDownload, i, count(), pkg->name());
+        d->ps->sendProgress(d->downloadProgress, i, pkg->name());
 
         // Téléchargement
         if (!pkg->download())
@@ -217,6 +222,9 @@ bool PackageList::process()
     disconnect(this, SLOT(packageDownloaded(bool)));
     
     d->downloadedPackages.clear();
+    
+    d->ps->endProgress(d->downloadProgress);
+    d->ps->endProgress(d->processProgress);
     
     return (rs == 0);
 }
@@ -236,7 +244,7 @@ void PackageList::packageProceeded(bool success)
         Package *next = d->downloadedPackages.takeAt(0);
 
         // Progression
-        d->ps->sendProgress(PackageSystem::PackageProcess, d->ipackages, count(), next->name() + "~" + next->version());
+        d->ps->sendProgress(d->processProgress, d->ipackages, next->name() + "~" + next->version());
 
         // Installation
         d->ipackages++;
@@ -259,8 +267,6 @@ void PackageList::packageProceeded(bool success)
     else
     {
         // On a tout installé et fini
-        d->ps->endProgress(PackageSystem::PackageProcess, count());
-
         d->loop.exit(0);
     }
 }
@@ -280,7 +286,7 @@ void PackageList::packageDownloaded(bool success)
     if (d->pipackages < d->parallelInstalls)
     {
         // Progression
-        d->ps->sendProgress(PackageSystem::PackageProcess, d->ipackages, count(), pkg->name() + "~" + pkg->version());
+        d->ps->sendProgress(d->processProgress, d->ipackages, pkg->name() + "~" + pkg->version());
         
         // Installer
         d->ipackages++;
@@ -306,7 +312,7 @@ void PackageList::packageDownloaded(bool success)
                       SIGNAL(communication(Logram::Package *, Logram::Communication *)));
         
         // Progression
-        d->ps->sendProgress(PackageSystem::GlobalDownload, d->dpackages, count(), next->name());
+        d->ps->sendProgress(d->downloadProgress, d->dpackages, next->name());
 
         // Téléchargement
         d->dpackages++;
@@ -316,10 +322,5 @@ void PackageList::packageDownloaded(bool success)
             d->loop.exit(1);
             return;
         }
-    }
-    else
-    {
-        // On a tout téléchargé
-        d->ps->endProgress(PackageSystem::GlobalDownload, count());
     }
 }

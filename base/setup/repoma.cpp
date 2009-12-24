@@ -38,20 +38,23 @@ void App::include(const QStringList &lpkFileNames)
     
     // Inclure les paquets
     int numPkg = 0;
+    int progress = ps->startProgress(Progress::Including, lpkFileNames.count());
     
     foreach (const QString &fileName, lpkFileNames)
     {
         // C'est nous qui envoyons la progression, car nous savons combien de paquets sont à importer
-        ps->sendProgress(PackageSystem::Including, numPkg, lpkFileNames.count(), fileName);
+        ps->sendProgress(progress, numPkg, fileName);
         
         if (!mg->includePackage(fileName))
         {
             error();
             return;
         }
+        
+        numPkg++;
     }
     
-    ps->endProgress(PackageSystem::Including, lpkFileNames.count());
+    ps->endProgress(progress);
     
     // Plus besoin
     delete mg;

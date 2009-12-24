@@ -40,6 +40,7 @@ namespace Logram
     class Solver;
     class Package;
     class Communication;
+    struct Progress;
 }
 
 class App : public QCoreApplication
@@ -76,7 +77,7 @@ class App : public QCoreApplication
         void displayPackages(QList<Logram::DatabasePackage *> *packages, int &instSize, int &dlSize, bool showType);
 
     public slots:
-        void progress(Logram::PackageSystem::Progress type, int done, int total, const QString &msg);
+        void progress(Logram::Progress *progress);
         void communication(Logram::Package *sender, Logram::Communication *comm);
 
     private:

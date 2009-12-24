@@ -48,7 +48,8 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     ps = new PackageSystem(this);
     colored = true;
 
-    connect(ps, SIGNAL(progress(Logram::PackageSystem::Progress, int, int, const QString &)), this, SLOT(progress(Logram::PackageSystem::Progress, int, int, const QString &)));
+    connect(ps, SIGNAL(progress(Logram::Progress *)), 
+            this, SLOT(progress(Logram::Progress *)));
     
     //Parser les arguments
     QStringList args = arguments();
@@ -383,59 +384,73 @@ void App::error()
     delete err;
 }
 
-void App::progress(PackageSystem::Progress type, int done, int total, const QString &msg)
+void App::progress(Progress *progress)
 {
-    if (done == total) return;
+    if (progress->action == Progress::Create)
+    {
+        return;
+    }
+    else if (progress->action == Progress::End)
+    {
+        delete progress;
+        return;
+    }
     
     // Afficher le message
-    cout << COLOR("[" + QString::number(done + 1) + "/" + QString::number(total) + "] ", "33");
+    cout << COLOR("[" + QString::number(progress->current + 1) + "/" + QString::number(progress->total) + "] ", "33");
 
     // Type
-    switch (type)
+    switch (progress->type)
     {
-        case PackageSystem::Other:
+        case Progress::Other:
             cout << COLOR(tr("Progression : "), "34");
             break;
             
-        case PackageSystem::GlobalDownload:
+        case Progress::GlobalDownload:
             cout << COLOR(tr("Téléchargement de "), "34");
             break;
             
-        case PackageSystem::Download:
+        case Progress::Download:
             cout << COLOR(tr("Téléchargement de "), "34");
             break;
             
-        case PackageSystem::UpdateDatabase:
+        case Progress::UpdateDatabase:
             cout << COLOR(tr("Mise à jour de la base de donnée : "), "34");
             break;
             
-        case PackageSystem::PackageProcess:
+        case Progress::PackageProcess:
             cout << COLOR(tr("Opération sur "), "34");
             break;
             
-        case PackageSystem::ProcessOut:
+        case Progress::ProcessOut:
             cout << COLOR(tr("Sortie du processus : "), "34");
             break;
             
-        case PackageSystem::GlobalCompressing:
+        case Progress::GlobalCompressing:
             cout << COLOR(tr("Création du paquet "), "34");
             break;
             
-        case PackageSystem::Compressing:
+        case Progress::Compressing:
             cout << COLOR(tr("Compression de "), "34");
             break;
             
-        case PackageSystem::Including:
+        case Progress::Including:
             cout << COLOR(tr("Inclusion de "), "34");
             break;
             
-        case PackageSystem::Exporting:
+        case Progress::Exporting:
             cout << COLOR(tr("Export de la distribution "), "34");
             break;
     }
     
     // Message
-    cout << qPrintable(msg);
+    cout << qPrintable(progress->info);
+    
+    if (!progress->more.isNull())
+    {
+        cout << ", " << qPrintable(progress->more);
+    }
+    
     cout << endl;
 
     // NOTE: Trouver une manière de ne pas spammer la sortie quand on télécharge quelque-chose (ça émet vraiment beaucoup de progress()). Plusieurs fichiers peuvent être téléchargés en même temps.

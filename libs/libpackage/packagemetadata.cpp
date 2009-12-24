@@ -494,7 +494,7 @@ void PackageMetaData::processDataOut()
         d->buffer += line + '\n';
         
         // Envoyer la progression
-        d->ps->sendProgress(PackageSystem::ProcessOut, 0, 1, line);
+        d->ps->processOut(d->commandLine, line);
         
         // Émettre le bon signal
         emit processLineOut(sh, line);
@@ -525,9 +525,6 @@ void PackageMetaData::processTerminated(int exitCode, QProcess::ExitStatus exitS
         
         rs = 1;
     }
-    
-    // Mettre un terme à la progression
-    d->ps->endProgress(PackageSystem::ProcessOut, 1);
     
     // Quitter la boucle
     d->loop.exit(rs);

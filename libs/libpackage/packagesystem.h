@@ -93,6 +93,35 @@ struct Repository
     bool gpgcheck;
 };
 
+struct Progress
+{
+    enum Type
+    {
+        Other,
+        GlobalDownload,
+        Download,
+        UpdateDatabase,
+        PackageProcess,
+        ProcessOut,
+        GlobalCompressing,
+        Compressing,
+        Including,
+        Exporting
+    };
+    
+    enum Action
+    {
+        Create,
+        Update,
+        End
+    };
+    
+    Type type;
+    Action action;
+    int current, total;
+    QString info, more;
+};
+
 struct UpgradeInfo;
 
 class PackageSystem : public QObject
@@ -146,26 +175,13 @@ class PackageSystem : public QObject
         void setLastError(PackageError *err); // Thread-safe
         PackageError *lastError(); // Thread-safe
 
-        // Progression
-        enum Progress
-        {
-            Other,
-            GlobalDownload,
-            Download,
-            UpdateDatabase,
-            PackageProcess,
-            ProcessOut,
-            GlobalCompressing,
-            Compressing,
-            Including,
-            Exporting
-        };
-
-        void sendProgress(Progress type, int num, int tot, const QString &msg);
-        void endProgress(Progress type, int tot);
+        int startProgress(Progress::Type type, int tot);
+        void sendProgress(int id, int num, const QString &msg, const QString &more = QString());
+        void processOut(const QString &command, const QString &line);
+        void endProgress(int id);
 
     signals:
-        void progress(Logram::PackageSystem::Progress type, int num, int tot, const QString &msg);
+        void progress(Logram::Progress *progress);
         void downloadEnded(Logram::ManagedDownload *reply);
 
     private slots:

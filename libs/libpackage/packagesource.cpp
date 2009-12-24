@@ -226,6 +226,8 @@ bool PackageSource::binaries()
     int curPkg = 0;
     int totPkg = d->md->documentElement().elementsByTagName("package").count();
     
+    int progress = d->ps->startProgress(Progress::GlobalCompressing, totPkg);
+    
     while (!package.isNull())
     {
         QString packageName = package.attribute("name");
@@ -258,7 +260,7 @@ bool PackageSource::binaries()
         QString packageFile = packageName + "~" + version + "." + arch + ".lpk";
         
         // Envoyer le signal de progression
-        d->ps->sendProgress(PackageSystem::GlobalCompressing, curPkg, totPkg, packageFile);
+        d->ps->sendProgress(progress, curPkg, packageFile);
         
         curPkg++;
         
@@ -344,11 +346,13 @@ bool PackageSource::binaries()
         archive_read_disk_set_symlink_logical(disk);
         archive_read_disk_set_standard_lookup(disk);
         
+        int mp = d->ps->startProgress(Progress::Compressing, packageFiles.count());
+        
         for (int i=0; i<packageFiles.count(); ++i)
         {
             const PackageFile &pf = packageFiles.at(i);
             
-            d->ps->sendProgress(PackageSystem::Compressing, i, packageFiles.count(), pf.to);
+            d->ps->sendProgress(mp, i, pf.to);
             
             // Ajouter l'élément
             stat(qPrintable(pf.from), &st);
@@ -369,6 +373,8 @@ bool PackageSource::binaries()
             archive_entry_free(entry);
         }
         
+        d->ps->endProgress(mp);
+        
         archive_write_close(a);
         archive_write_finish(a);
         delete[] buff;
@@ -376,7 +382,7 @@ bool PackageSource::binaries()
         package = package.nextSiblingElement("package");
     }
     
-    d->ps->endProgress(PackageSystem::GlobalCompressing, totPkg);
+    d->ps->endProgress(progress);
     
     return true;
 }

@@ -647,6 +647,8 @@ bool RepositoryManager::exp(const QStringList &distros)
     int eNum = 0;
     int eTot = distributions.count() * archs.count();
     
+    int progress = d->ps->startProgress(Progress::Exporting, eTot);
+    
     foreach (const QString &distro, distributions)
     {
         sql = "SELECT id FROM packages_distribution WHERE name='%1';";
@@ -657,7 +659,7 @@ bool RepositoryManager::exp(const QStringList &distros)
         foreach (const QString &arch, archs)
         {
             // Progression
-            d->ps->sendProgress(PackageSystem::Exporting, eNum, eTot, distro + '.' + arch);
+            d->ps->sendProgress(progress, eNum, distro, arch);
             eNum++;
             
             sql = "SELECT id FROM packages_arch WHERE name='%1';";
@@ -944,7 +946,7 @@ bool RepositoryManager::exp(const QStringList &distros)
         }
     }
     
-    d->ps->endProgress(PackageSystem::Exporting, eTot);
+    d->ps->endProgress(progress);
     
     gpgme_release(ctx);
     
