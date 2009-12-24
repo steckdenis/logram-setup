@@ -236,8 +236,22 @@ bool PackageSource::binaries()
         
         if (arch == "any")
         {
-            // TODO;
-            arch = "x86_64";
+#ifdef L__ARCH
+            arch = L__ARCH; // Architecture forcée à la compilation
+#else
+            if (sizeof(void *) == 4)
+            {
+                arch = "i686";
+            }
+            else if (sizeof(void *) == 8)
+            {
+                arch = "x86_64";
+            }
+            else
+            {
+                arch = "unknown";
+            }
+#endif
         }
         
         // Obtenir le nom de fichier

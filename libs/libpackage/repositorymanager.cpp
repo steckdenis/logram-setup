@@ -503,49 +503,54 @@ bool RepositoryManager::includePackage(const QString &fileName)
     QDir curDir = QDir::current();
     
     // Fichier du paquet
-    if (!QFile::exists(download_url))
+    if (QFile::exists(download_url))
     {
-        if (!curDir.mkpath(download_url.section('/', 0, -2)))
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::OpenFileError;
-            err->info = download_url.section('/', 0, -2);
-            
-            d->ps->setLastError(err);
-            
-            return false;
-        }
-        
-        if (!QFile::copy(fileName, download_url))
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::OpenFileError;
-            err->info = download_url;
-            
-            d->ps->setLastError(err);
-            
-            return false;
-        }
+        QFile::remove(download_url);
     }
     
-    // Métadonnées
-    if (!QFile::exists(metadata_url))
+    if (!curDir.mkpath(download_url.section('/', 0, -2)))
     {
-        if (!curDir.mkpath(metadata_url.section('/', 0, -2)))
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::OpenFileError;
-            err->info = download_url.section('/', 0, -2);
-            
-            d->ps->setLastError(err);
-            
-            return false;
-        }
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = download_url.section('/', 0, -2);
         
-        if (!d->writeXZ(metadata_url, fpkg->metadataContents()))
-        {
-            return false;
-        }
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    if (!QFile::copy(fileName, download_url))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = download_url;
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    
+    // Métadonnées
+    if (QFile::exists(metadata_url))
+    {
+        QFile::remove(metadata_url);
+    }
+    
+    if (!curDir.mkpath(metadata_url.section('/', 0, -2)))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = download_url.section('/', 0, -2);
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    if (!d->writeXZ(metadata_url, fpkg->metadataContents()))
+    {
+        return false;
     }
     
     return true;
