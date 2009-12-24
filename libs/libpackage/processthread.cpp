@@ -25,6 +25,7 @@
 #include "packagesystem.h"
 #include "packagemetadata.h"
 #include "templatable.h"
+#include "databasepackage.h"
 
 #include <QDir>
 #include <QFile>
@@ -93,7 +94,7 @@ static int copy_data(struct archive *ar, struct archive *aw)
     }
 }
 
-bool ProcessThread::depack(QList<QByteArray> &files, QByteArray &metadataContents)
+bool ProcessThread::depack(Package *pkg, QList<QByteArray> &files, QByteArray &metadataContents)
 {
     QString cDir = QDir::currentPath();
     
@@ -115,6 +116,7 @@ bool ProcessThread::depack(QList<QByteArray> &files, QByteArray &metadataContent
     archive_read_support_compression_xz(a);
     archive_read_support_format_all(a);
     
+    // NOTE: d->pkg à la place de pkg, car même à l'update, c'est le paquet principal qui contient le bon fichier
     if (archive_read_open_filename(a, qPrintable(d->pkg->tlzFileName()), 10240))
     {
         PackageError *err = new PackageError;
@@ -143,7 +145,7 @@ bool ProcessThread::depack(QList<QByteArray> &files, QByteArray &metadataContent
         {
             PackageError *err = new PackageError;
             err->type = PackageError::InstallError;
-            err->info = d->pkg->name() + '~' + d->pkg->version();
+            err->info = pkg->name() + '~' + pkg->version();
             
             d->ps->setLastError(err);
             
@@ -167,18 +169,16 @@ bool ProcessThread::depack(QList<QByteArray> &files, QByteArray &metadataContent
             {
                 PackageError *err = new PackageError;
                 err->type = PackageError::InstallError;
-                err->info = d->pkg->name() + '~' + d->pkg->version();
+                err->info = pkg->name() + '~' + pkg->version();
                 
                 d->ps->setLastError(err);
                 
                 return false; // TODO: Ne pas leaker entry, a et ext
             }
         }
-        
-        // Savoir quel type de fichier on a lu
-        if (path == "control/metadata.xml")
+        else if (path == "control/metadata.xml")
         {
-            // Lire le fichier
+            // Lire le fichier de métadonnées
             size = archive_entry_size(entry);
             buffer = new char[size];
             archive_read_data(a, buffer, size);
@@ -198,6 +198,84 @@ bool ProcessThread::depack(QList<QByteArray> &files, QByteArray &metadataContent
     return true;
 }
 
+bool ProcessThread::install(Package *pkg, QList<QByteArray> &files, PackageMetaData *md, const QString &prescript)
+{
+    QString dir;
+    QFile fl;
+    QByteArray metadataContents;
+    
+    QDir rootDir = QDir::root();
+    
+    // Désempaqueter le paquet
+    if (!depack(pkg, files, metadataContents))
+    {
+        return false;
+    }
+    
+    // Lancer le script preinst
+    md->loadData(metadataContents);
+    
+    if (!md->runScript(pkg->name(), prescript, d->ps->installRoot(), QStringList()))
+    {
+        return false;
+    }
+    
+    // Enregistrer la liste des fichiers dans "{{varRoot}}/var/cache/lgrpkg/db/pkgs/{{name}}_{{version}}"
+    dir = d->ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + pkg->name() + '_' + pkg->version();
+    
+    if (!rootDir.mkpath(dir))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = dir;
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    // Liste des fichiers : files.list
+    fl.setFileName(dir + "/files.list");
+    
+    if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    foreach (const QByteArray &file, files)
+    {
+        fl.write(file);
+        fl.write("\n");
+    }
+    
+    fl.close();
+    
+    // Métadonnées : metadata.xml
+    fl.setFileName(dir + "/metadata.xml");
+    
+    if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    fl.write(metadataContents);
+    fl.close();
+    
+    return true;
+}
+
 void ProcessThread::run()
 {
     QList<QByteArray> files;
@@ -209,21 +287,38 @@ void ProcessThread::run()
     QString dir;
     
     PackageMetaData *md;
+    Templatable *tpl;
     
     // On a besoin d'un templatable pour les variables du type instroot, varroot, confroot, package, version, arch, etc
-    Templatable *tpl = new Templatable(0);
+    tpl = new Templatable(0);
+    md = new PackageMetaData(d->ps, 0);
     
     tpl->addKey("instroot", d->ps->installRoot());
     tpl->addKey("varroot", d->ps->varRoot());
     tpl->addKey("confroot", d->ps->confRoot());
-    tpl->addKey("package", d->pkg->name());
-    tpl->addKey("version", d->pkg->version());
-    tpl->addKey("arch", d->pkg->arch());
     
-    // Métadonnées, chargées quand nécessaire
-    md = new PackageMetaData(d->ps, 0);
     md->setTemplatable(tpl);
-    md->setPackage(d->pkg);
+    
+    if (d->pkg->action() != Solver::Update)
+    {
+        // Pas de mise à jour, c'est ce paquet le maître
+        tpl->addKey("package", d->pkg->name());
+        tpl->addKey("version", d->pkg->version());
+        tpl->addKey("arch", d->pkg->arch());
+        
+        // Métadonnées, chargées quand nécessaire
+        md->setPackage(d->pkg);
+    }
+    else
+    {
+        // Mise à jour, c'est l'autre paquet le maître
+        tpl->addKey("package", d->pkg->upgradePackage()->name());
+        tpl->addKey("version", d->pkg->upgradePackage()->version());
+        tpl->addKey("arch", d->pkg->upgradePackage()->arch());
+        
+        // Métadonnées, chargées quand nécessaire
+        md->setPackage(d->pkg->upgradePackage());
+    }
     
     connect(md, SIGNAL(processLineOut(QProcess *, const QByteArray &)), 
           d->pkg, SLOT(processLineOut(QProcess *, const QByteArray &)));
@@ -231,76 +326,11 @@ void ProcessThread::run()
     switch (d->pkg->action())
     {
         case Solver::Install:
-            if (!depack(files, metadataContents))
+            if (!install(d->pkg, files, md, "preinst"))
             {
                 d->error = true;
                 return;
             }
-            
-            // Lancer le script preinst
-            md->loadData(metadataContents);
-            
-            if (!md->runScript(d->pkg->name(), "preinst", d->ps->installRoot(), QStringList()))
-            {
-                d->error = true;
-                return;
-            }
-            
-            // Enregistrer la liste des fichiers dans "{{varRoot}}/var/cache/lgrpkg/db/pkgs/{{name}}_{{version}}"
-            dir = d->ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + d->pkg->name() + '_' + d->pkg->version();
-            
-            if (!rootDir.mkpath(dir))
-            {
-                PackageError *err = new PackageError;
-                err->type = PackageError::OpenFileError;
-                err->info = dir;
-                
-                d->ps->setLastError(err);
-                d->error = true;
-                
-                return;
-            }
-            
-            // Liste des fichiers : files.list
-            fl.setFileName(dir + "/files.list");
-            
-            if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
-            {
-                PackageError *err = new PackageError;
-                err->type = PackageError::OpenFileError;
-                err->info = fl.fileName();
-                
-                d->ps->setLastError(err);
-                d->error = true;
-                
-                return;
-            }
-            
-            foreach (const QByteArray &file, files)
-            {
-                fl.write(file);
-                fl.write("\n");
-            }
-            
-            fl.close();
-            
-            // Métadonnées : metadata.xml
-            fl.setFileName(dir + "/metadata.xml");
-            
-            if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
-            {
-                PackageError *err = new PackageError;
-                err->type = PackageError::OpenFileError;
-                err->info = fl.fileName();
-                
-                d->ps->setLastError(err);
-                d->error = true;
-                
-                return;
-            }
-            
-            fl.write(metadataContents);
-            fl.close();
             
             // Lancer postinst
             if (!md->runScript(d->pkg->name(), "postinst", d->ps->installRoot(), QStringList()))
@@ -310,7 +340,6 @@ void ProcessThread::run()
             }
             
             // Fini !
-            delete md;
             d->error = false;
             break;
             
@@ -368,7 +397,7 @@ void ProcessThread::run()
             QFile::remove(dir);
             
             // Lancer postrm
-            if (!md->runScript(d->pkg->name(), "postinst", d->ps->installRoot(), QStringList()))
+            if (!md->runScript(d->pkg->name(), "postrm", d->ps->installRoot(), QStringList()))
             {
                 d->error = true;
                 return;
@@ -377,6 +406,54 @@ void ProcessThread::run()
             break;
             
         case Solver::Update:
+            // Faire comme si on installe le paquet, le nouveau paquet
+            if (!install(d->pkg->upgradePackage(), files, md, "preupd"))
+            {
+                d->error = true;
+                return;
+            }
+            
+            // On a la liste des fichiers du nouveau paquet (files), prendre celle de l'ancien (sfiles)
+            if (!d->ps->filesOfPackage(d->pkg->name(), sfiles))
+            {
+                d->error = true;
+                return;
+            }
+            
+            // Explorer les fichiers de l'ancien paquet, et si le nouveau ne les a plus, les supprimer
+            foreach (const QString &file, sfiles)
+            {
+                bool exists = false;
+                
+                foreach (const QByteArray &f, files)
+                {
+                    if (file == (d->ps->installRoot() + QString::fromUtf8(f)))
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+                
+                if (!exists)
+                {
+                    QFile::remove(file);
+                }
+            }
+            
+            // Supprimer l'enregistrement en base de donnée
+            dir = d->ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + d->pkg->name() + '_' + d->pkg->version();
+            
+            QFile::remove(dir + "/metadata.xml");
+            QFile::remove(dir + "/files.list");
+            QFile::remove(dir);
+            
+            // Lancer postupd
+            if (!md->runScript(d->pkg->upgradePackage()->name(), "postupd", d->ps->installRoot(), QStringList()))
+            {
+                d->error = true;
+                return;
+            }
+            
             break;
             
         default:
@@ -385,4 +462,5 @@ void ProcessThread::run()
     }
     
     delete tpl;
+    delete md;
 }

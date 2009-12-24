@@ -32,6 +32,7 @@ namespace Logram
 
 class Package;
 class PackageSystem;
+class PackageMetaData;
 
 class ProcessThread : public QThread
 {
@@ -43,7 +44,8 @@ class ProcessThread : public QThread
         bool error() const;
         
     private:
-        bool depack(QList<QByteArray> &files, QByteArray &metadataContents);
+        bool depack(Package *pkg, QList<QByteArray> &files, QByteArray &metadataContents);
+        bool install(Package *pkg, QList<QByteArray> &files, PackageMetaData *md, const QString &prescript);
         
         struct Private;
         Private *d;
