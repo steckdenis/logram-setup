@@ -442,6 +442,11 @@ void App::error()
 
 void App::updatePgs(Progress *p)
 {   
+    if (progresses.count() == 0)
+    {
+        return;
+    }
+    
     // Temps de maintenant
     QTime now = QTime::currentTime();
     
