@@ -78,6 +78,8 @@ class App : public QCoreApplication
         
         void displayPackages(QList<Logram::Package *> *packages, int &instSize, int &dlSize, bool showType);
         void displayPackages(QList<Logram::DatabasePackage *> *packages, int &instSize, int &dlSize, bool showType);
+        
+        void clean();
 
     public slots:
         void progress(Logram::Progress *progress);

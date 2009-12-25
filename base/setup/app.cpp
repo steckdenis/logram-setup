@@ -440,6 +440,16 @@ void App::error()
     delete err;
 }
 
+void App::clean()
+{
+    for (int i=0; i<progresses.count(); ++i)
+    {
+        progresses[i] = 0;
+    }
+    
+    updatePgs(0);
+}
+
 void App::updatePgs(Progress *p)
 {   
     if (progresses.count() == 0)
@@ -566,7 +576,12 @@ void App::updatePgs(Progress *p)
         cout << endl;
     }
     
-    cout << "\033[" << (progresses.count() * 2) << "A";
+    if (p != 0)
+    {
+        // Quand on nettoie, on envoie 0 dans p
+        cout << "\033[" << (progresses.count() * 2) << "A";
+    }
+    
     cout.flush();
 }
 
