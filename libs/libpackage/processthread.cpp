@@ -325,6 +325,10 @@ void ProcessThread::run()
         tpl->addKey("version", d->pkg->upgradePackage()->version());
         tpl->addKey("arch", d->pkg->upgradePackage()->arch());
         
+        tpl->addKey("oldpackage", d->pkg->name());
+        tpl->addKey("oldversion", d->pkg->version());
+        tpl->addKey("oldarch", d->pkg->arch());
+        
         // Métadonnées, chargées quand nécessaire
         md->setPackage(d->pkg->upgradePackage());
     }
