@@ -102,8 +102,6 @@ int main (int argc, char **argv)
 					exit (EXIT_FAILURE);
 				buf[size] = 0;
 
-				printf (buf);
-
 				if (!strncmp (buf, "PING ", 5))
 				{
 					buf[1] = 'O';
