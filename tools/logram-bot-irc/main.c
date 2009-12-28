@@ -74,7 +74,8 @@ int main (int argc, char **argv)
 	init ();
 
 	if (argc >= 2)
-		config_load (argv[1]);
+		if (0 != config_load (argv[1]))
+			exit (EXIT_FAILURE);
 
 	for (;;)
 	{

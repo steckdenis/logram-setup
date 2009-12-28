@@ -29,7 +29,7 @@ extern struct cmd_t commands[];
 void release (void);
 
 /* config.c */
-void config_load (const char *filename);
+int config_load (const char *filename);
 
 /* garbage.c */
 void *xmalloc (size_t size);

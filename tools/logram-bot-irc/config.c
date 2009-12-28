@@ -1,6 +1,6 @@
 #include "local.h"
 
-void config_load (const char *filename)
+int config_load (const char *filename)
 {
 	FILE *cfg = fopen (filename, "r");
 	char buf[512], *p;
@@ -32,11 +32,19 @@ void config_load (const char *filename)
 			else if (!strncmp (buf, "name=", 5))
 				asprintf (&global->config.name, "%s", p + 1);
 			else
+			{
 				fprintf (stderr, "Error in %s:%d.\n", filename, +i);
+				return 2;
+			}
 		}
 
 		fclose (cfg);
 	}
 	else
+	{
 		fprintf (stderr, "Couldn't find %s.\n", filename);
+		return 1;
+	}
+
+	return 0;
 }
