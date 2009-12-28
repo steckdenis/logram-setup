@@ -71,6 +71,55 @@ void App::add(const QStringList &packages)
     delete solver;
 }
 
+void App::getsource(const QString &name)
+{
+    QString n = name.section('=', 0, 0);
+    QString v;
+
+    if (name.contains('='))
+    {
+        v = name.section('=', 1, -1);
+    }
+
+    Package *pkg;
+    
+    if (!ps->package(n, v, pkg))
+    {
+        error();
+        return;
+    }
+    
+    // Caster le paquet en DatabasePackage
+    if (pkg->origin() != Package::Database)
+    {
+        cout << COLOR(tr("ERREUR : "), "31");
+        cout << qPrintable(tr("Le paquet dont vous souhaitez récupérer la source doit provenir d'un dépôt"));
+        cout << endl;
+        return;
+    }
+    
+    DatabasePackage *dpkg = (DatabasePackage *)pkg;
+    
+    // Télécharger le fichier
+    // bool download(Repository::Type type, const QString &url, const QString &dest, bool block, ManagedDownload* &rs);
+    QString url = dpkg->url(DatabasePackage::Source);
+    QString fname = url.section('/', -1, -1);
+    Repository repo;
+    ManagedDownload *md = 0;
+    
+    if (!ps->repository(dpkg->repo(), repo))
+    {
+        error();
+        return;
+    }
+    
+    if (!ps->download(repo.type, dpkg->url(DatabasePackage::Source), fname, true, md))
+    {
+        error();
+        return;
+    }
+}
+
 void App::upgrade()
 {
     QList<DatabasePackage *> pkgs = ps->upgradePackages();

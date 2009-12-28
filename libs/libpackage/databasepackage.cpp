@@ -336,7 +336,7 @@ QByteArray DatabasePackage::metadataHash()
 QString DatabasePackage::url(UrlType type)
 {
     // Construire la partie premières_lettres/nom
-    QString n = name();
+    QString n = (type == Source ? source() : name());
     QString d;
     
     if (n.startsWith("lib"))
@@ -349,9 +349,11 @@ QString DatabasePackage::url(UrlType type)
     }
     
     // Compléter en fonction du type demandé
-    if (type == Binary)
+    if (type == Binary || type == Source)
     {
-        return "pool/" + d + "/" + n + "/" + n + "~" + version() + "." + arch() + ".lpk";
+        QString a = (type == Binary ? arch() : "src");
+        
+        return "pool/" + d + "/" + n + "/" + n + "~" + version() + "." + a + ".lpk";
     }
     else
     {

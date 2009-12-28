@@ -195,6 +195,12 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         showpkg(args.at(2), changelog);
     }
+    else if (cmd == "getsource")
+    {
+        CHECK_ARGS(!= 3)
+        
+        getsource(args.at(2));
+    }
     else if (cmd == "update")
     {
         CHECK_ARGS(!= 2)
@@ -280,8 +286,8 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             usleep(50000);
             CHK(ps->sendProgress(p2, c2, "http://archive.logram-project.org/pool/a/amarok~2.2.2~5.i686.lpk"));
             
-            c1 += 20480 + (rand() % 10240);    // entre 200 et 300 Kio/s
-            c2 += 10240 + (rand() % 10240);    // entre 100 et 200 Kio/s
+            c1 += 21480 + (rand() % 2200);    // entre 200 et 220 Kio/s
+            c2 += 11240 + (rand() % 2200);    // entre 100 et 120 Kio/s
             
             if (c1 >= 1024*1024)
             {
@@ -324,6 +330,7 @@ void App::help()
             "    search <pattern>   Afficher tous les paquets dont le nom\n"
             "                       correspond à <pattern>\n"
             "    showpkg <name>     Affiche les informations du paquet <name>\n"
+            "    getsource <name>   Télécharge le paquet source de <name>\n"
             "    update             Met à jour la base de donnée des paquets\n"
             "    add <packages>     Ajoute des paquets (préfixés de \"-\" pour les supprimer)\n"
             "    files <pkg>        Affiche la liste des fichiers installés par <pkg>\n"
@@ -497,20 +504,32 @@ void App::updatePgs(Progress *p)
             continue;
         }
         
+        bool isDownload = (progress->type == Progress::Download);
         const QTime &oldTime = tProgresses.at(i);
         
         // Le pourcentage
         int percent = progress->current * 100 / progress->total;
         
         cout << ' ';
-        cout << COLOR(QString::number(percent).rightJustified(3) + '%', "33");
+        cout << COLOR(QString::number(percent).rightJustified(3, ' ', true) + '%', "33");
         cout << " [";
         
         // Obtenir le nombre de caractères, sachant que ça va
         // de 0 à width-20
-        // Ligne : | 100% [=== .. ===] 1023 Kib/s |
+        // Ligne : | 100% [=== .. ===] 1023.12 Mio 1023.13 Kib/s |
+        // Ligne : | 100% [=== ..                        .. ===] |
         
-        int maxcara = width-20;
+        int maxcara;
+        
+        if (isDownload)
+        {
+            maxcara = width-34;
+        }
+        else
+        {
+            maxcara = width-9;
+        }
+        
         int caracount = progress->current * maxcara / progress->total;
         
         if (caracount > maxcara) caracount = maxcara;
@@ -527,36 +546,44 @@ void App::updatePgs(Progress *p)
             cout << ' ';
         }
         
-        // Vitesse de téléchargement
         cout << "] ";
         
-        int timedelta = oldTime.msecsTo(now);
-        int bytedelta = progress->current - progress->old;
-        
-        // Mettre à jour l'heure de dernier passage, si c'est bien nous qui nous sommes mis à jour
-        if (p == progress)
+        if (isDownload)
         {
-            tProgresses[i] = now;
+            // Taille téléchargée
+            QString dlsize = ps->fileSizeFormat(progress->current);
+            
+            cout << COLOR(dlsize.rightJustified(11, ' ', true), "34");
+            
+            // Vitesse de téléchargement
+            int timedelta = oldTime.msecsTo(now);
+            int bytedelta = progress->current - progress->old;
+            
+            // Mettre à jour l'heure de dernier passage, si c'est bien nous qui nous sommes mis à jour
+            if (p == progress)
+            {
+                tProgresses[i] = now;
+            }
+            
+            // Nombre de bytes par seconde
+            int bps;
+            
+            if (timedelta == 0)
+            {
+                bps = 0;
+            }
+            else
+            {
+                bps = bytedelta * 1000 / timedelta;
+            }
+            
+            if (bps < 0) bps = 0;
+            
+            QString sdelta = ps->fileSizeFormat(bps);
+            
+            cout << COLOR(sdelta.rightJustified(11, ' ', true) + "/s", "32");
         }
-        
-        // Nombre de bytes par seconde
-        int bps;
-        
-        if (timedelta == 0)
-        {
-            bps = 0;
-        }
-        else
-        {
-            bps = bytedelta * 1000 / timedelta;
-        }
-        
-        if (bps < 0) bps = 0;
-        
-        QString sdelta = ps->fileSizeFormat(bps);
-        
-        cout << COLOR(sdelta.rightJustified(8, ' ', true) + "/s", "32");
-        
+            
         cout << endl;
         
         // Deuxième ligne : nom de fichier
@@ -603,7 +630,7 @@ void App::progress(Progress *progress)
     if (progress->action == Progress::Create)
     {
         // Si le type est un téléchargement, créer une barre de progression
-        if (progress->type == Progress::Download && !progresses.contains(progress))
+        if ((progress->type == Progress::Download || progress->type == Progress::Compressing) && !progresses.contains(progress))
         {
             // Trouver un emplacement libre
             for (int i=0; i<progresses.count(); ++i)
@@ -630,7 +657,7 @@ void App::progress(Progress *progress)
     else if (progress->action == Progress::End)
     {
         // Si un téléchargement, supprimer la barre de progression
-        if (progress->type == Progress::Download)
+        if (progress->type == Progress::Download || progress->type == Progress::Compressing)
         {
             int index = progresses.indexOf(progress);
             
@@ -646,7 +673,7 @@ void App::progress(Progress *progress)
         return;
     }
     
-    if (progress->type == Progress::Download)
+    if (progress->type == Progress::Download || progress->type == Progress::Compressing)
     {
         updatePgs(progress);
         return;

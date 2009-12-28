@@ -812,21 +812,23 @@ int Logram::PackageSystem::compareVersions(const char *a, const char *b)
 
 QString Logram::PackageSystem::fileSizeFormat(int size)
 {
+    double fsize = double(size);
+    
     if (size < 1024)
     {
         return QString::number(size) + " o";
     }
     else if (size < 1024*1024)
     {
-        return QString::number(size/1024) + " Kio";
+        return QString::number(fsize/1024.0, 'f', 2) + " Kio";
     }
     else if (size < 1024*1024*1024)
     {
-        return QString::number(size/(1024*1024)) + " Mio";
+        return QString::number(fsize/1048576.0, 'f', 2) + " Mio";
     }
     else
     {
-        return QString::number(size/(1024*1024*1024)) + " Gio";
+        return QString::number(fsize/1073741824.0, 'f', 2) + " Gio";
     }
 }
 

@@ -269,6 +269,66 @@ bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id
     return true;
 }
 
+bool RepositoryManager::includeSource(const QString &fileName)
+{
+    // Simply copy the file in the pool directory
+    QString download_url = "pool/%1/%2/%3";
+    QString dd;
+    QString fname = fileName.section('/', -1, -1);
+    QString pkname = fname.section('~', 0, 0);
+    QString arch = fname.section('.', -2, -2);
+    
+    if (arch != "src")
+    {
+        // This file MUST be a source package
+        return false;
+    }
+    
+    if (pkname.startsWith("lib"))
+    {
+        dd = pkname.left(4);
+    }
+    else
+    {
+        dd = pkname.left(1);
+    }
+    
+    download_url = download_url.arg(dd, pkname, fname);
+    
+    // Copier le paquet, enregistrer les métadonnées
+    QDir curDir = QDir::current();
+    
+    // Fichier du paquet
+    if (QFile::exists(download_url))
+    {
+        QFile::remove(download_url);
+    }
+    
+    if (!curDir.mkpath(download_url.section('/', 0, -2)))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = download_url.section('/', 0, -2);
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    if (!QFile::copy(fileName, download_url))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = download_url;
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    return true;
+}
+
 bool RepositoryManager::includePackage(const QString &fileName)
 {
     // Ouvrir le paquet

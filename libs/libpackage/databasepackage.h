@@ -57,7 +57,8 @@ class DatabasePackage : public Package
         enum UrlType
         {
             Binary,
-            Metadata
+            Metadata,
+            Source
         };
         
         QString name();

@@ -24,6 +24,8 @@
 
 #include <logram/repositorymanager.h>
 
+#include <QtDebug>
+
 using namespace Logram;
 
 void App::include(const QStringList &lpkFileNames)
@@ -39,6 +41,7 @@ void App::include(const QStringList &lpkFileNames)
     // Inclure les paquets
     int numPkg = 0;
     int progress = ps->startProgress(Progress::Including, lpkFileNames.count());
+    QString arch;
     
     foreach (const QString &fileName, lpkFileNames)
     {
@@ -48,10 +51,23 @@ void App::include(const QStringList &lpkFileNames)
             return;
         }
         
-        if (!mg->includePackage(fileName))
+        arch = fileName.section('.', -2, -2);
+        
+        if (arch == "src")
         {
-            error();
-            return;
+            if (!mg->includeSource(fileName))
+            {
+                error();
+                return;
+            }
+        }
+        else
+        {
+            if (!mg->includePackage(fileName))
+            {
+                error();
+                return;
+            }
         }
         
         numPkg++;

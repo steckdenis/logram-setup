@@ -31,8 +31,8 @@
 #include <QDir>
 #include <QRegExp>
 #include <QVector>
+#include <QDirIterator>
 
-#include <sys/stat.h>
 #include <archive.h>
 #include <archive_entry.h>
 #include <fcntl.h>
@@ -221,39 +221,60 @@ bool PackageSource::binaries()
     
     // Explorer les paquets
     QDomElement package = d->md->documentElement()
-                            .firstChildElement("package");
+                            .firstChildElement();
     
     int curPkg = 0;
-    int totPkg = d->md->documentElement().elementsByTagName("package").count();
+    int totPkg = d->md->documentElement().elementsByTagName("package").count() + 1; // Aussi la source
     
     int progress = d->ps->startProgress(Progress::GlobalCompressing, totPkg);
     
     while (!package.isNull())
     {
+        bool isSource = false;
+        
+        if (package.tagName() == "source")
+        {
+            isSource = true;
+        }
+        else if (package.tagName() != "package")
+        {
+            package = package.nextSiblingElement();
+            continue;
+        }
+        
         QString packageName = package.attribute("name");
         QStringList okFiles;
         
         // Obenir la version
-        QString arch = package.attribute("arch", "any");
+        QString arch;
         
-        if (arch == "any")
+        if (isSource)
         {
-#ifdef L__ARCH
-            arch = L__ARCH; // Architecture forcée à la compilation
-#else
-            if (sizeof(void *) == 4)
+            arch = "src";
+        }
+        else
+        {
+            arch = package.attribute("arch", "any");
+            
+            if (arch == "any")
             {
-                arch = "i686";
+    #ifdef L__ARCH
+                arch = L__ARCH; // Architecture forcée à la compilation
+    #else
+                if (sizeof(void *) == 4)
+                {
+                    arch = "i686";
+                }
+                else if (sizeof(void *) == 8)
+                {
+                    arch = "x86_64";
+                }
+                else
+                {
+                    arch = "unknown";
+                }
+    #endif
             }
-            else if (sizeof(void *) == 8)
-            {
-                arch = "x86_64";
-            }
-            else
-            {
-                arch = "unknown";
-            }
-#endif
         }
         
         // Obtenir le nom de fichier
@@ -268,21 +289,42 @@ bool PackageSource::binaries()
         curPkg++;
         
         // Explorer les <files pattern="" /> et ajouter à okFiles les fichiers qui conviennent
-        QDomElement pattern = package.firstChildElement("files");
-        
-        while (!pattern.isNull())
+        // Si source, alors on a juste besoin du metadata.xml et du dossier control, s'il existe
+        if (isSource)
         {
-            QRegExp regex(pattern.attribute("pattern", "*"), Qt::CaseSensitive, QRegExp::Wildcard);
-            
-            foreach (const QString &fname, files)
+            if (QFile::exists("control"))
             {
-                if (regex.exactMatch(fname))
+                QDirIterator it("control", QDirIterator::Subdirectories);
+                
+                while (it.hasNext())
                 {
-                    okFiles.append(fname);
+                    it.next();
+                    
+                    if (it.fileInfo().isFile())
+                    {
+                        okFiles.append(it.filePath());
+                    }
                 }
             }
+        }
+        else
+        {
+            QDomElement pattern = package.firstChildElement("files");
             
-            pattern = pattern.nextSiblingElement("files");
+            while (!pattern.isNull())
+            {
+                QRegExp regex(pattern.attribute("pattern", "*"), Qt::CaseSensitive, QRegExp::Wildcard);
+                
+                foreach (const QString &fname, files)
+                {
+                    if (regex.exactMatch(fname))
+                    {
+                        okFiles.append(fname);
+                    }
+                }
+                
+                pattern = pattern.nextSiblingElement("files");
+            }
         }
         
         // Écrire les métadonnées dans /tmp
@@ -308,34 +350,53 @@ bool PackageSource::binaries()
         
         foreach (const QString &fname, okFiles)
         {
-            pf.from = buildDir + fname;
-            pf.to = "data" + fname;
+            if (!isSource)
+            {
+                pf.from = buildDir + fname;
+                pf.to = "data" + fname;
+            }
+            else
+            {
+                pf.from = fname;
+                pf.to = fname;
+            }
             packageFiles.append(pf);
         }
         
         // Inclure certains fichiers nécessaires, comme le fichier de métadonnées et ceux
         // que le paquet veut inclure
         pf.from = d->metaFileName;
-        pf.to = "control/metadata.xml";
+        
+        if (isSource)
+        {
+            pf.to = "metadata.xml";
+        }
+        else
+        {
+            pf.to = "control/metadata.xml";
+        }
+        
         packageFiles.append(pf);
         
-        QDomElement embed = package.firstChildElement("embed");
-        
-        while (!embed.isNull())
+        if (!isSource)
         {
-            pf.from = templateString(embed.attribute("from"));
-            pf.to = templateString(embed.attribute("to"));
+            QDomElement embed = package.firstChildElement("embed");
             
-            packageFiles.append(pf);
-            
-            embed = embed.nextSiblingElement("embed");
+            while (!embed.isNull())
+            {
+                pf.from = templateString(embed.attribute("from"));
+                pf.to = templateString(embed.attribute("to"));
+                
+                packageFiles.append(pf);
+                
+                embed = embed.nextSiblingElement("embed");
+            }
         }
         
         // Créer l'archive .lpk (tar + xz) (code largement inspiré de l'exemple de "man archive_write")
         struct archive *a;
         struct archive *disk;
         struct archive_entry *entry;
-        struct stat st;
         char *buff = new char[8192];
         int len;
         int fd;
@@ -346,7 +407,6 @@ bool PackageSource::binaries()
         archive_write_open_filename(a, qPrintable(packageFile));
         
         disk = archive_read_disk_new();
-        archive_read_disk_set_symlink_logical(disk);
         archive_read_disk_set_standard_lookup(disk);
         
         int mp = d->ps->startProgress(Progress::Compressing, packageFiles.count());
@@ -361,20 +421,22 @@ bool PackageSource::binaries()
             }
             
             // Ajouter l'élément
-            stat(qPrintable(pf.from), &st);
-            
+            fd = open(qPrintable(pf.from), O_RDONLY);
             entry = archive_entry_new();
+            
             archive_entry_set_pathname(entry, qPrintable(pf.to));
-            archive_read_disk_entry_from_file(disk, entry, -1, &st);
+            archive_entry_copy_sourcepath(entry, qPrintable(pf.from));
+            archive_read_disk_entry_from_file(disk, entry, fd, 0);
             
             archive_write_header(a, entry);
-            fd = open(qPrintable(pf.from), O_RDONLY);
             len = read(fd, buff, 8192);
+            
             while (len > 0)
             {
                 archive_write_data(a, buff, len);
                 len = read(fd, buff, 8192);
             }
+            
             close(fd);
             archive_entry_free(entry);
         }
@@ -385,7 +447,7 @@ bool PackageSource::binaries()
         archive_write_finish(a);
         delete[] buff;
         
-        package = package.nextSiblingElement("package");
+        package = package.nextSiblingElement();
     }
     
     d->ps->endProgress(progress);

@@ -39,6 +39,7 @@ class RepositoryManager : public QObject
         bool loadConfig(const QString &fileName);
         
         bool includePackage(const QString &fileName);
+        bool includeSource(const QString &fileName);
         bool exp(const QStringList &distros);
         
         struct Private; // Nécessaire pour passphrase_cb

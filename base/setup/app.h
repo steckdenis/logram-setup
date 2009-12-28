@@ -58,6 +58,7 @@ class App : public QCoreApplication
         void version();
         void find(const QString &pattern);
         void showpkg(const QString &name, bool changelog);
+        void getsource(const QString &name);
         void update();
         void upgrade();
         void add(const QStringList &packages);
