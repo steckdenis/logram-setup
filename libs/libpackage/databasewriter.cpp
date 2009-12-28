@@ -388,7 +388,10 @@ bool DatabaseWriter::rebuild()
     // Première étape
     int progress = parent->startProgress(Progress::UpdateDatabase, 6);
     
-    parent->sendProgress(progress, 0, tr("Lecture des listes"));
+    if (!parent->sendProgress(progress, 0, tr("Lecture des listes")))
+    {
+        return false;
+    }
 
     // On lit également la liste des fichiers installés
     QString ipackagelist = parent->varRoot() + "/var/cache/lgrpkg/db/installed_packages.list";
@@ -955,7 +958,11 @@ bool DatabaseWriter::rebuild()
     char zero = 0;
     
     // Liste des paquets
-    parent->sendProgress(progress, 1, tr("Génération de la liste des paquets"));
+    if (!parent->sendProgress(progress, 1, tr("Génération de la liste des paquets")))
+    {
+        return false;
+    }
+    
     QFile fl(parent->varRoot() +  "/var/cache/lgrpkg/db/packages");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -981,7 +988,11 @@ bool DatabaseWriter::rebuild()
 
     // Chaînes de caractères
     fl.close();
-    parent->sendProgress(progress, 2, tr("Écriture des chaînes de caractère"));
+    if (!parent->sendProgress(progress, 2, tr("Écriture des chaînes de caractère")))
+    {
+        return false;
+    }
+    
     fl.setFileName(parent->varRoot() + "/var/cache/lgrpkg/db/strings");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -1015,7 +1026,11 @@ bool DatabaseWriter::rebuild()
 
     // Chaînes traduites
     fl.close();
-    parent->sendProgress(progress, 3, tr("Écriture des traductions"));
+    if (!parent->sendProgress(progress, 3, tr("Écriture des traductions")))
+    {
+        return false;
+    }
+    
     fl.setFileName(parent->varRoot() + "/var/cache/lgrpkg/db/translate");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -1049,7 +1064,11 @@ bool DatabaseWriter::rebuild()
 
     // Dépendances
     fl.close();
-    parent->sendProgress(progress, 4, tr("Enregistrement des dépendances"));
+    if (!parent->sendProgress(progress, 4, tr("Enregistrement des dépendances")))
+    {
+        return false;
+    }
+    
     fl.setFileName(parent->varRoot() + "/var/cache/lgrpkg/db/depends");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -1094,7 +1113,11 @@ bool DatabaseWriter::rebuild()
 
     // StrPackages
     fl.close();
-    parent->sendProgress(progress, 5, tr("Enregistrement des données supplémentaires"));
+    if (!parent->sendProgress(progress, 5, tr("Enregistrement des données supplémentaires")))
+    {
+        return false;
+    }
+    
     fl.setFileName(parent->varRoot() + "/var/cache/lgrpkg/db/strpackages");
 
     if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))

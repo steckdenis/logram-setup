@@ -272,11 +272,13 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         int c1 = 0;
         int c2 = 0;
         
+        #define CHK(x) if (!x) return;
+        
         while (true)
         {
-            ps->sendProgress(p1, c1, "http://archive.logram-project.org/pool/i/initng~0.6.99+git20091223~1.i686.lpk");
+            CHK(ps->sendProgress(p1, c1, "http://archive.logram-project.org/pool/i/initng~0.6.99+git20091223~1.i686.lpk"));
             usleep(50000);
-            ps->sendProgress(p2, c2, "http://archive.logram-project.org/pool/a/amarok~2.2.2~5.i686.lpk");
+            CHK(ps->sendProgress(p2, c2, "http://archive.logram-project.org/pool/a/amarok~2.2.2~5.i686.lpk"));
             
             c1 += 20480 + (rand() % 10240);    // entre 200 et 300 Kio/s
             c2 += 10240 + (rand() % 10240);    // entre 100 et 200 Kio/s
@@ -373,6 +375,13 @@ void App::error()
     cout << COLOR(tr("ERREUR : "), "31");
     
     PackageError *err = ps->lastError();
+    
+    if (err == 0)
+    {
+        // Interruption sans erreur, ou erreur inconnue
+        cout << qPrintable(tr("Erreur inconnue ou pas d'erreur")) << endl;
+        return;
+    }
 
     switch (err->type)
     {
@@ -426,6 +435,10 @@ void App::error()
             
         case PackageError::InstallError:
             cout << qPrintable(tr("Impossible d'installer le paquet "));
+            break;
+            
+        case PackageError::ProgressCanceled:
+            cout << qPrintable(tr("Opération annulée : "));
             break;
     }
     

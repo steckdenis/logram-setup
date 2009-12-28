@@ -244,7 +244,10 @@ bool Logram::PackageSystem::update()
 
         QString u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/packages.xz";
         
-        sendProgress(progress, i*2, u);
+        if (!sendProgress(progress, i*2, u))
+        {
+            return false;
+        }
         
         if (!db->download(enrg->sourceName, u, enrg->type, false, enrg->gpgCheck))
         {
@@ -254,7 +257,10 @@ bool Logram::PackageSystem::update()
         // Traductions
         u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/translate." + lang + ".xz";
         
-        sendProgress(progress, i*2+1, u);
+        if (!sendProgress(progress, i*2+1, u))
+        {
+            return false;
+        }
         
         if (!db->download(enrg->sourceName, u, enrg->type, true, enrg->gpgCheck))
         {
@@ -296,6 +302,16 @@ QList<Logram::DatabasePackage *> Logram::PackageSystem::upgradePackages()
 bool Logram::PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
 {
     return d->dr->packagesByName(regex, rs);
+}
+
+QList<int> Logram::PackageSystem::packagesByVString(const QString &name, const QString &version, int op)
+{
+    return d->dr->packagesByVString(name, version, op);
+}
+
+int Logram::PackageSystem::packages()
+{
+    return d->dr->packages();
 }
 
 bool Logram::PackageSystem::package(const QString &name, const QString &version, Package* &rs)
@@ -601,7 +617,10 @@ void Logram::PackageSystem::dlProgress(qint64 done, qint64 total)
             progress = prop.toInt();
         }
         
-        sendProgress(progress, done, reply->url().toString());
+        if (!sendProgress(progress, done, reply->url().toString()))
+        {
+            reply->abort();
+        }
     }
 }
 
@@ -619,6 +638,17 @@ void Logram::PackageSystem::setLastError(PackageError *err)
     d->lastError = err;
     
     d->errorMutex.unlock();
+}
+
+void Logram::PackageSystem::setLastError(PackageError::Error type, const QString &info, const QString &more)
+{
+    PackageError *err = new PackageError;
+    
+    err->type = type;
+    err->info = info;
+    err->more = more;
+    
+    setLastError(err);
 }
 
 PackageError *Logram::PackageSystem::lastError()
@@ -927,28 +957,37 @@ int Logram::PackageSystem::startProgress(Progress::Type type, int tot)
     return pid;
 }
 
-void Logram::PackageSystem::sendProgress(int id, int num, const QString &msg, const QString &more)
+bool Logram::PackageSystem::sendProgress(int id, int num, const QString &msg, const QString &more)
 {
     Progress *p = d->progresses.value(id);
     
     if (p == 0)
     {
-        return;
+        return false;
     }
     
     p->old = p->current;
     p->current = num;
     p->info = msg;
     p->more = more;
+    p->canceled = false;
     
     p->action = Progress::Update;
     
     emit progress(p);
+    
+    if (p->canceled)
+    {
+        setLastError(PackageError::ProgressCanceled, msg, more);
+        return false;
+    }
+    
+    return true;
 }
 
-void Logram::PackageSystem::processOut(const QString &command, const QString &line)
+bool Logram::PackageSystem::processOut(const QString &command, const QString &line)
 {
-    sendProgress(d->processOutProgress, 0, command, line);
+    return sendProgress(d->processOutProgress, 0, command, line);
 }
 
 void Logram::PackageSystem::endProgress(int id)

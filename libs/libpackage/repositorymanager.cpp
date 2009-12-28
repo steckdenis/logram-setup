@@ -659,7 +659,11 @@ bool RepositoryManager::exp(const QStringList &distros)
         foreach (const QString &arch, archs)
         {
             // Progression
-            d->ps->sendProgress(progress, eNum, distro, arch);
+            if (!d->ps->sendProgress(progress, eNum, distro, arch))
+            {
+                return false;
+            }
+            
             eNum++;
             
             sql = "SELECT id FROM packages_arch WHERE name='%1';";

@@ -260,7 +260,10 @@ bool PackageSource::binaries()
         QString packageFile = packageName + "~" + version + "." + arch + ".lpk";
         
         // Envoyer le signal de progression
-        d->ps->sendProgress(progress, curPkg, packageFile);
+        if (!d->ps->sendProgress(progress, curPkg, packageFile))
+        {
+            return false;
+        }
         
         curPkg++;
         
@@ -352,7 +355,10 @@ bool PackageSource::binaries()
         {
             const PackageFile &pf = packageFiles.at(i);
             
-            d->ps->sendProgress(mp, i, pf.to);
+            if (!d->ps->sendProgress(mp, i, pf.to))
+            {
+                return false;
+            }
             
             // Ajouter l'élément
             stat(qPrintable(pf.from), &st);

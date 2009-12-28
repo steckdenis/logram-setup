@@ -205,7 +205,10 @@ bool PackageList::process()
                      SIGNAL(communication(Logram::Package *, Logram::Communication *)));
 
         // Progression
-        d->ps->sendProgress(d->downloadProgress, i, pkg->name());
+        if (!d->ps->sendProgress(d->downloadProgress, i, pkg->name()))
+        {
+            return false;
+        }
 
         // Téléchargement
         if (!pkg->download())
@@ -244,7 +247,11 @@ void PackageList::packageProceeded(bool success)
         Package *next = d->downloadedPackages.takeAt(0);
 
         // Progression
-        d->ps->sendProgress(d->processProgress, d->ipackages, next->name() + "~" + next->version());
+        if (!d->ps->sendProgress(d->processProgress, d->ipackages, next->name() + "~" + next->version()))
+        {
+            d->loop.exit(1);
+            return;
+        }
 
         // Installation
         d->ipackages++;
@@ -286,7 +293,11 @@ void PackageList::packageDownloaded(bool success)
     if (d->pipackages < d->parallelInstalls)
     {
         // Progression
-        d->ps->sendProgress(d->processProgress, d->ipackages, pkg->name() + "~" + pkg->version());
+        if (!d->ps->sendProgress(d->processProgress, d->ipackages, pkg->name() + "~" + pkg->version()))
+        {
+            d->loop.exit(1);
+            return;
+        }
         
         // Installer
         d->ipackages++;
@@ -312,7 +323,11 @@ void PackageList::packageDownloaded(bool success)
                       SIGNAL(communication(Logram::Package *, Logram::Communication *)));
         
         // Progression
-        d->ps->sendProgress(d->downloadProgress, d->dpackages, next->name());
+        if (!d->ps->sendProgress(d->downloadProgress, d->dpackages, next->name()))
+        {
+            d->loop.exit(1);
+            return;
+        }
 
         // Téléchargement
         d->dpackages++;

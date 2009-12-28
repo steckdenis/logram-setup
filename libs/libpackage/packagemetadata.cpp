@@ -494,7 +494,11 @@ void PackageMetaData::processDataOut()
         d->buffer += line + '\n';
         
         // Envoyer la progression
-        d->ps->processOut(d->commandLine, line);
+        if (!d->ps->processOut(d->commandLine, line))
+        {
+            // Kill the process
+            sh->terminate();
+        }
         
         // Émettre le bon signal
         emit processLineOut(sh, line);

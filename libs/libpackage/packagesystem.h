@@ -63,7 +63,8 @@ struct PackageError
         OpenDatabaseError,
         QueryError,
         SignError,
-        InstallError
+        InstallError,
+        ProgressCanceled
     };
     
     Error type;
@@ -120,6 +121,7 @@ struct Progress
     Action action;
     int current, old, total;
     QString info, more;
+    bool canceled;
 };
 
 struct UpgradeInfo;
@@ -136,8 +138,10 @@ class PackageSystem : public QObject
 
         // API publique
         bool packagesByName(const QString &regex, QList<int> &rs);
+        QList<int> packagesByVString(const QString &name, const QString &version, int op);
         bool package(const QString &name, const QString &version, Package* &rs);
         DatabasePackage *package(int id);
+        int packages();
         bool update();
         QList<DatabasePackage *> upgradePackages();
         Solver *newSolver();
@@ -173,11 +177,12 @@ class PackageSystem : public QObject
         
         // Gestion des erreurs
         void setLastError(PackageError *err); // Thread-safe
-        PackageError *lastError(); // Thread-safe
+        void setLastError(PackageError::Error type, const QString &info, const QString &more = QString());
+        PackageError *lastError(); // Thread-safe, peut renvoyer 0
 
         int startProgress(Progress::Type type, int tot);
-        void sendProgress(int id, int num, const QString &msg, const QString &more = QString());
-        void processOut(const QString &command, const QString &line);
+        bool sendProgress(int id, int num, const QString &msg, const QString &more = QString()) __attribute__((warn_unused_result));
+        bool processOut(const QString &command, const QString &line) __attribute__((warn_unused_result));
         void endProgress(int id);
 
     signals:

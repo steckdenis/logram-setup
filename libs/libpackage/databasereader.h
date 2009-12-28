@@ -65,6 +65,8 @@ class DatabaseReader
         QList<_Depend *> depends(int pkgIndex);
         QList<int> packagesOfString(int stringIndex, int nameIndex, int op);
         QList<UpgradeInfo> upgradePackages();
+        
+        int packages();
 
         const char *string(bool translate, int index);
         _Package *package(int index);

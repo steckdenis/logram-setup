@@ -334,6 +334,11 @@ QList<UpgradeInfo> DatabaseReader::upgradePackages()
     return rs;
 }
 
+int DatabaseReader::packages()
+{
+    return *(int *)m_packages;
+}
+
 _Depend *DatabaseReader::depend(int32_t ptr)
 {
     int numdepsptr = *(int *)m_depends;
