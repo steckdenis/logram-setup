@@ -36,6 +36,7 @@ struct _Package
     int32_t maintainer; // Index de la chaîne du nom du mainteneur
     int32_t short_desc; // Index de la chaîne de description courte
     int32_t source;     // Nom du paquet source
+    int32_t uurl;       // Url upstream (site web, etc)
     int32_t repo;       // Nom du mirroir qui fourni le paquet (sources.list)
     int32_t arch;       // Url de téléchargement
     int32_t section;    // Section

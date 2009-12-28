@@ -68,6 +68,7 @@ class PackageMetaData : public QObject, public QDomDocument
         QString packageDescription() const;
         QString packageTitle() const;
         QString currentPackage() const;
+        QString upstreamUrl() const;
         
         QList<ChangeLogEntry *> changelog() const;
         

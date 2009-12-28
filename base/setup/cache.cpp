@@ -250,6 +250,7 @@ void App::showpkg(const QString &name, bool changelog)
     cout << COLOR(tr("Téléchargement      : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->downloadSize())) << endl;
     cout << COLOR(tr("Taille installée    : "), "33") << qPrintable(PackageSystem::fileSizeFormat(pkg->installSize())) << endl;
     cout << COLOR(tr("Paquet source       : "), "33") << qPrintable(pkg->source()) << endl;
+    cout << COLOR(tr("Adresse de l'auteur : "), "33") << qPrintable(pkg->upstreamUrl()) << endl;
     cout << COLOR(tr("Licence             : "), "33") << qPrintable(pkg->license()) << endl;
     cout << COLOR(tr("Mainteneur          : "), "33") << qPrintable(pkg->maintainer()) << endl;
     cout << COLOR(tr("Description courte  : "), "33") << qPrintable(pkg->shortDesc()) << endl;

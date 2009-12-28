@@ -229,6 +229,11 @@ QString PackageMetaData::primaryLang() const
     return documentElement().attribute("primarylang");
 }
 
+QString PackageMetaData::upstreamUrl() const
+{
+    return documentElement().firstChildElement("source").attribute("upstreamurl");
+}
+
 QString PackageMetaData::stringOfKey(const QDomElement &element) const
 {
     return stringOfKey(element, primaryLang());

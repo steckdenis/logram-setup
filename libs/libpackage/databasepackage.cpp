@@ -293,6 +293,11 @@ QString DatabasePackage::source()
     PKG_STR_ATTR(false, source)
 }
 
+QString DatabasePackage::upstreamUrl()
+{
+    PKG_STR_ATTR(false, uurl)
+}
+
 QString DatabasePackage::repo()
 {
     PKG_STR_ATTR(false, repo)

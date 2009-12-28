@@ -394,8 +394,8 @@ bool RepositoryManager::includePackage(const QString &fileName)
     if (!update)
     {
         sql = " INSERT INTO \
-                packages_package(name, maintainer, section_id, version, arch_id, distribution_id, primarylang, download_size, install_size, date, depends, suggests, conflicts, provides, replaces, source, license, flags, packageHash, metadataHash, download_url) \
-                VALUES ('%1', '%2', %3, '%4', %5, %6, '%7', %8, %9, NOW(), '%10', '%11', '%12', '%13', '%14', '%15', '%16', %17, '%18', '%19', '%20');";
+                packages_package(name, maintainer, section_id, version, arch_id, distribution_id, primarylang, download_size, install_size, date, depends, suggests, conflicts, provides, replaces, source, license, flags, packageHash, metadataHash, download_url, upstream_url) \
+                VALUES ('%1', '%2', %3, '%4', %5, %6, '%7', %8, %9, NOW(), '%10', '%11', '%12', '%13', '%14', '%15', '%16', %17, '%18', '%19', '%20', '%21');";
     }
     else
     {
@@ -420,7 +420,8 @@ bool RepositoryManager::includePackage(const QString &fileName)
                 flags=%17, \
                 packageHash='%18', \
                 metadataHash='%19', \
-                download_url='%20' \
+                download_url='%20', \
+                upstream_url='%21' \
                 \
                 WHERE id=") + QString::number(package_id) + ";";
     }
@@ -446,6 +447,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
             .arg(e(QString(fpkg->packageHash())))
             .arg(e(QString(fpkg->metadataHash())))
             .arg(e(download_url))
+            .arg(e(fpkg->upstreamUrl()))
             ))
     {
         PackageError *err = new PackageError;
@@ -726,6 +728,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                     pkg.install_size, \
                     pkg.packageHash, \
                     pkg.metadataHash, \
+                    pkg.upstream_url, \
                     \
                     section.name, \
                     pkg.id \
@@ -758,15 +761,16 @@ bool RepositoryManager::exp(const QStringList &distros)
             {
                 pkname = query.value(0).toString();
                 pkprimlang = query.value(5).toString();
-                pkid = query.value(17).toInt();
+                pkid = query.value(18).toInt();
                 primlangid = -1;
                 
                 rs = '[' + pkname + "]\n";
                 rs += "Name=" + pkname + '\n';
                 rs += "Version=" + query.value(1).toString() + '\n';
                 rs += "Source=" + query.value(2).toString() + '\n';
+                rs += "UpstreamUrl=" + query.value(16).toString() + '\n';
                 rs += "Maintainer=" + query.value(3).toString() + '\n';
-                rs += "Section=" + query.value(16).toString() + '\n';
+                rs += "Section=" + query.value(17).toString() + '\n';
                 rs += "Distribution=" + distro + '\n';
                 rs += "License=" + query.value(4).toString() + '\n';
                 rs += "PrimaryLang=" + pkprimlang + '\n';

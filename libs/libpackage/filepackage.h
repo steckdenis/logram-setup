@@ -53,6 +53,7 @@ class FilePackage : public Package
         QString maintainer();
         QString shortDesc();
         QString source();
+        QString upstreamUrl();
         QString repo();
         QString section();
         QString distribution();

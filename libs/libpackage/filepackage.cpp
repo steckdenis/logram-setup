@@ -55,6 +55,7 @@ struct FilePackage::Private
     QString maintainer;
     QString shortDesc;
     QString source;
+    QString upstream_url;
     QString section;
     QString distribution;
     QString license;
@@ -244,6 +245,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         {
             d->license = package.attribute("license");
             d->source = package.attribute("name");
+            d->upstream_url = package.attribute("upstreamurl");
             
             QDomElement maintainer = package.firstChildElement("maintainer");
             
@@ -425,6 +427,11 @@ QString FilePackage::shortDesc()
 QString FilePackage::source()
 {
     return d->source;
+}
+
+QString FilePackage::upstreamUrl()
+{
+    return d->upstream_url;
 }
 
 QString FilePackage::repo()

@@ -698,6 +698,10 @@ bool DatabaseWriter::rebuild()
                         {
                             pkg->section = stringIndex(value, index, false, false);
                         }
+                        else if (key == "UpstreamUrl")
+                        {
+                            pkg->uurl = stringIndex(value, index, false, false);
+                        }
                         else if (key == "License")
                         {
                             pkg->license = stringIndex(value, index, false, false);

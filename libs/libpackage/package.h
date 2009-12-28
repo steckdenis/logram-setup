@@ -87,6 +87,7 @@ class Package : public QObject
         virtual QString maintainer() = 0;
         virtual QString shortDesc() = 0;
         virtual QString source() = 0;
+        virtual QString upstreamUrl() = 0;
         virtual QString repo() = 0;
         virtual QString section() = 0;
         virtual QString distribution() = 0;
