@@ -43,7 +43,10 @@ void App::include(const QStringList &lpkFileNames)
     foreach (const QString &fileName, lpkFileNames)
     {
         // C'est nous qui envoyons la progression, car nous savons combien de paquets sont à importer
-        ps->sendProgress(progress, numPkg, fileName);
+        if (!ps->sendProgress(progress, numPkg, fileName))
+        {
+            return;
+        }
         
         if (!mg->includePackage(fileName))
         {
