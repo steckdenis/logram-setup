@@ -92,6 +92,7 @@ class App : public QCoreApplication
 
         void manageResults(Logram::Solver *solver);
         void updatePgs(Logram::Progress *p);
+        void printIndented(const QByteArray &chars, int indent);
         
         // Progressions
         QList<Logram::Progress *> progresses;

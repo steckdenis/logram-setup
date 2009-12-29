@@ -39,6 +39,15 @@ class Communication;
 
 struct ChangeLogEntry
 {
+    enum Type
+    {
+        LowPriority,
+        Feature,
+        BugFix,
+        Security
+    };
+    
+    Type type;
     QString version;
     QString author, email;
     QString distribution;

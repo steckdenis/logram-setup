@@ -256,7 +256,8 @@ void App::showpkg(const QString &name, bool changelog)
     cout << COLOR(tr("Description courte  : "), "33") << qPrintable(pkg->shortDesc()) << endl;
     
     cout << endl << COLOR(tr("Description longue : "), "35") << endl << endl;
-    cout << qPrintable(metadata->packageDescription()) << endl;
+    printIndented(metadata->packageDescription().toUtf8(), 4);
+    cout << endl;
 
     // Afficher les dépendances
     QList<Depend *> deps = pkg->depends();
@@ -371,23 +372,49 @@ void App::showpkg(const QString &name, bool changelog)
     
     if (changelog)
     {
-        cout << endl << COLOR(tr("Historique des versions : "), "35") << endl << endl;
+        cout << COLOR(tr("Historique des versions : "), "35") << endl << endl;
         
         // Afficher le changelog
         QList<ChangeLogEntry *> entries = metadata->changelog();
         
         foreach(ChangeLogEntry *entry, entries)
         {
+            QString t;
+            
+            switch (entry->type)
+            {
+                case ChangeLogEntry::LowPriority:
+                    t = tr("Faible priorité : ");
+                    break;
+                    
+                case ChangeLogEntry::Feature:
+                    t = tr("Nouvelles fonctionnalités : ");
+                    break;
+                    
+                case ChangeLogEntry::BugFix:
+                    t = tr("Correction de bogues : ");
+                    break;
+                    
+                case ChangeLogEntry::Security:
+                    t = tr("Mise à jour de sécurité : ");
+                    break;
+            }
+            
             cout
+            << "  * "
+            << COLOR(t, "37")
             << COLOR(entry->version, "32")
-            << " ("
-            << COLOR(entry->author + " <" + entry->email + ">", "33")
-            << "), "
-            << COLOR(entry->date.toString(Qt::DefaultLocaleShortDate), "36") << endl;
+            << ", "
+            << qPrintable(entry->date.toString(Qt::DefaultLocaleShortDate))
+            << endl
+            << "    "
+            << qPrintable(tr("Par %1 <%2>").arg(entry->author, entry->email))
+            << endl;
             
             cout << endl;
             
-            cout << qPrintable(entry->text);
+            // Ecrire le texte caractères par caractères
+            printIndented(entry->text.toUtf8(), 8);
             
             cout << endl << endl;
         }

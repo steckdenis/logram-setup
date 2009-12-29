@@ -29,6 +29,49 @@
 #include <termios.h> 
 #include <unistd.h>
 
+void App::printIndented(const QByteArray &chars, int indent)
+{
+    char c;
+    int pos = 0;
+    int maxpos = width - indent;
+    
+    #define IDENT for (int j=0; j<indent; ++j) putc(' ', stdout);
+    
+    IDENT
+    
+    for (int i=0; i<chars.size(); ++i)
+    {
+        c = chars.at(i);
+        
+        if (pos >= maxpos || c == '\n')
+        {
+            pos = 0;
+            
+            if (c != '\n')
+            {
+                putc(c, stdout);
+            }
+            
+            putc('\n', stdout);
+            IDENT
+            
+            // On ne commence pas une ligne par un espace, c'est moche
+            c = chars.at(i+1);
+            
+            while ((c == ' ' || c == '\t') && i<chars.size())
+            {
+                i++;
+                c = chars.at(i+1);
+            }
+        }
+        else
+        {
+            putc(c, stdout);
+            pos++;
+        }
+    }
+}
+
 void App::getString(char *buffer, int max_length, const char *def, bool append_return)
 {
     int pos = 0, slength = 0;

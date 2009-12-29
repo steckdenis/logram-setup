@@ -325,6 +325,26 @@ QList<ChangeLogEntry *> PackageMetaData::changelog() const
         // Trouver la date
         e->date = QDateTime(QDate::fromString(entry.attribute("date"), "yyyy-MM-dd"),
                             QTime::fromString(entry.attribute("time"), "hh:mm:ss"));
+                            
+        // Type de mise à jour
+        QString t = entry.attribute("type", "lowprio");
+        
+        if (t == "lowprio")
+        {
+            e->type = ChangeLogEntry::LowPriority;
+        }
+        else if (t == "feature")
+        {
+            e->type = ChangeLogEntry::Feature;
+        }
+        else if (t == "bugfix")
+        {
+            e->type = ChangeLogEntry::BugFix;
+        }
+        else if (t == "security")
+        {
+            e->type = ChangeLogEntry::Security;
+        }
         
         // Ajouter à la liste
         rs.append(e);
