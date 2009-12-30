@@ -66,6 +66,9 @@ struct Logram::PackageSystem::Private
     int parallelInstalls, parallelDownloads;
     QString installRoot, confRoot, varRoot;
     int setParams;
+    
+    // Mirroirs
+    QHash<QString, int> usedMirrors;
 };
 
 Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
@@ -1004,4 +1007,49 @@ void Logram::PackageSystem::endProgress(int id)
     p->action = Progress::End;
     
     emit progress(p);
+}
+
+QString Logram::PackageSystem::bestMirror(const Repository &repo)
+{
+    // Explorer chaque mirroir du dépôt
+    int minUsed = 0x7FFFFFFF;
+    QString bmirror;
+    
+    foreach (const QString &mirror, repo.mirrors)
+    {
+        if (!d->usedMirrors.contains(mirror))
+        {
+            // Mirroir pas encore utilisé, c'est facile
+            d->usedMirrors.insert(mirror, 1);
+            return mirror;
+        }
+        
+        if (d->usedMirrors.value(mirror) < minUsed)
+        {
+            // On a trouvé un mirroir moins utilisé que le précédant
+            bmirror = mirror;
+            minUsed = d->usedMirrors.value(mirror);
+        }
+    }
+    
+    // On a trouvé un mirroir
+    if (bmirror.isEmpty())
+    {
+        return QString();
+    }
+    
+    d->usedMirrors[bmirror]++;
+    
+    return bmirror;
+}
+
+void Logram::PackageSystem::releaseMirror(const QString &mirror)
+{
+    if (!d->usedMirrors.contains(mirror))
+    {
+        return;
+    }
+    
+    // Retirer un jeton au mirroir
+    d->usedMirrors[mirror]--;
 }

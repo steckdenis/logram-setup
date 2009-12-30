@@ -122,41 +122,29 @@ static QStringList pkgFlags(Package *pkg)
     
     rs.append(tmp);
     
+    #define YESNO(flag, string) \
+        rs.append( \
+            App::tr(string) \
+            + ((flags & flag) != 0 ? syes : sno));
+    
+    QString syes = App::tr("Oui");
+    QString sno = App::tr("Non");
+    
     // Graphique
-    bool b = ((flags & PACKAGE_FLAG_GUI) != 0);
-    
-    tmp = App::tr("Paquet graphique     : ");
-    
-    tmp += (b ? App::tr("Oui") : App::tr("Non"));
-    
-    rs.append(tmp);
+    YESNO(PACKAGE_FLAG_GUI,         "Paquet graphique     : ")
     
     // Ne pas mettre à jour
-    b = ((flags & PACKAGE_FLAG_DONTUPDATE) != 0);
-    
-    tmp = App::tr("Ne pas mettre à jour : ");
-    
-    tmp += (b ? App::tr("Oui") : App::tr("Non"));
-    
-    rs.append(tmp);
+    YESNO(PACKAGE_FLAG_DONTUPDATE,  "Ne pas mettre à jour : ")
     
     // Ne pas installer
-    b = ((flags & PACKAGE_FLAG_DONTINSTALL) != 0);
-    
-    tmp = App::tr("Ne pas installer     : ");
-    
-    tmp += (b ? App::tr("Oui") : App::tr("Non"));
-    
-    rs.append(tmp);
+    YESNO(PACKAGE_FLAG_DONTINSTALL, "Ne pas installer     : ")
     
     // Ne pas supprimer
-    b = ((flags & PACKAGE_FLAG_DONTREMOVE) != 0);
+    YESNO(PACKAGE_FLAG_DONTREMOVE,  "Ne pas supprimer     : ")
     
-    tmp = App::tr("Ne pas supprimer     : ");
+    // Nécessite une CLUF
+    YESNO(PACKAGE_FLAG_HASCLUF,     "License à approuver  : ")
     
-    tmp += (b ? App::tr("Oui") : App::tr("Non"));
-    
-    rs.append(tmp);
     
     return rs;
 }

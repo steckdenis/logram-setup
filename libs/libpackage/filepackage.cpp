@@ -232,6 +232,10 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     {
                         d->flags |= ((el.attribute("value").toInt() & 1) << 2);
                     }
+                    else if (el.attribute("name") == "hascluf")
+                    {
+                        d->flags |= ((el.attribute("value").toInt() & 1) << 6);
+                    }
                 }
                 else if (el.tagName() == "shortdesc")
                 {

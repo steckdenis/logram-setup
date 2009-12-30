@@ -30,7 +30,6 @@ namespace Logram
 
 struct _Package
 {
-    // TODO: Maintainer
     int32_t name;       // Index de la chaîne du nom
     int32_t version;    // Index de la chaîne de version
     int32_t maintainer; // Index de la chaîne du nom du mainteneur

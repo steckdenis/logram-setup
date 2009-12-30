@@ -51,8 +51,9 @@ struct DatabasePackage::Private
     QList<Depend *> deps;
 
     // Téléchargement
-    QString waitingDest;
+    QString waitingDest, usedMirror;
     ManagedDownload *waitingMd;
+    Repository usedRepo;
 };
 
 struct DatabaseDepend::Private
@@ -108,7 +109,6 @@ bool DatabasePackage::download()
 {
     QString fname, u;
     Repository::Type type;
-    Repository r;
     
     // TODO: Utiliser le meilleur mirroir (garder une liste des mirroirs qu'on utilise déjà et prendre le moins utilisé, pour optimiser les téléchargements en parallèle)
     
@@ -122,21 +122,31 @@ bool DatabasePackage::download()
     {
         // Télécharger le paquet
         fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + url().section('/', -1, -1);
-        d->ps->repository(repo(), r);
-        type = r.type;
-        u = r.mirrors.at(0) + "/" + url();
+        
+        d->ps->repository(repo(), d->usedRepo);
+        type = d->usedRepo.type;
+        
+        d->usedMirror = d->ps->bestMirror(d->usedRepo);
+        
+        u = d->usedMirror + "/" + url();
     }
     else /* Update */
     {
         DatabasePackage *other = upgradePackage();
         
         fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + other->url().section('/', -1, -1);
-        d->ps->repository(repo(), r);
-        type = r.type;
-        u = r.mirrors.at(0) + "/" + other->url();
+        
+        d->ps->repository(repo(), d->usedRepo);
+        type = d->usedRepo.type;
+        
+        d->usedMirror = d->ps->bestMirror(d->usedRepo);
+        
+        u = d->usedMirror + "/" + other->url();
     }
     
     d->waitingDest = fname;
+    
+    qDebug() << d->usedMirror;
     
     return d->ps->download(type, u, d->waitingDest, false, d->waitingMd); // Non-bloquant
 }
@@ -145,6 +155,9 @@ void DatabasePackage::downloadEnded(ManagedDownload *md)
 {
     if (md == d->waitingMd)
     {
+        // Libérer le mirroir
+        d->ps->releaseMirror(d->usedMirror);
+        
         if (md->error)
         {
             delete md;

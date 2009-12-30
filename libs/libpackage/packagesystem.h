@@ -73,7 +73,7 @@ struct PackageError
 };
 
 struct Repository
-{
+{   
     enum Type
     {
         Unknown,
@@ -184,6 +184,10 @@ class PackageSystem : public QObject
         bool sendProgress(int id, int num, const QString &msg, const QString &more = QString()) __attribute__((warn_unused_result));
         bool processOut(const QString &command, const QString &line) __attribute__((warn_unused_result));
         void endProgress(int id);
+        
+        // Usage interne
+        QString bestMirror(const Repository &repo);
+        void releaseMirror(const QString &mirror);
 
     signals:
         void progress(Logram::Progress *progress);
