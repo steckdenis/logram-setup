@@ -36,6 +36,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 #include <QtXml>
 #include <QtDebug>
@@ -424,9 +425,12 @@ bool PackageSource::binaries()
             fd = open(qPrintable(pf.from), O_RDONLY);
             entry = archive_entry_new();
             
+            struct stat st;
+            lstat(qPrintable(pf.from), &st);
+            
             archive_entry_set_pathname(entry, qPrintable(pf.to));
             archive_entry_copy_sourcepath(entry, qPrintable(pf.from));
-            archive_read_disk_entry_from_file(disk, entry, fd, 0);
+            archive_read_disk_entry_from_file(disk, entry, fd, &st);
             
             archive_write_header(a, entry);
             len = read(fd, buff, 8192);
