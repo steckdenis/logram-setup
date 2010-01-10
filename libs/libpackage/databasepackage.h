@@ -38,7 +38,7 @@ namespace Logram
 class DatabaseReader;
 struct ManagedDownload;
 
-class _Depend;
+struct _Depend;
 class DatabaseDepend;
 
 class DatabasePackage : public Package

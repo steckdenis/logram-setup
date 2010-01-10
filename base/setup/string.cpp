@@ -88,7 +88,7 @@ void App::getString(char *buffer, int max_length, const char *def, bool append_r
     {
         ln = strlen(def);
         
-        printf(def);
+        printf("%s", def);
         pos = ln;
         slength = ln;
         memcpy(buffer, def, ln);
@@ -123,7 +123,7 @@ void App::getString(char *buffer, int max_length, const char *def, bool append_r
                 
                 if (pos < slength)
                 {
-                    printf(buffer + pos);
+                    printf("%s", buffer + pos);
                     ln = strlen(buffer + pos);
                     
                     putc(' ', stdout);
@@ -184,7 +184,7 @@ void App::getString(char *buffer, int max_length, const char *def, bool append_r
                 else if (c == 70)
                 {
                     // END
-                    printf(buffer + pos);
+                    printf("%s", buffer + pos);
                     
                     pos = slength;
                 }
@@ -195,7 +195,7 @@ void App::getString(char *buffer, int max_length, const char *def, bool append_r
                     {
                         ln = strlen(buffer + pos);
                         
-                        printf(buffer + pos + 1);
+                        printf("%s", buffer + pos + 1);
                         putc(' ', stdout);
                         
                         for (i=0; i<ln; i++)
@@ -230,7 +230,7 @@ void App::getString(char *buffer, int max_length, const char *def, bool append_r
             if (pos < slength)
             {
                 ln = strlen(buffer + pos);
-                printf(buffer + pos);
+                printf("%s", buffer + pos);
                 
                 // Revenir en arrière
                 cc1 = c;
