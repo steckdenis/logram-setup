@@ -1,1 +1,41 @@
-Logram is a Desktop Environment, and also a Linux Distribution. This directory contains the parts of de Distribution and the tools to manage it.
+Logram Package Management Infrastructure
+========================================
+
+Here are the programs Logram uses to hangles its packages. You can find some
+directories here :
+
+	* libpackage : The shared libary that manages the packages
+	* setup      : The front-end console application to handle the packages
+
+Installation
+============
+
+Installing Setup is very simple :
+
+	cd libpackage
+	qmake
+	make
+	sudo make install
+
+	cd ../setup
+	qmake
+	make
+
+Then, follow the instructions there : 
+
+	http://www.logram-project.org/wiki-test-setup.html
+
+License
+=======
+
+Setup and its library are available under the GNU GPLv3 License. See COPYING
+for more informations.
+
+Contact
+=======
+
+If you have a question, here are where you can ask them :
+
+	* http://www.logram-project.org : Forums and general help
+	* #logram-project.org@freenode  : Developer channel for instant chat
+	* steckdenis@logram-project.org : Mail of the author of Setup

@@ -1,9 +1,0 @@
-[KSplash Theme: Logram]
-Name = Logram Splash Screen
-Description = Logram Splash Screen
-Version = 0.1
-Author = Denis Steckelmacher <steckdenis@logram-project.org> & Nuno Pinheiro <nuno@oxygen-icons.org> & Riccardo Iaconelli <riccardo@kde.org>
-Homepage = http://www.logram-project.org
-
-# Theme behaviour settings.
-Engine = KSplashX
