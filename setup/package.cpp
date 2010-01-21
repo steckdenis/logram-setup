@@ -25,6 +25,7 @@
 #include <logram/solver.h>
 #include <logram/databasepackage.h>
 #include <logram/packagelist.h>
+#include <logram/packagemetadata.h>
 
 #include <iostream>
 using namespace std;
@@ -113,11 +114,61 @@ void App::getsource(const QString &name)
         return;
     }
     
-    if (!ps->download(repo.type, dpkg->url(DatabasePackage::Source), fname, true, md))
+    if (!ps->download(repo.type, repo.mirrors.at(0) + "/" + dpkg->url(DatabasePackage::Source), fname, true, md))
     {
         error();
         return;
     }
+    
+    // Suggérer les dépendances qui seraient utiles
+    cout << COLOR(tr("Ce paquet pourrait nécessiter ceci pour être compilé :"), "35") << endl;
+    
+    cout << qPrintable(tr("Légende : "))
+         << COLOR(tr("D: Dépend "), "31")
+         << COLOR(tr("S: Suggère "), "32")
+         << COLOR(tr("C: Conflit "), "33")
+         << COLOR(tr("P: Fourni "), "34")
+         << COLOR(tr("R: Remplace "), "35")
+         << COLOR(tr("N: Est requis par"), "37")
+    << endl << endl;
+    
+    PackageMetaData *meta = dpkg->metadata();
+    QList<SourceDepend *> deps = meta->sourceDepends();
+    
+    foreach (SourceDepend *dep, deps)
+    {
+        switch (dep->type)
+        {
+            case DEPEND_TYPE_DEPEND:
+                cout << " D: ";
+                cout << COLOR(dep->string, "31");
+                break;
+            case DEPEND_TYPE_SUGGEST:
+                cout << " S: ";
+                cout << COLOR(dep->string, "32");
+                break;
+            case DEPEND_TYPE_CONFLICT:
+                cout << " C: ";
+                cout << COLOR(dep->string, "33");
+                break;
+            case DEPEND_TYPE_PROVIDE:
+                cout << " P: ";
+                cout << COLOR(dep->string, "34");
+                break;
+            case DEPEND_TYPE_REPLACE:
+                cout << " R: ";
+                cout << COLOR(dep->string, "35");
+                break;
+            case DEPEND_TYPE_REVDEP:
+                cout << " N: ";
+                cout << COLOR(dep->string, "37");
+                break;
+        }
+        
+        cout << endl;
+    }
+    
+    cout << endl;
 }
 
 void App::upgrade()

@@ -55,6 +55,12 @@ struct ChangeLogEntry
     QString text;
 };
 
+struct SourceDepend
+{
+    int type;
+    QString string;
+};
+
 class PackageMetaData : public QObject, public QDomDocument
 {
     Q_OBJECT
@@ -80,6 +86,7 @@ class PackageMetaData : public QObject, public QDomDocument
         QString upstreamUrl() const;
         
         QList<ChangeLogEntry *> changelog() const;
+        QList<SourceDepend *> sourceDepends() const;
         
         void setCurrentPackage(const QString &name);
         QDomElement currentPackageElement() const;

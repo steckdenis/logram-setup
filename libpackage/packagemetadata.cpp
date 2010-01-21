@@ -355,6 +355,50 @@ QList<ChangeLogEntry *> PackageMetaData::changelog() const
     return rs;
 }
 
+QList<SourceDepend *> PackageMetaData::sourceDepends() const
+{
+    QList<SourceDepend *> rs;
+    SourceDepend *dep;
+    QString deptype;
+    
+    QDomElement depend = documentElement().firstChildElement("source").firstChildElement("depend");
+    
+    while (!depend.isNull())
+    {
+        dep = new SourceDepend;
+        deptype = depend.attribute("type", "depend");
+        
+        dep->string = depend.attribute("string");
+        
+        if (deptype == "depend")
+        {
+            dep->type = DEPEND_TYPE_DEPEND;
+        }
+        else if (deptype == "suggest")
+        {
+            dep->type = DEPEND_TYPE_SUGGEST;
+        }
+        else if (deptype == "conflict")
+        {
+            dep->type = DEPEND_TYPE_CONFLICT;
+        }
+        else if (deptype == "provide")
+        {
+            dep->type = DEPEND_TYPE_PROVIDE;
+        }
+        else if (deptype == "replace")
+        {
+            dep->type = DEPEND_TYPE_REPLACE;
+        }
+        
+        rs.append(dep);
+        
+        depend = depend.nextSiblingElement("depend");
+    }
+    
+    return rs;
+}
+
 QByteArray PackageMetaData::scriptOut() const
 {
     return d->buffer;
