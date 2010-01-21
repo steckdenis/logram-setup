@@ -71,6 +71,7 @@ class PackageList : public QObject, public QList<Package *>
         Error *error(int i) const;
         bool wrong() const;
         int weight() const;
+        bool needsReboot() const;
         
         bool process();
         

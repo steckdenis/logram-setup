@@ -176,5 +176,6 @@ class Depend
 #define PACKAGE_FLAG_DONTINSTALL            0b00010000
 #define PACKAGE_FLAG_DONTREMOVE             0b00100000
 #define PACKAGE_FLAG_HASCLUF                0b01000000
+#define PACKAGE_FLAG_NEEDSREBOOT            0b10000000
 
 #endif

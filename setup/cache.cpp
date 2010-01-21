@@ -131,19 +131,22 @@ static QStringList pkgFlags(Package *pkg)
     QString sno = App::tr("Non");
     
     // Graphique
-    YESNO(PACKAGE_FLAG_GUI,         "Paquet graphique     : ")
+    YESNO(PACKAGE_FLAG_GUI,         "Paquet graphique         : ")
     
     // Ne pas mettre à jour
-    YESNO(PACKAGE_FLAG_DONTUPDATE,  "Ne pas mettre à jour : ")
+    YESNO(PACKAGE_FLAG_DONTUPDATE,  "Ne pas mettre à jour     : ")
     
     // Ne pas installer
-    YESNO(PACKAGE_FLAG_DONTINSTALL, "Ne pas installer     : ")
+    YESNO(PACKAGE_FLAG_DONTINSTALL, "Ne pas installer         : ")
     
     // Ne pas supprimer
-    YESNO(PACKAGE_FLAG_DONTREMOVE,  "Ne pas supprimer     : ")
+    YESNO(PACKAGE_FLAG_DONTREMOVE,  "Ne pas supprimer         : ")
     
     // Nécessite une CLUF
-    YESNO(PACKAGE_FLAG_HASCLUF,     "License à approuver  : ")
+    YESNO(PACKAGE_FLAG_HASCLUF,     "License à approuver      : ")
+    
+    // Nécessite un redémarrage
+    YESNO(PACKAGE_FLAG_NEEDSREBOOT, "Nécessite un redémarrage : ")
     
     
     return rs;

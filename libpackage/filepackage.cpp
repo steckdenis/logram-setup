@@ -224,17 +224,24 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                 }
                 else if (el.tagName() == "flag")
                 {
-                    if (el.attribute("name") == "kdeintegration")
+                    QString name = el.attribute("name");
+                    int val = el.attribute("value", "1").toInt();
+                    
+                    if (name == "kdeintegration")
                     {
-                        d->flags |= (el.attribute("value").toInt() & 3);
+                        d->flags |= (val & 3);
                     }
-                    else if (el.attribute("name") == "gui")
+                    else if (name == "gui")
                     {
-                        d->flags |= ((el.attribute("value").toInt() & 1) << 2);
+                        d->flags |= ((val & 1) << 2);
                     }
-                    else if (el.attribute("name") == "hascluf")
+                    else if (name == "hascluf")
                     {
-                        d->flags |= ((el.attribute("value").toInt() & 1) << 6);
+                        d->flags |= ((val & 1) << 6);
+                    }
+                    else if (name == "needsreboot")
+                    {
+                        d->flags |= ((val & 1) << 7);
                     }
                 }
                 else if (el.tagName() == "shortdesc")

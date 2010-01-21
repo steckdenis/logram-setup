@@ -605,7 +605,14 @@ void App::manageResults(Solver *solver)
     {
         error();
         return;
-    }   
+    }
+    
+    // Savoir si on doit dire à l'utilisateur de redémarrer
+    if (packages->needsReboot())
+    {
+        cout << endl;
+        cout << COLOR(tr("Un ou plusieurs des paquets que vous avez installés nécessite un redémarrage"), "31") << endl;
+    }
 
     cout << endl;
     cout << COLOR(tr("Opérations sur les paquets appliquées !"), "32") << endl;

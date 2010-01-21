@@ -35,6 +35,7 @@ struct PackageList::Private
 {
     PackageSystem *ps;
     bool error;
+    bool needsReboot;
     
     int downloadProgress, processProgress;
     
@@ -63,6 +64,7 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
     
     d->weighted = false;
     d->error = false;
+    d->needsReboot = false;
     d->ps = ps;
     
     d->parallelInstalls = ps->parallelInstalls();
@@ -128,6 +130,11 @@ PackageList::~PackageList()
 bool PackageList::error() const
 {
     return d->error;
+}
+
+bool PackageList::needsReboot() const
+{
+    return d->needsReboot;
 }
         
 void PackageList::addPackage(Package *pkg)
@@ -234,11 +241,19 @@ bool PackageList::process()
 
 void PackageList::packageProceeded(bool success)
 {
+    Package *pkg = qobject_cast<Package *>(sender());
+    
     if (!success)
     {
         // Un paquet a planté, arrêter
         d->loop.exit(1);
         return;
+    }
+    
+    // Si ce paquet nécessitait un redémarrage, le dire
+    if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
+    {
+        d->needsReboot = true;
     }
     
     // Voir si on a un paquet suivant
