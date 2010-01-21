@@ -460,16 +460,6 @@ void App::error()
     delete err;
 }
 
-void App::clean()
-{
-    for (int i=0; i<progresses.count(); ++i)
-    {
-        progresses[i] = 0;
-    }
-    
-    updatePgs(0);
-}
-
 void App::updatePgs(Progress *p)
 {   
     if (progresses.count() == 0)

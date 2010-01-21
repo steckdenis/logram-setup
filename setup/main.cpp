@@ -25,8 +25,6 @@
 int main(int argc, char **argv)
 {
     App app(argc, argv);
-    
-    app.clean();    // Nettoyer les progressions
 
     return 0;
 }

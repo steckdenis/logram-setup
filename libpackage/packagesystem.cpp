@@ -538,6 +538,17 @@ void Logram::PackageSystem::downloadFinished(QNetworkReply *reply)
         dlDest = d->dlDest;
     }
     
+    // Terminer la progression
+    int progress;
+    QVariant prop = reply->property("__L_progress");
+    
+    if (!prop.isNull())
+    {
+        progress = prop.toInt();
+        
+        endProgress(progress);
+    }
+    
     // Voir s'il y a eu des erreurs
     if (reply->error() != QNetworkReply::NoError)
     {
