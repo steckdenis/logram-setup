@@ -232,6 +232,12 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         showFiles(args.at(2));
     }
+    else if (cmd == "tag")
+    {
+        CHECK_ARGS(!= 4)
+        
+        tag(args.at(2), args.at(3));
+    }
     else if (cmd == "download")
     {
         CHECK_ARGS(!= 3)
@@ -335,6 +341,9 @@ void App::help()
             "    add <packages>     Ajoute des paquets (préfixés de \"-\" pour les supprimer)\n"
             "    files <pkg>        Affiche la liste des fichiers installés par <pkg>\n"
             "    upgrade            Mise à jour des paquets. Lancez update avant.\n"
+            "    tag <pkg> <tag>    Tag les paquets correspondants à <pkg> (p>=v, etc) avec\n"
+            "                       le tag <tag>. Si <tag> commence par \"-\", alors retirer\n"
+            "                       ce tag.\n"
             "\n"
             "Commandes pour la gestion des sources :\n"
             "    download <src>     Télécharge la source du paquet dont <src> est le\n"
@@ -458,6 +467,11 @@ void App::error()
     
     // Plus besoin de l'erreur
     delete err;
+}
+
+void App::clean()
+{
+    delete ps;
 }
 
 void App::updatePgs(Progress *p)

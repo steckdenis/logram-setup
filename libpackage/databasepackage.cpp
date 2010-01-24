@@ -374,6 +374,23 @@ QString DatabasePackage::url(UrlType type)
     }
 }
 
+void DatabasePackage::setFlags(int flags)
+{
+    QSettings *set = d->ps->installedPackagesList();
+    
+    // Enregistrer les nouveaux flags dans le fichier de sauvegarde
+    set->beginGroup(name() + "_" + version());
+    set->setValue("Name", name());
+    set->setValue("Version", version());
+    set->setValue("Flags", flags);
+    set->endGroup();
+    
+    // Enregistrer également dans la base de donnée binaire
+    _Package *pkg = d->psd->package(d->index);
+    
+    pkg->flags = flags;
+}
+
 int DatabasePackage::flags()
 {
     _Package *pkg = d->psd->package(d->index);

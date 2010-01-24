@@ -798,6 +798,10 @@ bool DatabaseWriter::rebuild()
                         {
                             pkg->short_desc = stringIndex(QByteArray::fromBase64(value), index, true, false);
                         }
+                        else if (key == "Flags")
+                        {
+                            pkg->flags = value.toInt();
+                        }
                     }
                 }
                 else if (pass == 1)

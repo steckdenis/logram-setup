@@ -63,6 +63,7 @@ class App : public QCoreApplication
         void upgrade();
         void add(const QStringList &packages);
         void showFiles(const QString &packageName);
+        void tag(const QString &packageName, const QString &tag);
         
         // Gestion des sources
         void sourceDownload(const QString &fileName);

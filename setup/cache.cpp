@@ -93,6 +93,87 @@ void App::showFiles(const QString &packageName)
     }
 }
 
+void App::tag(const QString &packageName, const QString &tag)
+{
+    DatabasePackage *pkg;
+    QList<int> pkgs;
+    QString n, v;
+    int op;
+    
+    // Parser le nom du paquet
+    op = ps->parseVersion(packageName, n, v);
+    
+    // Récupérer les paquets qui vont avec
+    pkgs = ps->packagesByVString(n, v, op);
+    
+    // S'il y a plus d'un paquet, demander à l'utilisateur la confirmation
+    if (pkgs.count() > 1)
+    {
+        cout << COLOR(tr("%1 paquets vont être tagués, continuer ? ").arg(pkgs.count()), "34") << std::flush;
+        
+        char in[2];
+        
+        getString(in, 2, "y", true);
+        
+        if (in[0] != 'y')
+        {
+            return;
+        }
+    }
+    
+    // Taguer les paquets
+    foreach(int i, pkgs)
+    {
+        pkg = ps->package(i);
+        
+        int flag;
+        bool remove = false;
+        QString t = tag;
+        
+        // Si t commence par "-", alors on retire le tag
+        if (t.startsWith('-'))
+        {
+            remove = true;
+            t.remove(0, 1);
+        }
+        
+        if (t == "dontupdate")
+        {
+            flag = PACKAGE_FLAG_DONTUPDATE;
+        }
+        else if (t == "dontinstall")
+        {
+            flag = PACKAGE_FLAG_DONTINSTALL;
+        }
+        else if (t == "dontremove")
+        {
+            flag = PACKAGE_FLAG_DONTREMOVE;
+        }
+        else
+        {
+            cout << COLOR(tr("Tags disponibles :"), "37") << endl << endl;
+            
+            cout << qPrintable(tr("  * dontupdate  : Ne pas mettre à jour le paquet\n"
+                                  "  * dontinstall : Ne pas installer le paquet\n"
+                                  "  * dontremove  : Ne pas supprimer le paquet\n"));
+                                  
+            cout << endl;
+        }
+        
+        if (remove)
+        {
+            // Supprimer le tag
+            pkg->setFlags(pkg->flags() & ~flag);
+        }
+        else
+        {
+            pkg->setFlags(pkg->flags() | flag);
+        }
+    }
+    
+    (void) tag;
+}
+
 static QStringList pkgFlags(Package *pkg)
 {
     QStringList rs;

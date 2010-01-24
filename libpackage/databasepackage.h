@@ -77,6 +77,7 @@ class DatabasePackage : public Package
         QByteArray packageHash();
         QByteArray metadataHash();
         int flags();
+        void setFlags(int flags);
         
         QDateTime installedDate();
         int installedBy();
