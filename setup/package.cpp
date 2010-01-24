@@ -486,6 +486,25 @@ void App::manageResults(Solver *solver)
                             .arg(err->version)
                             .arg(err->pattern));
                         break;
+                        
+                    case PackageList::Error::UninstallablePackageInstalled:
+                        cout << qPrintable(tr("Le paquet %1 à la version %2\n    devait être installé mais a été tagué comme étant non-installable")
+                            .arg(err->package)
+                            .arg(err->version));
+                        break;
+                        
+                    case PackageList::Error::UnremovablePackageRemoved:
+                        cout << qPrintable(tr("Le paquet %1 à la version %2\n    devait être supprimé mais a été tagué comme étant non-supprimable")
+                            .arg(err->package)
+                            .arg(err->version));
+                        break;
+                        
+                    case PackageList::Error::UnupdateablePackageUpdated:
+                        cout << qPrintable(tr("Le paquet %1 à la version %2\n    devait être mis à jour à la version %3,\n    mais a été tagué comme ne pouvant être mis à jour")
+                            .arg(err->package)
+                            .arg(err->version)
+                            .arg(err->otherVersion));
+                        break;
                 }
                 
                 cout << endl;
@@ -611,7 +630,7 @@ void App::manageResults(Solver *solver)
     if (packages->needsReboot())
     {
         cout << endl;
-        cout << COLOR(tr("Un ou plusieurs des paquets que vous avez installés nécessite un redémarrage"), "31") << endl;
+        cout << COLOR(tr("Un ou plusieurs des paquets que vous avez installés nécessitent un redémarrage"), "31") << endl;
     }
 
     cout << endl;

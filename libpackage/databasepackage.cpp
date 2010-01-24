@@ -379,9 +379,17 @@ void DatabasePackage::setFlags(int flags)
     QSettings *set = d->ps->installedPackagesList();
     
     // Enregistrer les nouveaux flags dans le fichier de sauvegarde
-    set->beginGroup(name() + "_" + version());
-    set->setValue("Name", name());
-    set->setValue("Version", version());
+    if (status() == PACKAGE_STATE_NOTINSTALLED)
+    {
+        // Paquet pas dans installed_packages.list, utiliser une sauvegarde annexe
+        set->beginGroup(name() + "_" + version());
+        set->setValue("Name", name());
+        set->setValue("Version", version());
+    }
+    else
+    {
+        set->beginGroup(name());
+    }
     set->setValue("Flags", flags);
     set->endGroup();
     

@@ -50,7 +50,10 @@ class PackageList : public QObject, public QList<Package *>
             {
                 SameNameSameVersionDifferentAction,
                 SameNameDifferentVersionSameAction,
-                NoPackagesMatchingPattern
+                NoPackagesMatchingPattern,
+                UninstallablePackageInstalled,
+                UnremovablePackageRemoved,
+                UnupdateablePackageUpdated
             };
             
             Type type;

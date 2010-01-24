@@ -305,7 +305,7 @@ QList<UpgradeInfo> DatabaseReader::upgradePackages()
         _Package *pkg = package(i);
         
         // Voir si le paquet est installé
-        if (pkg != 0 && pkg->state == PACKAGE_STATE_INSTALLED)
+        if (pkg != 0 && pkg->state == PACKAGE_STATE_INSTALLED && !(pkg->flags & PACKAGE_FLAG_DONTUPDATE))
         {
             // Trouver les autres versions de ce paquet
             otherVersions = packagesOfString(0, pkg->name, DEPEND_OP_NOVERSION);

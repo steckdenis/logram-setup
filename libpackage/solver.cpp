@@ -310,6 +310,21 @@ bool Solver::solve()
                     // Pas de mise à jour
                     package = new DatabasePackage(pkg.index, d->ps, d->psd, pkg.action);
                 }
+                else if (package->flags() & PACKAGE_FLAG_DONTUPDATE)
+                {
+                    // On a un paquet pour mise à jour, mais ce paquet ne veut pas
+                    plist->setWrong(true);
+                    
+                    PackageList::Error *err = new PackageList::Error;
+                    err->type = PackageList::Error::UnupdateablePackageUpdated;
+                    
+                    err->package = package->name();
+                    err->version = package->version();
+                    
+                    err->otherVersion = package->upgradePackage()->version();
+                    
+                    d->listErrors[i].append(err);
+                }
 
                 plist->addPackage(package);
             }
@@ -347,10 +362,38 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
     // Première liste
     lists.append(listIndex);
 
-    // Explorer la liste actuelle pour voir si le paquet demandé n'est pas déjà dedans
     QVector<Pkg> &list = packages[listIndex];
     _Package *mpkg = psd->package(pkg.index);
-
+    
+    // Vérifier que l'action demandée est compatible avec ce que le paquet veut
+    if (pkg.action == Solver::Install && (mpkg->flags & PACKAGE_FLAG_DONTINSTALL))
+    {
+        PackageList::Error *err = new PackageList::Error;
+        err->type = PackageList::Error::UninstallablePackageInstalled;
+        
+        err->package = psd->string(false, mpkg->name);
+        err->version = psd->string(false, mpkg->version);
+        
+        listErrors[listIndex].append(err);
+        
+        wrongLists.append(listIndex);
+        return;
+    }
+    else if (pkg.action == Solver::Remove && (mpkg->flags & PACKAGE_FLAG_DONTREMOVE))
+    {
+        PackageList::Error *err = new PackageList::Error;
+        err->type = PackageList::Error::UnremovablePackageRemoved;
+        
+        err->package = psd->string(false, mpkg->name);
+        err->version = psd->string(false, mpkg->version);
+        
+        listErrors[listIndex].append(err);
+        
+        wrongLists.append(listIndex);
+        return;
+    }
+    
+    // Explorer la liste actuelle pour voir si le paquet demandé n'est pas déjà dedans
     for(int i=0; i<list.count(); ++i)
     {
         const Pkg &pk = list.at(i);
