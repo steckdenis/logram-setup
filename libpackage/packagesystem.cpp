@@ -93,6 +93,9 @@ Logram::PackageSystem::~PackageSystem()
 {
     endProgress(d->processOutProgress);
     
+    delete d->ipackages;
+    delete d->nmanager;
+    delete d->set;
     delete d->dr;
     delete d;
 }
