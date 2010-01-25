@@ -279,6 +279,11 @@ QString PackageMetaData::packageTitle() const
     return stringOfKey(d->currentPackage.firstChildElement("title"));
 }
 
+QString PackageMetaData::packageEula() const
+{
+    return stringOfKey(d->currentPackage.firstChildElement("eula"));
+}
+
 QString PackageMetaData::currentPackage() const
 {
     return d->currentPackage.attribute("name");

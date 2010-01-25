@@ -82,6 +82,7 @@ class PackageMetaData : public QObject, public QDomDocument
         QString primaryLang() const;
         QString packageDescription() const;
         QString packageTitle() const;
+        QString packageEula() const;
         QString currentPackage() const;
         QString upstreamUrl() const;
         

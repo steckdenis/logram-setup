@@ -224,7 +224,7 @@ static QStringList pkgFlags(Package *pkg)
     YESNO(PACKAGE_FLAG_DONTREMOVE,  "Ne pas supprimer         : ")
     
     // Nécessite une CLUF
-    YESNO(PACKAGE_FLAG_HASCLUF,     "License à approuver      : ")
+    YESNO(PACKAGE_FLAG_EULA,        "License à approuver      : ")
     
     // Nécessite un redémarrage
     YESNO(PACKAGE_FLAG_NEEDSREBOOT, "Nécessite un redémarrage : ")
@@ -233,7 +233,7 @@ static QStringList pkgFlags(Package *pkg)
     return rs;
 }
 
-void App::showpkg(const QString &name, bool changelog)
+void App::showpkg(const QString &name, bool changelog, bool license)
 {
     QString n = name.section('=', 0, 0);
     QString v;
@@ -492,5 +492,12 @@ void App::showpkg(const QString &name, bool changelog)
         }
         
         qDeleteAll(entries);
+    }
+    
+    if (license && (pkg->flags() & PACKAGE_FLAG_EULA))
+    {
+        cout <<  COLOR(tr("Texte de la license : "), "35") << endl << endl;
+        printIndented(metadata->packageEula().toUtf8(), 4);
+        cout << endl << endl;
     }
 }

@@ -57,7 +57,7 @@ class App : public QCoreApplication
         void help();
         void version();
         void find(const QString &pattern);
-        void showpkg(const QString &name, bool changelog);
+        void showpkg(const QString &name, bool changelog, bool license);
         void getsource(const QString &name);
         void update();
         void upgrade();

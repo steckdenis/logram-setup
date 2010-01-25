@@ -235,7 +235,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     {
                         d->flags |= ((val & 1) << 2);
                     }
-                    else if (name == "hascluf")
+                    else if (name == "eula")
                     {
                         d->flags |= ((val & 1) << 6);
                     }

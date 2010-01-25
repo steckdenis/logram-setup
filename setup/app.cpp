@@ -65,6 +65,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     // Explorer les options
     QString opt = args.at(1).toLower();
     bool changelog = false;
+    bool license = false;
 
     while (opt.startsWith('-'))
     {
@@ -122,6 +123,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         else if (opt == "-c")
         {
             changelog = true;
+        }
+        else if (opt == "-l")
+        {
+            license = true;
         }
         else
         {
@@ -193,7 +198,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     {
         CHECK_ARGS(!= 3)
         
-        showpkg(args.at(2), changelog);
+        showpkg(args.at(2), changelog, license);
     }
     else if (cmd == "getsource")
     {
@@ -358,16 +363,17 @@ void App::help()
             "                       distributions spécifiées.\n"
             "\n"
             "Options (insensible à la casse) :\n"
-            "    -S [off]           Active (on) ou pas (off) l'installation des suggestions\n"
-            "    -I <num>           Définit le nombre de téléchargements en parallèle\n"
-            "    -D <num>           Définit le nombre d'installations en parallèle\n"
+            "    -S [off]           Active (on) ou pas (off) l'installation des suggestions.\n"
+            "    -I <num>           Définit le nombre de téléchargements en parallèle.\n"
+            "    -D <num>           Définit le nombre d'installations en parallèle.\n"
             "    -iR <install root> Chemin d'installation racine (\"/\" par défaut).\n"
-            "                       Sert à installer un «Logram dans le Logram»\n"
+            "                       Sert à installer un «Logram dans le Logram».\n"
             "    -cR <conf root>    Chemin racine de la configuration (\"/\" par défaut).\n"
-            "    -vR <var root>     Chemin racine des fichiers temporaires (\"/\" par défaut)\n"
+            "    -vR <var root>     Chemin racine des fichiers temporaires (\"/\" par défaut).\n"
             "    -C                 Affiche l'historique des modifications d'un paquet\n"
-            "                       quand utilisé avec showpkg\n"
-            "    -W                 Désactive les couleurs dans la sortie de Setup\n");
+            "                       quand utilisé avec showpkg.\n"
+            "    -L                 Affiche la license d'un paquet quand utilisé avec showpkg.\n"
+            "    -W                 Désactive les couleurs dans la sortie de Setup.\n");
    
     cout << qPrintable(rs);
 }
