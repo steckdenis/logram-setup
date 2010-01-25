@@ -75,6 +75,7 @@ class PackageList : public QObject, public QList<Package *>
         bool wrong() const;
         int weight() const;
         bool needsReboot() const;
+        int numLicenses() const;
         
         bool process();
         

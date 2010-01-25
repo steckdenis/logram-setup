@@ -398,11 +398,7 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
         if (pkg->action() != Solver::Update)
         {
             cout << ' '
-                 << COLOR(pkg->version(), "32")
-                 << endl
-                 << "        "
-                 << qPrintable(pkg->shortDesc())
-                 << endl;
+                 << COLOR(pkg->version(), "32");
         }
         else
         {
@@ -411,12 +407,24 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
             cout << ' '
                  << COLOR(pkg->version(), "32")
                  << " → "
-                 << COLOR(opkg->version(), "32")
-                 << endl
-                 << "        "
-                 << qPrintable(pkg->shortDesc())
-                 << endl;
+                 << COLOR(opkg->version(), "32");
         }
+        
+        // Afficher les flags importants du paquet (eula et reboot)
+        if (pkg->flags() & PACKAGE_FLAG_EULA)
+        {
+            cout << ' ' << COLOR(tr("(license à accepter)"), "31");
+        }
+        
+        if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
+        {
+            cout << ' ' << COLOR(tr("(redémarrage)"), "31");
+        }
+        
+        cout << endl
+             << "        "
+             << qPrintable(pkg->shortDesc())
+             << endl;
     }
 }
 
@@ -561,26 +569,30 @@ void App::manageResults(Solver *solver)
         cout << endl;
 
         // Demander si c'est bon
+        cout << qPrintable(tr("Solution %1 sur %2, de poids %3, %4 licence(s) à accepter%5.")
+                                .arg(index + 1)
+                                .arg(tot)
+                                .arg(packages->weight())
+                                .arg(packages->numLicenses())
+                                .arg( (packages->needsReboot() ? tr(", nécessite un redémarrage") : QString())))
+            << endl;
+                                
         if (instSize >= 0)
         {
-            cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, installation de %5\n"
-                                "Accepter (y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
-                                    .arg(QString::number(index+1))
-                                    .arg(QString::number(tot))
-                                    .arg(packages->weight())
-                                    .arg(PackageSystem::fileSizeFormat(dlSize))
-                                    .arg(PackageSystem::fileSizeFormat(instSize)));
+            cout << qPrintable(tr("Téléchargement de %6, installation de %5")
+                                    .arg(COLORS(PackageSystem::fileSizeFormat(dlSize), "33"))
+                                    .arg(COLORS(PackageSystem::fileSizeFormat(instSize), "33")));
         }
         else
         {
-            cout << qPrintable(tr("Solution %1 sur %2, de poids %3. Téléchargement de %4, libération de %5\n"
-                              "Accepter (y), Suivante (n), Précédante (p) ou Annuler (c) ? ")
-                                  .arg(QString::number(index+1))
-                                  .arg(QString::number(tot))
-                                  .arg(packages->weight())
-                                  .arg(PackageSystem::fileSizeFormat(dlSize))
-                                  .arg(PackageSystem::fileSizeFormat(-instSize)));
+            cout << qPrintable(tr("Téléchargement de %6, libération de %5")
+                                    .arg(COLORS(PackageSystem::fileSizeFormat(dlSize), "33"))
+                                    .arg(COLORS(PackageSystem::fileSizeFormat(-instSize), "33")));
         }
+        
+        cout << endl
+             << COLOR(tr("Accepter (y), Suivante (n), Précédante (p) ou Annuler (c) ? "), "32")
+             << std::flush;
         
         getString(in, 2, "y", true);
 
@@ -608,6 +620,38 @@ void App::manageResults(Solver *solver)
         else
         {
             break;
+        }
+    }
+    
+    // La liste a été validée, vérifier que toutes les CLUF sont acceptées
+    if (packages->numLicenses() != 0)
+    {
+        for (int i=0; i<packages->count(); ++i)
+        {
+            Package *p = packages->at(i);
+            
+            if (p->flags() & PACKAGE_FLAG_EULA)
+            {
+                cout << endl
+                     << COLOR(tr("License du paquet %1").arg(p->name()), "35")
+                     << endl << endl;
+                
+                PackageMetaData *md = p->metadata();
+                md->setCurrentPackage(p->name());
+                
+                printIndented(md->packageEula().toUtf8(), 4);
+                
+                cout << endl << endl
+                     << COLOR(tr("Accepter cette license (y/n) ? "), "32");
+                     
+                getString(in, 2, "n", true);
+                
+                if (in[0] != 'y')
+                {
+                    // Abandon de l'installation
+                    return;
+                }
+            }
         }
     }
 

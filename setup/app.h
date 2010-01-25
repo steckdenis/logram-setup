@@ -34,9 +34,9 @@
 
 #define VERSION "0.1-alpha1"
 
-#define COLOR(text, color) (colored ? qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m") : qPrintable(text))
-
-#define COLORC(text, color) (colored ? qPrintable(QString("\033[1m\033[") + color + "m" + text + "\033[0m") : text)
+#define COLORS(text, color) (colored ? QString("\033[1m\033[") + (color) + "m" + (text) + "\033[0m" : text)
+#define COLOR(text, color) qPrintable(COLORS(text, color))
+#define COLORC COLOR
 
 namespace Logram
 {

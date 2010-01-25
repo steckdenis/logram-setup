@@ -36,6 +36,7 @@ struct PackageList::Private
     PackageSystem *ps;
     bool error;
     bool needsReboot;
+    int numLicenses;
     
     int downloadProgress, processProgress;
     
@@ -65,6 +66,7 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
     d->weighted = false;
     d->error = false;
     d->needsReboot = false;
+    d->numLicenses = 0;
     d->ps = ps;
     
     d->parallelInstalls = ps->parallelInstalls();
@@ -136,10 +138,27 @@ bool PackageList::needsReboot() const
 {
     return d->needsReboot;
 }
+
+int PackageList::numLicenses() const
+{
+    return d->numLicenses;
+}
         
 void PackageList::addPackage(Package *pkg)
 {
     append(pkg);
+    
+    // Ce paquet nécessite-t-il un redémarrage ?
+    if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
+    {
+        d->needsReboot = true;
+    }
+    
+    // Ce paquet nécessite-t-il l'approbation d'une license ?
+    if (pkg->flags() & PACKAGE_FLAG_EULA)
+    {
+        d->numLicenses++;
+    }
 }
 
 void PackageList::addError(Error *err)
@@ -241,19 +260,11 @@ bool PackageList::process()
 
 void PackageList::packageProceeded(bool success)
 {
-    Package *pkg = qobject_cast<Package *>(sender());
-    
     if (!success)
     {
         // Un paquet a planté, arrêter
         d->loop.exit(1);
         return;
-    }
-    
-    // Si ce paquet nécessitait un redémarrage, le dire
-    if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
-    {
-        d->needsReboot = true;
     }
     
     // Voir si on a un paquet suivant
