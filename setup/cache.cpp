@@ -126,7 +126,7 @@ void App::tag(const QString &packageName, const QString &tag)
     {
         pkg = ps->package(i);
         
-        int flag;
+        int flag = 0;
         bool remove = false;
         QString t = tag;
         
@@ -158,6 +158,7 @@ void App::tag(const QString &packageName, const QString &tag)
                                   "  * dontremove  : Ne pas supprimer le paquet\n"));
                                   
             cout << endl;
+	    return;
         }
         
         if (remove)
