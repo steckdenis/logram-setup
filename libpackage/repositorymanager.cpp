@@ -590,7 +590,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
         mydt = QDateTime(QDate::fromString(changelog.attribute("date"), "yyyy-MM-dd"),
                          QTime::fromString(changelog.attribute("time"), "hh:mm:ss"));
                          
-        if (mydt < maxdt)
+        if (mydt <= maxdt)
         {
             // Déjà inséré
             changelog = changelog.nextSiblingElement("entry");
