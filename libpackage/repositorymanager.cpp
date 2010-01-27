@@ -30,6 +30,7 @@
 #include <QDir>
 #include <QFile>
 #include <QProcess>
+#include <QDateTime>
 
 #include <QtSql>
 #include <QtXml>
@@ -50,7 +51,7 @@ struct RepositoryManager::Private
     QRegExp regex;
     
     // Fonctions
-    bool registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type);
+    bool registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type, int changelog_id = 0);
     bool writeXZ(const QString &fileName, const QByteArray &data);
 };
 
@@ -188,7 +189,7 @@ bool RepositoryManager::Private::writeXZ(const QString &fileName, const QByteArr
     return true;
 }
 
-bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type)
+bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type, int changelog_id)
 {
     // Récupérer l'id de la chaîne
     QString content = cont;
@@ -201,12 +202,14 @@ bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id
             FROM packages_string \
             WHERE package_id=%1 \
             AND language='%2' \
-            AND type=%3;";
+            AND type=%3 \
+            AND changelog_id='%4';";
             
     if (!query.exec(sql
                     .arg(package_id)
                     .arg(e(lang))
                     .arg(type)
+                    .arg(changelog_id)
                     ))
     {
         PackageError *err = new PackageError;
@@ -246,14 +249,15 @@ bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id
     }
     else
     {
-        sql = " INSERT INTO packages_string (package_id, language, type, content) \
-                VALUES(%1, '%2', %3, '%4');";
+        sql = " INSERT INTO packages_string (package_id, language, type, content, changelog_id) \
+                VALUES(%1, '%2', %3, '%4', %5);";
         
         if (!query.exec(sql
                         .arg(package_id)
                         .arg(e(lang))
                         .arg(type)
                         .arg(e(content.replace(regex, "\n")))
+                        .arg(changelog_id)
                         ))
         {
             PackageError *err = new PackageError;
@@ -519,7 +523,10 @@ bool RepositoryManager::includePackage(const QString &fileName)
         return false;
     }
     
-    package_id = query.lastInsertId().toInt();
+    if (!update)
+    {
+        package_id = query.lastInsertId().toInt();
+    }
     
     // Chaînes
     QDomElement package = md->currentPackageElement();
@@ -559,6 +566,102 @@ bool RepositoryManager::includePackage(const QString &fileName)
         }
         
         el = el.nextSiblingElement();
+    }
+    
+    // Enregistrer le changelog, sans passer par md->changelog() car on a besoin des langues
+    QDomElement changelog = md->documentElement().firstChildElement("changelog").firstChildElement("entry");
+    QDateTime maxdt, mydt;
+    int m_distro_id, changelogType, changelogID;
+    
+    // Trouver l'entrée de changelog la plus récente
+    sql = " SELECT \
+            MAX(date) \
+            FROM packages_changelog \
+            WHERE package_id=%1;";
+            
+    TRY_QUERY(sql.arg(package_id))
+    
+    maxdt = query.value(0).toDateTime();
+    
+    while (!changelog.isNull())
+    {
+        // On ne peut qu'ajouter des entrées. Il suffit donc de vérifier si l'entrée
+        // est plus récente que maxdt. Si c'est le cas, l'ajouter. Sinon, la passer
+        mydt = QDateTime(QDate::fromString(changelog.attribute("date"), "yyyy-MM-dd"),
+                         QTime::fromString(changelog.attribute("time"), "hh:mm:ss"));
+                         
+        if (mydt < maxdt)
+        {
+            // Déjà inséré
+            changelog = changelog.nextSiblingElement("entry");
+            continue;
+        }
+        
+        // Trouver l'ID de la distribution
+        sql = "SELECT id FROM packages_distribution WHERE name='%1';";
+        TRY_QUERY(sql.arg(e(changelog.attribute("distribution"))))
+        m_distro_id = query.value(0).toInt();
+        
+        // Trouver le type d'entrée
+        QString t = changelog.attribute("type", "lowprio");
+        
+        if (t == "lowprio")
+        {
+            changelogType = ChangeLogEntry::LowPriority;
+        }
+        else if (t == "feature")
+        {
+            changelogType = ChangeLogEntry::Feature;
+        }
+        else if (t == "bugfix")
+        {
+            changelogType = ChangeLogEntry::BugFix;
+        }
+        else if (t == "security")
+        {
+            changelogType = ChangeLogEntry::Security;
+        }
+        
+        // Créer l'enregistrement
+        sql = " INSERT INTO \
+                packages_changelog(package_id, version, distribution_id, email, author, type, date) \
+                VALUES (%1, '%2', %3, '%4', '%5', %6, '%7');";
+                
+        if (!query.exec(sql
+                .arg(package_id)
+                .arg(e(changelog.attribute("version")))
+                .arg(m_distro_id)
+                .arg(e(changelog.attribute("email")))
+                .arg(e(changelog.attribute("author")))
+                .arg(changelogType)
+                .arg(mydt.toString(Qt::ISODate))
+            ))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::QueryError;
+            err->info = query.lastQuery();
+            
+            d->ps->setLastError(err);
+            
+            return false;
+        }
+        
+        // Gérer les chaînes de caractères
+        changelogID = query.lastInsertId().toInt();
+        
+        el = changelog.firstChildElement();
+        
+        while (!el.isNull())
+        {
+            if (!d->registerString(query, package_id, el.tagName(), el.text(), 3, changelogID))
+            {
+                return false;
+            }
+            
+            el = el.nextSiblingElement();
+        }
+        
+        changelog = changelog.nextSiblingElement();
     }
     
     // Copier le paquet, enregistrer les métadonnées

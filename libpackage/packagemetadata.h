@@ -41,10 +41,10 @@ struct ChangeLogEntry
 {
     enum Type
     {
-        LowPriority,
-        Feature,
-        BugFix,
-        Security
+        LowPriority = 1,
+        Feature = 2,
+        BugFix = 3,
+        Security = 4
     };
     
     Type type;
