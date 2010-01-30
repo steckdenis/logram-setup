@@ -20,6 +20,11 @@
  * Boston, MA  02110-1301  USA
  */
 
+/**
+    @file databasewriter.h
+    @brief Écrit la base de donnée binaire
+*/
+
 #ifndef __DATABASEWRITER_H__
 #define __DATABASEWRITER_H__
 
@@ -45,21 +50,64 @@ struct _Package;
 struct _StrPackage;
 struct _Depend;
 
+/**
+    @brief Entrée de paquet connue
+    
+    Permet de relier un nom et une version à une _Package prêt pour l'écriture.
+    
+    Fait également le lien entre la passe 1 et la passe 2 d'enregistrement (voir code source)
+    
+    @internal
+*/
 struct knownEntry
 {
-    QByteArray version;
-    _Package *pkg;
-    int index;
-    bool ignore;        // True si c'est un paquet présent dans les dépôts et installé à la même version
+    QByteArray version; /*!< Version du paquet */
+    _Package *pkg;      /*!< Paquet binaire */
+    int index;          /*!< Index de ce paquet binaire */
+    bool ignore;        /*!< True si c'est un paquet présent dans les dépôts et installé à la même version */
 };
 
+/**
+    @brief Enregistre les paquets des dépôts dans la base de donnée binaire
+    
+    Cette classe est responsable du lourd traitement d'enregistrement des paquets dans
+    la base de donnée binaire. Grâce à son travail, Setup est rapide même s'il doit gérer
+    plusieurs millions de paquets.
+    
+    Les tâches accomplies sont titanesques :
+    
+     - Résolution des dépendances (trouver tous les paquets correspondant à une dépendance
+       et les enregistrer dans les _Depend d'un paquet
+     - Résolution des provides
+     - Empaquetage des données
+     
+    Le code est long mais pas spécialement complexe.
+    
+    @internal
+*/
 class DatabaseWriter : public QObject
 {
     Q_OBJECT
     public:
+        /**
+            @brief Constructeur
+            @param _parent PackageSystem parent
+        */
         DatabaseWriter(PackageSystem *_parent);
 
+        /**
+            @brief Télécharge un élément du dépôt
+            @param source Nom du dépôt
+            @param url Url du fichier
+            @param type Type de dépôt (local, en ligne)
+            @param isTranslations true si c'est un fichier translate qui est téléchargé
+            @param gpgCheck true s'il faut vérifier avec GPG la signature des fichiers téléchargés
+        */
         bool download(const QString &source, const QString &url, Repository::Type type, bool isTranslations, bool gpgCheck);
+        
+        /**
+            @brief Reconstruit la base de donnée binaire
+        */
         bool rebuild();
 
     private:
