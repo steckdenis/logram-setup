@@ -20,6 +20,11 @@
  * Boston, MA  02110-1301  USA
  */
 
+/**
+    @file filepackage.h
+    @brief Paquet venant d'un fichier .tlz local
+*/
+
 #ifndef __FILEPACKAGE_H__
 #define __FILEPACKAGE_H__
 
@@ -34,19 +39,41 @@ class DatabaseReader;
     
 class FileDepend;
 
+/**
+    @brief Paquet venant d'un fichier .tlz local
+    
+    Cette classe permet d'installer un paquet local directement depuis Setup.
+    
+    Elle permet également de gérer le paquet en tant qu'archive .tlz, et
+    contient les fonctions nécessaires pour lire ses métadonnées, comprendre
+    son format, etc.
+    
+    RepositoryManager se sert de cette classe pour importer les paquets
+    
+    @note Ses membres sont les mêmes que Package, et ne sont donc pas 
+        documentés, à l'exception de certains qui ont des paramètres
+        différents
+*/
 class FilePackage : public Package
 {
     Q_OBJECT
     
     public:
+        /**
+            @brief Constructeur
+            @param fileName Nom du fichier .tlz
+            @param ps PackageSystem utilisé
+            @param psd Lecteur de base de donnée utilisé
+            @param _action Action, passé à Package::Package
+        */
         FilePackage(const QString &fileName, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
-        FilePackage(const FilePackage &other);
+        FilePackage(const FilePackage &other);  /*!< Constructeur de copie nécessaire pour la gestion du solveur */
         ~FilePackage();
 
-        bool download();
+        bool download();            /*!< Renvoie immédiatement true et émmet immédiatement downloaded() */
         QString tlzFileName();
         bool isValid();
-        Package::Origin origin();
+        Package::Origin origin();   /*!< Renvoie Package::File */
         
         QString name();
         QString version();
@@ -74,8 +101,8 @@ class FilePackage : public Package
         
         void registerState(int idate, int iby, int state);
         
-        QByteArray metadataContents();
-        QStringList files();
+        QByteArray metadataContents();  /*!< Contenu du fichier de métadonnées */
+        QStringList files();            /*!< Liste des fichiers du paquet */
 
     signals:
         void downloaded(bool success);
@@ -85,6 +112,13 @@ class FilePackage : public Package
         Private *d;
 };
 
+/**
+    @brief Dépendance d'un paquet .tlz
+    
+    Utilise le fichier de métadonnées du paquet pour renvoyer ses dépendances.
+    
+    Utilisé par RepositoryManager pour importer un paquet
+*/
 class FileDepend : public Depend
 {
     public:
