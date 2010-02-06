@@ -218,6 +218,12 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         upgrade();
     }
+    else if (cmd == "autoremove")
+    {
+        CHECK_ARGS(!= 2)
+        
+        autoremove();
+    }
     else if (cmd == "add")
     {
         CHECK_ARGS(< 3)
@@ -346,6 +352,7 @@ void App::help()
             "    add <packages>     Ajoute des paquets (préfixés de \"-\" pour les supprimer)\n"
             "    files <pkg>        Affiche la liste des fichiers installés par <pkg>\n"
             "    upgrade            Mise à jour des paquets. Lancez update avant.\n"
+            "    autoremove         Supprimer automatiquement les paquets orphelins.\n"
             "    tag <pkg> <tag>    Tag les paquets correspondants à <pkg> (p>=v, etc) avec\n"
             "                       le tag <tag>. Si <tag> commence par \"-\", alors retirer\n"
             "                       ce tag.\n"

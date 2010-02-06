@@ -103,6 +103,7 @@ void DatabasePackage::registerState(int idate, int iby, int state)
     pkg->idate = idate;
     pkg->iby = iby;
     pkg->state = state;
+    pkg->flags |= (wanted() ? PACKAGE_FLAG_WANTED : 0);
 }
 
 bool DatabasePackage::download()
@@ -223,6 +224,11 @@ void DatabasePackage::downloadEnded(ManagedDownload *md)
 bool DatabasePackage::isValid()
 {
     return d->index != -1;
+}
+
+int DatabasePackage::index() const
+{
+    return d->index;
 }
 
 QList<Package *> DatabasePackage::versions()
@@ -403,7 +409,7 @@ int DatabasePackage::flags()
 {
     _Package *pkg = d->psd->package(d->index);
     
-    if (pkg == 0) return false;
+    if (pkg == 0) return 0;
     
     return pkg->flags;
 }
@@ -441,7 +447,7 @@ int DatabasePackage::installedBy()
 {
     _Package *pkg = d->psd->package(d->index);
     
-    if (pkg == 0) return false;
+    if (pkg == 0) return 0;
     
     return pkg->iby;
 }
@@ -450,9 +456,18 @@ int DatabasePackage::status()
 {
     _Package *pkg = d->psd->package(d->index);
     
-    if (pkg == 0) return false;
+    if (pkg == 0) return 0;
     
     return pkg->state;
+}
+
+int DatabasePackage::used()
+{
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return 0;
+    
+    return pkg->used;
 }
 
 /*************************************

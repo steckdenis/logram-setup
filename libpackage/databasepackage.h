@@ -198,6 +198,8 @@ class DatabasePackage : public Package
         QDateTime installedDate();  /*!< Date d'installation du paquet, indéfini si non-installé */
         int installedBy();          /*!< UID de l'utilisateur ayant installé le paquet */
         int status();               /*!< Status du paquet, voir PACKAGE_STATE_* dans package.h */
+        int used();                 /*!< Nombre de paquets installés qui dépendent de ce paquet */
+        int index() const;          /*!< @internal */
         
         int downloadSize();         /*!< Taille du fichier .tlz à télécharger, en octets */
         int installSize();          /*!< Taille du paquet une fois installée. PackageSystem::fileSizeFormat pour formatter tout ça) */

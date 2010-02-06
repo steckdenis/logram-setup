@@ -288,9 +288,21 @@ class DatabaseReader
                   Ne pas vérifier cela permet d'éviter un appel à compareVersions, lourd et lent.
             @warning Cette fonction a une complexité de O(n) où n est le nombre
                      de paquets dans le dépôt.
-            @return Paquet qu'on peut mettre à jour
+            @return Paquets qu'on peut mettre à jour
         */
         QList<UpgradeInfo> upgradePackages();
+        
+        /**
+            @brief Liste des paquets orphelins
+            
+            Renvoie la liste des paquets qui ont été installés automatiquement en tant que dépendances,
+            mais qui ne sont plus nécessaires à aucun paquet demandé par l'utilisateur
+            
+            @warning Cette fonction a une complexité de O(n) où n est le nombre
+                     de paquets dans le dépôt
+            @return Paquets orphelins
+        */
+        QList<int> orphans();
         
         int packages(); /*!< Nombre de paquets disponibles dans la base de donnée */
 

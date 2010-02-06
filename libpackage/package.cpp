@@ -49,6 +49,7 @@ struct Package::Private
     DatabaseReader *psd;
 
     Solver::Action action;
+    bool wanted;
 
     // Installation
     ProcessThread *processThread;
@@ -69,6 +70,7 @@ Package::Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action)
     d->ps = ps;
     d->psd = psd;
     d->action = _action;
+    d->wanted = false;
     d->md = 0;
     d->processThread = 0;
     d->upd = 0;
@@ -82,6 +84,7 @@ Package::Package(const Package &other) : QObject(other.d->ps)
     d->ps = other.d->ps;
     d->psd = other.d->psd;
     d->action = other.d->action;
+    d->wanted = other.d->wanted;
     d->md = 0;
     d->processThread = 0;
     d->upd = 0;
@@ -118,6 +121,16 @@ PackageMetaData *Package::metadata()
     }
     
     return d->md;
+}
+
+void Package::setWanted(bool wanted)
+{
+    d->wanted = wanted;
+}
+
+bool Package::wanted() const
+{
+    return d->wanted;
 }
 
 void Package::process()
@@ -204,7 +217,7 @@ void Package::processEnd()
         set->setValue("InstallSize", installSize());
         set->setValue("MetadataHash", metadataHash().constData());
         set->setValue("PackageHash", packageHash().constData());
-        set->setValue("Flags", flags());
+        set->setValue("Flags", flags() | (wanted() ? PACKAGE_FLAG_WANTED : 0)); // Savoir si le paquet est voulu ou pas
 
         set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
         

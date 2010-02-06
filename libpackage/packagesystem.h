@@ -35,6 +35,7 @@ namespace Logram
 {
 
 class DatabasePackage;
+class DatabaseReader;
 class Package;
 class Solver;
 class PackageSystemPrivate;
@@ -144,6 +145,7 @@ class PackageSystem : public QObject
         int packages();
         bool update();
         QList<DatabasePackage *> upgradePackages();
+        QList<DatabasePackage *> orphans();
         Solver *newSolver();
 
         // Fonctions statiques
@@ -188,6 +190,7 @@ class PackageSystem : public QObject
         // Usage interne
         QString bestMirror(const Repository &repo);
         void releaseMirror(const QString &mirror);
+        DatabaseReader *databaseReader();
 
     signals:
         void progress(Logram::Progress *progress);

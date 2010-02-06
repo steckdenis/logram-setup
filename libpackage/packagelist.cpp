@@ -23,11 +23,14 @@
 #include "packagelist.h"
 #include "packagesystem.h"
 #include "package.h"
+#include "databasepackage.h"
+#include "databasereader.h"
 
 #include <QtScript>
 #include <QList>
 #include <QEventLoop>
 #include <QFile>
+#include <QSettings>
 
 using namespace Logram;
 
@@ -52,6 +55,7 @@ struct PackageList::Private
     Package *installingPackage;
     QList<Package *> list;
     QList<Package *> downloadedPackages;
+    QList<int> orphans;
     
     // Programme QtScript
     QScriptValue weightFunction;
@@ -143,6 +147,11 @@ int PackageList::numLicenses() const
 {
     return d->numLicenses;
 }
+
+QList<int> PackageList::orphans() const
+{
+    return d->orphans;
+}
         
 void PackageList::addPackage(Package *pkg)
 {
@@ -155,7 +164,7 @@ void PackageList::addPackage(Package *pkg)
     }
     
     // Ce paquet nécessite-t-il l'approbation d'une license ?
-    if (pkg->flags() & PACKAGE_FLAG_EULA)
+    if (pkg->flags() & PACKAGE_FLAG_EULA && pkg->action() == Solver::Install)
     {
         d->numLicenses++;
     }
@@ -245,6 +254,72 @@ bool PackageList::process()
 
     // Attendre
     int rs = d->loop.exec();
+    
+    // Enregistrer le taux d'utilisation de chaque paquet
+    DatabaseReader *dr = d->ps->databaseReader();
+    QList<int> pkgs;
+    QSettings *set = d->ps->installedPackagesList();
+    
+    for (int i=0; i<count(); ++i)
+    {
+        Package *pkg = at(i);
+        
+        if (pkg->origin() == Package::Database)
+        {
+            // Paquet en base de donnée, explorer ses dépendances et incrémenter leur compteur
+            DatabasePackage *dpkg = static_cast<DatabasePackage *>(pkg);
+            
+            QList<_Depend *> deps = dr->depends(dpkg->index());
+            
+            foreach (_Depend *dep, deps)
+            {
+                if (dep->type != DEPEND_TYPE_DEPEND)
+                {
+                    // On n'incrémente que les dépendances
+                    continue;
+                }
+                
+                // Paquets qui correspondent
+                pkgs = dr->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+                
+                foreach (int p, pkgs)
+                {
+                    _Package *pp = dr->package(p);
+                    
+                    if (pp->state == PACKAGE_STATE_INSTALLED)
+                    {
+                        if (pkg->action() == Solver::Install)
+                        {
+                            // On installe un paquet, ses dépendances recoivent un jeton
+                            pp->used++;
+                            
+                            // Enregistrer également l'information dans le fichier installed_packages
+                            set->beginGroup(dr->string(false, pp->name));
+                            set->setValue("Used", set->value("Used").toInt() + 1);
+                            set->endGroup();
+                        }
+                        else if (pkg->action() == Solver::Remove || pkg->action() == Solver::Purge)
+                        {
+                            // On supprime un paquet, ses dépendances perdent un jeton
+                            pp->used--;
+                            
+                            set->beginGroup(dr->string(false, pp->name));
+                            set->setValue("Used", set->value("Used").toInt() - 1);
+                            set->endGroup();
+                            
+                            // Si le paquet n'est plus utilisé par personne, le déclarer comme orphelin
+                            if (pp->used == 0 && (pp->flags & PACKAGE_FLAG_WANTED) == 0)
+                            {
+                                d->orphans.append(p);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // TODO : Même chose pour les paquets fichiers, sauf qu'on n'a pas un traitement O(1) dans la BDD pour
+        //        leurs dépendances
+    }
 
     // Nettoyage
     disconnect(this, SLOT(packageProceeded(bool)));

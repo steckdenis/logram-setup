@@ -61,6 +61,7 @@ class App : public QCoreApplication
         void getsource(const QString &name);
         void update();
         void upgrade();
+        void autoremove();
         void add(const QStringList &packages);
         void showFiles(const QString &packageName);
         void tag(const QString &packageName, const QString &tag);
@@ -80,6 +81,7 @@ class App : public QCoreApplication
         
         void displayPackages(QList<Logram::Package *> *packages, int &instSize, int &dlSize, bool showType);
         void displayPackages(QList<Logram::DatabasePackage *> *packages, int &instSize, int &dlSize, bool showType);
+        void displayPackage(Logram::Package *pkg, int i, int &instSize, int &dlSize, bool showType);
         
         void clean();
 

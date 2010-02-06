@@ -305,6 +305,21 @@ QList<Logram::DatabasePackage *> Logram::PackageSystem::upgradePackages()
     return rs;
 }
 
+QList<Logram::DatabasePackage *> Logram::PackageSystem::orphans()
+{
+    QList<int> pkgs = d->dr->orphans();
+    QList<DatabasePackage *> rs;
+    
+    foreach (int p, pkgs)
+    {
+        DatabasePackage *pkg = new DatabasePackage(p, this, d->dr, Solver::Remove);
+        
+        rs.append(pkg);
+    }
+    
+    return rs;
+}
+
 bool Logram::PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
 {
     return d->dr->packagesByName(regex, rs);
@@ -1066,4 +1081,9 @@ void Logram::PackageSystem::releaseMirror(const QString &mirror)
     
     // Retirer un jeton au mirroir
     d->usedMirrors[mirror]--;
+}
+
+DatabaseReader *Logram::PackageSystem::databaseReader()
+{
+    return d->dr;
 }

@@ -97,6 +97,7 @@ class Package : public QObject
         virtual QByteArray packageHash() = 0;
         virtual int flags() = 0;
         virtual int status() = 0;
+        virtual int used() = 0;
         
         virtual int downloadSize() = 0;
         virtual int installSize() = 0;
@@ -112,6 +113,10 @@ class Package : public QObject
         Solver::Action action();
         void setAction(Solver::Action act);
         PackageMetaData *metadata();
+        
+        // Attributs communs
+        void setWanted(bool wanted);
+        bool wanted() const;
 
         // Utilitaire
         static QString dependsToString(const QList<Depend *> &deps, int type);
@@ -170,12 +175,13 @@ class Depend
 #define PACKAGE_STATE_INSTALLED     1   // Installé
 #define PACKAGE_STATE_REMOVED       2   // Supprimé
 
-#define PACKAGE_FLAG_KDEINTEGRATION         0b00000011
-#define PACKAGE_FLAG_GUI                    0b00000100
-#define PACKAGE_FLAG_DONTUPDATE             0b00001000
-#define PACKAGE_FLAG_DONTINSTALL            0b00010000
-#define PACKAGE_FLAG_DONTREMOVE             0b00100000
-#define PACKAGE_FLAG_EULA                   0b01000000
-#define PACKAGE_FLAG_NEEDSREBOOT            0b10000000
+#define PACKAGE_FLAG_KDEINTEGRATION         0b000000011
+#define PACKAGE_FLAG_GUI                    0b000000100
+#define PACKAGE_FLAG_DONTUPDATE             0b000001000
+#define PACKAGE_FLAG_DONTINSTALL            0b000010000
+#define PACKAGE_FLAG_DONTREMOVE             0b000100000
+#define PACKAGE_FLAG_EULA                   0b001000000
+#define PACKAGE_FLAG_NEEDSREBOOT            0b010000000
+#define PACKAGE_FLAG_WANTED                 0b100000000
 
 #endif

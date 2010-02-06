@@ -149,16 +149,21 @@ void App::tag(const QString &packageName, const QString &tag)
         {
             flag = PACKAGE_FLAG_DONTREMOVE;
         }
+        else if (t == "wanted")
+        {
+            flag = PACKAGE_FLAG_WANTED;
+        }
         else
         {
             cout << COLOR(tr("Tags disponibles :"), "37") << endl << endl;
             
             cout << qPrintable(tr("  * dontupdate  : Ne pas mettre à jour le paquet\n"
                                   "  * dontinstall : Ne pas installer le paquet\n"
-                                  "  * dontremove  : Ne pas supprimer le paquet\n"));
+                                  "  * dontremove  : Ne pas supprimer le paquet\n"
+                                  "  * wanted      : Ne pas supprimer ce paquet s'il n'est plus nécessaire\n"));
                                   
             cout << endl;
-	    return;
+            return;
         }
         
         if (remove)
@@ -229,6 +234,9 @@ static QStringList pkgFlags(Package *pkg)
     
     // Nécessite un redémarrage
     YESNO(PACKAGE_FLAG_NEEDSREBOOT, "Nécessite un redémarrage : ")
+    
+    // Ne pas être supprimé par dépendances auto
+    YESNO(PACKAGE_FLAG_WANTED,      "Installé manuellement    : ")
     
     
     return rs;
@@ -308,6 +316,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     cout << COLOR(tr("Distribution        : "), "33") << qPrintable(pkg->distribution()) << endl;
     cout << COLOR(tr("Dépôt d'origine     : "), "33") << qPrintable(repo.description) << " (" << qPrintable(pkg->repo()) << ')' << endl;
     cout << COLOR(tr("Status              : "), "33") << qPrintable(status) << endl;
+    cout << COLOR(tr("Utilisé par         : "), "33") << qPrintable(tr("%n paquet(s)", "", pkg->used())) << endl;
     
     if (pkg->status() == PACKAGE_STATE_INSTALLED)
     {

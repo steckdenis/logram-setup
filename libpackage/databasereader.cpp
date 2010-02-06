@@ -292,6 +292,25 @@ QList<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, int 
     return rs;
 }
 
+QList<int> DatabaseReader::orphans()
+{
+    int32_t npkgs = *(int *)m_packages;
+    QList<int> rs;
+    
+    for (int i=0; i<npkgs; ++i)
+    {
+        _Package *pkg = package(i);
+        
+        // Si le paquet est installé, n'est pas demandé par l'utilisateur, et a un used = 0, alors le prendre
+        if (pkg->state == PACKAGE_STATE_INSTALLED && (pkg->flags & PACKAGE_FLAG_WANTED) == 0 && pkg->used == 0)
+        {
+            rs.append(i);
+        }
+    }
+    
+    return rs;
+}
+
 QList<UpgradeInfo> DatabaseReader::upgradePackages()
 {
     int32_t npkgs = *(int *)m_packages;

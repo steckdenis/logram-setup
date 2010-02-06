@@ -93,6 +93,7 @@ class FilePackage : public Package
         QDateTime installedDate();
         int installedBy();
         int status();
+        int used();
         
         int downloadSize();
         int installSize();

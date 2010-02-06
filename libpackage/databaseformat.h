@@ -76,6 +76,7 @@ struct _Package
     int32_t deps;       /*!< Index du tableau de dépendances */
     int32_t isize;      /*!< Taille de l'installation */
     int32_t dsize;      /*!< Taille du téléchargement */
+    int32_t used;       /*!< Nombre de paquets installés qui dépendent de ce paquet */
 
     int32_t idate;      /*!< Timestamp de l'installation */
     int32_t iby;        /*!< UID de l'utilisateur ayant installé le paquet */

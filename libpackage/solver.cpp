@@ -196,6 +196,7 @@ bool Solver::solve()
             
             // Ajouter le paquet aux paquets à ajouter dans toutes les listes
             fpkg->setAction(Solver::Install);
+            fpkg->setWanted(true);              // Installé manuellement
             d->filePackages.append(fpkg);
         }
         else
@@ -324,6 +325,12 @@ bool Solver::solve()
                     err->otherVersion = package->upgradePackage()->version();
                     
                     d->listErrors[i].append(err);
+                }
+                
+                // Savoir si le paquet a été installé manuellement
+                if (d->topLevelPackages.contains(pkg.index) && pkg.action == Solver::Install)
+                {
+                    package->setWanted(true);
                 }
 
                 plist->addPackage(package);

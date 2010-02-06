@@ -500,6 +500,11 @@ int FilePackage::status()
     return PACKAGE_STATE_NOTINSTALLED;
 }
 
+int FilePackage::used()
+{
+    return 0;
+}
+
 int FilePackage::downloadSize()
 {
     return d->size;

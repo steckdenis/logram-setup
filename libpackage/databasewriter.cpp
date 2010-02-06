@@ -591,6 +591,7 @@ bool DatabaseWriter::rebuild()
                         // On commence un paquet
                         pkg = new _Package;
                         pkg->flags = 0;
+                        pkg->used = 0;
                         name = QByteArray::fromRawData(cline + 1, linelength - 2); // -2 : sauter le ] et le [
                         
                         // Initialisations
@@ -801,6 +802,10 @@ bool DatabaseWriter::rebuild()
                         else if (key == "Flags")
                         {
                             pkg->flags = value.toInt();
+                        }
+                        else if (key == "Used")
+                        {
+                            pkg->used = value.toInt();
                         }
                     }
                 }

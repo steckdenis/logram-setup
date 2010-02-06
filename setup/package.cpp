@@ -171,6 +171,108 @@ void App::getsource(const QString &name)
     cout << endl;
 }
 
+void App::autoremove()
+{
+    QList<DatabasePackage *> pkgs = ps->orphans();
+    int instSize = 0, dlSize = 0;
+    
+    if (pkgs.count() == 0)
+    {
+        cout << COLOR(tr("Il n'y a aucun paquet orphelin dans votre système."), "34") << endl << endl;
+        
+        qDeleteAll(pkgs);
+        return;
+    }
+    
+    cout << COLOR(tr("Paquets installés automatiquement et qui ne sont plus nécessaires :"), "32") << endl << endl;
+    
+    displayPackages(&pkgs, instSize, dlSize, false);
+    
+    // Demander si ça convient
+    cout << endl;
+    
+    cout << qPrintable(tr("Entrez la liste des paquets à mettre à jour, ou \"n\" pour abandonner"))
+         << endl;
+         
+    // Créer la liste des nombres
+    QByteArray nums;
+    
+    for (int i=0; i<pkgs.count(); ++i)
+    {
+        if (i != 0)
+        {
+            nums += ',';
+        }
+        
+        nums += QByteArray::number(i + 1);
+    }
+    
+    // Demander l'entrée
+    char *buffer = new char[nums.size() + 1];
+    bool ok = false;
+    QList<int> numPkgs;
+    
+    while (!ok)
+    {
+        cout << "> ";
+        cout.flush();
+        
+        getString(buffer, nums.size() + 1, nums.data(), true);
+        
+        // Lire l'entrée
+        QString in(buffer);
+
+        if (in == "n")
+        {
+            // Abandonner
+            return;
+        }
+        
+        // Créer la liste des nombres
+        ok = true;
+        foreach(const QString &s, in.split(','))
+        {
+            int n = s.toInt(&ok);
+            
+            if (!ok || n < 1 || n > pkgs.count())
+            {
+                // Redemander l'entrée
+                numPkgs.clear();
+                ok = false;
+                break;
+            }
+            
+            numPkgs.append(n - 1);
+        }
+    }
+    
+    delete[] buffer;
+    
+    // Remplir la liste des paquets
+    Solver *solver = ps->newSolver();
+    
+    foreach(int index, numPkgs)
+    {
+        DatabasePackage *pkg = pkgs.at(index);
+            
+        solver->addPackage(pkg->name() + "=" + pkg->version(), Solver::Remove);
+    }
+    
+    if (!solver->solve())
+    {
+        error();
+        delete solver;
+        return;
+    }
+
+    // Afficher et gérer les résultats
+    cout << endl;
+    manageResults(solver);
+    
+    delete solver;
+    qDeleteAll(pkgs);
+}
+
 void App::upgrade()
 {
     QList<DatabasePackage *> pkgs = ps->upgradePackages();
@@ -276,6 +378,7 @@ void App::upgrade()
     manageResults(solver);
     
     delete solver;
+    qDeleteAll(pkgs);
 }
 
 static QString actionString(Solver::Action act)
@@ -311,6 +414,115 @@ void App::displayPackages(QList<Logram::DatabasePackage *> *packages, int &instS
     displayPackages(&pkgs, instSize, dlSize, showType);
 }
 
+void App::displayPackage(Package *pkg, int i, int &instSize, int &dlSize, bool showType)
+{
+    QString name = pkg->name().leftJustified(20, ' ', false);
+
+    if (pkg->action() == Solver::Install)
+    {
+        if (showType)
+        {
+            cout << " I: ";
+        }
+        else
+        {
+            cout << ' ' << (i+1) << ". ";
+        }
+        
+        if (pkg->origin() != Package::File)
+        {
+            dlSize += pkg->downloadSize();
+        }
+        instSize += pkg->installSize();
+        cout << COLOR(name, "34");
+    }
+    else if (pkg->action() == Solver::Remove)
+    {
+        if (showType)
+        {
+            cout << " R: ";
+        }
+        else
+        {
+            cout << ' ' << (i+1) << ". ";
+        }
+        
+        instSize -= pkg->installSize();
+        cout << COLOR(name, "31");
+    }
+    else if (pkg->action() == Solver::Update)
+    {
+        if (showType)
+        {
+            cout << " U: ";
+        }
+        else
+        {
+            cout << ' ' << (i+1) << ". ";
+        }
+        
+        if (pkg->origin() != Package::File)
+        {
+            dlSize += pkg->downloadSize();
+        }
+        
+        // Différence entre la version installée et la version qu'on va télécharger
+        Package *other = pkg->upgradePackage();
+        
+        if (other != 0)
+        {
+            instSize += other->installSize() - pkg->installSize();
+        }
+        
+        cout << COLOR(name, "33");
+    }
+    else if (pkg->action() == Solver::Purge)
+    {
+        if (showType)
+        {
+            cout << " P: ";
+        }
+        else
+        {
+            cout << ' ' << (i+1) << ". ";
+        }
+        
+        instSize -= pkg->installSize();
+        cout << COLOR(name, "35");
+    }
+
+    if (pkg->action() != Solver::Update)
+    {
+        cout << ' '
+                << COLOR(pkg->version(), "32");
+    }
+    else
+    {
+        Package *opkg = pkg->upgradePackage();
+        
+        cout << ' '
+                << COLOR(pkg->version(), "32")
+                << " → "
+                << COLOR(opkg->version(), "32");
+    }
+    
+    // Afficher les flags importants du paquet (eula et reboot)
+    if (pkg->flags() & PACKAGE_FLAG_EULA)
+    {
+        cout << ' ' << COLOR(tr("(license à accepter)"), "31");
+    }
+    
+    if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
+    {
+        cout << ' ' << COLOR(tr("(redémarrage)"), "31");
+    }
+    
+    cout << endl
+            << "        "
+            << qPrintable(pkg->shortDesc())
+            << endl;
+}
+
 void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize, bool showType)
 {
     instSize = 0;
@@ -320,111 +532,7 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
     {
         Package *pkg = packages->at(i);
         
-        QString name = pkg->name().leftJustified(20, ' ', false);
-
-        if (pkg->action() == Solver::Install)
-        {
-            if (showType)
-            {
-                cout << " I: ";
-            }
-            else
-            {
-                cout << ' ' << (i+1) << ". ";
-            }
-            
-            if (pkg->origin() != Package::File)
-            {
-                dlSize += pkg->downloadSize();
-            }
-            instSize += pkg->installSize();
-            cout << COLOR(name, "34");
-        }
-        else if (pkg->action() == Solver::Remove)
-        {
-            if (showType)
-            {
-                cout << " R: ";
-            }
-            else
-            {
-                cout << ' ' << (i+1) << ". ";
-            }
-            
-            instSize -= pkg->installSize();
-            cout << COLOR(name, "31");
-        }
-        else if (pkg->action() == Solver::Update)
-        {
-            if (showType)
-            {
-                cout << " U: ";
-            }
-            else
-            {
-                cout << ' ' << (i+1) << ". ";
-            }
-            
-            if (pkg->origin() != Package::File)
-            {
-                dlSize += pkg->downloadSize();
-            }
-            
-            // Différence entre la version installée et la version qu'on va télécharger
-            Package *other = pkg->upgradePackage();
-            
-            if (other != 0)
-            {
-                instSize += other->installSize() - pkg->installSize();
-            }
-            
-            cout << COLOR(name, "33");
-        }
-        else if (pkg->action() == Solver::Purge)
-        {
-            if (showType)
-            {
-                cout << " P: ";
-            }
-            else
-            {
-                cout << ' ' << (i+1) << ". ";
-            }
-            
-            instSize -= pkg->installSize();
-            cout << COLOR(name, "35");
-        }
-
-        if (pkg->action() != Solver::Update)
-        {
-            cout << ' '
-                 << COLOR(pkg->version(), "32");
-        }
-        else
-        {
-            Package *opkg = pkg->upgradePackage();
-            
-            cout << ' '
-                 << COLOR(pkg->version(), "32")
-                 << " → "
-                 << COLOR(opkg->version(), "32");
-        }
-        
-        // Afficher les flags importants du paquet (eula et reboot)
-        if (pkg->flags() & PACKAGE_FLAG_EULA)
-        {
-            cout << ' ' << COLOR(tr("(license à accepter)"), "31");
-        }
-        
-        if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
-        {
-            cout << ' ' << COLOR(tr("(redémarrage)"), "31");
-        }
-        
-        cout << endl
-             << "        "
-             << qPrintable(pkg->shortDesc())
-             << endl;
+        displayPackage(pkg, i, instSize, dlSize, showType);
     }
 }
 
@@ -563,6 +671,7 @@ void App::manageResults(Solver *solver)
         }
         
         allempty = false;
+        instSize = dlSize = 0;
 
         displayPackages(packages, instSize, dlSize, true);
 
@@ -579,13 +688,13 @@ void App::manageResults(Solver *solver)
                                 
         if (instSize >= 0)
         {
-            cout << qPrintable(tr("Téléchargement de %6, installation de %5")
+            cout << qPrintable(tr("Téléchargement de %1, installation de %2")
                                     .arg(COLORS(PackageSystem::fileSizeFormat(dlSize), "33"))
                                     .arg(COLORS(PackageSystem::fileSizeFormat(instSize), "33")));
         }
         else
         {
-            cout << qPrintable(tr("Téléchargement de %6, libération de %5")
+            cout << qPrintable(tr("Téléchargement de %1, libération de %2")
                                     .arg(COLORS(PackageSystem::fileSizeFormat(dlSize), "33"))
                                     .arg(COLORS(PackageSystem::fileSizeFormat(-instSize), "33")));
         }
@@ -668,6 +777,29 @@ void App::manageResults(Solver *solver)
     {
         error();
         return;
+    }
+    
+    // Paquets devenus orphelins
+    if (packages->orphans().count() != 0)
+    {
+        cout << endl;
+        cout << COLOR(tr("Les paquets suivants ont été installés automatiquement et ne sont plus nécessaires :"), "31") << endl;
+        cout << endl;
+        
+        instSize = dlSize = 0;
+        int i = 0;
+        
+        foreach (int p, packages->orphans())
+        {
+            DatabasePackage *dp = ps->package(p);
+            dp->setAction(Solver::Remove);
+            
+            displayPackage(dp, i, instSize, dlSize, false);
+            ++i;
+        }
+        
+        cout << endl;
+        cout << qPrintable(tr("Pour une suppression totale de %1. Utilisez setup autoremove pour supprimer ces paquets.").arg(PackageSystem::fileSizeFormat(-instSize))) << endl;
     }
     
     // Savoir si on doit dire à l'utilisateur de redémarrer
