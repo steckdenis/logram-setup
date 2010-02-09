@@ -38,20 +38,38 @@ void App::communication(Package *sender, Communication *comm)
     
     cout << endl;
     
-    if (comm->type() == Communication::Question)
+    if (sender)
     {
-        cout << COLOR(tr("Question de "), "33");
-    }
-    else if (comm->type() == Communication::Message)
-    {
-        cout << COLOR(tr("Message de "), "33");
+        if (comm->type() == Communication::Question)
+        {
+            cout << COLOR(tr("Question de "), "33");
+        }
+        else if (comm->type() == Communication::Message)
+        {
+            cout << COLOR(tr("Message de "), "33");
+        }
+        else
+        {
+            return;
+        }
+        
+        cout << qPrintable(sender->name()) << " : ";
     }
     else
     {
-        return;
+        if (comm->type() == Communication::Question)
+        {
+            cout << COLOR(tr("Question générale : "), "33");
+        }
+        else if (comm->type() == Communication::Message)
+        {
+            cout << COLOR(tr("Message général : "), "33");
+        }
+        else
+        {
+            return;
+        }
     }
-    
-    cout << qPrintable(sender->name()) << " : ";
     
     // Titre de la question
     cout << COLOR(comm->title(), "35") << endl << endl;

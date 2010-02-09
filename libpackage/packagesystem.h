@@ -187,6 +187,8 @@ class PackageSystem : public QObject
         bool processOut(const QString &command, const QString &line) __attribute__((warn_unused_result));
         void endProgress(int id);
         
+        void sendCommunication(Package *sender, Communication *comm);
+        
         // Usage interne
         QString bestMirror(const Repository &repo);
         void releaseMirror(const QString &mirror);

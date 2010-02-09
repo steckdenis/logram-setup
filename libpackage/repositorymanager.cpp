@@ -24,6 +24,7 @@
 #include "packagesystem.h"
 #include "filepackage.h"
 #include "packagemetadata.h"
+#include "repopwdcommunication.h"
 
 #include <QSettings>
 #include <QRegExp>
@@ -125,13 +126,23 @@ static QString e(const QString &str)
 
 static gpgme_error_t passphrase_cb(void *hook, const char *uid_hint, const char *passphrase_info, int prev_was_bad, int fd)
 {
-    // TODO: Pas très sécurisé tout ça !
     RepositoryManager::Private *d = (RepositoryManager::Private *)hook;
     
-    QString pass = d->set->value("Sign/Passphrase").toString();
+    // Lancer une communication système
+    // NOTE: Dans un certain futur, les paramètres voidés en fin de procédure pourraient servir
+    //       à envoyer une communication plus précise.
+    RepoCommunication *comm = new RepoCommunication(d->ps);
+    
+    qDebug() << "ici";
+    
+    d->ps->sendCommunication(0, comm);
+    
+    QString pass = comm->processData();
     
     write(fd, pass.toUtf8().constData(), pass.length());
     write(fd, "\n", 1);
+    
+    delete comm;
     
     return 0;
     

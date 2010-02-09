@@ -1038,6 +1038,11 @@ void Logram::PackageSystem::endProgress(int id)
     emit progress(p);
 }
 
+void Logram::PackageSystem::sendCommunication(Package *sender, Communication *comm)
+{
+    emit communication(sender, comm);
+}
+
 QString Logram::PackageSystem::bestMirror(const Repository &repo)
 {
     // Explorer chaque mirroir du dépôt
