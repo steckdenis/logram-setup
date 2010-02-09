@@ -56,6 +56,8 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
 
     connect(ps, SIGNAL(progress(Logram::Progress *)), 
             this, SLOT(progress(Logram::Progress *)));
+    connect(ps, SIGNAL(communication(Logram::Package *, Logram::Communication *)), this, 
+                  SLOT(communication(Logram::Package *, Logram::Communication *)));
     
     //Parser les arguments
     QStringList args = arguments();

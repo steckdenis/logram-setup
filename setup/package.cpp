@@ -767,10 +767,6 @@ void App::manageResults(Solver *solver)
     cout << endl;
     cout << COLOR(tr("Installation des paquets..."), "32") << endl;
     cout << endl;
-    
-    // Connecter un signal
-    connect(packages, SIGNAL(communication(Logram::Package *, Logram::Communication *)), this, 
-                        SLOT(communication(Logram::Package *, Logram::Communication *)));
 
     // Installer les paquets
     if (!packages->process())

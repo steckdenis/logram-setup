@@ -22,7 +22,7 @@
 
 /**
     @file communication.h
-    @brief Gère les communications entre un paquet et Setup
+    @brief Gère les communications entre un la libpackages et le front-end
 */
 
 #ifndef __COMMUNICATION_H__
@@ -32,12 +32,9 @@
 
 namespace Logram
 {
-    
-class PackageSystem;
-class PackageMetaData;
 
 /**
-    @brief Gère les communications entre un paquet et Setup
+    @brief Gère les communications entre la bibliothèque de gestion des paquets et son front-end
     
     Lorsqu'un paquet est installé, mis à jour ou supprimé, il peut avoir besoin
     d'informations. Pour les obtenir, la meilleure manière est de lancer une
@@ -50,32 +47,26 @@ class PackageMetaData;
     Il s'en sert alors pour créer une Communication, facile à gérer en C++.
     
     @note Vous n'avez normalement pas à instancier cette classe. Vous en recevez une
-    copie lorsque le signal Package::communication est émis.
+    copie lorsque le signal PackageList::communication ou PackageSystem::communication
+    est émis.
 */
 class Communication : public Templatable
 {
     public:
         /**
             @brief Constructeur par défaut
-            @param ps PackageSystem à utiliser
-            @param md Métadonnées du paquet à gérer
-            @param name Nom de la communication lancée
+            @param parent QObject parent
             @internal
         */
-        Communication(PackageSystem *ps, PackageMetaData *md, const QString &name);
-        ~Communication();       /*!< Destructeur */
+        Communication(QObject *parent);
         
         /**
             @brief Permet de savoir si une erreur s'est produite
-            
-            Renvoie @b false si le constructeur a échoué. Sinon, @b true est
-            renvoyé, ce qui veut dire que la classe est prête à être utilisée.
-            
             @note PackageSystem::lastError est placé correctement
             @internal
             @return true si la classe est prête à être utilisée
         */
-        bool error() const;
+        virtual bool error() const = 0;
         
         /**
             @brief Type de communication
@@ -88,6 +79,18 @@ class Communication : public Templatable
             None,       /*!< Pas de type, communication invalide */
             Question,   /*!< Question, attend une entrée en retour (setValue à appeler) */
             Message     /*!< Message, pas d'entrée nécessaire en retour */
+        };
+        
+        /**
+            @brief Origine de la communication
+            
+            Cette classe est abstraite et ne fait que relayer des communications
+            venant soit d'un paquet, soit du la bibliothèque elle-même.
+        */
+        enum Origin
+        {
+            Package,    /*!< Communication venant d'un paquet */
+            System      /*!< Communication venant du système */
         };
         
         /**
@@ -130,7 +133,7 @@ class Communication : public Templatable
             @return Type de la communication
             @sa Type
         */
-        Type type() const;
+        virtual Type type() const = 0;
         
         /**
             @brief Type de retour d'une question
@@ -145,10 +148,20 @@ class Communication : public Templatable
             @return Type de la valeur de retour
             @sa ReturnType
         */
-        ReturnType returnType() const;
+        virtual ReturnType returnType() const = 0;
         
-        QString title() const;          /*!< Titre de la communication */
-        QString description() const;    /*!< Description de la communication */
+        /**
+            @brief Origine de la communication
+            
+            Permet de savoir si la communication vient d'un paquet ou du système,
+            ou autre, si futures expansions.
+            
+            @return Type de la communication
+        */
+        virtual Origin origin() const = 0;
+        
+        virtual QString title() const = 0;          /*!< Titre de la communication */
+        virtual QString description() const = 0;    /*!< Description de la communication */
         
         /**
             @brief Valeur par défaut pour une chaîne
@@ -159,19 +172,19 @@ class Communication : public Templatable
             
             @return Valeur par défaut pour une réponse de type chaîne de caractère
         */
-        QString defaultString() const;
+        virtual QString defaultString() const = 0;
         
         /**
             @brief Valeur par défaut pour une réponse de type entier
             @return Valeur par défaut pour une réponse de type entier
         */
-        int defaultInt() const;
+        virtual int defaultInt() const = 0;
         
         /**
             @brief Valeur par défaut pour une réponse de type flottant
             @return Valeur par défaut pour une réponse de type flottant
         */
-        double defaultDouble() const;
+        virtual double defaultDouble() const = 0;
         
         /**
             @brief Valeur par défaut pour un choix
@@ -183,7 +196,7 @@ class Communication : public Templatable
             @return Index du choix par défaut
             @sa choice
         */
-        int defaultIndex() const;
+        virtual int defaultIndex() const = 0;
         
         /**
             @brief Nombre de choix possibles
@@ -196,7 +209,7 @@ class Communication : public Templatable
             @return Nombre de choix possibles
             @sa choice
         */
-        int choicesCount();
+        virtual int choicesCount() = 0;
         
         /**
             @brief Retourne un choix pour la question
@@ -218,7 +231,7 @@ class Communication : public Templatable
             @param i index du choix
             @return Choix d'index @p i
         */
-        Choice choice(int i);
+        virtual Choice choice(int i) = 0;
         
         /**
             @brief Active ou non un choix
@@ -242,54 +255,44 @@ class Communication : public Templatable
             @param i index du choix
             @param enable true s'il faut sélectionner le choix, false pour le désélectionner
         */
-        void enableChoice(int i, bool enable);
+        virtual void enableChoice(int i, bool enable) = 0;
         
-        void setValue(const QString &value);    /*!< Définis la valeur de retour d'une question chaîne, n'oubliez pas isEntryValid() */
-        void setValue(int value);               /*!< Définis la valeur de retour pour un entier */
-        void setValue(double value);            /*!< Définis la valeur de retour pour un flottant */
+        /** Définis la valeur de retour d'une question chaîne, n'oubliez pas isEntryValid() */
+        virtual void setValue(const QString &value) = 0;
+        virtual void setValue(int value) = 0;               /*!< Définis la valeur de retour pour un entier */
+        virtual void setValue(double value) = 0;            /*!< Définis la valeur de retour pour un flottant */
         
         /**
             @brief Indique si l'entrée est valide
             
-            Dans le cas d'une question de type chaîne, entier ou flottant, le
-            créateur du paquet peut fournir un ensemble de règles à vérifier :
-            
-             - @b regex : Pour une chaîne, vérifier qu'elle corresponde bien
-                          à l'expression régulière de type Perl (les plus
-                          puissantes
-             - @b min   : Permet de s'assurer que les nombres entrés sont plus
-                          grands qu'une certaine valeur. Pour les chaînes de
-                          caractère, c'est la taille minimum
-             - @b max   : Même chose que pour min, mais s'assure que les
-                          sont plus petits qu'une valeur, et une chaîne moins
-                          longue
-                          
-            Le créateur du paquet fournit également un message d'erreur,
-            accessible grâce à entryValidationErrorString().
+            Dans le cas d'une question de type chaîne, entier ou flottant, 
+            la communication peut être valide ou non. Suivant le type de
+            communication (Paquet ou Système), cette entrée peut être
+            validée par un regex dans le paquet ou directement par la
+            communication.
             
             @return True si l'entrée est acceptée, false sinon
             @sa entryValidationErrorString
         */
-        bool isEntryValid() const;
+        virtual bool isEntryValid() const = 0;
         
         /**
             @brief Message d'erreur de validation
             
             Au cas où la validation grâce à isEntryValid() rate, cette fonction
-            renvoie un message créé par l'empaqueteur permettant d'expliquer à
-            l'utilisateur ce qu'il a mal fait.
+            renvoie un message précisant la raison de l'échec de la validation.
             
             @return Message d'erreur de la validation
             @sa isEntryValid
         */
-        QString entryValidationErrorString() const;
+        virtual QString entryValidationErrorString() const = 0;
         
         /**
             @brief Valeur à renvoyer à helperscript
             @internal
             @return Représentation textuelle de la réponse à une question
         */
-        QString processData() const;
+        virtual QString processData() const = 0;
         
     private:
         struct Private;

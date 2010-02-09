@@ -26,7 +26,8 @@ HEADERS +=  packagesystem.h \
             packagesource.h \
             templatable.h \
             repositorymanager.h \
-            processthread.h
+            processthread.h \
+            packagecommunication.h
             
 SOURCES +=  packagesystem.cpp \
             databasereader.cpp \
@@ -41,7 +42,8 @@ SOURCES +=  packagesystem.cpp \
             templatable.cpp \
             packagesource.cpp \
             repositorymanager.cpp \
-            processthread.cpp
+            processthread.cpp \
+            packagecommunication.cpp
 
 includes.files = *.h
 includes.path = /usr/include/logram

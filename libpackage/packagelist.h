@@ -84,9 +84,6 @@ class PackageList : public QObject, public QList<Package *>
         void packageProceeded(bool success);
         void packageDownloaded(bool success);
         
-    signals:
-        void communication(Logram::Package *sender, Logram::Communication *comm);
-        
     private:
         struct Private;
         Private *d;

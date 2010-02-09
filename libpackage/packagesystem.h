@@ -38,7 +38,7 @@ class DatabasePackage;
 class DatabaseReader;
 class Package;
 class Solver;
-class PackageSystemPrivate;
+class Communication;
 
 struct ManagedDownload
 {
@@ -195,6 +195,7 @@ class PackageSystem : public QObject
     signals:
         void progress(Logram::Progress *progress);
         void downloadEnded(Logram::ManagedDownload *reply);
+        void communication(Logram::Package *sender, Logram::Communication *comm);
 
     private slots:
         void downloadFinished(QNetworkReply *reply);

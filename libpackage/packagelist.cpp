@@ -236,7 +236,7 @@ bool PackageList::process()
 
         connect(pkg, SIGNAL(proceeded(bool)), this, SLOT(packageProceeded(bool)));
         connect(pkg, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
-        connect(pkg, SIGNAL(communication(Logram::Package *, Logram::Communication *)), this,
+        connect(pkg, SIGNAL(communication(Logram::Package *, Logram::Communication *)), d->ps,
                      SIGNAL(communication(Logram::Package *, Logram::Communication *)));
 
         // Progression

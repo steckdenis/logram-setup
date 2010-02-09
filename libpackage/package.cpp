@@ -24,7 +24,7 @@
 #include "packagesystem.h"
 #include "databasereader.h"
 #include "packagemetadata.h"
-#include "communication.h"
+#include "packagecommunication.h"
 #include "processthread.h"
 
 #include "databasepackage.h"
@@ -156,7 +156,7 @@ void Package::processLineOut(QProcess *process, const QByteArray &line)
         QString name = parts.takeAt(0);
         
         // Créer la communication
-        Communication *comm = new Communication(d->ps, md, name);
+        Communication *comm = new PackageCommunication(d->ps, md, name);
         
         if (comm->error())
         {
