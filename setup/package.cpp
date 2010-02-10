@@ -509,7 +509,7 @@ void App::displayPackage(Package *pkg, int i, int &instSize, int &dlSize, bool s
     // Afficher les flags importants du paquet (eula et reboot)
     if (pkg->flags() & PACKAGE_FLAG_EULA)
     {
-        cout << ' ' << COLOR(tr("(license à accepter)"), "31");
+        cout << ' ' << COLOR(tr("(licence à accepter)"), "31");
     }
     
     if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
@@ -751,7 +751,7 @@ void App::manageResults(Solver *solver)
                 printIndented(md->packageEula().toUtf8(), 4);
                 
                 cout << endl << endl
-                     << COLOR(tr("Accepter cette license (y/n) ? "), "32");
+                     << COLOR(tr("Accepter cette licence (y/n) ? "), "32");
                      
                 getString(in, 2, "n", true);
                 

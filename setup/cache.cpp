@@ -189,7 +189,7 @@ static QStringList pkgFlags(Package *pkg)
     // Intégration KDE
     int kdeintegration = (flags & PACKAGE_FLAG_KDEINTEGRATION);
     
-    tmp = App::tr("Intégration à KDE    : ");
+    tmp = App::tr("Intégration à KDE        : ");
     
     switch (kdeintegration)
     {
