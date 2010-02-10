@@ -80,6 +80,8 @@ Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     d->setParams = 0;
     d->lastError = 0;
     d->progressCount = 0;
+    d->set = 0;
+    d->ipackages = 0;
     
     d->processOutProgress = startProgress(Progress::ProcessOut, 1);
     
@@ -93,9 +95,10 @@ Logram::PackageSystem::~PackageSystem()
 {
     endProgress(d->processOutProgress);
     
-    delete d->ipackages;
+    if (d->ipackages) delete d->ipackages;
+    if (d->set) delete d->set;
+    
     delete d->nmanager;
-    delete d->set;
     delete d->dr;
     delete d;
 }
