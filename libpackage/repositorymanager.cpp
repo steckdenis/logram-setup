@@ -779,44 +779,49 @@ bool RepositoryManager::exp(const QStringList &distros)
     QByteArray &pkgstream = streams[langs.count()];
     
     // Initialiser GPGME
-    QByteArray skey = d->set->value("Sign/Key").toByteArray();
-    const char *key_id = skey.constData();
-    
+    bool useGpg = d->set->value("Sign/Enabled", true).toBool();
     gpgme_ctx_t ctx;
-    gpgme_key_t gpgme_key;
     
-    gpgme_new(&ctx);
-    gpgme_set_armor(ctx, 0);
-    
-    gpgme_keylist_mode_t mode = gpgme_get_keylist_mode(ctx);
-    mode |= GPGME_KEYLIST_MODE_LOCAL;
-    gpgme_set_keylist_mode(ctx, mode);
-    
-    gpgme_set_passphrase_cb(ctx, passphrase_cb, d);
-    
-    if (gpgme_get_key(ctx, key_id, &gpgme_key, 1) != GPG_ERR_NO_ERROR)
+    if (useGpg)
     {
-        PackageError *err = new PackageError;
-        err->type = PackageError::SignError;
-        err->info = tr("Impossible de trouver la clef %1").arg(key_id);
+        QByteArray skey = d->set->value("Sign/Key").toByteArray();
+        const char *key_id = skey.constData();
         
-        d->ps->setLastError(err);
+        gpgme_key_t gpgme_key;
         
-        return false;
-    }
+        gpgme_new(&ctx);
+        gpgme_set_armor(ctx, 0);
+        
+        gpgme_keylist_mode_t mode = gpgme_get_keylist_mode(ctx);
+        mode |= GPGME_KEYLIST_MODE_LOCAL;
+        gpgme_set_keylist_mode(ctx, mode);
+        
+        gpgme_set_passphrase_cb(ctx, passphrase_cb, d);
     
-    if (gpgme_signers_add(ctx, gpgme_key) != GPG_ERR_NO_ERROR)
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::SignError;
-        err->info = tr("Impossible d'ajouter la clef %1 pour signature").arg(key_id);
+        if (gpgme_get_key(ctx, key_id, &gpgme_key, 1) != GPG_ERR_NO_ERROR)
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::SignError;
+            err->info = tr("Impossible de trouver la clef %1").arg(key_id);
+            
+            d->ps->setLastError(err);
+            
+            return false;
+        }
         
-        d->ps->setLastError(err);
+        if (gpgme_signers_add(ctx, gpgme_key) != GPG_ERR_NO_ERROR)
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::SignError;
+            err->info = tr("Impossible d'ajouter la clef %1 pour signature").arg(key_id);
+            
+            d->ps->setLastError(err);
+            
+            return false;
+        }
         
-        return false;
+        gpgme_key_unref(gpgme_key);
     }
-    
-    gpgme_key_unref(gpgme_key);
     
     // Explorer les distributions
     int arch_id, distro_id;
@@ -1031,96 +1036,99 @@ bool RepositoryManager::exp(const QStringList &distros)
                 d->writeXZ(fileName, stream);
                 
                 // Écrire la signature du flux non-compressé
-                gpgme_data_t in, out;
-                gpgme_sign_result_t result;
-                char *userret;
-                size_t retsize;
-                
-                if (gpgme_data_new_from_mem(&in, stream.constData(), stream.size(), 0) != GPG_ERR_NO_ERROR)
+                if (useGpg)
                 {
-                    PackageError *err = new PackageError;
-                    err->type = PackageError::SignError;
-                    err->info = tr("Impossible de créer le tampon mémoire pour la signature.");
+                    gpgme_data_t in, out;
+                    gpgme_sign_result_t result;
+                    char *userret;
+                    size_t retsize;
                     
-                    d->ps->setLastError(err);
+                    if (gpgme_data_new_from_mem(&in, stream.constData(), stream.size(), 0) != GPG_ERR_NO_ERROR)
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::SignError;
+                        err->info = tr("Impossible de créer le tampon mémoire pour la signature.");
+                        
+                        d->ps->setLastError(err);
+                        
+                        return false;
+                    }
                     
-                    return false;
-                }
-                
-                if (gpgme_data_new(&out) != GPG_ERR_NO_ERROR)
-                {
-                    PackageError *err = new PackageError;
-                    err->type = PackageError::SignError;
-                    err->info = tr("Impossible de créer le tampon mémoire de sortie.");
+                    if (gpgme_data_new(&out) != GPG_ERR_NO_ERROR)
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::SignError;
+                        err->info = tr("Impossible de créer le tampon mémoire de sortie.");
+                        
+                        d->ps->setLastError(err);
+                        
+                        gpgme_data_release(in);
+                        return false;
+                    }
                     
-                    d->ps->setLastError(err);
+                    if (gpgme_op_sign(ctx, in, out, GPGME_SIG_MODE_DETACH) != GPG_ERR_NO_ERROR)
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::SignError;
+                        err->info = tr("Impossible de signer le fichier %1").arg(fileName);
+                        
+                        d->ps->setLastError(err);
+                        
+                        gpgme_data_release(in);
+                        gpgme_data_release(out);
+                        return false;
+                    }
+                    
+                    result = gpgme_op_sign_result(ctx);
+                    
+                    if (result->invalid_signers)
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::SignError;
+                        err->info = tr("Mauvais signataires");
+                        
+                        d->ps->setLastError(err);
+                        
+                        gpgme_data_release(in);
+                        gpgme_data_release(out);
+                        return false;
+                    }
+                    
+                    if (!result->signatures)
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::SignError;
+                        err->info = tr("Pas de signatures dans le résultat");
+                        
+                        d->ps->setLastError(err);
+                        
+                        gpgme_data_release(in);
+                        gpgme_data_release(out);
+                        return false;
+                    }
+                    
+                    userret = gpgme_data_release_and_get_mem(out, &retsize);
+                    
+                    // Écrire le fichier
+                    QFile signFile(fileName + ".sig");
+                    
+                    if (!signFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::OpenFileError;
+                        err->info = signFile.fileName();
+                        
+                        d->ps->setLastError(err);
+                        
+                        gpgme_data_release(in);
+                        return false;
+                    }
+                    
+                    signFile.write(userret, retsize);
                     
                     gpgme_data_release(in);
-                    return false;
+                    free(userret);
                 }
-                
-                if (gpgme_op_sign(ctx, in, out, GPGME_SIG_MODE_DETACH) != GPG_ERR_NO_ERROR)
-                {
-                    PackageError *err = new PackageError;
-                    err->type = PackageError::SignError;
-                    err->info = tr("Impossible de signer le fichier %1").arg(fileName);
-                    
-                    d->ps->setLastError(err);
-                    
-                    gpgme_data_release(in);
-                    gpgme_data_release(out);
-                    return false;
-                }
-                
-                result = gpgme_op_sign_result(ctx);
-                
-                if (result->invalid_signers)
-                {
-                    PackageError *err = new PackageError;
-                    err->type = PackageError::SignError;
-                    err->info = tr("Mauvais signataires");
-                    
-                    d->ps->setLastError(err);
-                    
-                    gpgme_data_release(in);
-                    gpgme_data_release(out);
-                    return false;
-                }
-                
-                if (!result->signatures)
-                {
-                    PackageError *err = new PackageError;
-                    err->type = PackageError::SignError;
-                    err->info = tr("Pas de signatures dans le résultat");
-                    
-                    d->ps->setLastError(err);
-                    
-                    gpgme_data_release(in);
-                    gpgme_data_release(out);
-                    return false;
-                }
-                
-                userret = gpgme_data_release_and_get_mem(out, &retsize);
-                
-                // Écrire le fichier
-                QFile signFile(fileName + ".sig");
-                
-                if (!signFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
-                {
-                    PackageError *err = new PackageError;
-                    err->type = PackageError::OpenFileError;
-                    err->info = signFile.fileName();
-                    
-                    d->ps->setLastError(err);
-                    
-                    gpgme_data_release(in);
-                    return false;
-                }
-                
-                signFile.write(userret, retsize);
-                
-                gpgme_data_release(in);
-                free(userret);
                 
                 // Supprimer le flux
                 streams[i].clear();
@@ -1130,7 +1138,10 @@ bool RepositoryManager::exp(const QStringList &distros)
     
     d->ps->endProgress(progress);
     
-    gpgme_release(ctx);
+    if (useGpg)
+    {
+        gpgme_release(ctx);
+    }
     
     return true;
 }

@@ -70,9 +70,12 @@ bool DatabaseWriter::download(const QString &source, const QString &url, Reposit
     }
     
     // Télécharger également la signature
-    if (!parent->download(type, url + ".sig", fileName + ".sig", true, unused))
+    if (gpgCheck)
     {
-        return false;
+        if (!parent->download(type, url + ".sig", fileName + ".sig", true, unused))
+        {
+            return false;
+        }
     }
     
     delete unused;
