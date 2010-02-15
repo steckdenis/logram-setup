@@ -419,16 +419,48 @@ QByteArray PackageMetaData::script(const QString &key, const QString &type)
             (package.tagName() == "package" && package.attribute("name") == key))
         {
             QDomElement script = package.firstChildElement("script");
+            QByteArray rs, h, f;
+            QString header, footer;
+            bool found = false;
             
+            // Trouver le script lui-même
             while (!script.isNull())
             {
                 if (script.attribute("type") == type)
                 {
-                    return script.text().toUtf8();
+                    // Savoir s'il veut des en-têtes ou autre
+                    header = script.attribute("header", "header");
+                    footer = script.attribute("footer", "footer");
+                    
+                    rs = script.text().toUtf8();
+                    found = true;
+                    break;
                 }
                 
                 script = script.nextSiblingElement("script");
             }
+            
+            if (!found) break;
+            
+            // Trouver son en-tête ou pied si nécessaire
+            script = package.firstChildElement("script");
+            
+            while (!script.isNull())
+            {
+                if (script.attribute("type") == header)
+                {
+                    h = script.text().toUtf8();
+                }
+                else if (script.attribute("type") == footer)
+                {
+                    f = script.text().toUtf8();
+                }
+                
+                script = script.nextSiblingElement("script");
+            }
+            
+            // Renvoyer le résultat
+            return h + '\n' + rs + '\n' + f;
         }
         package = package.nextSiblingElement();
     }
