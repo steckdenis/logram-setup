@@ -234,6 +234,23 @@ QString PackageMetaData::upstreamUrl() const
     return documentElement().firstChildElement("source").attribute("upstreamurl");
 }
 
+QStringList PackageMetaData::triggers() const
+{
+    QStringList rs;
+    
+    // Explorer les tags <trigger> du paquet courant
+    QDomElement trigger = d->currentPackage.firstChildElement("trigger");
+    
+    while (!trigger.isNull())
+    {
+        rs.append(trigger.text());
+        
+        trigger = trigger.nextSiblingElement("trigger");
+    }
+    
+    return rs;
+}
+
 QString PackageMetaData::stringOfKey(const QDomElement &element) const
 {
     return stringOfKey(element, primaryLang());

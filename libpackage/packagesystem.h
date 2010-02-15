@@ -108,7 +108,8 @@ struct Progress
         GlobalCompressing,
         Compressing,
         Including,
-        Exporting
+        Exporting,
+        Trigger
     };
     
     enum Action

@@ -28,6 +28,7 @@
 #include <QObject>
 #include <QDateTime>
 #include <QProcess>
+#include <QStringList>
 
 namespace Logram
 {
@@ -85,6 +86,7 @@ class PackageMetaData : public QObject, public QDomDocument
         QString packageEula() const;
         QString currentPackage() const;
         QString upstreamUrl() const;
+        QStringList triggers() const;
         
         QList<ChangeLogEntry *> changelog() const;
         QList<SourceDepend *> sourceDepends() const;

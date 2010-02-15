@@ -25,6 +25,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QProcess>
 
 #include "solver.h"
 
@@ -84,6 +85,9 @@ class PackageList : public QObject, public QList<Package *>
         void packageProceeded(bool success);
         void packageDownloaded(bool success);
         void communication(Logram::Package *pkg, Logram::Communication *comm);
+        
+        void triggerFinished(int exitCode, QProcess::ExitStatus exitStatus);
+        void triggerOut();
         
     private:
         struct Private;

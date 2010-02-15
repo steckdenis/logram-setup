@@ -25,6 +25,8 @@
 #include "package.h"
 #include "databasepackage.h"
 #include "databasereader.h"
+#include "packagemetadata.h"
+#include "templatable.h"
 
 #include <QtScript>
 #include <QList>
@@ -56,6 +58,7 @@ struct PackageList::Private
     QList<Package *> list;
     QList<Package *> downloadedPackages;
     QList<int> orphans;
+    QList<QString> triggers;
     
     // Programme QtScript
     QScriptValue weightFunction;
@@ -255,7 +258,8 @@ bool PackageList::process()
     // Attendre
     int rs = d->loop.exec();
     
-    // Enregistrer le taux d'utilisation de chaque paquet
+    if (rs != 0) return false;
+    
     DatabaseReader *dr = d->ps->databaseReader();
     QList<int> pkgs;
     QSettings *set = d->ps->installedPackagesList();
@@ -264,6 +268,19 @@ bool PackageList::process()
     {
         Package *pkg = at(i);
         
+        // Enregistrer les triggers du paquet
+        PackageMetaData *md = pkg->metadata();
+        md->setCurrentPackage(pkg->name());
+        
+        foreach (const QString &trigger, md->triggers())
+        {
+            if (!d->triggers.contains(trigger))
+            {
+                d->triggers.append(trigger);
+            }
+        }
+    
+        // Enregistrer le taux d'utilisation de chaque paquet
         if (pkg->origin() == Package::Database)
         {
             // Paquet en base de donnée, explorer ses dépendances et incrémenter leur compteur
@@ -330,7 +347,103 @@ bool PackageList::process()
     d->ps->endProgress(d->downloadProgress);
     d->ps->endProgress(d->processProgress);
     
-    return (rs == 0);
+    // Lancer les triggers
+    int trigProgress = d->ps->startProgress(Progress::Trigger, d->triggers.count());
+    Templatable *tpl = new Templatable(this);
+    
+    // Remplir la template
+    tpl->addKey("instroot", d->ps->installRoot());
+    tpl->addKey("varroot", d->ps->varRoot());
+    tpl->addKey("confroot", d->ps->confRoot());
+    
+    for (int i=0; i<d->triggers.count(); ++i)
+    {
+        const QString &trigger = d->triggers.at(i);
+        
+        // Progression
+        if (!d->ps->sendProgress(trigProgress, i, tpl->templateString(trigger), QString()))
+        {
+            d->ps->endProgress(trigProgress);
+            delete tpl;
+            return false;
+        }
+        
+        QProcess *proc = new QProcess;
+        
+        connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)),
+                this,   SLOT(triggerFinished(int, QProcess::ExitStatus)));
+                
+        connect(proc, SIGNAL(readyReadStandardOutput()),
+                this,   SLOT(triggerOut()));
+                
+        proc->setProcessChannelMode(QProcess::MergedChannels);
+        
+        // Exécuter le processus
+        proc->setProperty("lgr_trigger", tpl->templateString(trigger));  // Qt <3
+        proc->start(tpl->templateString(trigger), QIODevice::ReadOnly);
+        
+        rs = d->loop.exec();
+        
+        if (rs != 0) return false;
+    }
+    
+    delete tpl;
+    d->ps->endProgress(trigProgress);
+    
+    return true;
+}
+
+void PackageList::triggerFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    // Plus besoin du processus
+    QProcess *sh = static_cast<QProcess *>(sender());
+    
+    if (sh != 0)
+    {
+        sh->deleteLater();
+    }
+    
+    // Savoir si tout est ok
+    int rs = 0;
+    
+    if (exitCode != 0 || exitStatus != QProcess::NormalExit)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::ProcessError;
+        err->info = sh->property("lgr_trigger").toString();
+        
+        d->ps->setLastError(err);
+        
+        rs = 1;
+    }
+    
+    // Quitter la boucle
+    d->loop.exit(rs);
+}
+
+void PackageList::triggerOut()
+{
+    QProcess *sh = static_cast<QProcess *>(sender());
+    
+    if (sh == 0)
+    {
+        return;
+    }
+    
+    // Lire les lignes
+    QByteArray line;
+    
+    while (sh->bytesAvailable() > 0)
+    {
+        line = sh->readLine().trimmed();
+        
+        // Envoyer la progression
+        if (!d->ps->processOut(sh->property("lgr_trigger").toString(), line))
+        {
+            // Kill the process
+            sh->terminate();
+        }
+    }
 }
 
 void PackageList::packageProceeded(bool success)

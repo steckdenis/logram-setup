@@ -745,6 +745,9 @@ void App::progress(Progress *progress)
             s = tr("Export de la distribution ");
             break;
             
+        case Progress::Trigger:
+            s = tr("Exécution du trigger ");
+            
         default:
             return;
     }
