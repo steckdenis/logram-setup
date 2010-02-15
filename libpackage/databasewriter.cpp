@@ -259,8 +259,11 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
     foreach (const QByteArray &_dep, deps)
     {
         dep = _dep.trimmed();
+        
+        QString name, version;
+        int op = parent->parseVersion(dep, name, version);
 
-        if (!dep.contains('('))
+        if (op == DEPEND_OP_NOVERSION)
         {
             // Dépendance non-versionnée
             depend = new _Depend;
@@ -287,53 +290,12 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
         }
         else
         {
-            // Retirer les parenthèses      // machin (>= version)
-            dep.replace('(', "");           // machin >= version)
-            dep.replace(')', "");           // machin >= version
-
-            // Splitter avec les espaces
-            QList<QByteArray> parts = dep.split(' ');
-            
-            if (parts.count() != 3) return;
-            
-            const QByteArray &name = parts.at(0);
-            const QByteArray &_op = parts.at(1);
-            const QByteArray &version = parts.at(2);
-
-            // Trouver le bon opérateur
-            int8_t op = 0;
-
-            if (_op == "=")
-            {
-                op = DEPEND_OP_EQ;
-            }
-            else if (_op == ">")
-            {
-                op = DEPEND_OP_GR;
-            }
-            else if (_op == ">=")
-            {
-                op = DEPEND_OP_GREQ;
-            }
-            else if (_op == "<")
-            {
-                op = DEPEND_OP_LO;
-            }
-            else if (_op == "<=")
-            {
-                op = DEPEND_OP_LOEQ;
-            }
-            else if (_op == "!=")
-            {
-                op = DEPEND_OP_NE;
-            }
-
             // Créer le depend
             depend = new _Depend;
             depend->type = type;
             depend->op = op;
-            depend->pkgname = stringIndex(name, 0, false, false);
-            depend->pkgver = stringIndex(version, 0, false, false);
+            depend->pkgname = stringIndex(name.toUtf8(), 0, false, false);
+            depend->pkgver = stringIndex(version.toUtf8(), 0, false, false);
 
             depends[pkg->deps].append(depend);
 
@@ -347,7 +309,7 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
                     tp = DEPEND_TYPE_REVDEP;
                 }
                 
-                revdep(pkg, name, version, op, tp);
+                revdep(pkg, name.toUtf8(), version.toUtf8(), op, tp);
             }
         }
     }

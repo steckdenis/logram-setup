@@ -421,7 +421,7 @@ void PackageList::packageDownloaded(bool success)
         connect(next, SIGNAL(proceeded(bool)), this, SLOT(packageProceeded(bool)));
         connect(next, SIGNAL(downloaded(bool)), this, SLOT(packageDownloaded(bool)), Qt::QueuedConnection);
         connect(next, SIGNAL(communication(Logram::Package *, Logram::Communication *)), this, 
-                      SIGNAL(communication(Logram::Package *, Logram::Communication *)));
+                      SLOT(communication(Logram::Package *, Logram::Communication *)));
         
         // Progression
         if (!d->ps->sendProgress(d->downloadProgress, d->dpackages, next->name()))
@@ -439,4 +439,9 @@ void PackageList::packageDownloaded(bool success)
             return;
         }
     }
+}
+
+void PackageList::communication(Logram::Package *pkg, Logram::Communication *comm)
+{
+    d->ps->sendCommunication(pkg, comm);
 }

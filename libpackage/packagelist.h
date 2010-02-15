@@ -83,6 +83,7 @@ class PackageList : public QObject, public QList<Package *>
     private slots:
         void packageProceeded(bool success);
         void packageDownloaded(bool success);
+        void communication(Logram::Package *pkg, Logram::Communication *comm);
         
     private:
         struct Private;

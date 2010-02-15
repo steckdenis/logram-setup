@@ -327,8 +327,11 @@ void FilePackage::Private::addDeps(const QByteArray &str, int8_t type)
     foreach (const QByteArray &_dep, deps)
     {
         dep = _dep.trimmed();
+        
+        QString name, version;
+        int op = ps->parseVersion(dep, name, version);
 
-        if (!dep.contains('('))
+        if (op == DEPEND_OP_NOVERSION)
         {
             // Dépendance non-versionnée
             depend = new FileDepend(type, DEPEND_OP_NOVERSION, dep, QString());
@@ -338,47 +341,6 @@ void FilePackage::Private::addDeps(const QByteArray &str, int8_t type)
         }
         else
         {
-            // Retirer les parenthèses      // machin (>= version)
-            dep.replace('(', "");           // machin >= version)
-            dep.replace(')', "");           // machin >= version
-
-            // Splitter avec les espaces
-            QList<QByteArray> parts = dep.split(' ');
-            
-            if (parts.count() != 3) return;
-            
-            const QByteArray &name = parts.at(0);
-            const QByteArray &_op = parts.at(1);
-            const QByteArray &version = parts.at(2);
-
-            // Trouver le bon opérateur
-            int8_t op = 0;
-
-            if (_op == "=")
-            {
-                op = DEPEND_OP_EQ;
-            }
-            else if (_op == ">")
-            {
-                op = DEPEND_OP_GR;
-            }
-            else if (_op == ">=")
-            {
-                op = DEPEND_OP_GREQ;
-            }
-            else if (_op == "<")
-            {
-                op = DEPEND_OP_LO;
-            }
-            else if (_op == "<=")
-            {
-                op = DEPEND_OP_LOEQ;
-            }
-            else if (_op == "!=")
-            {
-                op = DEPEND_OP_NE;
-            }
-
             // Créer le depend
             depend = new FileDepend(type, op, name, version);
 

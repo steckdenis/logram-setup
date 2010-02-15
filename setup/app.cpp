@@ -381,7 +381,7 @@ void App::help()
             "    -vR <var root>     Chemin racine des fichiers temporaires (\"/\" par défaut).\n"
             "    -C                 Affiche l'historique des modifications d'un paquet\n"
             "                       quand utilisé avec showpkg.\n"
-            "    -L                 Affiche la license d'un paquet quand utilisé avec showpkg.\n"
+            "    -L                 Affiche la licence d'un paquet quand utilisé avec showpkg.\n"
             "    -W                 Désactive les couleurs dans la sortie de Setup.\n");
    
     cout << qPrintable(rs);

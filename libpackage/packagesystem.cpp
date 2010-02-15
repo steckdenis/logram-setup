@@ -876,26 +876,26 @@ QString Logram::PackageSystem::dependString(const QString &name, const QString &
         switch (op)
         {
             case DEPEND_OP_EQ:
-                rs += " (= ";
+                rs += "=";
                 break;
             case DEPEND_OP_GREQ:
-                rs += " (>= ";
+                rs += ">=";
                 break;
             case DEPEND_OP_GR:
-                rs += " (> ";
+                rs += ">";
                 break;
             case DEPEND_OP_LOEQ:
-                rs += " (<= ";
+                rs += "<=";
                 break;
             case DEPEND_OP_LO:
-                rs += " (< ";
+                rs += "<";
                 break;
             case DEPEND_OP_NE:
-                rs += " (!= ";
+                rs += "!=";
                 break;
         }
-
-        rs += version + ")";
+        
+        rs += version;
     }
     
     return rs;

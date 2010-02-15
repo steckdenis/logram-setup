@@ -230,7 +230,7 @@ static QStringList pkgFlags(Package *pkg)
     YESNO(PACKAGE_FLAG_DONTREMOVE,  "Ne pas supprimer         : ")
     
     // Nécessite une CLUF
-    YESNO(PACKAGE_FLAG_EULA,        "License à approuver      : ")
+    YESNO(PACKAGE_FLAG_EULA,        "Licence à approuver      : ")
     
     // Nécessite un redémarrage
     YESNO(PACKAGE_FLAG_NEEDSREBOOT, "Nécessite un redémarrage : ")
@@ -506,7 +506,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     
     if (license && (pkg->flags() & PACKAGE_FLAG_EULA))
     {
-        cout <<  COLOR(tr("Texte de la license : "), "35") << endl << endl;
+        cout <<  COLOR(tr("Texte de la licence : "), "35") << endl << endl;
         printIndented(metadata->packageEula().toUtf8(), 4);
         cout << endl << endl;
     }
