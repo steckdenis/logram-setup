@@ -747,6 +747,7 @@ void App::progress(Progress *progress)
             
         case Progress::Trigger:
             s = tr("Exécution du trigger ");
+            break;
             
         default:
             return;
