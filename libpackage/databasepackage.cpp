@@ -147,8 +147,6 @@ bool DatabasePackage::download()
     
     d->waitingDest = fname;
     
-    qDebug() << d->usedMirror;
-    
     return d->ps->download(type, u, d->waitingDest, false, d->waitingMd); // Non-bloquant
 }
 
