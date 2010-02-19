@@ -314,12 +314,28 @@ bool PackageSource::binaries()
             while (!pattern.isNull())
             {
                 QRegExp regex(pattern.attribute("pattern", "*"), Qt::CaseSensitive, QRegExp::Wildcard);
+                bool exclude = (pattern.attribute("exclude", "false") == "true");
                 
-                foreach (const QString &fname, files)
+                if (!exclude)
                 {
-                    if (regex.exactMatch(fname))
+                    foreach (const QString &fname, files)
                     {
-                        okFiles.append(fname);
+                        if (regex.exactMatch(fname))
+                        {
+                            okFiles.append(fname);
+                        }
+                    }
+                }
+                else
+                {
+                    // Retirer d'okFiles les fichiers qui correspondent
+                    for (int i=0; i<okFiles.count(); ++i)
+                    {
+                        if (regex.exactMatch(okFiles.at(i)))
+                        {
+                            okFiles.removeAt(i);
+                            --i;
+                        }
                     }
                 }
                 
