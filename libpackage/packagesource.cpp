@@ -217,7 +217,6 @@ bool PackageSource::binaries()
         version = templateString(changelog.attribute("version"));
         
         addKey("version", version);
-        changelog.setAttribute("version", version);
     }
     
     // Explorer les paquets
@@ -327,23 +326,6 @@ bool PackageSource::binaries()
                 pattern = pattern.nextSiblingElement("files");
             }
         }
-        
-        // Écrire les métadonnées dans /tmp
-        QFile fl(d->metaFileName);
-        
-        if (!fl.open(QIODevice::WriteOnly))
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::OpenFileError;
-            err->info = d->metaFileName;
-            
-            d->ps->setLastError(err);
-            
-            return false;
-        }
-        
-        fl.write(d->md->toByteArray(4));
-        fl.close();
         
         // Créer la liste des PackageFiles permettant de créer l'archive
         QVector<PackageFile> packageFiles;
