@@ -39,7 +39,7 @@ gitversion()
 
 # lh_strip <dirs>
 #
-# example :
+# example:
 #
 #    (cd "{{builddir}}" && lh_strip bin usr/bin usr/lib usr/share/app/plugins)
 lh_strip()
@@ -71,4 +71,42 @@ lh_strip()
         # Passer au dossier suivant
         shift
     done
+}
+
+# lh_installservice <service> [runlevel=default.runlevel]
+#
+# example:
+#
+#   lh_installservice daemon/dbus
+#   lh_installservice system/udev system.virtual
+lh_installservice() {
+    if [ "x$2" == "x" ]; then
+        runlevel="default.runlevel"
+    else
+        runlevel="$2"
+    fi
+
+    cat "{{instroot}}/etc/initng/runlevel/$runlevel" | grep "^$1\$" > /dev/null 2>&1
+
+    if [ "$?" == "1" ]; then
+        # Add the service to the runlever
+        mkdir -p     "{{instroot}}/etc/initng/runlevel"
+        echo "$1" >> "{{instroot}}/etc/initng/runlevel/$runlevel"
+    fi
+}
+
+# lh_removeservice <service> [runlevel=default.runlevel]
+#
+# example:
+#
+#   lh_removeservice daemon/dbus
+#   lh_removeservice system/udev system.virtual
+lh_removeservice() {
+    if [ "x$2" == "x" ]; then
+        runlevel="default.runlevel"
+    else
+        runlevel="$2"
+    fi
+
+    sed -i -e "s#$1##g" "{{instroot}}/etc/initng/runlevel/$runlevel"
 }
