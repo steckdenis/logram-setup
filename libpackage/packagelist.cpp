@@ -270,6 +270,12 @@ bool PackageList::process()
         
         // Enregistrer les triggers du paquet
         PackageMetaData *md = pkg->metadata();
+        
+        if (md == 0)
+        {
+            return false;
+        }
+        
         md->setCurrentPackage(pkg->name());
         
         foreach (const QString &trigger, md->triggers())

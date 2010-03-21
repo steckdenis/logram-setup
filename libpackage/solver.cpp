@@ -35,6 +35,10 @@
 #include <QtDebug>
 #include <QtAlgorithms>
 
+// DEBUG
+#include <iostream>
+using namespace std;
+
 using namespace Logram;
 
 struct Pkg
@@ -535,6 +539,10 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
         }
         else if (dep->type == DEPEND_TYPE_REVDEP && pkg.action == Solver::Remove)
         {
+#ifdef _DEBUG
+            cout << "On veut supprimer " << psd->string(false, mpkg->name) << " à la version "
+                 << psd->string(false, mpkg->version) << endl;
+#endif
             // Gestion des dépendances inverses. Créer n branches. Dans la première,
             // supprimer dep. Dans les autres, installer les provides
             QList<int> myVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
@@ -544,7 +552,7 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
             // Ajout de la dépendance inverse à supprimer
             Pkg p;
             
-            if (revdepPackage.count() != 0)
+            if (revdepPackage.count() != 0 && myVersions.count() == 0)
             {
                 p.index = revdepPackage.at(0);  // N'en contient qu'un
                 p.action = Solver::Remove;
@@ -565,6 +573,65 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
                     pkgsToAdd.append(p);
                 }
             }
+            
+#ifdef _DEBUG
+            // DEBUG :  ce qu'on va faire
+            foreach(const Pkg &p, pkgsToAdd)
+            {
+                switch (p.action)
+                {
+                    case Solver::Install:
+                        cout << "Installer ";
+                        break;
+                    case Solver::Remove:
+                        cout << "Supprimer ";
+                        break;
+                    default:
+                        break;
+                }
+                
+                _Package *pp = psd->package(p.index);
+                
+                cout << psd->string(false, pp->name);
+                cout << " à la version ";
+                cout << psd->string(false, pp->version);
+                cout << endl;
+            }
+            cout << "***************" << endl;
+            
+            // DEBUG: Les branches
+            for (int i=0; i<packages.count(); ++i)
+            {
+                const QVector<Pkg> &pkgs = packages.at(i);
+                
+                for (int j=0; j<pkgs.count(); ++j)
+                {
+                    const Pkg &p = pkgs.at(j);
+                    
+                    switch (p.action)
+                    {
+                        case Solver::Install:
+                            cout << '+';
+                            break;
+                        case Solver::Remove:
+                            cout << '-';
+                            break;
+                        default:
+                            break;
+                    }
+                    _Package *pp = psd->package(p.index);
+                    
+                    cout << psd->string(false, pp->name);
+                    cout << '~';
+                    cout << psd->string(false, pp->version);
+                    cout << ' ';
+                }
+                cout << endl;
+            }
+            cout << "***************" << endl;
+            int i;            
+            cin >> i;
+#endif
             
             // Ajouter les paquets
             if (pkgsToAdd.count() != 0)
