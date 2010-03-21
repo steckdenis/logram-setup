@@ -332,16 +332,16 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     else if (cmd == "test")
     {
         #define CHECK_RESULT(title, op) \
-            cout << "\033[1m" << title; \
+            cout << "\033[1m["; \
             if (!(op)) \
             { \
-                cout << "\033[31m failed"; \
+                cout << "\033[31m failed "; \
             } \
             else \
             { \
-                cout << "\033[32m ok"; \
+                cout << "\033[32m   ok   "; \
             } \
-            cout << "\033[0m" << endl;
+            cout << "\033[0m] " << title << endl;
             
         /* Test des fonctions helper de PackageSystem */
         // compareVersions
@@ -374,8 +374,18 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         op = ps->parseVersion("name=version", name, version);
         CHECK_RESULT("name=version : name ~ version DEPEND_OP_EQ", name == "name" && version == "version" && op == DEPEND_OP_EQ);
+        
         // matchVersion
+        CHECK_RESULT("1.2.3>=0.1 : yes", ps->matchVersion("1.2.3", "0.1", DEPEND_OP_GREQ) == true)
+        CHECK_RESULT("2.1alpha8<=2.0alpha11 : no", ps->matchVersion("2.1alpha8", "2.0alpha11", DEPEND_OP_LOEQ) == false)
+        CHECK_RESULT("1debian2ubuntu1!=1ubuntu2debian1 : no", ps->matchVersion("1debian2ubuntu1", "1ubuntu2debian1", DEPEND_OP_NE) == false)
+        CHECK_RESULT("1.1<1.2 : yes", ps->matchVersion("1.1", "1.2", DEPEND_OP_LO) == true);
+        
         // fileSizeFormat
+        CHECK_RESULT("3 = 3 o", ps->fileSizeFormat(3) == "3 o");
+        CHECK_RESULT("1024 = 1.00 Kio", ps->fileSizeFormat(1024) == "1.00 Kio");
+        CHECK_RESULT("1280 = 1.25 Kio", ps->fileSizeFormat(1280) == "1.25 Kio");
+        
         // dependString
     }
 #endif
