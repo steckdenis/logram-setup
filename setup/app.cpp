@@ -754,10 +754,10 @@ void App::progress(Progress *progress)
     QString s = "[" + QString::number(progress->current + 1) + "/" + QString::number(progress->total) + "] ";
     
     cout << COLOR(s, "33");
-    
     usedwidth += s.size();
 
     // Type
+    Package *pkg;
     switch (progress->type)
     {
         case Progress::Other:
@@ -773,7 +773,34 @@ void App::progress(Progress *progress)
             break;
             
         case Progress::PackageProcess:
-            s = tr("Opération sur ");
+            // progress->data est un Package, nous pouvons nous en servir pour afficher plein de choses
+            pkg = static_cast<Package *>(progress->data);
+            
+            if (pkg == 0)
+            {
+                s = tr("Opération sur ");
+            }
+            else
+            {
+                switch (pkg->action())
+                {
+                    case Solver::Install:
+                        s = tr("Installation de ");
+                        break;
+                    case Solver::Remove:
+                        s = tr("Suppression de ");
+                        break;
+                    case Solver::Purge:
+                        s = tr("Purge de ");
+                        break;
+                    case Solver::Update:
+                        s = tr("Mise à jour de ");
+                        break;
+                    default:
+                        // N'arrive jamais, juste pour que GCC soit content
+                        break;
+                }
+            }
             break;
             
         case Progress::ProcessOut:
@@ -808,15 +835,52 @@ void App::progress(Progress *progress)
     usedwidth += s.size();
     
     // Message
-    cout << qPrintable(progress->info);
-    
-    usedwidth += progress->info.size();
-    
-    if (!progress->more.isNull())
+    if (progress->type != Progress::PackageProcess)
     {
-        cout << ", " << qPrintable(progress->more);
+        cout << qPrintable(progress->info);
         
-        usedwidth += progress->more.size() + 2;
+        usedwidth += progress->info.size();
+        
+        if (!progress->more.isNull())
+        {
+            cout << ", " << qPrintable(progress->more);
+            
+            usedwidth += progress->more.size() + 2;
+        }
+    }
+    else
+    {
+        pkg = static_cast<Package *>(progress->data);
+        Package *opkg = 0;
+        
+        if (pkg == 0)
+        {
+            // Ok, on ne sait rien
+            cout << qPrintable(progress->info);
+            usedwidth += progress->info.size();
+        }
+        else
+        {
+            // Nom et version en couleur, plus info en cas de mise à jour
+            cout << COLOR(pkg->name(), "31")
+                 << '~'
+                 << COLOR(pkg->version(), "32");
+                 
+            usedwidth += pkg->name().size() + 1 + pkg->version().size();
+            
+            if (pkg->action() == Solver::Update && (opkg = (Package *)pkg->upgradePackage()) != 0)
+            {
+                // Rajouter "vers <version>"
+                s = tr("vers", "Mise à jour de <paquet>~<version> vers <nouvelle version>");
+                
+                cout << ' '
+                     << qPrintable(s)
+                     << ' '
+                     << COLOR(opkg->version(), "32");
+                     
+                usedwidth += s.size() + 2 + opkg->version().size();
+            }
+        }
     }
     
     // Effacer le reste de la largeur de l'écran

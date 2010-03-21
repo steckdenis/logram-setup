@@ -1028,7 +1028,7 @@ int Logram::PackageSystem::startProgress(Progress::Type type, int tot)
     return pid;
 }
 
-bool Logram::PackageSystem::sendProgress(int id, int num, const QString &msg, const QString &more)
+bool Logram::PackageSystem::sendProgress(int id, int num, const QString &msg, const QString &more, void *data)
 {
     Progress *p = d->progresses.value(id);
     
@@ -1041,6 +1041,7 @@ bool Logram::PackageSystem::sendProgress(int id, int num, const QString &msg, co
     p->current = num;
     p->info = msg;
     p->more = more;
+    p->data = data;
     p->canceled = false;
     
     p->action = Progress::Update;

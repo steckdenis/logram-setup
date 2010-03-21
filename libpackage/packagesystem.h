@@ -123,6 +123,7 @@ struct Progress
     Action action;
     int current, old, total;
     QString info, more;
+    void *data;
     bool canceled;
 };
 
@@ -184,7 +185,7 @@ class PackageSystem : public QObject
         PackageError *lastError(); // Thread-safe, peut renvoyer 0
 
         int startProgress(Progress::Type type, int tot);
-        bool sendProgress(int id, int num, const QString &msg, const QString &more = QString()) __attribute__((warn_unused_result));
+        bool sendProgress(int id, int num, const QString &msg, const QString &more = QString(), void *data = 0) __attribute__((warn_unused_result));
         bool processOut(const QString &command, const QString &line) __attribute__((warn_unused_result));
         void endProgress(int id);
         

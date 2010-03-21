@@ -468,7 +468,7 @@ void PackageList::packageProceeded(bool success)
         Package *next = d->downloadedPackages.takeAt(0);
 
         // Progression
-        if (!d->ps->sendProgress(d->processProgress, d->ipackages, next->name() + "~" + next->version()))
+        if (!d->ps->sendProgress(d->processProgress, d->ipackages, next->name() + "~" + next->version(), QString(), next))
         {
             d->loop.exit(1);
             return;
@@ -514,7 +514,7 @@ void PackageList::packageDownloaded(bool success)
     if (d->pipackages < d->parallelInstalls)
     {
         // Progression
-        if (!d->ps->sendProgress(d->processProgress, d->ipackages, pkg->name() + "~" + pkg->version()))
+        if (!d->ps->sendProgress(d->processProgress, d->ipackages, pkg->name() + "~" + pkg->version(), QString(), pkg))
         {
             d->loop.exit(1);
             return;
