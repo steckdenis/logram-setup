@@ -153,10 +153,10 @@ QList<int> DatabaseReader::packagesByVString(const QString &name, const QString 
 QList<int> DatabaseReader::packagesByVString(const QString &verStr)
 {
     // Parser la version
-    QString name, version;
+    QByteArray name, version;
     int op;
 
-    op = PackageSystem::parseVersion(verStr, name, version);
+    op = PackageSystem::parseVersion(verStr.toUtf8(), name, version);
 
     return packagesByVString(name, version, op);
 }

@@ -153,7 +153,7 @@ class PackageSystem : public QObject
         static int compareVersions(const char *a, const char *b);
         static int compareVersions(const QByteArray &v1, const QByteArray &v2);
         static bool matchVersion(const QByteArray &v1, const QByteArray &v2, int op);
-        static int parseVersion(const QString &verStr, QString &name, QString &version);
+        static int parseVersion(const QByteArray &verStr, QByteArray &name, QByteArray &version);
         static QString fileSizeFormat(int size);
         static QString dependString(const QString &name, const QString &version, int op);
 

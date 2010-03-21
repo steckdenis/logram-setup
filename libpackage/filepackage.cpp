@@ -328,7 +328,7 @@ void FilePackage::Private::addDeps(const QByteArray &str, int8_t type)
     {
         dep = _dep.trimmed();
         
-        QString name, version;
+        QByteArray name, version;
         int op = ps->parseVersion(dep, name, version);
 
         if (op == DEPEND_OP_NOVERSION)

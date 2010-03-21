@@ -97,11 +97,11 @@ void App::tag(const QString &packageName, const QString &tag)
 {
     DatabasePackage *pkg;
     QList<int> pkgs;
-    QString n, v;
+    QByteArray n, v;
     int op;
     
     // Parser le nom du paquet
-    op = ps->parseVersion(packageName, n, v);
+    op = ps->parseVersion(packageName.toUtf8(), n, v);
     
     // Récupérer les paquets qui vont avec
     pkgs = ps->packagesByVString(n, v, op);

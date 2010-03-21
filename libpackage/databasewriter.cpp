@@ -260,7 +260,7 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
     {
         dep = _dep.trimmed();
         
-        QString name, version;
+        QByteArray name, version;
         int op = parent->parseVersion(dep, name, version);
 
         if (op == DEPEND_OP_NOVERSION)
@@ -294,8 +294,8 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
             depend = new _Depend;
             depend->type = type;
             depend->op = op;
-            depend->pkgname = stringIndex(name.toUtf8(), 0, false, false);
-            depend->pkgver = stringIndex(version.toUtf8(), 0, false, false);
+            depend->pkgname = stringIndex(name, 0, false, false);
+            depend->pkgver = stringIndex(version, 0, false, false);
 
             depends[pkg->deps].append(depend);
 
@@ -309,7 +309,7 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
                     tp = DEPEND_TYPE_REVDEP;
                 }
                 
-                revdep(pkg, name.toUtf8(), version.toUtf8(), op, tp);
+                revdep(pkg, name, version, op, tp);
             }
         }
     }
@@ -576,7 +576,7 @@ bool DatabaseWriter::rebuild()
                     QByteArray key = QByteArray::fromRawData(cline, indexofequal);
                     QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1 + hasquote, 
                                                                linelength - indexofequal - 1 - hasquote - hasquote);
-
+                    
                     if (!ignorepackage)
                     {
                         if (key == "Name")
@@ -696,7 +696,7 @@ bool DatabaseWriter::rebuild()
                         {
                             pkg->flags = value.toInt();
                         }
-                        else if (key == "Provides")
+                        else if (key == "Provides" || key == "Replaces")
                         {
                             // Insérer des knownPackages pour chaque provide
                             if (value.isEmpty())
@@ -707,26 +707,17 @@ bool DatabaseWriter::rebuild()
                             // Parser la chaîne
                             QList<QByteArray> deps = value.split(';');
                             QByteArray dep;
-                            QByteArray version(pkgver);
-                            
 
                             foreach (const QByteArray &_dep, deps)
                             {
                                 dep = _dep.trimmed();
-
-                                bool pa = dep.contains('(');
-
-                                if (pa)
+        
+                                QByteArray name, version;
+                                parent->parseVersion(dep, name, version);
+                                
+                                if (version.isNull())
                                 {
-                                    // Provide avec version
-                                    // Parser la chaîne "nom (= version)"
-                                    dep.replace('(', "");           // machin >= version)
-                                    dep.replace(')', "");           // machin >= version
-
-                                    // Splitter avec les espaces
-                                    QList<QByteArray> parts = dep.split(' ');
-                                    dep = parts.at(0);
-                                    version = parts.at(2);
+                                    version = pkgver;
                                 }
 
                                 // Ajouter <dep>=<version> dans knownPackages
@@ -737,7 +728,7 @@ bool DatabaseWriter::rebuild()
                                 entry->version = version;
                                 entry->index = index;
                                 
-                                knownPackages[dep].append(entry);
+                                knownPackages[name].append(entry);
                             }
                         }
                     }
@@ -817,6 +808,8 @@ bool DatabaseWriter::rebuild()
                         QByteArray key = QByteArray::fromRawData(cline, indexofequal);
                         QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1 + hasquote,
                                                                    linelength - indexofequal - 1 - hasquote - hasquote);
+                        
+                        if (value.isNull()) continue;
 
                         if (key == "Version")
                         {
@@ -835,64 +828,52 @@ bool DatabaseWriter::rebuild()
                                 }
                             }
                         }
-                        if (key == "Depends" && !value.isNull())
+                        if (key == "Depends")
                         {
                             setDepends(pkg, value, DEPEND_TYPE_DEPEND);
                         }
-                        else if (key == "Replaces" && !value.isNull())
-                        {
-                            setDepends(pkg, value, DEPEND_TYPE_REPLACE);
-                        }
-                        else if (key == "Suggest" && !value.isNull())
+                        else if (key == "Suggest")
                         {
                             setDepends(pkg, value, DEPEND_TYPE_SUGGEST);
                         }
-                        else if (key == "Conflicts" && !value.isNull())
+                        else if (key == "Conflicts")
                         {
                             setDepends(pkg, value, DEPEND_TYPE_CONFLICT);
                         }
-                        else if (key == "Provides" && !value.isNull())
+                        else if (key == "Provides" || key == "Replaces")
                         {
+                            // Quand on remplace un paquet, on le fournit
                             setDepends(pkg, value, DEPEND_TYPE_PROVIDE);
                             
-                            if (value.isEmpty())
+                            if (key == "Replaces")
                             {
-                                continue;
+                                // Pour info et pour le solveur
+                                setDepends(pkg, value, DEPEND_TYPE_REPLACE);
                             }
 
                             // Parser la chaîne
                             QList<QByteArray> deps = value.split(';');
                             QByteArray dep;
-
+                            
                             foreach (const QByteArray &_dep, deps)
                             {
                                 dep = _dep.trimmed();
-                                
-                                bool pa = dep.contains('(');
+        
                                 int32_t oldver;
-                                QByteArray version;
-
-                                if (pa)
+                                
+                                QByteArray name, version;
+                                parent->parseVersion(dep, name, version);
+                                
+                                if (!version.isNull())
                                 {
-                                    // Provide avec version
                                     oldver = pkg->version;
-
-                                    // Parser la chaîne "nom (= version)"
-                                    dep.replace('(', "");           // machin >= version)
-                                    dep.replace(')', "");           // machin >= version
-
-                                    // Splitter avec les espaces
-                                    QList<QByteArray> parts = dep.split(' ');
-                                    dep = parts.at(0);
-                                    version = parts.at(2);
-
                                     pkg->version = stringIndex(version, index, false, false);
                                 }
                                 
                                 // Simplement créer une chaîne
                                 stringIndex(dep, index, false, true);
-
-                                if (pa)
+                                
+                                if (!version.isNull())
                                 {
                                     pkg->version = oldver;
                                 }

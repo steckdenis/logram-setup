@@ -699,52 +699,86 @@ PackageError *Logram::PackageSystem::lastError()
 
 /* Utilitaires */
 
-int Logram::PackageSystem::parseVersion(const QString &verStr, QString &name, QString &version)
+int Logram::PackageSystem::parseVersion(const QByteArray &verStr, QByteArray &name, QByteArray &version)
 {
-    QStringList parts;
-    int rs;
+    const char *s = verStr.constData();
+    char c, c2;
+    int namesize = 0, versionsize = 0, op = DEPEND_OP_NOVERSION, pos = 0, len = verStr.size();
+    const char *n = 0, *v = 0;
     
-    if (verStr.contains(">="))
+    // Le nom
+    n = s;
+    while (*s != 0 && pos < len)
     {
-        parts = verStr.split(">=");
-        rs = DEPEND_OP_GREQ;
+        c = *s;
+        
+        if (c == '>' || c == '<' || c == '!' || c == '=')
+        {
+            break;
+        }
+        
+        s++;
+        namesize++;
+        pos++;
     }
-    else if (verStr.contains("<="))
+    
+    if (*s == 0 || pos == len)
     {
-        parts = verStr.split("<=");
-        rs = DEPEND_OP_LOEQ;
+        // Juste un nom
+        name = QByteArray(n, namesize);
+        return op;
     }
-    else if (verStr.contains("!="))
+    
+    // L'opération
+    // Ici, c est soit égal à >, soit à <, soit à !, soit à =.
+    // Il suffit de comparer le caractère suivant
+    s++;            // s pointe sur le premier caractère de la version, ou =, ou \0 s'il y a un problème
+    pos++;
+    c2 = *s;
+    
+    if (c2 == 0 || pos == len)
     {
-        parts = verStr.split("!=");
-        rs = DEPEND_OP_NE;
+        name = QByteArray(n, namesize);
+        return op;
     }
-    else if (verStr.contains('<'))
+    
+    if (c2 == '=')
     {
-        parts = verStr.split('<');
-        rs = DEPEND_OP_LO;
+        // Avancer d'un caractère pour la version
+        s++;
+        pos++;
     }
-    else if (verStr.contains('>'))
+    
+    switch (c)
     {
-        parts = verStr.split('>');
-        rs = DEPEND_OP_GR;
+        case '>':
+            op = (c2 == '=' ? DEPEND_OP_GREQ : DEPEND_OP_GR);
+            break;
+        case '<':
+            op = (c2 == '=' ? DEPEND_OP_LOEQ : DEPEND_OP_LO);
+            break;
+        case '!':
+            op = DEPEND_OP_NE;  // a!=b ou a!b est pris, side effect
+            break;
+        case '=':
+            op = DEPEND_OP_EQ;  // a=b ou a==b est pris, side effect
+            break;
     }
-    else if (verStr.contains('='))
+    
+    // La version, simplement prendre de *s au bout
+    v = s;
+    
+    while (*s && pos < len)
     {
-        parts = verStr.split('=');
-        rs = DEPEND_OP_EQ;
+        s++;
+        versionsize++;
+        pos++;
     }
-    else
-    {
-        name = verStr;
-        version = QString();
-        return DEPEND_OP_NOVERSION;
-    }
-
-    name = parts.at(0);
-    version = parts.at(1);
-
-    return rs;
+    
+    // Retour
+    name = QByteArray(n, namesize);
+    version = QByteArray(v, versionsize);
+    return op;
 }
 
 bool Logram::PackageSystem::matchVersion(const QByteArray &v1, const QByteArray &v2, int op)
@@ -784,7 +818,7 @@ int Logram::PackageSystem::compareVersions(const char *a, const char *b)
     // Explorer chaque caractère
     int numa, numb;
     
-    while (*a && *b)
+    while (*a || *b)
     {
         //Sauter tout ce qui n'est pas nombre
         while (*a && !isdigit(*a)) a++;

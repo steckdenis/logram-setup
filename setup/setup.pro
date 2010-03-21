@@ -8,7 +8,7 @@ TARGET =
 DEPENDPATH += .
 QT -= gui
 LIBS += -llgrpkg
-QMAKE_CXXFLAGS += -D_FILE_OFFSET_BITS=64 -Werror
+QMAKE_CXXFLAGS += -D_FILE_OFFSET_BITS=64 -Werror -DBUILD_TESTS
 
 # Input
 HEADERS +=  app.h

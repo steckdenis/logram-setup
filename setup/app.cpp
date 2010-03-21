@@ -328,6 +328,57 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             usleep(50000);
         }
     }
+#ifdef BUILD_TESTS
+    else if (cmd == "test")
+    {
+        #define CHECK_RESULT(title, op) \
+            cout << "\033[1m" << title; \
+            if (!(op)) \
+            { \
+                cout << "\033[31m failed"; \
+            } \
+            else \
+            { \
+                cout << "\033[32m ok"; \
+            } \
+            cout << "\033[0m" << endl;
+            
+        /* Test des fonctions helper de PackageSystem */
+        // compareVersions
+        CHECK_RESULT("0.1b2 > 0c0d9", ps->compareVersions("0.1b2", "0c0d9") == 1)
+        CHECK_RESULT("14.7 < 14.7.1", ps->compareVersions("14.7", "14.7.1") == -1)
+        CHECK_RESULT("1.1alpha1 = 1-1.1", ps->compareVersions("1.1alpha1", "1-1.1") == 0)
+        CHECK_RESULT("1.0machin = 1machin0", ps->compareVersions("1.0machin", "1machin0") == 0)
+        
+        // parseVersion
+        int op;
+        QByteArray name, version;
+        
+        op = ps->parseVersion("name", name, version);
+        CHECK_RESULT("name : name ~ <null> DEPEND_OP_NOVERSION", op == DEPEND_OP_NOVERSION && name == "name" && version.isNull())
+        
+        op = ps->parseVersion("name>version", name, version);
+        CHECK_RESULT("name>version : name ~ version DEPEND_OP_GR", name == "name" && version == "version" && op == DEPEND_OP_GR);
+        
+        op = ps->parseVersion("name>=version", name, version);
+        CHECK_RESULT("name>=version : name ~ version DEPEND_OP_GREQ", name == "name" && version == "version" && op == DEPEND_OP_GREQ);
+        
+        op = ps->parseVersion("name<version", name, version);
+        CHECK_RESULT("name<version : name ~ version DEPEND_OP_LO", name == "name" && version == "version" && op == DEPEND_OP_LO);
+        
+        op = ps->parseVersion("name<=version", name, version);
+        CHECK_RESULT("name<=version : name ~ version DEPEND_OP_LOEQ", name == "name" && version == "version" && op == DEPEND_OP_LOEQ);
+        
+        op = ps->parseVersion("name!=version", name, version);
+        CHECK_RESULT("name!=version : name ~ version DEPEND_OP_NE", name == "name" && version == "version" && op == DEPEND_OP_NE);
+        
+        op = ps->parseVersion("name=version", name, version);
+        CHECK_RESULT("name=version : name ~ version DEPEND_OP_EQ", name == "name" && version == "version" && op == DEPEND_OP_EQ);
+        // matchVersion
+        // fileSizeFormat
+        // dependString
+    }
+#endif
     else
     {
         help();
