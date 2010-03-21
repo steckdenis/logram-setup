@@ -219,6 +219,15 @@ bool PackageSource::binaries()
         addKey("version", version);
     }
     
+    // Architecture de Setup
+    #ifndef SETUP_ARCH
+        #if __SIZEOF_POINTER__ == 4
+            #define SETUP_ARCH "i686"
+        #else
+            #define SETUP_ARCH "x86_64"
+        #endif
+    #endif
+    
     // Explorer les paquets
     QDomElement package = d->md->documentElement()
                             .firstChildElement();
@@ -258,22 +267,13 @@ bool PackageSource::binaries()
             
             if (arch == "any")
             {
-    #ifdef L__ARCH
-                arch = L__ARCH; // Architecture forcée à la compilation
-    #else
-                if (sizeof(void *) == 4)
-                {
-                    arch = "i686";
-                }
-                else if (sizeof(void *) == 8)
-                {
-                    arch = "x86_64";
-                }
-                else
-                {
-                    arch = "unknown";
-                }
-    #endif
+                arch = SETUP_ARCH;
+            }
+            else if (arch != "all" && arch != SETUP_ARCH)
+            {
+                // On ne doit pas construire ce paquet
+                package = package.nextSiblingElement();
+                continue;
             }
         }
         
