@@ -96,7 +96,6 @@ class Package : public QObject
         virtual QByteArray metadataHash() = 0;
         virtual QByteArray packageHash() = 0;
         virtual int flags() = 0;
-        virtual int status() = 0;
         virtual int used() = 0;
         
         virtual int downloadSize() = 0;
@@ -106,7 +105,7 @@ class Package : public QObject
         virtual QDateTime installedDate() = 0;
         virtual int installedBy() = 0;
         
-        virtual void registerState(int idate, int iby, int state) = 0;
+        virtual void registerState(int idate, int iby, int flags) = 0;
         
         // Commun à tous les types de paquets
         void process();
@@ -171,17 +170,15 @@ class Depend
 #define DEPEND_OP_LO         5   // <
 #define DEPEND_OP_NE         6   // !=
 
-#define PACKAGE_STATE_NOTINSTALLED  0   // Non-installé
-#define PACKAGE_STATE_INSTALLED     1   // Installé
-#define PACKAGE_STATE_REMOVED       2   // Supprimé
-
-#define PACKAGE_FLAG_KDEINTEGRATION         0b000000011
-#define PACKAGE_FLAG_GUI                    0b000000100
-#define PACKAGE_FLAG_DONTUPDATE             0b000001000
-#define PACKAGE_FLAG_DONTINSTALL            0b000010000
-#define PACKAGE_FLAG_DONTREMOVE             0b000100000
-#define PACKAGE_FLAG_EULA                   0b001000000
-#define PACKAGE_FLAG_NEEDSREBOOT            0b010000000
-#define PACKAGE_FLAG_WANTED                 0b100000000
+#define PACKAGE_FLAG_KDEINTEGRATION         0b00000000011
+#define PACKAGE_FLAG_GUI                    0b00000000100
+#define PACKAGE_FLAG_DONTUPDATE             0b00000001000
+#define PACKAGE_FLAG_DONTINSTALL            0b00000010000
+#define PACKAGE_FLAG_DONTREMOVE             0b00000100000
+#define PACKAGE_FLAG_EULA                   0b00001000000
+#define PACKAGE_FLAG_NEEDSREBOOT            0b00010000000
+#define PACKAGE_FLAG_WANTED                 0b00100000000
+#define PACKAGE_FLAG_INSTALLED              0b01000000000
+#define PACKAGE_FLAG_REMOVED                0b10000000000
 
 #endif

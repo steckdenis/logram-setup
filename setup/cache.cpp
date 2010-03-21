@@ -274,17 +274,17 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     // Status du paquet
     QString status;
 
-    if (pkg->status() == PACKAGE_STATE_NOTINSTALLED)
+    if (pkg->flags() & PACKAGE_FLAG_REMOVED)
     {
-        status = tr("Non-installé");
+        status = tr("Supprimé");
     }
-    else if (pkg->status() == PACKAGE_STATE_INSTALLED)
+    else if (pkg->flags() & PACKAGE_FLAG_INSTALLED)
     {
         status = tr("Installé");
     }
     else
     {
-        status = tr("Supprimé");
+        status = tr("Non installé");
     }
 
     // Afficher les informations
@@ -318,12 +318,12 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     cout << COLOR(tr("Status              : "), "33") << qPrintable(status) << endl;
     cout << COLOR(tr("Utilisé par         : "), "33") << qPrintable(tr("%n paquet(s)", "", pkg->used())) << endl;
     
-    if (pkg->status() == PACKAGE_STATE_INSTALLED)
+    if (pkg->flags() & PACKAGE_FLAG_INSTALLED)
     {
         cout << COLOR(tr("Date d'installation : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
         // TODO: Uid vers nom d'utilisateur
     }
-    else if (pkg->status() == PACKAGE_STATE_REMOVED)
+    else if (pkg->flags() & PACKAGE_FLAG_REMOVED)
     {
         cout << COLOR(tr("Date de suppression : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
         // TODO: Uid vers nom d'utilisateur
@@ -432,11 +432,11 @@ void App::showpkg(const QString &name, bool changelog, bool license)
 
         foreach(Package *ver, vers)
         {
-            if (ver->status() == PACKAGE_STATE_INSTALLED)
+            if (ver->flags() & PACKAGE_FLAG_INSTALLED)
             {
                 cout << COLORC("  I ", "34");
             }
-            else if (ver->status() == PACKAGE_STATE_REMOVED)
+            else if (ver->flags() & PACKAGE_FLAG_REMOVED)
             {
                 cout << COLORC("  R ", "31");
             }
@@ -445,8 +445,11 @@ void App::showpkg(const QString &name, bool changelog, bool license)
                 cout << "  * ";
             }
 
-            cout << COLOR(ver->version().leftJustified(26, ' ', true), "32") << ' '
-                << qPrintable(ver->shortDesc()) << endl;
+            //cout << COLOR((ver->name() +ver->version().leftJustified(26, ' ', true), "32") << ' '
+            //     << qPrintable(ver->shortDesc()) << endl;
+            cout << qPrintable((COLORS(ver->name(), "34") + '~' + COLORS(ver->version(), "33")))
+                 << ' '
+                 << qPrintable(ver->shortDesc()) << endl;
         }
 
         cout << endl;

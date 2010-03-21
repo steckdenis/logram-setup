@@ -197,7 +197,6 @@ class DatabasePackage : public Package
         
         QDateTime installedDate();  /*!< Date d'installation du paquet, indéfini si non-installé */
         int installedBy();          /*!< UID de l'utilisateur ayant installé le paquet */
-        int status();               /*!< Status du paquet, voir PACKAGE_STATE_* dans package.h */
         int used();                 /*!< Nombre de paquets installés qui dépendent de ce paquet */
         int index() const;          /*!< @internal */
         
@@ -216,9 +215,9 @@ class DatabasePackage : public Package
             
             @param idate : TimeStamp UNIX de la date d'installation
             @param iby : UID de l'utilisateur ayant installé le paquet
-            @param state : Status du paquet (installé, supprimé, autre)
+            @param flags : Flags du paquet à enregistrer
         */
-        void registerState(int idate, int iby, int state);
+        void registerState(int idate, int iby, int flags);
 
     signals:
         /**

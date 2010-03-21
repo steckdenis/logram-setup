@@ -176,7 +176,7 @@ void PackageMetaData::bindPackage(Package *pkg)
         loadData(fpkg->metadataContents());
         return;
     }
-    else if (pkg->status() == PACKAGE_STATE_INSTALLED && QFile::exists(fname))
+    else if ((pkg->flags() & PACKAGE_FLAG_INSTALLED) && QFile::exists(fname))
     {
         // Déjà téléchargé
         loadFile(fname, QByteArray(), false);

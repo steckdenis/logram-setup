@@ -300,7 +300,7 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
             depends[pkg->deps].append(depend);
 
             // Gérer les dépendances inverses
-            if (type == DEPEND_TYPE_DEPEND || type == DEPEND_TYPE_CONFLICT)
+            if (type == DEPEND_TYPE_DEPEND || type == DEPEND_TYPE_CONFLICT || DEPEND_TYPE_REPLACE)
             {
                 int tp = DEPEND_TYPE_CONFLICT;
 
@@ -631,7 +631,6 @@ bool DatabaseWriter::rebuild()
                                     pkg->repo = stringIndex(reponame.toUtf8(), index, false, false);
                                     pkg->idate = 0;
                                     pkg->iby = 0;
-                                    pkg->state = PACKAGE_STATE_NOTINSTALLED;
                                 }
                                 
                                 knownEntry *entry = new knownEntry;
@@ -742,10 +741,6 @@ bool DatabaseWriter::rebuild()
                         else if (key == "InstalledRepo")
                         {
                             pkg->repo = stringIndex(value, index, false, false);
-                        }
-                        else if (key == "State")
-                        {
-                            pkg->state = value.toInt();
                         }
                         else if (key == "InstalledBy")
                         {
@@ -871,7 +866,7 @@ bool DatabaseWriter::rebuild()
                                 }
                                 
                                 // Simplement créer une chaîne
-                                stringIndex(dep, index, false, true);
+                                stringIndex(name, index, false, true);
                                 
                                 if (!version.isNull())
                                 {

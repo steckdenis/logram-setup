@@ -97,13 +97,12 @@ QString DatabasePackage::tlzFileName()
     return d->waitingDest;
 }
 
-void DatabasePackage::registerState(int idate, int iby, int state)
+void DatabasePackage::registerState(int idate, int iby, int flags)
 {
     _Package *pkg = d->psd->package(d->index);
     pkg->idate = idate;
     pkg->iby = iby;
-    pkg->state = state;
-    pkg->flags |= (wanted() ? PACKAGE_FLAG_WANTED : 0);
+    pkg->flags = flags;
 }
 
 bool DatabasePackage::download()
@@ -383,7 +382,7 @@ void DatabasePackage::setFlags(int flags)
     QSettings *set = d->ps->installedPackagesList();
     
     // Enregistrer les nouveaux flags dans le fichier de sauvegarde
-    if (status() == PACKAGE_STATE_NOTINSTALLED)
+    if (!(this->flags() & (PACKAGE_FLAG_INSTALLED | PACKAGE_FLAG_REMOVED)))
     {
         // Paquet pas dans installed_packages.list, utiliser une sauvegarde annexe
         set->beginGroup(name() + "_" + version());
@@ -448,15 +447,6 @@ int DatabasePackage::installedBy()
     if (pkg == 0) return 0;
     
     return pkg->iby;
-}
-
-int DatabasePackage::status()
-{
-    _Package *pkg = d->psd->package(d->index);
-    
-    if (pkg == 0) return 0;
-    
-    return pkg->state;
 }
 
 int DatabasePackage::used()

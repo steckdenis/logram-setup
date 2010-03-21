@@ -470,14 +470,14 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
     // Si on veut supprimer le paquet et que le paquet n'est pas installé, quitter
     bool ok = false;
     
-    if (pkg.action == Solver::Remove && mpkg->state != PACKAGE_STATE_INSTALLED)
+    if (pkg.action == Solver::Remove && !(mpkg->flags & PACKAGE_FLAG_INSTALLED))
     {
         pkg.reallyWanted = false;
         ok = true;
     }
 
     // Si on veut installer un paquet déjà installé, quitter
-    if (pkg.action == Solver::Install && mpkg->state == PACKAGE_STATE_INSTALLED)
+    if (pkg.action == Solver::Install && mpkg->flags & PACKAGE_FLAG_INSTALLED)
     {
         pkg.reallyWanted = false;
         ok = true;
@@ -501,7 +501,7 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
             _Package *opkg = psd->package(otherVersion);
             
             // NOTE: le "&& opkg->name == mpkg->name" permet d'avoir deux paquets fournissant le même provide ensemble
-            if (opkg->state == PACKAGE_STATE_INSTALLED && opkg->version != mpkg->version && opkg->name == mpkg->name)
+            if ((opkg->flags & PACKAGE_FLAG_INSTALLED) && opkg->version != mpkg->version && opkg->name == mpkg->name)
             {
                 // Supprimer le paquet
                 Pkg pkgToAdd;
@@ -674,11 +674,14 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
         
         foreach(int i, mpkgsToAdd)
         {
-            p.index = i;
-            p.action = act;
-            p.reallyWanted = true;
-            
-            pkgsToAdd.append(p);
+            if (i != pkg.index)
+            {
+                p.index = i;
+                p.action = act;
+                p.reallyWanted = true;
+                
+                pkgsToAdd.append(p);
+            }
         }
         
         addPkgs(pkgsToAdd, lists);

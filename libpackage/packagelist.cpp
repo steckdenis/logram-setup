@@ -309,7 +309,7 @@ bool PackageList::process()
                 {
                     _Package *pp = dr->package(p);
                     
-                    if (pp->state == PACKAGE_STATE_INSTALLED)
+                    if (pp->flags & PACKAGE_FLAG_INSTALLED)
                     {
                         if (pkg->action() == Solver::Install)
                         {

@@ -302,7 +302,7 @@ QList<int> DatabaseReader::orphans()
         _Package *pkg = package(i);
         
         // Si le paquet est installé, n'est pas demandé par l'utilisateur, et a un used = 0, alors le prendre
-        if (pkg->state == PACKAGE_STATE_INSTALLED && (pkg->flags & PACKAGE_FLAG_WANTED) == 0 && pkg->used == 0)
+        if (pkg->flags & PACKAGE_FLAG_INSTALLED && (pkg->flags & PACKAGE_FLAG_WANTED) == 0 && pkg->used == 0)
         {
             rs.append(i);
         }
@@ -324,7 +324,7 @@ QList<UpgradeInfo> DatabaseReader::upgradePackages()
         _Package *pkg = package(i);
         
         // Voir si le paquet est installé
-        if (pkg != 0 && pkg->state == PACKAGE_STATE_INSTALLED && !(pkg->flags & PACKAGE_FLAG_DONTUPDATE))
+        if (pkg != 0 && pkg->flags & PACKAGE_FLAG_INSTALLED && !(pkg->flags & PACKAGE_FLAG_DONTUPDATE))
         {
             // Trouver les autres versions de ce paquet
             otherVersions = packagesOfString(0, pkg->name, DEPEND_OP_NOVERSION);

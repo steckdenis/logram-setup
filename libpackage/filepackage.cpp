@@ -457,11 +457,6 @@ int FilePackage::installedBy()
     return 0;
 }
 
-int FilePackage::status()
-{
-    return PACKAGE_STATE_NOTINSTALLED;
-}
-
 int FilePackage::used()
 {
     return 0;
@@ -482,12 +477,12 @@ QList<Depend *> FilePackage::depends()
     return d->depends;
 }
 
-void FilePackage::registerState(int idate, int iby, int state)
+void FilePackage::registerState(int idate, int iby, int flags)
 {
     // TODO: Pas possible d'ajouter un élément dans la BDD. Peut-être déclencher un update()
     (void) idate;
     (void) iby;
-    (void) state;
+    (void) flags;
 }
 
 QByteArray FilePackage::metadataContents()

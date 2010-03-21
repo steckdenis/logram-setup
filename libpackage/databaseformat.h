@@ -80,7 +80,6 @@ struct _Package
 
     int32_t idate;      /*!< Timestamp de l'installation */
     int32_t iby;        /*!< UID de l'utilisateur ayant installé le paquet */
-    int32_t state;      /*!< Status du paquet (PACKAGE_STATE) */
 };
 
 /**

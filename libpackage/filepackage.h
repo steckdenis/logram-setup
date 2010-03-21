@@ -92,7 +92,6 @@ class FilePackage : public Package
         
         QDateTime installedDate();
         int installedBy();
-        int status();
         int used();
         
         int downloadSize();
@@ -100,7 +99,7 @@ class FilePackage : public Package
 
         QList<Depend *> depends();
         
-        void registerState(int idate, int iby, int state);
+        void registerState(int idate, int iby, int flags);
         
         QByteArray metadataContents();  /*!< Contenu du fichier de métadonnées */
         QStringList files();            /*!< Liste des fichiers du paquet */

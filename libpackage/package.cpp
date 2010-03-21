@@ -184,6 +184,8 @@ void Package::processLineOut(QProcess *process, const QByteArray &line)
 
 void Package::processEnd()
 {
+    int flgs = 0;
+    
     if (d->processThread->error())
     {
         PackageError *err = new PackageError;
@@ -200,6 +202,9 @@ void Package::processEnd()
     
     if (action() == Solver::Install)
     {
+        flgs = (flags() | PACKAGE_FLAG_INSTALLED | (wanted() ? PACKAGE_FLAG_WANTED : 0))
+                      & ~PACKAGE_FLAG_REMOVED;
+                      
         set->beginGroup(name());
         set->setValue("Name", name());
         set->setValue("Version", version());
@@ -217,25 +222,25 @@ void Package::processEnd()
         set->setValue("InstallSize", installSize());
         set->setValue("MetadataHash", metadataHash().constData());
         set->setValue("PackageHash", packageHash().constData());
-        set->setValue("Flags", flags() | (wanted() ? PACKAGE_FLAG_WANTED : 0)); // Savoir si le paquet est voulu ou pas
+        set->setValue("Flags", flgs); 
 
         set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
         
         set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
         set->setValue("InstalledRepo", repo());
         set->setValue("InstalledBy", QString(getenv("UID")).toInt());
-        set->setValue("State", PACKAGE_STATE_INSTALLED);
         set->setValue("InstallRoot", d->ps->installRoot());
         set->endGroup();
 
         // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
         registerState(QDateTime::currentDateTime().toTime_t(), 
                       QString(getenv("UID")).toInt(),
-                      PACKAGE_STATE_INSTALLED);
+                      flgs);
     }
     else if (action() == Solver::Update)
     {
         Package *other = upgradePackage();
+        flgs = (other->flags() | PACKAGE_FLAG_INSTALLED) & ~PACKAGE_FLAG_REMOVED;
         
         set->beginGroup(name());
         set->setValue("Name", name());
@@ -254,38 +259,41 @@ void Package::processEnd()
         set->setValue("InstallSize", other->installSize());
         set->setValue("MetadataHash", other->metadataHash().constData());
         set->setValue("PackageHash", other->packageHash().constData());
-        set->setValue("Flags", other->flags());
+        set->setValue("Flags", flgs);
 
         set->setValue("ShortDesc", QString(other->shortDesc().toUtf8().toBase64()));
         
         set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
         set->setValue("InstalledRepo", other->repo());
         set->setValue("InstalledBy", QString(getenv("UID")).toInt());
-        set->setValue("State", PACKAGE_STATE_INSTALLED);
         set->setValue("InstallRoot", d->ps->installRoot());
         set->endGroup();
 
-        // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
-        registerState(QDateTime::currentDateTime().toTime_t(), 
-                      QString(getenv("UID")).toInt(),
-                      PACKAGE_STATE_NOTINSTALLED);
-        
-        // Également pour l'autre paquet
+        // Enregistrer l'état du nouveau paquet
         other->registerState(QDateTime::currentDateTime().toTime_t(), 
                              QString(getenv("UID")).toInt(),
-                             PACKAGE_STATE_INSTALLED);
+                             flgs);
+        
+        // Également pour l'ancien paquet
+        flgs = (flags() | PACKAGE_FLAG_REMOVED) & ~PACKAGE_FLAG_INSTALLED;
+        
+        registerState(QDateTime::currentDateTime().toTime_t(), 
+                      QString(getenv("UID")).toInt(),
+                      flgs);
     }
     else if (action() == Solver::Remove)
     {
         // Enregistrer le paquet comme supprimé
+        flgs = (flags() | PACKAGE_FLAG_REMOVED) & ~PACKAGE_FLAG_INSTALLED;
+        
         set->beginGroup(name());
-        set->setValue("State", PACKAGE_STATE_REMOVED);
+        set->setValue("Flags", flgs);
         set->endGroup();
         
         // Également dans la base de donnée binaire, avec l'heure et l'UID de celui qui a supprimé le paquet
         registerState(QDateTime::currentDateTime().toTime_t(), 
                       QString(getenv("UID")).toInt(),
-                      PACKAGE_STATE_REMOVED);
+                      flgs);
     }
     else if (action() == Solver::Purge)
     {
@@ -294,7 +302,7 @@ void Package::processEnd()
         
         registerState(0, 
                       0,
-                      PACKAGE_STATE_NOTINSTALLED);
+                      flags() & ~(PACKAGE_FLAG_INSTALLED | PACKAGE_FLAG_REMOVED));
     }
 
     // Supprimer le thread
