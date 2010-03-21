@@ -548,7 +548,7 @@ void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
             // Ajout de la dépendance inverse à supprimer
             Pkg p;
             
-            if (revdepPackage.count() != 0 && myVersions.count() == 1)
+            if (revdepPackage.count() != 0)
             {
                 p.index = revdepPackage.at(0);  // N'en contient qu'un
                 p.action = Solver::Remove;
