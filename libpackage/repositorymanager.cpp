@@ -539,6 +539,126 @@ bool RepositoryManager::includePackage(const QString &fileName)
         package_id = query.lastInsertId().toInt();
     }
     
+    // Liste des fichiers
+    QStringList fileParts;
+    
+    sql = "DELETE FROM packages_file WHERE package_id=%1";
+          
+    if (!query.exec(sql.arg(package_id)))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::QueryError;
+        err->info = query.lastQuery();
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    foreach (const QString &fileName, fpkg->files())
+    {
+        // fileName est par exemple usr/lib/terminfo/x/xterm+pcc2
+        // Découper ce nom de fichier suivant '/'
+        fileParts = fileName.split('/');
+        
+        // Explorer ces morceaux
+        QString dirPath;
+        int dirId = 0;
+        for (int i=0; i<fileParts.count(); ++i)
+        {
+            const QString &part = fileParts.at(i);
+            
+            if (i < fileParts.count() - 1)
+            {
+                // Dossier, vérifier s'il existe
+                sql = " SELECT id \
+                        FROM packages_directory \
+                        WHERE name='%1' AND directory_id=%2;";
+                
+                if (!query.exec(sql
+                        .arg(e(part))
+                        .arg(dirId)))
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::QueryError;
+                    err->info = query.lastQuery();
+                    
+                    d->ps->setLastError(err);
+                    
+                    return false;
+                }
+                
+                if (query.next())
+                {
+                    // Le dossier existe déjà, ok
+                    dirId = query.value(0).toInt();
+                }
+                else
+                {
+                    // Le dossier n'existe pas déjà, le créer
+                    sql = " INSERT INTO packages_directory \
+                            (directory_id, name, path) \
+                            VALUES (%1, '%2', '%3');";
+                    
+                    if (!query.exec(sql
+                            .arg(dirId)
+                            .arg(e(part))
+                            .arg(e(dirPath))))
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::QueryError;
+                        err->info = query.lastQuery();
+                        
+                        d->ps->setLastError(err);
+                        
+                        return false;
+                    }
+                    
+                    // Récupérer l'ID du dossier
+                    dirId = query.lastInsertId().toInt();
+                }
+                
+                // Ajouter cet élément au path du dossier
+                if (!dirPath.isEmpty())
+                {
+                    dirPath += '/';
+                }
+                
+                dirPath += part;
+            }
+            else
+            {
+                // Fichier, on sait que dirId pointe sur son dossier parent.
+                // Il faut juste créer ce fichier.
+                // En effet, on les a tous supprimés avant (pour éviter les 
+                // problèmes de mise à jour.
+                sql = " INSERT INTO packages_file \
+                        (package_id, directory_id, name, flags, arch_id, distribution_id) \
+                        VALUES (%1, %2, '%3', %4, %5, %6);";
+                
+                if (!query.exec(sql
+                        .arg(package_id)
+                        .arg(dirId)
+                        .arg(e(part))
+                        .arg(0)
+                        .arg(arch_id)
+                        .arg(distro_id))) /* TODO: flags, en les lisant depuis metadata.xml :
+                                           <file name="..."><flag name="backup" value="1" /></file>
+                                            + fichiers virtuels (pas dans le paquet mais avec un <file> dessus)
+                                  */
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::QueryError;
+                    err->info = query.lastQuery();
+                    
+                    d->ps->setLastError(err);
+                    
+                    return false;
+                }
+            }
+        }
+    }
+    
     // Chaînes
     QDomElement package = md->currentPackageElement();
     QDomElement el = package.firstChildElement();
@@ -888,6 +1008,12 @@ bool RepositoryManager::exp(const QStringList &distros)
                     );
                 }
             }
+            
+            // Explorer les fichiers, et les placer dans un fichier du format
+            // :usr
+            // :bin
+            // paquet|flags|paquet_bin
+            // ::
             
             // Sélectionner tous les paquets qu'il y a dedans
             sql = " SELECT \
