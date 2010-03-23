@@ -54,6 +54,7 @@ struct RepositoryManager::Private
     // Fonctions
     bool registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type, int changelog_id = 0);
     bool writeXZ(const QString &fileName, const QByteArray &data);
+    int exploreDirectory(int dirId, QByteArray &rs, int arch_id, int distro_id);
 };
 
 RepositoryManager::RepositoryManager(PackageSystem *ps) : QObject(ps)
@@ -198,6 +199,93 @@ bool RepositoryManager::Private::writeXZ(const QString &fileName, const QByteArr
     fl.close();
     
     return true;
+}
+
+int RepositoryManager::Private::exploreDirectory(int dirId, QByteArray &rs, int arch_id, int distro_id)
+{
+    QSqlQuery query;
+    QString sql;
+    
+    // Sous-dossiers
+    sql = " SELECT \
+            id, \
+            name \
+            FROM packages_directory \
+            WHERE directory_id=%1";
+    
+    if (!query.exec(sql.arg(dirId)))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::QueryError;
+        err->info = query.lastQuery();
+        
+        ps->setLastError(err);
+        
+        return -1;
+    }
+    
+    int num = 0;
+    
+    while (query.next())
+    {
+        // Commencer le dossier
+        QByteArray temp;
+        
+        temp += ':';
+        temp += query.value(1).toByteArray();
+        temp += '\n';
+        
+        // L'explorer
+        int m_num = exploreDirectory(query.value(0).toInt(), temp, arch_id, distro_id);
+        
+        if (m_num == -1)
+        {
+            return -1;
+        }
+        else if (m_num == 0)
+        {
+            // Pas de fichiers dans ce dossier, le sauter
+            continue;
+        }
+        
+        // Le dossier contient des fichiers, ok
+        num += m_num;
+        rs += temp;
+        rs += "::\n";
+    }
+    
+    // Fichiers
+    sql = " SELECT \
+            file.name AS f_name, \
+            file.flags AS f_flags, \
+            package.name AS p_name \
+            FROM packages_file file \
+            LEFT JOIN packages_package package ON package.id=file.package_id \
+            WHERE file.directory_id=%1 AND package.distribution_id=%2 AND package.arch_id=%3";
+    
+    if (!query.exec(sql
+            .arg(dirId)
+            .arg(distro_id)
+            .arg(arch_id)))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::QueryError;
+        err->info = query.lastQuery();
+        
+        ps->setLastError(err);
+        
+        return -1;
+    }
+    
+    while (query.next())
+    {
+        num++;
+        rs += query.value(2).toByteArray() + '|';
+        rs += query.value(1).toString().toUtf8() + '|';
+        rs += query.value(0).toByteArray() + '\n';
+    }
+    
+    return num;
 }
 
 bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type, int changelog_id)
@@ -633,16 +721,14 @@ bool RepositoryManager::includePackage(const QString &fileName)
                 // En effet, on les a tous supprimés avant (pour éviter les 
                 // problèmes de mise à jour.
                 sql = " INSERT INTO packages_file \
-                        (package_id, directory_id, name, flags, arch_id, distribution_id) \
-                        VALUES (%1, %2, '%3', %4, %5, %6);";
+                        (package_id, directory_id, name, flags) \
+                        VALUES (%1, %2, '%3', %4);";
                 
                 if (!query.exec(sql
                         .arg(package_id)
                         .arg(dirId)
                         .arg(e(part))
-                        .arg(0)
-                        .arg(arch_id)
-                        .arg(distro_id))) /* TODO: flags, en les lisant depuis metadata.xml :
+                        .arg(0))) /* TODO: flags, en les lisant depuis metadata.xml :
                                            <file name="..."><flag name="backup" value="1" /></file>
                                             + fichiers virtuels (pas dans le paquet mais avec un <file> dessus)
                                   */
@@ -890,13 +976,14 @@ bool RepositoryManager::exp(const QStringList &distros)
     // QByteArrays nécessaires à l'écriture
     QList<QByteArray> streams;
     
-    for (int i=0; i<=langs.count(); ++i)
+    for (int i=0; i<=langs.count()+1; ++i)
     {
         // un tour en plus, parce qu'on a aussi la liste des paquets à écrire
         streams.append(QByteArray());
     }
     
     QByteArray &pkgstream = streams[langs.count()];
+    QByteArray &filestream = streams[langs.count()+1];
     
     // Initialiser GPGME
     bool useGpg = d->set->value("Sign/Enabled", true).toBool();
@@ -972,7 +1059,7 @@ bool RepositoryManager::exp(const QStringList &distros)
             arch_id = query.value(0).toInt();
             
             // Obtenir les traductions
-            QHash<int, QString> trads;
+            QHash<int, QByteArray> trads;
             
             sql = " SELECT \
                     package_id, \
@@ -1004,7 +1091,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                 {
                     trads.insert(
                         LANGPKGKEY(query.value(0).toInt(), lindex),
-                        query.value(2).toString()
+                        query.value(2).toByteArray()
                     );
                 }
             }
@@ -1014,6 +1101,16 @@ bool RepositoryManager::exp(const QStringList &distros)
             // :bin
             // paquet|flags|paquet_bin
             // ::
+            // paquet|flags|fichier_dans_usr_pas_dans_bin
+            // ::
+            //
+            // Simple : explorer tous les dossiers qui ont comme parent 0, tous
+            // les fichiers qui ont comme parent 0. Explorer les sous-dossiers
+            // et sous-fichiers, récursivement.
+            if (d->exploreDirectory(0, filestream, arch_id, distro_id) == -1)
+            {
+                return false;
+            }
             
             // Sélectionner tous les paquets qu'il y a dedans
             sql = " SELECT \
@@ -1059,37 +1156,37 @@ bool RepositoryManager::exp(const QStringList &distros)
             
             // Explorer les paquets
             bool first = true;
-            QString rs, pkname, pkprimlang, trad;
+            QByteArray rs, pkname, pkprimlang, trad;
             int i, key, pkid, primlangid;
             
             while (query.next())
             {
-                pkname = query.value(0).toString();
-                pkprimlang = query.value(5).toString();
+                pkname = query.value(0).toByteArray();
+                pkprimlang = query.value(5).toByteArray();
                 pkid = query.value(18).toInt();
                 primlangid = -1;
                 
                 rs = '[' + pkname + "]\n";
                 rs += "Name=" + pkname + '\n';
-                rs += "Version=" + query.value(1).toString() + '\n';
-                rs += "Source=" + query.value(2).toString() + '\n';
-                rs += "UpstreamUrl=" + query.value(16).toString() + '\n';
-                rs += "Maintainer=" + query.value(3).toString() + '\n';
-                rs += "Section=" + query.value(17).toString() + '\n';
+                rs += "Version=" + query.value(1).toByteArray() + '\n';
+                rs += "Source=" + query.value(2).toByteArray() + '\n';
+                rs += "UpstreamUrl=" + query.value(16).toByteArray() + '\n';
+                rs += "Maintainer=" + query.value(3).toByteArray() + '\n';
+                rs += "Section=" + query.value(17).toByteArray() + '\n';
                 rs += "Distribution=" + distro + '\n';
-                rs += "License=" + query.value(4).toString() + '\n';
+                rs += "License=" + query.value(4).toByteArray() + '\n';
                 rs += "PrimaryLang=" + pkprimlang + '\n';
-                rs += "Flags=" + query.value(6).toString() + '\n';
-                rs += "Depends=" + query.value(7).toString() + '\n';
-                rs += "Provides=" + query.value(8).toString() + '\n';
-                rs += "Replaces=" + query.value(9).toString() + '\n';
-                rs += "Suggest=" + query.value(10).toString() + '\n';
-                rs += "Conflicts=" + query.value(11).toString() + '\n';
-                rs += "DownloadSize=" + query.value(12).toString() + '\n';
-                rs += "InstallSize=" + query.value(13).toString() + '\n';
+                rs += "Flags=" + query.value(6).toByteArray() + '\n';
+                rs += "Depends=" + query.value(7).toByteArray() + '\n';
+                rs += "Provides=" + query.value(8).toByteArray() + '\n';
+                rs += "Replaces=" + query.value(9).toByteArray() + '\n';
+                rs += "Suggest=" + query.value(10).toByteArray() + '\n';
+                rs += "Conflicts=" + query.value(11).toByteArray() + '\n';
+                rs += "DownloadSize=" + query.value(12).toByteArray() + '\n';
+                rs += "InstallSize=" + query.value(13).toByteArray() + '\n';
                 rs += "Arch=" + arch + '\n';
-                rs += "PackageHash=" + query.value(14).toString() + '\n';
-                rs += "MetadataHash=" + query.value(15).toString() + '\n';
+                rs += "PackageHash=" + query.value(14).toByteArray() + '\n';
+                rs += "MetadataHash=" + query.value(15).toByteArray() + '\n';
                 
                 if (!first)
                 {
@@ -1140,10 +1237,14 @@ bool RepositoryManager::exp(const QStringList &distros)
                     // Traductions
                     fileName = filePath + "/translate." + langs.at(i) + ".xz";
                 }
-                else
+                else if (i == langs.count())
                 {
                     // Liste des paquets
                     fileName = filePath + "/packages.xz";
+                }
+                else
+                {
+                    fileName = filePath + "/files.xz";
                 }
                 
                 // Créer le dossier s'il le fait
