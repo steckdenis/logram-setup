@@ -389,6 +389,34 @@ _Package *DatabaseReader::package(int index)
     return (_Package *)pkg;
 }
 
+_File *DatabaseReader::file(int index)
+{
+    if (index >= *(int *)m_files || index < 0)
+    {
+        return 0;
+    }
+    
+    uchar *fl = m_files;
+    fl += 8;        // Nombre de fichiers + Index de la racine
+    
+    fl += (index * sizeof(_File));
+    
+    return (_File *)fl;
+}
+
+const char *DatabaseReader::fileString(int ptr)
+{
+    // Chaîne dont on a le pointeur. Elle se trouve
+    // simplement à fichiers*sizeof(_File)+8+ptr
+    const char *rs = (const char *)m_files;
+    
+    rs += 8;
+    rs += (*(int *)m_files)*sizeof(_File);
+    rs += ptr;
+    
+    return rs;
+}
+
 const char *DatabaseReader::string(bool translate, int index)
 {
     uchar *map;

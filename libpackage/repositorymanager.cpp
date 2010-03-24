@@ -617,8 +617,14 @@ bool RepositoryManager::includePackage(const QString &fileName)
         return false;
     }
     
-    foreach (const QString &fileName, fpkg->files())
+    QList<PackageFile *> pkgfiles = fpkg->files();
+    
+    for (int j=0; j<pkgfiles.count(); ++j)
     {
+        PackageFile *file = pkgfiles.at(j);
+        QString fileName = file->path();
+        delete file;    // TODO: flags du fichier
+        
         // fileName est par exemple usr/lib/terminfo/x/xterm+pcc2
         // Découper ce nom de fichier suivant '/'
         fileParts = fileName.split('/');

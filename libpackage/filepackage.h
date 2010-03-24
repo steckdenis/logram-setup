@@ -102,7 +102,7 @@ class FilePackage : public Package
         void registerState(int idate, int iby, int flags);
         
         QByteArray metadataContents();  /*!< Contenu du fichier de métadonnées */
-        QStringList files();            /*!< Liste des fichiers du paquet */
+        QList<PackageFile *> files();            /*!< Liste des fichiers du paquet */
 
     signals:
         void downloaded(bool success);

@@ -1196,6 +1196,7 @@ bool DatabaseWriter::rebuild()
         file.parent_dir = -1;
         file.next_file_dir = -1;
         file.next_file_pkg = -1;
+        file.first_child = -1;
         file.itime = 0;
         
         if (mfile->next)
@@ -1211,6 +1212,11 @@ bool DatabaseWriter::rebuild()
         if (mfile->parent)
         {
             file.parent_dir = mfile->parent->index;
+        }
+        
+        if (mfile->first_child)
+        {
+            file.first_child = mfile->first_child->index;
         }
         
         // Écriture

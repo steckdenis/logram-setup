@@ -349,6 +349,42 @@ QByteArray DatabasePackage::metadataHash()
     PKG_QBA_ATTR(false, mtd_hash)
 }
 
+QList<PackageFile *> DatabasePackage::files()
+{
+    QList<PackageFile *> rs;
+    _Package *pkg = d->psd->package(d->index);
+    
+    if (pkg == 0) return rs;
+    
+    _File *file = d->psd->file(pkg->first_file);
+    PackageFile *pf;
+    
+    QString path;
+    
+    while (file)
+    {
+        // Trouver le chemin du fichier. Ça se fait simplement en remontant dans l'arborescence
+        path = QString(d->psd->fileString(file->name_ptr));
+        
+        _File *dir = d->psd->file(file->parent_dir);
+        
+        while (dir)
+        {
+            path = QString(d->psd->fileString(dir->name_ptr)) + '/' + path;
+            
+            dir = d->psd->file(dir->parent_dir);
+        }
+        
+        // Ajouter l'enregistrement
+        pf = new PackageFile(path, file->flags);
+        rs.append(pf);
+        
+        file = d->psd->file(file->next_file_pkg);
+    }
+    
+    return rs;
+}
+
 QString DatabasePackage::url(UrlType type)
 {
     // Construire la partie premières_lettres/nom

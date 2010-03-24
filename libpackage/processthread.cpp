@@ -386,7 +386,7 @@ void ProcessThread::run()
             }
             
             // Obtenir la liste des fichiers
-            if (!d->ps->filesOfPackage(d->pkg->name(), sfiles))
+            /*if (!d->ps->filesOfPackage(d->pkg->name(), sfiles))
             {
                 d->error = true;
                 return;
@@ -402,7 +402,7 @@ void ProcessThread::run()
                 }
                 
                 QFile::remove(file);
-            }
+            }*/
             
             // Supprimer l'enregistrement en base de donnée
             QFile::remove(dir + "/metadata.xml");
@@ -427,7 +427,7 @@ void ProcessThread::run()
             }
             
             // On a la liste des fichiers du nouveau paquet (files), prendre celle de l'ancien (sfiles)
-            if (!d->ps->filesOfPackage(d->pkg->name(), sfiles))
+            /*if (!d->ps->filesOfPackage(d->pkg->name(), sfiles))
             {
                 d->error = true;
                 return;
@@ -451,7 +451,7 @@ void ProcessThread::run()
                 {
                     QFile::remove(file);
                 }
-            }
+            }*/
             
             // Supprimer l'enregistrement en base de donnée
             dir = d->ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + d->pkg->name() + '_' + d->pkg->version();

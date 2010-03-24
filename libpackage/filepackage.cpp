@@ -372,9 +372,16 @@ Package::Origin FilePackage::origin()
     return Package::File;
 }
 
-QStringList FilePackage::files()
+QList<PackageFile *> FilePackage::files()
 {
-    return d->fileList;
+    QList<PackageFile *> rs;
+    
+    foreach (const QString &file, d->fileList)
+    {
+        rs.append(new PackageFile(file, 0));    // TODO: Gérer les flags directement depuis le XML
+    }
+    
+    return rs;
 }
 
 QString FilePackage::name()

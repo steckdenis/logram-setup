@@ -40,6 +40,7 @@ class Communication;
 class DatabaseReader;
 
 class Depend;
+class PackageFile;
 class DatabasePackage;
 
 class Package : public QObject
@@ -102,6 +103,7 @@ class Package : public QObject
         virtual int installSize() = 0;
         
         virtual QList<Depend *> depends() = 0;
+        virtual QList<PackageFile *> files() = 0;
         virtual QDateTime installedDate() = 0;
         virtual int installedBy() = 0;
         
@@ -148,6 +150,20 @@ class Depend
         virtual QString version() = 0;
         virtual int8_t type() = 0;
         virtual int8_t op() = 0;
+};
+
+class PackageFile
+{
+    public:
+        PackageFile(const QString &path, int flags);
+        ~PackageFile();
+        
+        QString path() const;
+        int flags() const;
+        
+    private:
+        struct Private;
+        Private *d;
 };
 
 } /* Namespace */

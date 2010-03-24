@@ -45,6 +45,7 @@ struct ManagedDownload;
 
 struct _Depend;
 class DatabaseDepend;
+class PackageFile;
 
 /**
     @brief Paquet dans la base de donnée binaire
@@ -205,6 +206,7 @@ class DatabasePackage : public Package
 
         QList<Package *> versions();    /*!< Liste de Package donc chacun est une version différente de ce paquet */
         QList<Depend *> depends();      /*!< Liste de Depend représentant les dépendances de ce paquet */
+        QList<PackageFile *> files();   /*!< Liste des fichiers du paquet */
         
         /**
             @brief Enregistrer l'état du paquet

@@ -325,6 +325,21 @@ class DatabaseReader
         const char *string(bool translate, int index);
         
         /**
+            @brief Nom d'un fichier dont on a le pointeur
+            
+            Retourne un pointeur sur la chaîne dans le fichier @b files, 
+            généralement le nom du fichier, mais pourrait être autre-chose
+            à l'avenir.
+            
+            @note Cette fonction a une complexité O(1)
+            
+            @param ptr pointeur sur la chaîne comme on trouve dans une
+                       structure _File.
+            @return pointeur sur le premier caractère de la chaîne, terminée par 0.
+        */
+        const char *fileString(int ptr);
+        
+        /**
             @brief Paquet ayant un certain index
             
             Retourne un pointeur sur le paquet ayant l'index @p index.
@@ -341,6 +356,23 @@ class DatabaseReader
             @return pointeur sur la structure _Package du paquet.
         */
         _Package *package(int index);
+        
+        /**
+            @brief Fichier ayant un certain index
+            
+            Retourne le fichier dont l'index est @p index
+            
+            @note Cette fonction a une complexité de O(1). Le fichier
+                  se trouve dans un fichier mappé en mémoire, toute
+                  modification de la structure sera répercutée sur
+                  le disque lorsque le constructeur de databasereader
+                  sera appelé.
+                  
+            @param index index du fichier
+            @return pointeur sur la structure _File du fichier.
+        */    
+        _File *file(int index);
+        
         _Depend *depend(int32_t ptr);   /*!< Renvoie la dépendance pointée par @p ptr dans le fichier @b depends */
         
     private:

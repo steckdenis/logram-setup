@@ -163,7 +163,6 @@ class PackageSystem : public QObject
         QList<Repository> repositories() const;
         bool repository(const QString &name, Repository &rs) const;
         QSettings *installedPackagesList() const;
-        bool filesOfPackage(const QString &packageName, QStringList &rs);
 
         // Options
         bool installSuggests() const;

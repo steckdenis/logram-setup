@@ -60,6 +60,38 @@ struct Package::Private
 };
 
 /*************************************
+******* File *************************
+*************************************/
+
+struct PackageFile::Private
+{
+    QString path;
+    int flags;
+};
+
+PackageFile::PackageFile(const QString &path, int flags)
+{
+    d = new Private;
+    d->path = path;
+    d->flags = flags;
+}
+
+PackageFile::~PackageFile()
+{
+    delete d;
+}
+
+QString PackageFile::path() const
+{
+    return d->path;
+}
+
+int PackageFile::flags() const
+{
+    return d->flags;
+}
+
+/*************************************
 ******* Package **********************
 *************************************/
 

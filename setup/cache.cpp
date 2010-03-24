@@ -23,6 +23,7 @@
 #include "app.h"
 
 #include <logram/databasepackage.h>
+#include <logram/filepackage.h>
 #include <logram/packagemetadata.h>
 
 #include <QString>
@@ -77,19 +78,104 @@ void App::find(const QString &pattern)
     }
 }
 
+static void outFlags(int flags)
+{
+    // Sortir les flags
+    #define PACKAGE_FILE_INSTALLED              0b00000001
+    #define PACKAGE_FILE_DIR                    0b00000010
+    #define PACKAGE_FILE_DONTREMOVE             0b00000100
+    #define PACKAGE_FILE_DONTPURGE              0b00001000
+    #define PACKAGE_FILE_BACKUP                 0b00010000
+    #define PACKAGE_FILE_OVERWRITE              0b00100000
+    
+    #define OUT_FLAG(flag_name, letter) \
+        cout << (flags & flag_name ? letter : '-');
+        
+    cout << "\033[1m\033[33m";  // Fonction utilisée seulement en couleur, donc ok
+    
+    OUT_FLAG(PACKAGE_FILE_DIR, 'd')
+    OUT_FLAG(PACKAGE_FILE_INSTALLED, 'i')
+    OUT_FLAG(PACKAGE_FILE_DONTREMOVE, 'r')
+    OUT_FLAG(PACKAGE_FILE_DONTPURGE, 'p')
+    OUT_FLAG(PACKAGE_FILE_BACKUP, 'b')
+    OUT_FLAG(PACKAGE_FILE_OVERWRITE, 'o')
+    
+    cout << "\033[0m";
+        
+    cout << ' ';
+}
+
 void App::showFiles(const QString &packageName)
 {
-    QStringList files;
+    QByteArray name, version;
+    ps->parseVersion(packageName.toUtf8(), name, version);
     
-    if (!ps->filesOfPackage(packageName, files))
+    Package *pkg;
+    
+    if (!ps->package(name, (version.isNull() ? QString() : version), pkg))
     {
         error();
         return;
     }
-
-    foreach(const QString &file, files)
+    
+    cout << COLOR(tr("Liste des fichiers installés par %1 :").arg(packageName), "32") << endl;
+    cout << qPrintable(tr("Légende : d: dossier, i: installé, r: ne pas supprimer, p: ne pas purger, b: sauvegarder, o: effacer même si modifications locales")) << endl << endl;
+    
+    QString path;
+    QStringList curParts, parts;
+    int level;
+    
+    foreach (PackageFile *file, pkg->files())
     {
-        cout << qPrintable(file) << endl;
+        path = file->path();
+        
+        if (!colored)
+        {
+            // Affichage "script-friendly" quand pas de couleurs
+            cout << '/' << qPrintable(path) << endl;
+            continue;
+        }
+        
+        parts = path.split('/');
+        
+        // Trouver le nombre de parts communes entre curParts et parts.
+        level = 0;
+        for (int i=0; i<qMin(curParts.count()-1, parts.count()-1); ++i)
+        {
+            if (parts.at(i) == curParts.at(i))
+            {
+                level++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        // Sortir toutes les autres parties, avec indentation
+        int level2 = level;
+        for (int i=level; i<parts.count(); ++i)
+        {
+            outFlags(i != parts.count()-1 ? PACKAGE_FILE_DIR : file->flags());
+            
+            for (int j=0; j<level2; ++j)
+            {
+                cout << "  ";
+            }
+            if (i == parts.count()-1)
+            {
+                // Fichier
+                cout << "  " << qPrintable(parts.at(i)) << endl;
+            }
+            else
+            {
+                // Dossier
+                cout << COLOR("* " + parts.at(i), "34") << endl;
+            }
+            level2++;
+        }
+        
+        curParts = parts;
     }
 }
 
