@@ -347,8 +347,8 @@ class DatabaseReader
         bool mapFile(const QString &file, QFile **ptr, uchar **map);
 
     private:
-        QFile *f_packages, *f_strings, *f_translate, *f_depends, *f_strpackages;
-        uchar *m_packages, *m_strings, *m_translate, *m_depends, *m_strpackages;
+        QFile *f_packages, *f_strings, *f_translate, *f_depends, *f_strpackages, *f_files;
+        uchar *m_packages, *m_strings, *m_translate, *m_depends, *m_strpackages, *m_files;
 
         PackageSystem *ps;
 };

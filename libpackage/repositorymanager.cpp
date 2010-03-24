@@ -24,7 +24,6 @@
 #include "packagesystem.h"
 #include "filepackage.h"
 #include "packagemetadata.h"
-#include "repopwdcommunication.h"
 
 #include <QSettings>
 #include <QRegExp>
@@ -123,33 +122,6 @@ static QString e(const QString &str)
     rs.replace('%', "\\%");
     
     return rs;
-}
-
-static gpgme_error_t passphrase_cb(void *hook, const char *uid_hint, const char *passphrase_info, int prev_was_bad, int fd)
-{
-    RepositoryManager::Private *d = (RepositoryManager::Private *)hook;
-    
-    // Lancer une communication système
-    // NOTE: Dans un certain futur, les paramètres voidés en fin de procédure pourraient servir
-    //       à envoyer une communication plus précise.
-    RepoCommunication *comm = new RepoCommunication(d->ps);
-    
-    qDebug() << "ici";
-    
-    d->ps->sendCommunication(0, comm);
-    
-    QString pass = comm->processData();
-    
-    write(fd, pass.toUtf8().constData(), pass.length());
-    write(fd, "\n", 1);
-    
-    delete comm;
-    
-    return 0;
-    
-    (void) uid_hint;
-    (void) passphrase_info;
-    (void) prev_was_bad;
 }
 
 bool RepositoryManager::Private::writeXZ(const QString &fileName, const QByteArray &data)
@@ -1004,8 +976,6 @@ bool RepositoryManager::exp(const QStringList &distros)
         gpgme_keylist_mode_t mode = gpgme_get_keylist_mode(ctx);
         mode |= GPGME_KEYLIST_MODE_LOCAL;
         gpgme_set_keylist_mode(ctx, mode);
-        
-        gpgme_set_passphrase_cb(ctx, passphrase_cb, d);
     
         if (gpgme_get_key(ctx, key_id, &gpgme_key, 1) != GPG_ERR_NO_ERROR)
         {

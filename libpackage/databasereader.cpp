@@ -49,6 +49,7 @@ bool DatabaseReader::init()
     if (!mapFile("translate", &f_translate, &m_translate)) return false;
     if (!mapFile("depends", &f_depends, &m_depends)) return false;
     if (!mapFile("strpackages", &f_strpackages, &m_strpackages)) return false;
+    if (!mapFile("files", &f_files, &m_files)) return false;
     
     return true;
 }
