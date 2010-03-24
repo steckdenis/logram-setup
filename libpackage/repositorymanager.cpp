@@ -283,7 +283,7 @@ int RepositoryManager::Private::exploreDirectory(int dirId, QByteArray &rs, int 
         int flags = query.value(1).toInt();
         
         rs += query.value(2).toByteArray() + '|';
-        rs += QByteArray((const char *)&flags, sizeof(int)) + '|';
+        rs += QByteArray((const char *)&flags, sizeof(int));
         rs += query.value(0).toByteArray() + '\n';
     }
     
