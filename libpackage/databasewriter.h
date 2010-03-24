@@ -41,6 +41,8 @@ class QNetworkAccessManager;
 class QNetworkReply;
 class QIODevice;
 
+struct FileFile;
+
 namespace Logram {
     
 class PackageSystem;
@@ -94,6 +96,13 @@ class DatabaseWriter : public QObject
             @param _parent PackageSystem parent
         */
         DatabaseWriter(PackageSystem *_parent);
+        
+        enum FileDataType
+        {
+            PackagesList,
+            Translations,
+            FilesList
+        };
 
         /**
             @brief Télécharge un élément du dépôt
@@ -103,7 +112,7 @@ class DatabaseWriter : public QObject
             @param isTranslations true si c'est un fichier translate qui est téléchargé
             @param gpgCheck true s'il faut vérifier avec GPG la signature des fichiers téléchargés
         */
-        bool download(const QString &source, const QString &url, Repository::Type type, bool isTranslations, bool gpgCheck);
+        bool download(const QString &source, const QString &url, Repository::Type type, FileDataType datatype, bool gpgCheck);
         
         /**
             @brief Reconstruit la base de donnée binaire
@@ -123,19 +132,23 @@ class DatabaseWriter : public QObject
         QList<_String *> translate;
         QHash<QByteArray, int> stringsIndexes;
         QHash<QByteArray, int> translateIndexes;
+        QHash<QByteArray, int> fileStringsPtrs;
         QList<QByteArray> stringsStrings;
         QList<QByteArray> translateStrings;
+        QList<QByteArray> fileStrings;
 
-        int strPtr, transPtr;
+        int strPtr, transPtr, fileStrPtr;
 
         QList<QList<_StrPackage *> > strPackages;
         QList<QList<_Depend *> > depends;
         
         QHash<QByteArray, QList<knownEntry *> > knownPackages; // (nom, [(version, _Package)])
         QList<knownEntry *> knownEntries;
+        QList<FileFile *> knownFiles;
 
         void handleDl(QIODevice *device);
         int stringIndex(const QByteArray &str, int pkg, bool isTr, bool create = true);
+        int fileStringIndex(const QByteArray &str);
         void setDepends(_Package *pkg, const QByteArray &str, int type);
         void revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op, int type);
         

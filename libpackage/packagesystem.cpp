@@ -251,27 +251,41 @@ bool Logram::PackageSystem::update()
     {
         Enrg *enrg = enrgs.at(i);
 
-        QString u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/packages.xz";
+        QString path = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch;
+        QString u = path + "/packages.xz";
         
-        if (!sendProgress(progress, i*2, u))
+        if (!sendProgress(progress, i*3, u))
         {
             return false;
         }
         
-        if (!db->download(enrg->sourceName, u, enrg->type, false, enrg->gpgCheck))
+        if (!db->download(enrg->sourceName, u, enrg->type, DatabaseWriter::PackagesList, enrg->gpgCheck))
         {
             return false;
         }
 
         // Traductions
-        u = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch + "/translate." + lang + ".xz";
+        u = path + "/translate." + lang + ".xz";
         
-        if (!sendProgress(progress, i*2+1, u))
+        if (!sendProgress(progress, i*3+1, u))
         {
             return false;
         }
         
-        if (!db->download(enrg->sourceName, u, enrg->type, true, enrg->gpgCheck))
+        if (!db->download(enrg->sourceName, u, enrg->type, DatabaseWriter::Translations, enrg->gpgCheck))
+        {
+            return false;
+        }
+        
+        // Liste des fichiers
+        u = path + "/files.xz";
+        
+        if (!sendProgress(progress, i*3+2, u))
+        {
+            return false;
+        }
+        
+        if (!db->download(enrg->sourceName, u, enrg->type, DatabaseWriter::FilesList, enrg->gpgCheck))
         {
             return false;
         }

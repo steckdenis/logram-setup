@@ -43,18 +43,33 @@
 using namespace std;
 using namespace Logram;
 
+struct FileFile
+{
+    int index;          // index dans knownFiles
+    
+    FileFile *parent;   // Dossier parent (un dossier est un fichier)
+    int package_index;  // Index du parent, inutilisé si dossier
+    int name_index;     // Index du nom
+    int flags;          // Flags (voir PACKAGE_FILE_FLAGS)
+    
+    FileFile *next;         // Prochain fichier du dossier
+    FileFile *package_next; // Prochain fichier du paquet
+    
+    FileFile *first_child;  // Premier enfant
+};
+
 DatabaseWriter::DatabaseWriter(PackageSystem *_parent)
 {
     parent = _parent;
 }
 
-bool DatabaseWriter::download(const QString &source, const QString &url, Repository::Type type, bool isTranslations, bool gpgCheck)
+bool DatabaseWriter::download(const QString &source, const QString &url, Repository::Type type, FileDataType datatype, bool gpgCheck)
 {
     // Calculer le nom du fichier
     QString arch = url.section('/', -2, -2);
     QString distro = url.section('/', -3, -3);
 
-    QString fname = QString("%1.%2.%3.%4.%5.xz").arg(source).arg(distro).arg(arch).arg(isTranslations).arg(type);
+    QString fname = QString("%1.%2.%3.%4.%5.xz").arg(source).arg(distro).arg(arch).arg(datatype).arg(type);
     QString fileName(parent->varRoot() + "/var/cache/lgrpkg/download/");
 
     fileName += fname;
@@ -172,6 +187,25 @@ bool DatabaseWriter::verifySign(const QString &signFileName, const QByteArray &s
     return true;
 }
 
+int DatabaseWriter::fileStringIndex(const QByteArray &str)
+{
+    int rs = fileStringsPtrs.value(str, -1);
+    
+    if (rs != -1)
+    {
+        return rs;
+    }
+    
+    // Pas trouvé, ajouter
+    rs = fileStrPtr;
+    fileStringsPtrs.insert(str, rs);
+    fileStrings.append(str);
+    
+    fileStrPtr += str.length() + 1;
+    
+    return rs;
+}
+
 int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool create)
 {
     int rs;
@@ -180,6 +214,7 @@ int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool 
     
     if (isTr)
     {
+        // TODO: Optimisation (voir fileStringIndex)
         if (translateIndexes.contains(str))
         {
             rs = translateIndexes.value(str);
@@ -342,16 +377,17 @@ void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteAr
 bool DatabaseWriter::rebuild()
 {
     // On utilise 2 passes (d'abord créer les paquets, puis les manipuler)
+    FileFile *currentDir = 0, *firstFile = 0;
     int pass;
-    int numFile;
     QList<char *> buffers;
     char *buffer;
 
     strPtr = 0;
     transPtr = 0;
+    fileStrPtr = 0;
 
     // Première étape
-    int progress = parent->startProgress(Progress::UpdateDatabase, 6);
+    int progress = parent->startProgress(Progress::UpdateDatabase, 7);
     
     if (!parent->sendProgress(progress, 0, tr("Lecture des listes")))
     {
@@ -360,29 +396,27 @@ bool DatabaseWriter::rebuild()
 
     // On lit également la liste des fichiers installés
     QString ipackagelist = parent->varRoot() + "/var/cache/lgrpkg/db/installed_packages.list";
-    bool hasInstalledPackages = false;
+    int installedPackagesListIndex = -1;
     
     if (QFile::exists(ipackagelist))
     {
+        installedPackagesListIndex = cacheFiles.count();
         cacheFiles.append(ipackagelist);
-        hasInstalledPackages = true;
     }
     
     for (pass=0; pass<2; ++pass)
     {
-        numFile = 0;
         for (int cfIndex=0; cfIndex < cacheFiles.count(); ++cfIndex)
         {
             const QString &file = cacheFiles.at(cfIndex);
-            numFile++;
             
             QString fname = file;
             QStringList parts;
             QString reponame, distroname, arch, method;
             int strDistro, strRepo;
-            bool istr;
+            FileDataType datatype = PackagesList;
 
-            bool isInstalledPackages = (numFile == cacheFiles.count() && hasInstalledPackages);
+            bool isInstalledPackages = (cfIndex == installedPackagesListIndex);
             
             if (!isInstalledPackages)
             {
@@ -414,19 +448,15 @@ bool DatabaseWriter::rebuild()
                 reponame = parts.at(0);
                 distroname = parts.at(1);
                 arch = parts.at(2);
-                istr = (parts.at(3) == "1");
+                datatype = (FileDataType)parts.at(3).toInt();
                 method = parts.at(4);
-            }
-            else
-            {
-                istr = false;
             }
 
             // Pas de passe 1 pour translate
-            if (pass == 0 && istr) continue;
+            if (pass == 0 && datatype != PackagesList) continue;
             
             // Préparation pour les traductions
-            if (istr)
+            if (datatype != PackagesList)
             {
                 strDistro = stringsIndexes.value(distroname.toAscii());
                 strRepo = stringsIndexes.value(reponame.toAscii());
@@ -479,11 +509,12 @@ bool DatabaseWriter::rebuild()
                 
                 if (!signvalid)
                 {
-                    PackageError *err = new PackageError;
+                    /*PackageError *err = new PackageError;
                     err->type = PackageError::SignatureError;
                     err->info = file;
                     
-                    //parent->setLastError(err);
+                    parent->setLastError(err);
+                    */
                     
                     return false;
                 }
@@ -500,7 +531,7 @@ bool DatabaseWriter::rebuild()
                 linelength = 0;
                 indexofequal = 0;
                 
-                if (!istr)
+                if (datatype == PackagesList)
                 {
                     // Trouver le égal, s'il existe
                     while (fpos < flength && *buffer != '\n')
@@ -521,7 +552,7 @@ bool DatabaseWriter::rebuild()
                         fpos++;
                     }
                 }
-                else
+                else if (datatype == Translations)
                 {
                     // Trouver le :, s'il existe
                     while (fpos < flength && *buffer != '\n')
@@ -533,6 +564,16 @@ bool DatabaseWriter::rebuild()
                             indexofequal = linelength;
                         }
                             
+                        linelength++;
+                        buffer++;
+                        fpos++;
+                    }
+                }
+                else if (datatype == FilesList)
+                {
+                    // Avancer jusqu'à la fin de la ligne, on gère tout plus tard
+                    while (fpos < flength && *buffer != '\n')
+                    {
                         linelength++;
                         buffer++;
                         fpos++;
@@ -557,6 +598,7 @@ bool DatabaseWriter::rebuild()
                         pkg = new _Package;
                         pkg->flags = 0;
                         pkg->used = 0;
+                        pkg->first_file = 0;
                         name = QByteArray::fromRawData(cline + 1, linelength - 2); // -2 : sauter le ] et le [
                         
                         // Initialisations
@@ -763,7 +805,7 @@ bool DatabaseWriter::rebuild()
                 else if (pass == 1)
                 {
                     // Si ce sont les traductions, savoir à quel paquet elles appartiennent
-                    if (istr)
+                    if (datatype == Translations)
                     {
                         // Chaque ligne est de la forme "package:description courte"
                         QByteArray name = QByteArray::fromRawData(cline, indexofequal);
@@ -783,6 +825,188 @@ bool DatabaseWriter::rebuild()
                                 
                                 break;
                             }
+                        }
+                    }
+                    else if (datatype == FilesList)
+                    {
+                        /*
+                        FileFile *currentDir = 0, *firstFile = 0;
+                        
+                        struct FileFile
+                        {
+                            int index;          // index dans knownFiles
+
+                            FileFile *parent;   // Dossier parent (un dossier est un fichier)
+                            int package_index;  // Index du parent, inutilisé si dossier
+                            int name_index;     // Index du nom
+                            int flags;          // Flags (voir PACKAGE_FILE_FLAGS)
+                            
+                            FileFile *next;         // Prochain fichier du dossier
+                            FileFile *package_next; // Prochain fichier du paquet
+                            
+                            FileFile *first_child;  // Premier enfant
+                        };
+                        */
+                        
+                        if (cline[0] == ':')
+                        {
+                            if (cline[1] == ':')
+                            {
+                                // On remonte d'un dossier
+                                currentDir = currentDir->parent;
+                            }
+                            else
+                            {
+                                // On entre dans un dossier, cline[1:-] contient son nom
+                                // Explorer les enfants de currentDir à la recherche d'un qui
+                                // a le bon nom (bon index). Si pas trouvé, en ajouter un.
+                                cline++;
+                                int name_index = fileStringIndex(QByteArray::fromRawData(cline, linelength-1));
+                                
+                                FileFile *file = 0;
+                                
+                                if (currentDir)
+                                {
+                                    file = currentDir->first_child;
+                                }
+                                
+                                while (file != 0 && 
+                                    (file->name_index != name_index || file->flags != PACKAGE_FILE_DIR)
+                                    ) // NOTE: != et pas !( & ), car un dossier n'a que ça comme flags
+                                {
+                                    file = file->next;
+                                }
+                                
+                                if (file != 0)
+                                {
+                                    // On a un dossier du bon nom
+                                    // L'utiliser comme dossier courant
+                                    currentDir = file;
+                                }
+                                else
+                                {
+                                    // file == 0, on n'a rien trouvé, créer un dossier
+                                    // du bon nom
+                                    file = new FileFile;
+                                    
+                                    file->index = knownFiles.count();
+                                    file->parent = currentDir;
+                                    file->package_index = 0;
+                                    file->name_index = name_index;
+                                    file->flags = PACKAGE_FILE_DIR;
+                                    file->package_next = 0;
+                                    file->first_child = 0;
+                                    
+                                    // L'insérer en premier, son suivant est l'actuel premier
+                                    if (currentDir)
+                                    {
+                                        file->next = currentDir->first_child;
+                                        currentDir->first_child = file;
+                                    }
+                                    else
+                                    {
+                                        file->next = firstFile;
+                                        firstFile = file;
+                                    }
+                                    
+                                    // Enregistrer dans knownFiles
+                                    knownFiles.append(file);
+                                    
+                                    // Le passer comme dossier courant
+                                    currentDir = file;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // On a un fichier.
+                            // D'abord, récupérer des informations :
+                            // package_name|flags|file_name.
+                            // cline pointe sur le début de cette ligne
+                            const char *pkname = cline;
+                            int length = 0, flags = 0;
+                            
+                            // Avancer jusqu'au |
+                            while (*cline != '|')
+                            {
+                                cline++;
+                                length++;
+                                linelength--;
+                            }
+                            
+                            pkgname = QByteArray::fromRawData(pkname, length);
+                            
+                            // Les flags sont 4 octets, simplement sauter le |
+                            cline++;
+                            flags = *(int *)cline;
+                            cline += 4;
+                            
+                            // Tout le reste est le nom, pas de | à sauter
+                            linelength -= (1 + sizeof(int)); // Garder la bonne taille
+                            
+                            name = QByteArray::fromRawData(cline, linelength);
+                            
+                            // Obtenir une position de chaîne pour le nom
+                            int name_index = fileStringIndex(name);
+                            
+                            // Trouver le paquet du bon nom dans le bon dépôt
+                            const QList<knownEntry *> &entries = knownPackages.value(pkgname);
+
+                            index = -1;
+                            foreach(knownEntry *entry, entries)
+                            {
+                                if (entry->pkg->distribution == strDistro && entry->pkg->repo == strRepo)
+                                {
+                                    index = entry->index;
+                                    break;
+                                }
+                            }
+                            
+                            if (index == -1)
+                            {
+                                // Oh ? Un fichier avec un mauvais paquet ?
+                                qDebug() << "Index = -1 found for file" << name << ", package" << pkgname;
+                                continue;
+                            }
+                            
+                            // Explorer les fichiers de currentDir, pour voir si un fichier
+                            // du même nom et même paquet existe déjà. Si c'est le cas, 
+                            // remplacer ses flags (en effet, les flags utilisateurs sont
+                            // lus après ceux de l'empaqueteur, et ont la priorité dessus).
+                            FileFile *file = new FileFile;
+                            
+                            file->index = knownFiles.count();
+                            file->parent = currentDir;
+                            file->package_index = index;
+                            file->name_index = name_index;
+                            file->flags = flags;
+                            file->first_child = 0;
+                            file->package_next = 0;
+                            
+                            // Ajouter à la liste des fichiers connus
+                            knownFiles.append(file);
+                            
+                            // Le relier à l'arbre des fichiers
+                            if (currentDir)
+                            {
+                                file->next = currentDir->first_child;
+                                currentDir->first_child = file;
+                            }
+                            else
+                            {
+                                file->next = firstFile;
+                                firstFile = file;
+                            }
+                            
+                            // Le relier à la liste des fichiers de son paquet
+                            _Package *pkg = packages.at(index);
+                            
+                            if (pkg->first_file != 0)
+                            {
+                                file->package_next = knownFiles.at(pkg->first_file);
+                            }
+                            
+                            pkg->first_file = file->index;
                         }
                     }
                     else
@@ -881,13 +1105,11 @@ bool DatabaseWriter::rebuild()
     }
 
     // Supprimer les fichiers temporaires
-    numFile = 0;
-    
-    foreach (const QString &file, cacheFiles)
+    for (int cfIndex=0; cfIndex < cacheFiles.count(); ++cfIndex)
     {
-        numFile++;
+        const QString &file = cacheFiles.at(cfIndex);
 
-        if (numFile != cacheFiles.count())
+        if (cfIndex != installedPackagesListIndex /* TODO: && != filesListIndex */)
         {
             QString fname = file;
             fname.replace(".xz", "");
@@ -939,10 +1161,72 @@ bool DatabaseWriter::rebuild()
         
         delete pkg;
     }
+    
+    // Liste des fichiers
+    fl.close();
+    if (!parent->sendProgress(progress, 2, tr("Enregistrement de la liste des fichiers")))
+    {
+        return false;
+    }
+    
+    fl.setFileName(parent->varRoot() + "/var/cache/lgrpkg/db/files");
+    
+    if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
+        
+        parent->setLastError(err);
+        return false;
+    }
+    
+    length = knownFiles.count(); // Nombre de fichiers dans la base
+    fl.write((const char *)&length, sizeof(int32_t));
+    length = firstFile->index;   // Index du premier enfant du dossier racine
+    fl.write((const char *)&length, sizeof(int32_t));
+    
+    _File file;
+    
+    foreach (FileFile *mfile, knownFiles)
+    {
+        file.package = mfile->package_index;
+        file.flags = mfile->flags;
+        file.name_ptr = mfile->name_index;
+        file.parent_dir = -1;
+        file.next_file_dir = -1;
+        file.next_file_pkg = -1;
+        file.itime = 0;
+        
+        if (mfile->next)
+        {
+            file.next_file_dir = mfile->next->index;
+        }
+        
+        if (mfile->package_next)
+        {
+            file.next_file_pkg = mfile->package_next->index;
+        }
+        
+        if (mfile->parent)
+        {
+            file.parent_dir = mfile->parent->index;
+        }
+        
+        // Écriture
+        fl.write((const char *)&file, sizeof(_File));
+    }
+    
+    for (int i=0; i<fileStrings.count(); ++i)
+    {
+        const QByteArray &str = fileStrings.at(i);
+        fl.write(str.constData(), str.length());
+        fl.write(&zero, 1);
+    }
 
     // Chaînes de caractères
     fl.close();
-    if (!parent->sendProgress(progress, 2, tr("Écriture des chaînes de caractère")))
+    if (!parent->sendProgress(progress, 3, tr("Écriture des chaînes de caractère")))
     {
         return false;
     }
@@ -980,7 +1264,7 @@ bool DatabaseWriter::rebuild()
 
     // Chaînes traduites
     fl.close();
-    if (!parent->sendProgress(progress, 3, tr("Écriture des traductions")))
+    if (!parent->sendProgress(progress, 4, tr("Écriture des traductions")))
     {
         return false;
     }
@@ -1018,7 +1302,7 @@ bool DatabaseWriter::rebuild()
 
     // Dépendances
     fl.close();
-    if (!parent->sendProgress(progress, 4, tr("Enregistrement des dépendances")))
+    if (!parent->sendProgress(progress, 5, tr("Enregistrement des dépendances")))
     {
         return false;
     }
@@ -1067,7 +1351,7 @@ bool DatabaseWriter::rebuild()
 
     // StrPackages
     fl.close();
-    if (!parent->sendProgress(progress, 5, tr("Enregistrement des données supplémentaires")))
+    if (!parent->sendProgress(progress, 6, tr("Enregistrement des données supplémentaires")))
     {
         return false;
     }

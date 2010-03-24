@@ -181,4 +181,12 @@ class Depend
 #define PACKAGE_FLAG_INSTALLED              0b01000000000
 #define PACKAGE_FLAG_REMOVED                0b10000000000
 
+#define PACKAGE_FILE_INSTALLED              0b00000001
+#define PACKAGE_FILE_DIR                    0b00000010
+#define PACKAGE_FILE_DONTREMOVE             0b00000100
+#define PACKAGE_FILE_DONTPURGE              0b00001000
+#define PACKAGE_FILE_BACKUP                 0b00010000
+#define PACKAGE_FILE_OVERWRITE              0b00100000
+
+
 #endif

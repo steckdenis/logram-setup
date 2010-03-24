@@ -77,9 +77,21 @@ struct _Package
     int32_t isize;      /*!< Taille de l'installation */
     int32_t dsize;      /*!< Taille du téléchargement */
     int32_t used;       /*!< Nombre de paquets installés qui dépendent de ce paquet */
+    int32_t first_file; /*!< Premier des fichiers installés par ce paquet */
 
     int32_t idate;      /*!< Timestamp de l'installation */
     int32_t iby;        /*!< UID de l'utilisateur ayant installé le paquet */
+};
+
+struct _File
+{
+    int32_t parent_dir; /*!< Index du _File représentant le dossier parent, -1 si racine */
+    int32_t package;    /*!< Index du paquet contenant le fichier, ignoré si dossier */
+    int32_t flags;      /*!< Flags du fichier (voir PACKAGE_FILE_* dans package.h) */
+    int32_t name_ptr;   /*!< Pointeur du nom de ce fichier dans la zone de donnée de @b files */
+    int32_t next_file_dir;  /*!< Index du fichier suivant appartenant au même dossier, ou -1 */
+    int32_t next_file_pkg;  /*!< Index du fichier suivant appartenant au même paquet, ou -1 */
+    int32_t itime;      /*!< Timestamp UNIX de la date d'installation */
 };
 
 /**
