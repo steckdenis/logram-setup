@@ -623,7 +623,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
     {
         PackageFile *file = pkgfiles.at(j);
         QString fileName = file->path();
-        delete file;    // TODO: flags du fichier
+        int flags = file->flags();
         
         // fileName est par exemple usr/lib/terminfo/x/xterm+pcc2
         // Découper ce nom de fichier suivant '/'
@@ -708,10 +708,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
                         .arg(package_id)
                         .arg(dirId)
                         .arg(e(part))
-                        .arg(0))) /* TODO: flags, en les lisant depuis metadata.xml :
-                                           <file name="..."><flag name="backup" value="1" /></file>
-                                            + fichiers virtuels (pas dans le paquet mais avec un <file> dessus)
-                                  */
+                        .arg(flags)))
                 {
                     PackageError *err = new PackageError;
                     err->type = PackageError::QueryError;
