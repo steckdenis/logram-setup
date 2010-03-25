@@ -62,7 +62,7 @@ struct FilePackage::Private
     QString arch;
     QString primaryLang;
     
-    QStringList fileList;
+    QList<PackageFile *> files;
     QByteArray metadataContents;
     
     QByteArray packageHash, metadataHash;
@@ -141,7 +141,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         if (path.startsWith("data/"))
         {
             path.remove(0, 5);
-            d->fileList.append(path);
+            d->files.append(new PackageFile(path, 0));
         }
         
         // Savoir quel type de fichier on a lu
@@ -248,6 +248,72 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                 {
                     d->shortDesc = PackageMetaData::stringOfKey(el, d->primaryLang);
                 }
+                else if (el.tagName() == "file")
+                {
+                    // Un fichier (pour la liste des fichiers du paquet, pas la création, qui utilise <files>)
+                    QString path = el.attribute("path");
+                    path.remove(0, 1);  // Retirer le premier /
+                    int flags = 0;
+                    PackageFile *file = 0;
+                    
+                    // Trouver le PackageFile correspondant, ou le créer si nécessaire
+                    for (int i=0; i<d->files.count(); ++i)
+                    {
+                        PackageFile *fl = d->files.at(i);
+                        
+                        if (fl->path() == path)
+                        {
+                            file = fl;
+                            break;
+                        }
+                    }
+                    
+                    if (file == 0)
+                    {
+                        // On n'a pas trouvé le fichier
+                        flags |= PACKAGE_FILE_VIRTUAL;
+                        file = new PackageFile(path, flags);
+                        d->files.append(file);
+                        
+                        // NOTE: On fait tout ceci avant de parser les éléments <flag>
+                        // pour leur permettre de désactiver le flag virtual, au cas où.
+                    }
+                    
+                    // Explorer ses enfants pour voir si ce fichier a des flags
+                    QDomElement flag = el.firstChildElement("flag");
+                    
+                    while (!flag.isNull())
+                    {
+                        QString name = flag.attribute("name");
+                        bool enable = (flag.attribute("value", "1") == "1");
+                        
+                        #define APPLY_FLAG(flag_name) \
+                            if (enable) flags |= flag_name; \
+                            else flags &= ~flag_name;
+                        
+                        if (name == "backup")
+                        {
+                            APPLY_FLAG(PACKAGE_FILE_BACKUP)
+                        }
+                        else if (name == "dontremove")
+                        {
+                            APPLY_FLAG(PACKAGE_FILE_DONTREMOVE)
+                        }
+                        else if (name == "dontpurge")
+                        {
+                            APPLY_FLAG(PACKAGE_FILE_DONTPURGE)
+                        }
+                        else if (name == "overwrite")
+                        {
+                            APPLY_FLAG(PACKAGE_FILE_OVERWRITE)
+                        }
+                        
+                        flag = flag.nextSiblingElement("flag");
+                    }
+                    
+                    // Placer les flags dans l'enregistrement
+                    file->setFlags(flags);
+                }
                 
                 el = el.nextSiblingElement();
             }
@@ -296,18 +362,23 @@ FilePackage::FilePackage(const FilePackage &other) : Package(other)
     d->arch = other.d->arch;
     d->primaryLang = other.d->primaryLang;
     
-    d->fileList = other.d->fileList;
     d->metadataContents = other.d->metadataContents;
     
     foreach(Depend *dep, other.d->depends)
     {
         d->depends.append(new FileDepend(dep->type(), dep->op(), dep->name(), dep->version()));
     }
+    
+    foreach(PackageFile *file, other.d->files)
+    {
+        d->files.append(new PackageFile(file->path(), file->flags()));
+    }
 }
 
 FilePackage::~FilePackage()
 {
     qDeleteAll(d->depends);
+    qDeleteAll(d->files);
     
     delete d;
 }
@@ -374,14 +445,7 @@ Package::Origin FilePackage::origin()
 
 QList<PackageFile *> FilePackage::files()
 {
-    QList<PackageFile *> rs;
-    
-    foreach (const QString &file, d->fileList)
-    {
-        rs.append(new PackageFile(file, 0));    // TODO: Gérer les flags directement depuis le XML
-    }
-    
-    return rs;
+    return d->files;
 }
 
 QString FilePackage::name()

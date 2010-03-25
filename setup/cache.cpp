@@ -99,6 +99,7 @@ static void outFlags(int flags)
     OUT_FLAG(PACKAGE_FILE_DONTPURGE, 'p')
     OUT_FLAG(PACKAGE_FILE_BACKUP, 'b')
     OUT_FLAG(PACKAGE_FILE_OVERWRITE, 'o')
+    OUT_FLAG(PACKAGE_FILE_VIRTUAL, 'v')
     
     cout << "\033[0m";
         
@@ -119,7 +120,7 @@ void App::showFiles(const QString &packageName)
     }
     
     cout << COLOR(tr("Liste des fichiers installés par %1 :").arg(packageName), "32") << endl;
-    cout << qPrintable(tr("Légende : d: dossier, i: installé, r: ne pas supprimer, p: ne pas purger, b: sauvegarder, o: effacer même si modifications locales")) << endl << endl;
+    cout << qPrintable(tr("Légende : d: dossier, i: installé, r: ne pas supprimer, p: ne pas purger, b: sauvegarder, o: effacer même si modifications locales, v: virtuel")) << endl << endl;
     
     QString path;
     QStringList curParts, parts;

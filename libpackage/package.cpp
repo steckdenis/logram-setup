@@ -81,6 +81,16 @@ PackageFile::~PackageFile()
     delete d;
 }
 
+void PackageFile::setFlags(int flags)
+{
+    d->flags = flags;
+}
+
+void PackageFile::setPath(const QString &path)
+{
+    d->path = path;
+}
+
 QString PackageFile::path() const
 {
     return d->path;

@@ -158,6 +158,9 @@ class PackageFile
         PackageFile(const QString &path, int flags);
         ~PackageFile();
         
+        void setFlags(int flags);
+        void setPath(const QString &path);
+        
         QString path() const;
         int flags() const;
         
@@ -203,6 +206,7 @@ class PackageFile
 #define PACKAGE_FILE_DONTPURGE              0b00001000
 #define PACKAGE_FILE_BACKUP                 0b00010000
 #define PACKAGE_FILE_OVERWRITE              0b00100000
+#define PACKAGE_FILE_VIRTUAL                0b01000000
 
 
 #endif
