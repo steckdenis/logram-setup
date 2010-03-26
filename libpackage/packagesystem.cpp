@@ -337,7 +337,7 @@ QList<Logram::DatabasePackage *> Logram::PackageSystem::orphans()
     return rs;
 }
 
-bool Logram::PackageSystem::packagesByName(const QString &regex, QList<int> &rs)
+bool Logram::PackageSystem::packagesByName(const QRegExp &regex, QList<int> &rs)
 {
     return d->dr->packagesByName(regex, rs);
 }

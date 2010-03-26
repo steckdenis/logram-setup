@@ -27,6 +27,7 @@
 #include <QString>
 #include <QList>
 #include <QStringList>
+#include <QRegExp>
 
 class QNetworkReply;
 class QSettings;
@@ -141,7 +142,7 @@ class PackageSystem : public QObject
         void loadConfig();
 
         // API publique
-        bool packagesByName(const QString &regex, QList<int> &rs);
+        bool packagesByName(const QRegExp &regex, QList<int> &rs);
         QList<int> packagesByVString(const QString &name, const QString &version, int op);
         bool package(const QString &name, const QString &version, Package* &rs);
         DatabasePackage *package(int id);

@@ -45,8 +45,21 @@ void App::update()
 void App::find(const QString &pattern)
 {
     QList<int> pkgs;
+    QRegExp exp;
     
-    if (!ps->packagesByName("*" + pattern + "*", pkgs))
+    exp.setCaseSensitivity(Qt::CaseSensitive);
+    exp.setPatternSyntax(QRegExp::Wildcard);
+    
+    if (pattern.contains('*'))
+    {
+        exp.setPattern(pattern);
+    }
+    else
+    {
+        exp.setPattern("*" + pattern + "*");
+    }
+    
+    if (!ps->packagesByName(exp, pkgs))
     {
         error();
         return;

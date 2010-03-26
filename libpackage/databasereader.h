@@ -32,6 +32,7 @@
 #include <QList>
 #include <QEventLoop>
 #include <QHash>
+#include <QRegExp>
 
 #include "databaseformat.h"
 
@@ -187,11 +188,11 @@ class DatabaseReader
             @warning Cette fonction a une complexité de O(n) où n est le nombre
                      de paquets dans la distribution.
                      
-            @param regex Regex de type shell, c'est à dire avec des *, ?, etc.
+            @param regex Regex
             @param rs Référence sur une liste d'entiers qui recevra le résultat
             @return true si tout s'est bien passé, false sinon
         */
-        bool packagesByName(const QString &regex, QList<int> &rs);
+        bool packagesByName(const QRegExp &regex, QList<int> &rs);
         
         /**
             @brief Liste des paquets correspondant à une chaîne de version

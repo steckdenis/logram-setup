@@ -94,13 +94,12 @@ DatabaseReader::~DatabaseReader()
     }
 }
 
-bool DatabaseReader::packagesByName(const QString &regex, QList<int> &rs)
+bool DatabaseReader::packagesByName(const QRegExp &regex, QList<int> &rs)
 {
     // Explorer le contenu de packages à la recherche d'un paquet dont le nom est bon
     rs = QList<int>();
     QString pkgname;
-    
-    QRegExp exp(regex, Qt::CaseSensitive, QRegExp::Wildcard);
+
     int32_t count = *(int32_t *)m_packages;     // Nombre de paquets
 
     // Explorer les paquets
@@ -109,7 +108,7 @@ bool DatabaseReader::packagesByName(const QString &regex, QList<int> &rs)
         pkgname = QString(string(false, package(i)->name));
         
         // Voir si ça correspond à la regex
-        if (exp.exactMatch(pkgname))
+        if (regex.exactMatch(pkgname))
         {
             // On ajoute le paquet comme résultat
             rs.append(i);
