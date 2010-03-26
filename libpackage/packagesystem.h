@@ -39,6 +39,7 @@ class DatabaseReader;
 class Package;
 class Solver;
 class Communication;
+class PackageFile;
 
 struct ManagedDownload
 {
@@ -144,6 +145,7 @@ class PackageSystem : public QObject
         QList<int> packagesByVString(const QString &name, const QString &version, int op);
         bool package(const QString &name, const QString &version, Package* &rs);
         DatabasePackage *package(int id);
+        PackageFile *file(const QString &name);
         int packages();
         bool update();
         QList<DatabasePackage *> upgradePackages();

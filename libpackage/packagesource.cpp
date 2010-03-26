@@ -171,7 +171,7 @@ bool PackageSource::build()
     return true;
 }
 
-struct PackageFile
+struct _PackageFile
 {
     QString from;
     QString to;
@@ -343,9 +343,9 @@ bool PackageSource::binaries()
             }
         }
         
-        // Créer la liste des PackageFiles permettant de créer l'archive
-        QVector<PackageFile> packageFiles;
-        PackageFile pf;
+        // Créer la liste des _PackageFiles permettant de créer l'archive
+        QVector<_PackageFile> packageFiles;
+        _PackageFile pf;
         
         foreach (const QString &fname, okFiles)
         {
@@ -412,7 +412,7 @@ bool PackageSource::binaries()
         
         for (int i=0; i<packageFiles.count(); ++i)
         {
-            const PackageFile &pf = packageFiles.at(i);
+            const _PackageFile &pf = packageFiles.at(i);
             
             if (!d->ps->sendProgress(mp, i, pf.to))
             {

@@ -64,6 +64,7 @@ class App : public QCoreApplication
         void autoremove();
         void add(const QStringList &packages);
         void showFiles(const QString &packageName);
+        void infoFile(const QString &path);
         void tag(const QString &packageName, const QString &tag);
         
         // Gestion des sources

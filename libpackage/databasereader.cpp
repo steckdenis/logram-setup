@@ -23,6 +23,7 @@
 #include "packagesystem.h"
 #include "databasereader.h"
 #include "package.h"
+#include "databasepackage.h"
 
 #include <QFile>
 #include <QRegExp>
@@ -203,6 +204,69 @@ bool DatabaseReader::package(const QString &name, const QString &version, int &r
     
     ps->setLastError(err);
     return false;
+}
+
+PackageFile *DatabaseReader::file(const QString &name)
+{
+    QStringList parts = name.split('/');
+    uchar *ptr = m_files;
+    int index = 0, curPart = 0;
+    
+    // Trouver l'index du dossier racine
+    ptr += 4;
+    index = *(int32_t *)ptr;
+    
+    // Explorer les fichiers
+    _File *fl = file(index);
+    
+    while (fl)
+    {
+        QString fileName(fileString(fl->name_ptr));
+        
+        if (fileName == parts.at(curPart))
+        {
+            // Nom correct. Si c'est un dossier, entrer dedans
+            if (fl->flags & PACKAGE_FILE_DIR && curPart != parts.count() - 1)
+            {
+                // Dossier et pas dernière partie ==> ok, tout va bien
+                curPart++;
+                fl = file(fl->first_child);
+            }
+            else if (!(fl->flags & PACKAGE_FILE_DIR) && curPart == parts.count() - 1)
+            {
+                // Fichier, et dernière partie ==> ok, tout va bien
+                return file(fl, new DatabasePackage(fl->package, ps, this), true);
+            }
+            else
+            {
+                // On a un dossier et l'utilisateur veut un fichier, ou l'inverse ==> pas bien du tout
+                return 0;
+            }
+        }
+        
+        // Passer au suivant
+        fl = file(fl->next_file_dir);
+    }
+    
+    return 0;
+}
+
+PackageFile *DatabaseReader::file(_File *fl, Package *pkg, bool bindedpackage)
+{
+    if (fl == 0) return 0;
+    
+    // Trouver le chemin
+    _File *dir = file(fl->parent_dir);
+    QString path(fileString(fl->name_ptr));
+    
+    while (dir)
+    {
+        path = QString(fileString(dir->name_ptr)) + '/' + path;
+        
+        dir = file(dir->parent_dir);
+    }
+    
+    return new PackageFile(path, fl->flags, pkg, bindedpackage);
 }
 
 QList<_Depend *> DatabaseReader::depends(int pkgIndex)

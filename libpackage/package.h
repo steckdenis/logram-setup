@@ -155,7 +155,7 @@ class Depend
 class PackageFile
 {
     public:
-        PackageFile(const QString &path, int flags);
+        PackageFile(const QString &path, int flags, Package *pkg, bool bindedpackage = false);
         ~PackageFile();
         
         void setFlags(int flags);
@@ -163,6 +163,7 @@ class PackageFile
         
         QString path() const;
         int flags() const;
+        Package *package() const;
         
     private:
         struct Private;

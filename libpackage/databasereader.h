@@ -43,6 +43,8 @@ namespace Logram
 {
     
 class PackageSystem;
+class PackageFile;
+class Package;
 
 /**
     @brief Informations sur une mise à jour
@@ -220,6 +222,35 @@ class DatabaseReader
             @return Liste des paquets qui correspondent
         */
         QList<int> packagesByVString(const QString &name, const QString &version, int op);
+        
+        /**
+            @brief Retourne le fichier correspondant au nom name
+            
+            Retourne le PackageFile pour le fichier @p name.
+            
+            @note Cette fonction a une complexité de O(n) où n est le nombre
+                  d'éléments dans path, séparés par / .
+                  
+            @param name nom du fichier à récupérer, sans le premier / .
+            @return PackageFile correspondant au nom
+        */
+        PackageFile *file(const QString &name);
+        
+        /**
+            @brief Crée un PackageFile pour file
+            
+            Retourne un PackageFile correspondant au fichier @p fl
+            
+            @note Cette fonction a une complexité de O(n) où n est le nombre
+                  de dossiers parents du fichier.
+                  
+            @param fl _File représentant le fichier en base de donnée
+            @param pkg paquet de ce fichier, si voulu (0 si pas utilisé)
+            @param bindedpackage true si la suppression du PackageFile doit
+                   entraîner la suppression de pkg.
+            @return le PackageFile du fichier @p fl
+        */
+        PackageFile *file(_File *fl, Package *pkg, bool bindedpackage);
         
         /**
             @brief Liste des dépendances d'un paquet

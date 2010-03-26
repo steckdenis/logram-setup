@@ -394,6 +394,11 @@ DatabasePackage *Logram::PackageSystem::package(int id)
     return new DatabasePackage(id, this, d->dr);
 }
 
+PackageFile *Logram::PackageSystem::file(const QString &name)
+{
+    return d->dr->file(name);
+}
+
 Solver *Logram::PackageSystem::newSolver()
 {
     return new Solver(this, d->dr);

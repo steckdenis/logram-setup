@@ -245,6 +245,12 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         showFiles(args.at(2));
     }
+    else if (cmd == "file")
+    {
+        CHECK_ARGS(!= 3)
+        
+        infoFile(args.at(2));
+    }
     else if (cmd == "tag")
     {
         CHECK_ARGS(!= 4)
@@ -414,6 +420,10 @@ void App::help()
             "    update             Met à jour la base de donnée des paquets\n"
             "    add <packages>     Ajoute des paquets (préfixés de \"-\" pour les supprimer)\n"
             "    files <pkg>        Affiche la liste des fichiers installés par <pkg>\n"
+            "    file <path|regex>  Affiche des informations sur le fichier <path>,\n"
+            "                       s'il commence par \"/\". Sinon, <path> est considéré\n"
+            "                       comme une expression régulière permettant de trouver\n"
+            "                       la liste des fichiers correspondant à ce motif.\n"
             "    upgrade            Mise à jour des paquets. Lancez update avant.\n"
             "    autoremove         Supprimer automatiquement les paquets orphelins.\n"
             "    tag <pkg> <tag>    Tag les paquets correspondants à <pkg> (p>=v, etc) avec\n"

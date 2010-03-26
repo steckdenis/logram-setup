@@ -106,6 +106,69 @@ static void outFlags(int flags)
     cout << ' ';
 }
 
+static void displayFile(PackageFile *file, bool colored)
+{
+    // Affichage de la sorte : «<jaune>---l--b</jaune> <bleu>/usr/share/truc/</bleu>chose 
+    //                          appartient à <bleu>paquet</bleu>~<jaune>version</jaune>
+    
+    if (colored)
+    {
+        outFlags(file->flags());
+    }
+    
+    // Afficher le chemin en couleur
+    cout << COLOR(file->path(), "32");
+    
+    if (file->package() == 0 || !file->package()->isValid())
+    {
+        cout << endl;
+        return;
+    }
+    
+    // Afficher «appartient à»
+    if (colored)
+    {
+        cout << qPrintable(App::tr(" appartient à "));
+    }
+    else
+    {
+        // Plus facilement lisible d'un script
+        cout << ':';
+    }
+    
+    // Afficher le paquet en couleur
+    cout << COLOR(file->package()->name(), "34");
+    
+    // Afficher la version du paquet
+    cout << '~' << COLOR(file->package()->version(), "33");
+    
+    // Si le paquet est installé, afficher «(installé)» en rouge
+    if (file->package()->flags() & PACKAGE_FLAG_INSTALLED)
+    {
+        cout << COLOR(App::tr(" (installé)"), "31");
+    }
+    
+    // Fini
+    cout << endl;
+}
+
+void App::infoFile(const QString &path)
+{
+    if (path.startsWith('/'))
+    {
+        QString pth(path);
+        pth.remove(0, 1);
+        
+        PackageFile *file = ps->file(pth);
+        
+        displayFile(file, colored);
+    }
+    else
+    {
+        // path = une expression régulière
+    }
+}
+
 void App::showFiles(const QString &packageName)
 {
     QByteArray name, version;

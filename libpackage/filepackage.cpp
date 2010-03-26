@@ -141,7 +141,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         if (path.startsWith("data/"))
         {
             path.remove(0, 5);
-            d->files.append(new PackageFile(path, 0));
+            d->files.append(new PackageFile(path, 0, this));
         }
         
         // Savoir quel type de fichier on a lu
@@ -272,7 +272,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     {
                         // On n'a pas trouvé le fichier
                         flags |= PACKAGE_FILE_VIRTUAL;
-                        file = new PackageFile(path, flags);
+                        file = new PackageFile(path, flags, this);
                         d->files.append(file);
                         
                         // NOTE: On fait tout ceci avant de parser les éléments <flag>
@@ -371,7 +371,7 @@ FilePackage::FilePackage(const FilePackage &other) : Package(other)
     
     foreach(PackageFile *file, other.d->files)
     {
-        d->files.append(new PackageFile(file->path(), file->flags()));
+        d->files.append(new PackageFile(file->path(), file->flags(), this));
     }
 }
 

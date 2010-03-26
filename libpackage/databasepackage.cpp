@@ -366,17 +366,7 @@ QList<PackageFile *> DatabasePackage::files()
         // Trouver le chemin du fichier. Ça se fait simplement en remontant dans l'arborescence
         path = QString(d->psd->fileString(file->name_ptr));
         
-        _File *dir = d->psd->file(file->parent_dir);
-        
-        while (dir)
-        {
-            path = QString(d->psd->fileString(dir->name_ptr)) + '/' + path;
-            
-            dir = d->psd->file(dir->parent_dir);
-        }
-        
-        // Ajouter l'enregistrement
-        pf = new PackageFile(path, file->flags);
+        pf = d->psd->file(file, this, false);
         rs.append(pf);
         
         file = d->psd->file(file->next_file_pkg);
