@@ -205,6 +205,26 @@ bool DatabaseReader::package(const QString &name, const QString &version, int &r
     return false;
 }
 
+QList<PackageFile *> DatabaseReader::files(const QRegExp &regex)
+{
+    QList<PackageFile *> rs;
+    
+    int count = *(int32_t *)m_files;
+    
+    // Explorer tous les fichiers
+    for (int i=0; i<count; ++i)
+    {
+        _File *fl = file(i);
+        
+        if (regex.exactMatch(fileString(fl->name_ptr)))
+        {
+            rs.append(file(fl, new DatabasePackage(fl->package, ps, this), true));
+        }
+    }
+    
+    return rs;
+}
+
 PackageFile *DatabaseReader::file(const QString &name)
 {
     QStringList parts = name.split('/');

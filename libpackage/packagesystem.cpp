@@ -399,6 +399,11 @@ PackageFile *Logram::PackageSystem::file(const QString &name)
     return d->dr->file(name);
 }
 
+QList<PackageFile *> Logram::PackageSystem::files(const QRegExp &regex)
+{
+    return d->dr->files(regex);
+}
+
 Solver *Logram::PackageSystem::newSolver()
 {
     return new Solver(this, d->dr);

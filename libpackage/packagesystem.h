@@ -147,6 +147,7 @@ class PackageSystem : public QObject
         bool package(const QString &name, const QString &version, Package* &rs);
         DatabasePackage *package(int id);
         PackageFile *file(const QString &name);
+        QList<PackageFile *> files(const QRegExp &regex);
         int packages();
         bool update();
         QList<DatabasePackage *> upgradePackages();

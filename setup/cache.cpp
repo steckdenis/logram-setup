@@ -130,7 +130,7 @@ static void displayFile(PackageFile *file, bool colored)
     }
     
     // Afficher le chemin en couleur
-    cout << COLOR(file->path(), "32");
+    cout << COLOR("/" + file->path(), "32");
     
     if (file->package() == 0 || !file->package()->isValid())
     {
@@ -179,6 +179,18 @@ void App::infoFile(const QString &path)
     else
     {
         // path = une expression régulière
+        QRegExp exp;
+    
+        exp.setCaseSensitivity(Qt::CaseSensitive);
+        exp.setPatternSyntax(QRegExp::Wildcard);
+        exp.setPattern(path);
+        
+        QList<PackageFile *> files = ps->files(exp);
+        
+        foreach (PackageFile *file, files)
+        {
+            displayFile(file, colored);
+        }
     }
 }
 

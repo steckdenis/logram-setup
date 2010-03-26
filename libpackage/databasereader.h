@@ -254,6 +254,23 @@ class DatabaseReader
         PackageFile *file(_File *fl, Package *pkg, bool bindedpackage);
         
         /**
+            @brief Retourne les fichiers correspondant à l'expression régulière
+            
+            Retourne la liste des fichiers dont le nom (le chemin d'accès n'est
+            pas considéré) correspond à l'expression régulière regex.
+            
+            @warning Cette fonction a une complexité de O(n) où n est le nombre
+                     de fichiers dans la base de donnée. Elle peut être très
+                     lente si la regex est complexe, ou s'il y a beaucoup de
+                     fichiers (forte utilisation de QString::QString(), ainsi
+                     que stress du système de fichiers).
+                     
+            @param regex Expression régulière
+            @return Liste des fichiers dont le nom correspond au motif
+        */
+        QList<PackageFile *> files(const QRegExp &regex);
+        
+        /**
             @brief Liste des dépendances d'un paquet
             
             Renvoie la liste des dépendances d'un paquet dont l'index est donné.
