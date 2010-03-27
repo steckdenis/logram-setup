@@ -72,6 +72,53 @@ struct FilePackage::Private
     void addDeps(const QByteArray &str, int8_t type);
 };
 
+/**** FileFile ****/
+
+struct FileFile::Private
+{
+    QString path;
+    int flags;
+};
+
+FileFile::FileFile(const QString &path, int flags)
+{
+    d = new Private;
+    d->path = path;
+    d->flags = flags;
+}
+
+FileFile::~FileFile()
+{
+    delete d;
+}
+        
+QString FileFile::path() const
+{
+    return d->path;
+}
+
+int FileFile::flags() const
+{
+    return d->flags;
+}
+
+Package *FileFile::package() const
+{
+    return 0;
+}
+        
+void FileFile::setFlags(int flags)
+{
+    d->flags = flags;
+}
+
+void FileFile::setPath(const QString &path)
+{
+    d->path = path;
+}
+
+/**** FilePackage ****/
+
 FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action)
     : Package(ps, psd, _action)
 {
@@ -141,7 +188,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         if (path.startsWith("data/"))
         {
             path.remove(0, 5);
-            d->files.append(new PackageFile(path, 0, this));
+            d->files.append((PackageFile *)(new FileFile(path, 0)));
         }
         
         // Savoir quel type de fichier on a lu
@@ -254,12 +301,12 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     QString path = el.attribute("path");
                     path.remove(0, 1);  // Retirer le premier /
                     int flags = 0;
-                    PackageFile *file = 0;
+                    FileFile *file = 0;
                     
-                    // Trouver le PackageFile correspondant, ou le créer si nécessaire
+                    // Trouver le FileFile correspondant, ou le créer si nécessaire
                     for (int i=0; i<d->files.count(); ++i)
                     {
-                        PackageFile *fl = d->files.at(i);
+                        FileFile *fl = (FileFile *)d->files.at(i);
                         
                         if (fl->path() == path)
                         {
@@ -272,8 +319,8 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     {
                         // On n'a pas trouvé le fichier
                         flags |= PACKAGE_FILE_VIRTUAL;
-                        file = new PackageFile(path, flags, this);
-                        d->files.append(file);
+                        file = new FileFile(path, flags);
+                        d->files.append((PackageFile *)file);
                         
                         // NOTE: On fait tout ceci avant de parser les éléments <flag>
                         // pour leur permettre de désactiver le flag virtual, au cas où.
@@ -371,7 +418,7 @@ FilePackage::FilePackage(const FilePackage &other) : Package(other)
     
     foreach(PackageFile *file, other.d->files)
     {
-        d->files.append(new PackageFile(file->path(), file->flags(), this));
+        d->files.append((PackageFile *)(new FileFile(file->path(), file->flags())));
     }
 }
 

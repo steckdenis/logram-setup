@@ -65,6 +65,75 @@ struct DatabaseDepend::Private
 };
 
 /*************************************
+******* File *************************
+*************************************/
+
+struct DatabaseFile::Private
+{
+    DatabaseReader *dr;
+    int id;
+    DatabasePackage *pkg;
+    bool packagebinded;
+    QString path;
+    _File *file;
+};
+
+DatabaseFile::DatabaseFile(DatabaseReader *dr, _File *file, DatabasePackage *pkg, bool packagebinded)
+{
+    d = new Private;
+    d->dr = dr;
+    d->pkg = pkg;
+    d->packagebinded = packagebinded;
+    
+    // Trouver le chemin
+    d->file = file;
+    
+    _File *dir = dr->file(file->parent_dir);
+    QString path(dr->fileString(file->name_ptr));
+    
+    while (dir)
+    {
+        path = QString(dr->fileString(dir->name_ptr)) + '/' + path;
+        
+        dir = dr->file(dir->parent_dir);
+    }
+    
+    d->path = path;
+}
+
+DatabaseFile::~DatabaseFile()
+{
+    if (d->packagebinded)
+    {
+        delete d->pkg;
+    }
+    
+    delete d;
+}
+        
+QString DatabaseFile::path() const
+{
+    return d->path;
+}
+
+int DatabaseFile::flags() const
+{
+    return d->file->flags;
+}
+
+Package *DatabaseFile::package() const
+{
+    return d->pkg;
+}
+        
+void DatabaseFile::setFlags(int flags)
+{
+    d->file->flags = flags;
+    
+    // TODO: persistance des flags
+}
+
+/*************************************
 ******* Package **********************
 *************************************/
 
@@ -357,7 +426,7 @@ QList<PackageFile *> DatabasePackage::files()
     if (pkg == 0) return rs;
     
     _File *file = d->psd->file(pkg->first_file);
-    PackageFile *pf;
+    DatabaseFile *pf;
     
     QString path;
     
@@ -366,8 +435,8 @@ QList<PackageFile *> DatabasePackage::files()
         // Trouver le chemin du fichier. Ça se fait simplement en remontant dans l'arborescence
         path = QString(d->psd->fileString(file->name_ptr));
         
-        pf = d->psd->file(file, this, false);
-        rs.append(pf);
+        pf = new DatabaseFile(d->psd, file, this, false);
+        rs.append((PackageFile *)pf);
         
         file = d->psd->file(file->next_file_pkg);
     }

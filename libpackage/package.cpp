@@ -60,63 +60,6 @@ struct Package::Private
 };
 
 /*************************************
-******* File *************************
-*************************************/
-
-struct PackageFile::Private
-{
-    QString path;
-    int flags;
-    Package *pkg;
-    bool bindedpackage;
-};
-
-PackageFile::PackageFile(const QString &path, int flags, Package *pkg, bool bindedpackage)
-{
-    d = new Private;
-    d->path = path;
-    d->flags = flags;
-    d->pkg = pkg;
-    d->bindedpackage = bindedpackage;
-}
-
-PackageFile::~PackageFile()
-{
-    if (d->bindedpackage)
-    {
-        // Package créé spécialement pour ce PackageFile, il faut le supprimer
-        delete d->pkg;
-    }
-    
-    delete d;
-}
-
-void PackageFile::setFlags(int flags)
-{
-    d->flags = flags;
-}
-
-void PackageFile::setPath(const QString &path)
-{
-    d->path = path;
-}
-
-QString PackageFile::path() const
-{
-    return d->path;
-}
-
-int PackageFile::flags() const
-{
-    return d->flags;
-}
-
-Package *PackageFile::package() const
-{
-    return d->pkg;
-}
-
-/*************************************
 ******* Package **********************
 *************************************/
 

@@ -218,7 +218,7 @@ QList<PackageFile *> DatabaseReader::files(const QRegExp &regex)
         
         if (regex.exactMatch(fileString(fl->name_ptr)))
         {
-            rs.append(file(fl, new DatabasePackage(fl->package, ps, this), true));
+            rs.append((PackageFile *)(new DatabaseFile(this, fl, new DatabasePackage(fl->package, ps, this), true)));
         }
     }
     
@@ -255,7 +255,7 @@ QList<PackageFile *> DatabaseReader::files(const QString &name)
             else if (!(fl->flags & PACKAGE_FILE_DIR) && curPart == parts.count() - 1)
             {
                 // Fichier, et dernière partie ==> ok, tout va bien
-                rs.append(file(fl, new DatabasePackage(fl->package, ps, this), true));
+                rs.append((PackageFile *)(new DatabaseFile(this, fl, new DatabasePackage(fl->package, ps, this), true)));
             }
         }
         
@@ -264,24 +264,6 @@ QList<PackageFile *> DatabaseReader::files(const QString &name)
     }
     
     return rs;
-}
-
-PackageFile *DatabaseReader::file(_File *fl, Package *pkg, bool bindedpackage)
-{
-    if (fl == 0) return 0;
-    
-    // Trouver le chemin
-    _File *dir = file(fl->parent_dir);
-    QString path(fileString(fl->name_ptr));
-    
-    while (dir)
-    {
-        path = QString(fileString(dir->name_ptr)) + '/' + path;
-        
-        dir = file(dir->parent_dir);
-    }
-    
-    return new PackageFile(path, fl->flags, pkg, bindedpackage);
 }
 
 QList<_Depend *> DatabaseReader::depends(int pkgIndex)

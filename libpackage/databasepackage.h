@@ -44,6 +44,7 @@ class DatabaseReader;
 struct ManagedDownload;
 
 struct _Depend;
+struct _File;
 class DatabaseDepend;
 class PackageFile;
 
@@ -265,6 +266,23 @@ class DatabaseDepend : public Depend
         int8_t type();
         int8_t op();
 
+    private:
+        struct Private;
+        Private *d;
+};
+
+class DatabaseFile
+{
+    public:
+        DatabaseFile(DatabaseReader *dr, _File *file, DatabasePackage *pkg, bool packagebinded);
+        ~DatabaseFile();
+        
+        QString path() const;
+        int flags() const;
+        Package *package() const;
+        
+        void setFlags(int flags);
+        
     private:
         struct Private;
         Private *d;

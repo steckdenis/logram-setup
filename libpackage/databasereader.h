@@ -239,22 +239,6 @@ class DatabaseReader
         QList<PackageFile *> files(const QString &name);
         
         /**
-            @brief Crée un PackageFile pour file
-            
-            Retourne un PackageFile correspondant au fichier @p fl
-            
-            @note Cette fonction a une complexité de O(n) où n est le nombre
-                  de dossiers parents du fichier.
-                  
-            @param fl _File représentant le fichier en base de donnée
-            @param pkg paquet de ce fichier, si voulu (0 si pas utilisé)
-            @param bindedpackage true si la suppression du PackageFile doit
-                   entraîner la suppression de pkg.
-            @return le PackageFile du fichier @p fl
-        */
-        PackageFile *file(_File *fl, Package *pkg, bool bindedpackage);
-        
-        /**
             @brief Retourne les fichiers correspondant à l'expression régulière
             
             Retourne la liste des fichiers dont le nom (le chemin d'accès n'est

@@ -155,19 +155,13 @@ class Depend
 class PackageFile
 {
     public:
-        PackageFile(const QString &path, int flags, Package *pkg, bool bindedpackage = false);
-        ~PackageFile();
+        PackageFile();
         
-        void setFlags(int flags);
-        void setPath(const QString &path);
+        virtual QString path();
+        virtual int flags();
+        virtual Package *package();
         
-        QString path() const;
-        int flags() const;
-        Package *package() const;
-        
-    private:
-        struct Private;
-        Private *d;
+        virtual void setFlags(int flags);
 };
 
 } /* Namespace */

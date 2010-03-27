@@ -135,6 +135,24 @@ class FileDepend : public Depend
         Private *d;
 };
 
+class FileFile
+{
+    public:
+        FileFile(const QString &path, int flags);
+        ~FileFile();
+        
+        QString path() const;
+        int flags() const;
+        Package *package() const;
+        
+        void setFlags(int flags);
+        void setPath(const QString &path);
+        
+    private:
+        struct Private;
+        Private *d;
+};
+
 } /* Namespace */
 
 #endif
