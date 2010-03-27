@@ -31,6 +31,7 @@
 #include <QFile>
 #include <QProcess>
 #include <QDateTime>
+#include <QVector>
 
 #include <QtSql>
 #include <QtXml>
@@ -406,6 +407,12 @@ bool RepositoryManager::includeSource(const QString &fileName)
     return true;
 }
 
+struct DirectoryId
+{
+    QString name;
+    int id;
+};
+
 bool RepositoryManager::includePackage(const QString &fileName)
 {
     // Ouvrir le paquet
@@ -618,6 +625,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
     }
     
     QList<PackageFile *> pkgfiles = fpkg->files();
+    QVector<DirectoryId> dirIds;
     
     for (int j=0; j<pkgfiles.count(); ++j)
     {
@@ -639,39 +647,21 @@ bool RepositoryManager::includePackage(const QString &fileName)
             if (i < fileParts.count() - 1)
             {
                 // Dossier, vérifier s'il existe
-                sql = " SELECT id \
-                        FROM packages_directory \
-                        WHERE name='%1' AND directory_id=%2;";
-                
-                if (!query.exec(sql
-                        .arg(e(part))
-                        .arg(dirId)))
+                // Voir si on n'a rien en cache
+                if (i < dirIds.count() && dirIds.at(i).name == part)
                 {
-                    PackageError *err = new PackageError;
-                    err->type = PackageError::QueryError;
-                    err->info = query.lastQuery();
-                    
-                    d->ps->setLastError(err);
-                    
-                    return false;
-                }
-                
-                if (query.next())
-                {
-                    // Le dossier existe déjà, ok
-                    dirId = query.value(0).toInt();
+                    dirId = dirIds.at(i).id;
                 }
                 else
                 {
-                    // Le dossier n'existe pas déjà, le créer
-                    sql = " INSERT INTO packages_directory \
-                            (directory_id, name, path) \
-                            VALUES (%1, '%2', '%3');";
+                    // Pas en cache
+                    sql = " SELECT id \
+                            FROM packages_directory \
+                            WHERE name='%1' AND directory_id=%2;";
                     
                     if (!query.exec(sql
-                            .arg(dirId)
                             .arg(e(part))
-                            .arg(e(dirPath))))
+                            .arg(dirId)))
                     {
                         PackageError *err = new PackageError;
                         err->type = PackageError::QueryError;
@@ -682,8 +672,43 @@ bool RepositoryManager::includePackage(const QString &fileName)
                         return false;
                     }
                     
-                    // Récupérer l'ID du dossier
-                    dirId = query.lastInsertId().toInt();
+                    if (query.next())
+                    {
+                        // Le dossier existe déjà, ok
+                        dirId = query.value(0).toInt();
+                    }
+                    else
+                    {
+                        // Le dossier n'existe pas déjà, le créer
+                        sql = " INSERT INTO packages_directory \
+                                (directory_id, name, path) \
+                                VALUES (%1, '%2', '%3');";
+                        
+                        if (!query.exec(sql
+                                .arg(dirId)
+                                .arg(e(part))
+                                .arg(e(dirPath))))
+                        {
+                            PackageError *err = new PackageError;
+                            err->type = PackageError::QueryError;
+                            err->info = query.lastQuery();
+                            
+                            d->ps->setLastError(err);
+                            
+                            return false;
+                        }
+                        
+                        // Récupérer l'ID du dossier
+                        dirId = query.lastInsertId().toInt();
+                    }
+                    
+                    // L'insérer dans le cache
+                    dirIds.resize(i);
+                    
+                    DirectoryId did;
+                    did.name = part;
+                    did.id = dirId;
+                    dirIds.append(did);
                 }
                 
                 // Ajouter cet élément au path du dossier
