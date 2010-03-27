@@ -54,7 +54,6 @@ struct RepositoryManager::Private
     // Fonctions
     bool registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type, int changelog_id = 0);
     bool writeXZ(const QString &fileName, const QByteArray &data);
-    int exploreDirectory(int dirId, QByteArray &rs, int arch_id, int distro_id);
 };
 
 RepositoryManager::RepositoryManager(PackageSystem *ps) : QObject(ps)
@@ -172,95 +171,6 @@ bool RepositoryManager::Private::writeXZ(const QString &fileName, const QByteArr
     fl.close();
     
     return true;
-}
-
-int RepositoryManager::Private::exploreDirectory(int dirId, QByteArray &rs, int arch_id, int distro_id)
-{
-    QSqlQuery query;
-    QString sql;
-    
-    // Sous-dossiers
-    sql = " SELECT \
-            id, \
-            name \
-            FROM packages_directory \
-            WHERE directory_id=%1";
-    
-    if (!query.exec(sql.arg(dirId)))
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::QueryError;
-        err->info = query.lastQuery();
-        
-        ps->setLastError(err);
-        
-        return -1;
-    }
-    
-    int num = 0;
-    
-    while (query.next())
-    {
-        // Commencer le dossier
-        QByteArray temp;
-        
-        temp += ':';
-        temp += query.value(1).toByteArray();
-        temp += '\n';
-        
-        // L'explorer
-        int m_num = exploreDirectory(query.value(0).toInt(), temp, arch_id, distro_id);
-        
-        if (m_num == -1)
-        {
-            return -1;
-        }
-        else if (m_num == 0)
-        {
-            // Pas de fichiers dans ce dossier, le sauter
-            continue;
-        }
-        
-        // Le dossier contient des fichiers, ok
-        num += m_num;
-        rs += temp;
-        rs += "::\n";
-    }
-    
-    // Fichiers
-    sql = " SELECT \
-            file.name AS f_name, \
-            file.flags AS f_flags, \
-            package.name AS p_name \
-            FROM packages_file file \
-            LEFT JOIN packages_package package ON package.id=file.package_id \
-            WHERE file.directory_id=%1 AND package.distribution_id=%2 AND package.arch_id=%3";
-    
-    if (!query.exec(sql
-            .arg(dirId)
-            .arg(distro_id)
-            .arg(arch_id)))
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::QueryError;
-        err->info = query.lastQuery();
-        
-        ps->setLastError(err);
-        
-        return -1;
-    }
-    
-    while (query.next())
-    {
-        num++;
-        int flags = query.value(1).toInt();
-        
-        rs += query.value(2).toByteArray() + '|';
-        rs += QByteArray((const char *)&flags, sizeof(int));
-        rs += query.value(0).toByteArray() + '\n';
-    }
-    
-    return num;
 }
 
 bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type, int changelog_id)
@@ -1103,13 +1013,83 @@ bool RepositoryManager::exp(const QStringList &distros)
             // ::
             // paquet|flags|fichier_dans_usr_pas_dans_bin
             // ::
-            //
-            // Simple : explorer tous les dossiers qui ont comme parent 0, tous
-            // les fichiers qui ont comme parent 0. Explorer les sous-dossiers
-            // et sous-fichiers, récursivement.
-            if (d->exploreDirectory(0, filestream, arch_id, distro_id) == -1)
+            sql = " SELECT \
+                    CONCAT(dir.path, '/', dir.name, '/', file.name), \
+                    pkg.name, \
+                    file.flags \
+                    FROM packages_file file \
+                    LEFT JOIN packages_directory dir ON dir.id=file.directory_id \
+                    LEFT JOIN packages_package pkg ON pkg.id=file.package_id \
+                    WHERE pkg.arch_id=%1 AND pkg.distribution_id=%2 \
+                    ORDER BY dir.path ASC;";
+            
+            if (!query.exec(sql
+                            .arg(arch_id)
+                            .arg(distro_id)))
             {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                    
+                d->ps->setLastError(err);
+                    
                 return false;
+            }
+            
+            QByteArray path, pkgname;
+            QList<QByteArray> parts, curParts;
+            int level, flags;
+            
+            while(query.next())
+            {
+                path = query.value(0).toByteArray();
+                pkgname = query.value(1).toByteArray();
+                flags = query.value(2).toInt();
+                
+                if (path[0] == '/')
+                {
+                    path.remove(0, 1);
+                }
+                
+                parts = path.split('/');
+                
+                // Trouver le nombre de parts communes entre curParts et parts.
+                level = 0;
+                for (int i=0; i<qMin(curParts.count()-1, parts.count()-1); ++i)
+                {
+                    if (parts.at(i) == curParts.at(i))
+                    {
+                        level++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                
+                // Remonter du bon nombre de dossiers
+                for (int i=0; i<(curParts.count()-level-1); ++i)
+                {
+                    filestream += "::\n";
+                }
+                
+                // Sortir toutes les autres parties, avec indentation
+                int level2 = level;
+                for (int i=level; i<parts.count(); ++i)
+                {
+                    if (i == parts.count()-1)
+                    {
+                        // Fichier
+                        filestream += pkgname + '|' + QByteArray((const char *)&flags, sizeof(int)) + parts.at(i) + '\n';
+                    }
+                    else
+                    {
+                        filestream += ':' + parts.at(i) + '\n';
+                    }
+                    level2++;
+                }
+                
+                curParts = parts;
             }
             
             // Sélectionner tous les paquets qu'il y a dedans
