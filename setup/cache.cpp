@@ -268,7 +268,135 @@ void App::showFiles(const QString &packageName)
     }
 }
 
-void App::tag(const QString &packageName, const QString &tag)
+void App::tagFile(const QString &fileName, const QString &tag)
+{
+    QList<PackageFile *> files;
+    QString fname, pname;
+    Package *pkg = 0;
+    DatabasePackage *dpkg = 0;
+    
+    // Savoir si fileName a une information sur le paquet contenant les fichiers
+    fname = fileName;
+    
+    if (fileName.contains(':'))
+    {
+        fname = fileName.section(':', 1, -1); // Prendre juste le nom
+        pname = fileName.section(':', 0, 0);  // Prendre le paquet
+        
+        QByteArray name, version;
+        ps->parseVersion(pname.toUtf8(), name, version);
+        
+        if (!ps->package(name, (version.isNull() ? QString() : version), pkg))
+        {
+            error();
+            return;
+        }
+        
+        if (pkg != 0 && pkg->origin() == Package::Database)
+        {
+            dpkg = (DatabasePackage *)pkg;
+        }
+    }
+    
+    // Savoir si FileName est une regex
+    if (fname.startsWith('/'))
+    {
+        // Non
+        fname.remove(0, 1);
+        files = ps->files(fname);
+    }
+    else
+    {
+        // Oui
+        files = ps->files(QRegExp(fname, Qt::CaseSensitive, QRegExp::Wildcard));
+    }
+    
+    // Si pkg != 0, éliminer tous les fichiers n'ayant pas le bon paquet
+    if (dpkg != 0)
+    {
+        for (int i=0; i<files.count(); ++i)
+        {
+            DatabaseFile *file = (DatabaseFile *)files.at(i);
+            
+            if (((DatabasePackage *)file->package())->index() != dpkg->index())
+            {
+                files.removeAt(i);
+                i--;
+            }
+        }
+    }
+    
+    if (files.count() > 1)
+    {
+        cout << COLOR(tr("%1 fichiers vont être tagués, continuer ? ").arg(files.count()), "34") << std::flush;
+        
+        char in[2];
+        
+        getString(in, 2, "y", true);
+        
+        if (in[0] != 'y')
+        {
+            return;
+        }
+    }
+    
+    foreach (PackageFile *file, files)
+    {
+        int flag = 0;
+        bool remove = false;
+        QString t = tag;
+        
+        // Si t commence par "-", alors on retire le tag
+        if (t.startsWith('-'))
+        {
+            remove = true;
+            t.remove(0, 1);
+        }
+        
+        if (t == "dontremove")
+        {
+            flag = PACKAGE_FILE_DONTREMOVE;
+        }
+        else if (t == "dontpurge")
+        {
+            flag = PACKAGE_FILE_DONTPURGE;
+        }
+        else if (t == "backup")
+        {
+            flag = PACKAGE_FILE_BACKUP;
+        }
+        else if (t == "overwrite")
+        {
+            flag = PACKAGE_FILE_OVERWRITE;
+        }
+        else
+        {
+            cout << COLOR(tr("Tags disponibles :"), "37") << endl << endl;
+            
+            cout << qPrintable(tr("  * dontremove : Ne pas supprimer quand son paquet est supprimé\n"
+                                  "  * dontpurge  : Ne pas supprimer même si son paquet est purgé\n"
+                                  "  * backup     : Toujours sauvegarder (.bak) avant remplacement\n"
+                                  "  * overwrite  : Ne jamais sauvegarder avant remplacement\n"));
+                                  
+            cout << endl;
+            return;
+        }
+        
+        if (remove)
+        {
+            // Supprimer le tag
+            file->setFlags(file->flags() & ~flag);
+        }
+        else
+        {
+            file->setFlags(file->flags() | flag);
+        }
+    }
+    
+    (void) tag;
+}
+
+void App::tagPackage(const QString &packageName, const QString &tag)
 {
     DatabasePackage *pkg;
     QList<int> pkgs;

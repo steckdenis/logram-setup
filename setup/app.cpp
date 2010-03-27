@@ -253,9 +253,21 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     }
     else if (cmd == "tag")
     {
-        CHECK_ARGS(!= 4)
+        CHECK_ARGS(!= 5)
         
-        tag(args.at(2), args.at(3));
+        if (args.at(2) == "package")
+        {
+            tagPackage(args.at(3), args.at(4));
+        }
+        else if (args.at(2) == "file")
+        {
+            tagFile(args.at(3), args.at(4));
+        }
+        else
+        {
+            help();
+            return;
+        }
     }
     else if (cmd == "download")
     {
@@ -426,9 +438,13 @@ void App::help()
             "                       la liste des fichiers correspondant à ce motif.\n"
             "    upgrade            Mise à jour des paquets. Lancez update avant.\n"
             "    autoremove         Supprimer automatiquement les paquets orphelins.\n"
-            "    tag <pkg> <tag>    Tag les paquets correspondants à <pkg> (p>=v, etc) avec\n"
-            "                       le tag <tag>. Si <tag> commence par \"-\", alors retirer\n"
-            "                       ce tag.\n"
+            "    tag [file|package] Tag les paquets correspondants à <pkg> (p>=v, etc) avec\n"
+            "        <pkg|fl> <tag> le tag <tag>. Si <tag> commence par \"-\", alors retirer\n"
+            "                       ce tag. Si <pkg> est un fichier (/usr/truc, ou mac*n),\n"
+            "                       alors c'est ce seront les fichiers correspondants au\n"
+            "                       motif qui seront taggués. <fl> peut être de la forme\n"
+            "                       \"pkg:fl\", ce qui permet de ne taguer que les\n"
+            "                       fichiers correspondants à <fl> et appartenant à <pkg>\n"
             "\n"
             "Commandes pour la gestion des sources :\n"
             "    download <src>     Télécharge la source du paquet dont <src> est le\n"

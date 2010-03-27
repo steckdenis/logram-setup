@@ -157,11 +157,11 @@ class PackageFile
     public:
         PackageFile();
         
-        virtual QString path();
-        virtual int flags();
-        virtual Package *package();
+        virtual QString path() = 0;
+        virtual int flags() = 0;
+        virtual Package *package() = 0;
         
-        virtual void setFlags(int flags);
+        virtual void setFlags(int flags) = 0;
 };
 
 } /* Namespace */

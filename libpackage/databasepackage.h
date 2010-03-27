@@ -271,15 +271,15 @@ class DatabaseDepend : public Depend
         Private *d;
 };
 
-class DatabaseFile
+class DatabaseFile : public PackageFile
 {
     public:
         DatabaseFile(DatabaseReader *dr, _File *file, DatabasePackage *pkg, bool packagebinded);
         ~DatabaseFile();
         
-        QString path() const;
-        int flags() const;
-        Package *package() const;
+        QString path();
+        int flags();
+        Package *package();
         
         void setFlags(int flags);
         

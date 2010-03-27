@@ -92,17 +92,17 @@ FileFile::~FileFile()
     delete d;
 }
         
-QString FileFile::path() const
+QString FileFile::path()
 {
     return d->path;
 }
 
-int FileFile::flags() const
+int FileFile::flags()
 {
     return d->flags;
 }
 
-Package *FileFile::package() const
+Package *FileFile::package()
 {
     return 0;
 }
@@ -188,7 +188,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         if (path.startsWith("data/"))
         {
             path.remove(0, 5);
-            d->files.append((PackageFile *)(new FileFile(path, 0)));
+            d->files.append(new FileFile(path, 0));
         }
         
         // Savoir quel type de fichier on a lu
@@ -320,7 +320,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                         // On n'a pas trouvé le fichier
                         flags |= PACKAGE_FILE_VIRTUAL;
                         file = new FileFile(path, flags);
-                        d->files.append((PackageFile *)file);
+                        d->files.append(file);
                         
                         // NOTE: On fait tout ceci avant de parser les éléments <flag>
                         // pour leur permettre de désactiver le flag virtual, au cas où.
@@ -418,7 +418,7 @@ FilePackage::FilePackage(const FilePackage &other) : Package(other)
     
     foreach(PackageFile *file, other.d->files)
     {
-        d->files.append((PackageFile *)(new FileFile(file->path(), file->flags())));
+        d->files.append(new FileFile(file->path(), file->flags()));
     }
 }
 

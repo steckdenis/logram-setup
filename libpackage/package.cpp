@@ -378,3 +378,8 @@ Depend::Depend()
 {
     // rien
 }
+
+PackageFile::PackageFile()
+{
+    // rien
+}

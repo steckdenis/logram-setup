@@ -111,17 +111,17 @@ DatabaseFile::~DatabaseFile()
     delete d;
 }
         
-QString DatabaseFile::path() const
+QString DatabaseFile::path()
 {
     return d->path;
 }
 
-int DatabaseFile::flags() const
+int DatabaseFile::flags()
 {
     return d->file->flags;
 }
 
-Package *DatabaseFile::package() const
+Package *DatabaseFile::package()
 {
     return d->pkg;
 }
@@ -436,7 +436,7 @@ QList<PackageFile *> DatabasePackage::files()
         path = QString(d->psd->fileString(file->name_ptr));
         
         pf = new DatabaseFile(d->psd, file, this, false);
-        rs.append((PackageFile *)pf);
+        rs.append(pf);
         
         file = d->psd->file(file->next_file_pkg);
     }

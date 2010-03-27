@@ -135,15 +135,15 @@ class FileDepend : public Depend
         Private *d;
 };
 
-class FileFile
+class FileFile : public PackageFile
 {
     public:
         FileFile(const QString &path, int flags);
         ~FileFile();
         
-        QString path() const;
-        int flags() const;
-        Package *package() const;
+        QString path();
+        int flags();
+        Package *package();
         
         void setFlags(int flags);
         void setPath(const QString &path);
