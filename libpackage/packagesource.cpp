@@ -347,23 +347,7 @@ bool PackageSource::binaries()
         QVector<_PackageFile> packageFiles;
         _PackageFile pf;
         
-        foreach (const QString &fname, okFiles)
-        {
-            if (!isSource)
-            {
-                pf.from = buildDir + fname;
-                pf.to = "data" + fname;
-            }
-            else
-            {
-                pf.from = fname;
-                pf.to = fname;
-            }
-            packageFiles.append(pf);
-        }
-        
-        // Inclure certains fichiers nécessaires, comme le fichier de métadonnées et ceux
-        // que le paquet veut inclure
+        // D'abord, le fichier de métadonnées
         pf.from = d->metaFileName;
         
         if (isSource)
@@ -377,6 +361,7 @@ bool PackageSource::binaries()
         
         packageFiles.append(pf);
         
+        // Ensuite, ce qu'on veut inclure
         if (!isSource)
         {
             QDomElement embed = package.firstChildElement("embed");
@@ -390,6 +375,22 @@ bool PackageSource::binaries()
                 
                 embed = embed.nextSiblingElement("embed");
             }
+        }
+        
+        // Pour finir, le reste des fichiers du paquet
+        foreach (const QString &fname, okFiles)
+        {
+            if (!isSource)
+            {
+                pf.from = buildDir + fname;
+                pf.to = "data" + fname;
+            }
+            else
+            {
+                pf.from = fname;
+                pf.to = fname;
+            }
+            packageFiles.append(pf);
         }
         
         // Créer l'archive .lpk (tar + xz) (code largement inspiré de l'exemple de "man archive_write")
