@@ -225,8 +225,9 @@ QList<PackageFile *> DatabaseReader::files(const QRegExp &regex)
     return rs;
 }
 
-PackageFile *DatabaseReader::file(const QString &name)
+QList<PackageFile *> DatabaseReader::files(const QString &name)
 {
+    QList<PackageFile *> rs;
     QStringList parts = name.split('/');
     uchar *ptr = m_files;
     int index = 0, curPart = 0;
@@ -254,12 +255,7 @@ PackageFile *DatabaseReader::file(const QString &name)
             else if (!(fl->flags & PACKAGE_FILE_DIR) && curPart == parts.count() - 1)
             {
                 // Fichier, et dernière partie ==> ok, tout va bien
-                return file(fl, new DatabasePackage(fl->package, ps, this), true);
-            }
-            else
-            {
-                // On a un dossier et l'utilisateur veut un fichier, ou l'inverse ==> pas bien du tout
-                return 0;
+                rs.append(file(fl, new DatabasePackage(fl->package, ps, this), true));
             }
         }
         
@@ -267,7 +263,7 @@ PackageFile *DatabaseReader::file(const QString &name)
         fl = file(fl->next_file_dir);
     }
     
-    return 0;
+    return rs;
 }
 
 PackageFile *DatabaseReader::file(_File *fl, Package *pkg, bool bindedpackage)

@@ -394,9 +394,9 @@ DatabasePackage *Logram::PackageSystem::package(int id)
     return new DatabasePackage(id, this, d->dr);
 }
 
-PackageFile *Logram::PackageSystem::file(const QString &name)
+QList<PackageFile *> Logram::PackageSystem::files(const QString &name)
 {
-    return d->dr->file(name);
+    return d->dr->files(name);
 }
 
 QList<PackageFile *> Logram::PackageSystem::files(const QRegExp &regex)

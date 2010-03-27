@@ -167,14 +167,14 @@ static void displayFile(PackageFile *file, bool colored)
 
 void App::infoFile(const QString &path)
 {
+    QList<PackageFile *> files;
+    
     if (path.startsWith('/'))
     {
         QString pth(path);
         pth.remove(0, 1);
         
-        PackageFile *file = ps->file(pth);
-        
-        displayFile(file, colored);
+        files = ps->files(pth);
     }
     else
     {
@@ -185,12 +185,12 @@ void App::infoFile(const QString &path)
         exp.setPatternSyntax(QRegExp::Wildcard);
         exp.setPattern(path);
         
-        QList<PackageFile *> files = ps->files(exp);
-        
-        foreach (PackageFile *file, files)
-        {
-            displayFile(file, colored);
-        }
+        files = ps->files(exp);
+    }
+    
+    foreach (PackageFile *file, files)
+    {
+        displayFile(file, colored);
     }
 }
 

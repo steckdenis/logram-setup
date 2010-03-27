@@ -225,17 +225,18 @@ class DatabaseReader
         QList<int> packagesByVString(const QString &name, const QString &version, int op);
         
         /**
-            @brief Retourne le fichier correspondant au nom name
+            @brief Retourne les fichier correspondant au nom name
             
-            Retourne le PackageFile pour le fichier @p name.
+            Retourne les PackageFiles pour le fichier @p name.
             
             @note Cette fonction a une complexité de O(n) où n est le nombre
                   d'éléments dans path, séparés par / .
                   
             @param name nom du fichier à récupérer, sans le premier / .
-            @return PackageFile correspondant au nom
+            @return PackageFiles correspondant au nom (un fichier peut
+                    appartenir à plusieurs paquets).
         */
-        PackageFile *file(const QString &name);
+        QList<PackageFile *> files(const QString &name);
         
         /**
             @brief Crée un PackageFile pour file
