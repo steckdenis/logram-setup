@@ -147,6 +147,7 @@ class FileFile : public PackageFile
         
         void setFlags(int flags);
         void setPath(const QString &path);
+        void setInstallTime(uint timestamp);
         
     private:
         struct Private;

@@ -76,6 +76,19 @@ Package::Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action)
     d->upd = 0;
 }
 
+Package::Package(QObject *parent, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action) : QObject(parent)
+{
+    d = new Private;
+    d->upgradeIndex = -1;
+    d->ps = ps;
+    d->psd = psd;
+    d->action = _action;
+    d->wanted = false;
+    d->md = 0;
+    d->processThread = 0;
+    d->upd = 0;
+}
+
 Package::Package(const Package &other) : QObject(other.d->ps)
 {
     d = new Private;
@@ -183,16 +196,11 @@ void Package::processLineOut(QProcess *process, const QByteArray &line)
 }
 
 void Package::processEnd()
-{
+{   
     int flgs = 0;
     
     if (d->processThread->error())
     {
-        PackageError *err = new PackageError;
-        err->type = PackageError::InstallError;
-        err->info = name() + '~' + version();
-        
-        d->ps->setLastError(err);
         emit proceeded(false);
         return;
     }
@@ -287,6 +295,8 @@ void Package::processEnd()
         flgs = (flags() | PACKAGE_FLAG_REMOVED) & ~PACKAGE_FLAG_INSTALLED;
         
         set->beginGroup(name());
+        set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
+        set->setValue("InstalledBy", QString(getenv("UID")).toInt());
         set->setValue("Flags", flgs);
         set->endGroup();
         

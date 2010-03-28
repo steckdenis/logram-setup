@@ -75,6 +75,11 @@ class DatabasePackage : public Package
         */
         DatabasePackage(int index, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
         
+        /** 
+            @overload
+        */
+        DatabasePackage(QObject *parent, int index, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
+        
         /**
             @brief Destructeur
         */
@@ -282,6 +287,7 @@ class DatabaseFile : public PackageFile
         Package *package();
         
         void setFlags(int flags);
+        void setInstallTime(uint timestamp);
         
     private:
         struct Private;

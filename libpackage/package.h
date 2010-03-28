@@ -68,6 +68,7 @@ class Package : public QObject
     
     public:
         Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
+        Package(QObject *parent, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
         Package(const Package &other);
         ~Package();
         
@@ -162,6 +163,7 @@ class PackageFile
         virtual Package *package() = 0;
         
         virtual void setFlags(int flags) = 0;
+        virtual void setInstallTime(uint timestamp) = 0;
 };
 
 } /* Namespace */

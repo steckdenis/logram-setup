@@ -133,12 +133,29 @@ void DatabaseFile::setFlags(int flags)
     // TODO: persistance des flags
 }
 
+void DatabaseFile::setInstallTime(uint timestamp)
+{
+    d->file->itime = timestamp;
+}
+
 /*************************************
 ******* Package **********************
 *************************************/
 
 DatabasePackage::DatabasePackage(int index, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action) 
     : Package(ps, psd, _action)
+{
+    d = new Private;
+    d->index = index;
+    d->ps = ps;
+    d->psd = psd;
+    d->depok = false;
+    
+    connect(ps, SIGNAL(downloadEnded(Logram::ManagedDownload *)), this, SLOT(downloadEnded(Logram::ManagedDownload *)));
+}
+
+DatabasePackage::DatabasePackage(QObject *parent, int index, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action) 
+    : Package(parent, ps, psd, _action)
 {
     d = new Private;
     d->index = index;

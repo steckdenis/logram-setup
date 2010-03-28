@@ -117,6 +117,13 @@ void FileFile::setPath(const QString &path)
     d->path = path;
 }
 
+void FileFile::setInstallTime(uint timestamp)
+{
+    return; // TODO: Sauvegarde dans la liste des fichiers
+    
+    (void) timestamp;
+}
+
 /**** FilePackage ****/
 
 FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action)

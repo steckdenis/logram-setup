@@ -41,15 +41,6 @@
 #include <QtXml>
 #include <QtDebug>
 
-// Architecture de Setup
-#ifndef SETUP_ARCH
-    #if __SIZEOF_POINTER__ == 4
-        #define SETUP_ARCH "i686"
-    #else
-        #define SETUP_ARCH "x86_64"
-    #endif
-#endif
-
 using namespace Logram;
 
 struct PackageSource::Private

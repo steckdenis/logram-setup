@@ -44,9 +44,6 @@ class ProcessThread : public QThread
         bool error() const;
         
     private:
-        bool depack(Package *pkg, QList<QByteArray> &files, QByteArray &metadataContents);
-        bool install(Package *pkg, QList<QByteArray> &files, PackageMetaData *md, const QString &prescript);
-        
         struct Private;
         Private *d;
 };

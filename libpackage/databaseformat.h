@@ -92,7 +92,7 @@ struct _File
     int32_t next_file_dir;  /*!< Index du fichier suivant appartenant au même dossier, ou -1 */
     int32_t next_file_pkg;  /*!< Index du fichier suivant appartenant au même paquet, ou -1 */
     int32_t first_child;    /*!< Premier enfant d'un dossier */
-    int32_t itime;      /*!< Timestamp UNIX de la date d'installation */
+    uint32_t itime;     /*!< Timestamp UNIX de la date d'installation */
 };
 
 /**
