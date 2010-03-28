@@ -1021,7 +1021,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                     LEFT JOIN packages_directory dir ON dir.id=file.directory_id \
                     LEFT JOIN packages_package pkg ON pkg.id=file.package_id \
                     WHERE pkg.arch_id=%1 AND pkg.distribution_id=%2 \
-                    ORDER BY dir.path ASC;";
+                    ORDER BY dir.path ASC, dir.name ASC;";
             
             if (!query.exec(sql
                             .arg(arch_id)

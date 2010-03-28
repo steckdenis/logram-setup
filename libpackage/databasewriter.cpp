@@ -482,6 +482,7 @@ bool DatabaseWriter::rebuild()
             int index;
             int linelength;
             bool ignorepackage = false;
+            currentDir = 0;
             
             int flength, fpos;
             
@@ -868,6 +869,10 @@ bool DatabaseWriter::rebuild()
                                 if (currentDir)
                                 {
                                     file = currentDir->first_child;
+                                }
+                                else
+                                {
+                                    file = firstFile;
                                 }
                                 
                                 while (file != 0 && 

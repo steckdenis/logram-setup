@@ -251,6 +251,7 @@ QList<PackageFile *> DatabaseReader::files(const QString &name)
                 // Dossier et pas dernière partie ==> ok, tout va bien
                 curPart++;
                 fl = file(fl->first_child);
+                continue;
             }
             else if (!(fl->flags & PACKAGE_FILE_DIR) && curPart == parts.count() - 1)
             {
