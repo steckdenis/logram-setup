@@ -384,12 +384,23 @@ DatabasePackage *Package::upgradePackage()
 ******* Depend ***********************
 *************************************/
 
+struct PackageFile::Private
+{
+    PackageSystem *ps;
+};
+
 Depend::Depend()
 {
     // rien
 }
 
-PackageFile::PackageFile()
+PackageFile::PackageFile(PackageSystem *ps)
 {
-    // rien
+    d = new Private;
+    d->ps = ps;
+}
+
+void PackageFile::saveFile()
+{
+    d->ps->saveFile(this);
 }

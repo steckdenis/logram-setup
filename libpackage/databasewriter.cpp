@@ -882,13 +882,7 @@ bool DatabaseWriter::rebuild()
                                     file = file->next;
                                 }
                                 
-                                if (file != 0)
-                                {
-                                    // On a un dossier du bon nom
-                                    // L'utiliser comme dossier courant
-                                    currentDir = file;
-                                }
-                                else
+                                if (file == 0)
                                 {
                                     // file == 0, on n'a rien trouvé, créer un dossier
                                     // du bon nom
@@ -916,10 +910,9 @@ bool DatabaseWriter::rebuild()
                                     
                                     // Enregistrer dans knownFiles
                                     knownFiles.append(file);
-                                    
-                                    // Le passer comme dossier courant
-                                    currentDir = file;
                                 }
+                                
+                                currentDir = file;
                             }
                         }
                         else
@@ -978,6 +971,9 @@ bool DatabaseWriter::rebuild()
                             // du même nom et même paquet existe déjà. Si c'est le cas, 
                             // remplacer ses flags (en effet, les flags utilisateurs sont
                             // lus après ceux de l'empaqueteur, et ont la priorité dessus).
+                            
+                            // TODO: Ecraser les fichiers qui y sont déjà, et les fichiers installés
+                            //       ont itime juste après flags
                             FileFile *file = new FileFile;
                             
                             file->index = knownFiles.count();

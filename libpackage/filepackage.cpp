@@ -78,9 +78,10 @@ struct FileFile::Private
 {
     QString path;
     int flags;
+    uint itime;
 };
 
-FileFile::FileFile(const QString &path, int flags)
+FileFile::FileFile(PackageSystem *ps, const QString &path, int flags) : PackageFile(ps)
 {
     d = new Private;
     d->path = path;
@@ -102,12 +103,23 @@ int FileFile::flags()
     return d->flags;
 }
 
+uint FileFile::installTime()
+{
+    return d->itime;
+}
+
 Package *FileFile::package()
 {
     return 0;
 }
         
 void FileFile::setFlags(int flags)
+{
+    d->flags = flags;
+    saveFile();
+}
+
+void FileFile::setFlagsNoSave(int flags)
 {
     d->flags = flags;
 }
@@ -119,9 +131,8 @@ void FileFile::setPath(const QString &path)
 
 void FileFile::setInstallTime(uint timestamp)
 {
-    return; // TODO: Sauvegarde dans la liste des fichiers
-    
-    (void) timestamp;
+    d->itime = timestamp;
+    saveFile();
 }
 
 /**** FilePackage ****/
@@ -195,7 +206,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         if (path.startsWith("data/"))
         {
             path.remove(0, 5);
-            d->files.append(new FileFile(path, 0));
+            d->files.append(new FileFile(d->ps, path, 0));
         }
         
         // Savoir quel type de fichier on a lu
@@ -326,7 +337,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     {
                         // On n'a pas trouvé le fichier
                         flags |= PACKAGE_FILE_VIRTUAL;
-                        file = new FileFile(path, flags);
+                        file = new FileFile(d->ps, path, flags);
                         d->files.append(file);
                         
                         // NOTE: On fait tout ceci avant de parser les éléments <flag>
@@ -366,7 +377,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     }
                     
                     // Placer les flags dans l'enregistrement
-                    file->setFlags(flags);
+                    file->setFlagsNoSave(flags);
                 }
                 
                 el = el.nextSiblingElement();
@@ -425,7 +436,7 @@ FilePackage::FilePackage(const FilePackage &other) : Package(other)
     
     foreach(PackageFile *file, other.d->files)
     {
-        d->files.append(new FileFile(file->path(), file->flags()));
+        d->files.append(new FileFile(d->ps, file->path(), file->flags()));
     }
 }
 

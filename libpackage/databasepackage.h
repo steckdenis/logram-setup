@@ -279,11 +279,12 @@ class DatabaseDepend : public Depend
 class DatabaseFile : public PackageFile
 {
     public:
-        DatabaseFile(DatabaseReader *dr, _File *file, DatabasePackage *pkg, bool packagebinded);
+        DatabaseFile(PackageSystem *ps, DatabaseReader *dr, _File *file, DatabasePackage *pkg, bool packagebinded);
         ~DatabaseFile();
         
         QString path();
         int flags();
+        uint installTime();
         Package *package();
         
         void setFlags(int flags);

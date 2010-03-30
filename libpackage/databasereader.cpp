@@ -218,7 +218,7 @@ QList<PackageFile *> DatabaseReader::files(const QRegExp &regex)
         
         if (regex.exactMatch(fileString(fl->name_ptr)))
         {
-            rs.append((PackageFile *)(new DatabaseFile(this, fl, new DatabasePackage(fl->package, ps, this), true)));
+            rs.append((PackageFile *)(new DatabaseFile(ps, this, fl, new DatabasePackage(fl->package, ps, this), true)));
         }
     }
     
@@ -256,7 +256,7 @@ QList<PackageFile *> DatabaseReader::files(const QString &name)
             else if (!(fl->flags & PACKAGE_FILE_DIR) && curPart == parts.count() - 1)
             {
                 // Fichier, et dernière partie ==> ok, tout va bien
-                rs.append((PackageFile *)(new DatabaseFile(this, fl, new DatabasePackage(0, fl->package, ps, this), true)));
+                rs.append((PackageFile *)(new DatabaseFile(ps, this, fl, new DatabasePackage(0, fl->package, ps, this), true)));
             }
         }
         

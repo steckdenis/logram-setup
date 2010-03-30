@@ -207,6 +207,8 @@ class PackageSystem : public QObject
         QString bestMirror(const Repository &repo);
         void releaseMirror(const QString &mirror);
         DatabaseReader *databaseReader();
+        void saveFile(PackageFile *file);
+        void syncFiles();
 
     signals:
         void progress(Logram::Progress *progress);

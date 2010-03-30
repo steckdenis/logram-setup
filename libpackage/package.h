@@ -156,14 +156,22 @@ class Depend
 class PackageFile
 {
     public:
-        PackageFile();
+        PackageFile(PackageSystem *ps);
         
         virtual QString path() = 0;
         virtual int flags() = 0;
+        virtual uint installTime() = 0;
         virtual Package *package() = 0;
         
         virtual void setFlags(int flags) = 0;
         virtual void setInstallTime(uint timestamp) = 0;
+        
+    protected:
+        void saveFile();
+        
+    private:
+        struct Private;
+        Private *d;
 };
 
 } /* Namespace */

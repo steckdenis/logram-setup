@@ -78,7 +78,8 @@ struct DatabaseFile::Private
     _File *file;
 };
 
-DatabaseFile::DatabaseFile(DatabaseReader *dr, _File *file, DatabasePackage *pkg, bool packagebinded)
+DatabaseFile::DatabaseFile(PackageSystem *ps, DatabaseReader *dr, _File *file, DatabasePackage *pkg, bool packagebinded)
+    : PackageFile(ps)
 {
     d = new Private;
     d->dr = dr;
@@ -121,6 +122,11 @@ int DatabaseFile::flags()
     return d->file->flags;
 }
 
+uint DatabaseFile::installTime()
+{
+    return d->file->itime;
+}
+
 Package *DatabaseFile::package()
 {
     return d->pkg;
@@ -129,8 +135,7 @@ Package *DatabaseFile::package()
 void DatabaseFile::setFlags(int flags)
 {
     d->file->flags = flags;
-    
-    // TODO: persistance des flags
+    saveFile();
 }
 
 void DatabaseFile::setInstallTime(uint timestamp)
@@ -452,7 +457,7 @@ QList<PackageFile *> DatabasePackage::files()
         // Trouver le chemin du fichier. Ça se fait simplement en remontant dans l'arborescence
         path = QString(d->psd->fileString(file->name_ptr));
         
-        pf = new DatabaseFile(d->psd, file, this, false);
+        pf = new DatabaseFile(d->ps, d->psd, file, this, false);
         rs.append(pf);
         
         file = d->psd->file(file->next_file_pkg);

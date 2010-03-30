@@ -138,14 +138,16 @@ class FileDepend : public Depend
 class FileFile : public PackageFile
 {
     public:
-        FileFile(const QString &path, int flags);
+        FileFile(PackageSystem *ps, const QString &path, int flags);
         ~FileFile();
         
         QString path();
         int flags();
+        uint installTime();
         Package *package();
         
         void setFlags(int flags);
+        void setFlagsNoSave(int flags);
         void setPath(const QString &path);
         void setInstallTime(uint timestamp);
         

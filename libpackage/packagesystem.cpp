@@ -37,12 +37,18 @@
 #include <QMutex>
 
 #include <cctype>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <gpgme.h>
 
 #include <QtDebug>
 
 using namespace Logram;
+using namespace std;
+
+struct _SaveFile;
 
 struct Logram::PackageSystem::Private
 {
@@ -69,6 +75,9 @@ struct Logram::PackageSystem::Private
     
     // Mirroirs
     QHash<QString, int> usedMirrors;
+    
+    // Sauvegarde des fichiers
+    _SaveFile *firstFile;
 };
 
 Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
@@ -82,6 +91,7 @@ Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     d->progressCount = 0;
     d->set = 0;
     d->ipackages = 0;
+    d->firstFile = 0;
     
     d->processOutProgress = startProgress(Progress::ProcessOut, 1);
     
@@ -94,6 +104,7 @@ Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
 Logram::PackageSystem::~PackageSystem()
 {
     endProgress(d->processOutProgress);
+    syncFiles();
     
     if (d->ipackages) delete d->ipackages;
     if (d->set) delete d->set;
@@ -1080,4 +1091,336 @@ void Logram::PackageSystem::releaseMirror(const QString &mirror)
 DatabaseReader *Logram::PackageSystem::databaseReader()
 {
     return d->dr;
+}
+
+struct _SaveFile
+{
+    _SaveFile *parent;
+    _SaveFile *next;
+    _SaveFile *first_child;
+    QByteArray name;
+    QByteArray pkgname;
+    int flags;
+    uint itime;
+    bool writen;
+};
+
+static void writeCurrentFile(_SaveFile *currentFile, int out)
+{
+    _SaveFile *child = currentFile;
+    
+    while (child)
+    {
+        if (child->writen)
+        {
+            child = child->next;
+            continue;
+        }
+        
+        child->writen = true;
+        
+        if (!child->first_child)
+        {
+            // Fichier
+            write(out, child->pkgname.constData(), child->pkgname.size());
+            write(out, "|", 1);
+            write(out, &child->flags, sizeof(int));
+            write(out, &child->itime, sizeof(uint));
+            write(out, child->name.constData(), child->name.size());
+            write(out, "\n", 1);
+        }
+        else
+        {
+            // Dossier
+            write(out, ":", 1);
+            write(out, child->name.constData(), child->name.size());
+            write(out, "\n", 1);
+            
+            writeCurrentFile(child->first_child, out);
+            
+            write(out, "::\n", 3);
+        }
+        
+        child = child->next;
+    }
+}
+
+void Logram::PackageSystem::syncFiles()
+{
+    // Explorer les fichiers
+    if (d->firstFile == 0) return;
+    
+    // Ouvrir les fichiers d'entrée et de sortie
+    _SaveFile *currentFile = 0;
+    int level = 0;
+    int in, out, linesize;
+    char *buffer = new char[1024];
+    char c;
+    
+    in = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/files.list"), O_RDONLY);
+    out = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/files.list.new"), O_WRONLY);
+    
+    if (out == -1)
+    {
+        // in peut échouer (pas encore de liste de fichier), pas out
+        return;
+    }
+    
+    // Lire les lignes du fichier
+    if (in != -1)
+    {
+        while (true)
+        {
+            // Lire la ligne
+            linesize = 0;
+            if (!read(in, &c, 1)) break;
+            
+            while (c != '\n' && linesize < 1024)
+            {
+                buffer[linesize] = c;
+                linesize++;
+                read(in, &c, 1);
+            }
+            
+            // Si la ligne commence par ':', gestion des dossiers
+            if (buffer[0] == ':')
+            {
+                if (buffer[1] == ':')
+                {
+                    // On remonte d'un dossier
+                    if (level == 0)
+                    {
+                        // On a ce dossier nous-même
+                        writeCurrentFile(currentFile->first_child, out);
+                        currentFile = currentFile->parent;
+                    }
+                    else
+                    {
+                        // On n'avait pas ce dossier
+                        level--;
+                    }
+                    
+                    // L'écrire dans la sortie
+                    write(out, buffer, linesize);
+                    write(out, "\n", 1);
+                }
+                else
+                {
+                    // L'écrire dans la sortie
+                    write(out, buffer, linesize);
+                    write(out, "\n", 1);
+                    
+                    // On commence un dossier
+                    const char *ptrname = buffer;
+                    ptrname++;      // Sauter le :
+                    
+                    _SaveFile *sf;
+                    
+                    if (currentFile)
+                    {
+                        sf = currentFile->first_child;
+                    }
+                    else
+                    {
+                        sf = d->firstFile;
+                    }
+                    
+                    while (sf && sf->name != ptrname)
+                    {
+                        sf = sf->next;
+                    }
+                    
+                    if (sf == 0)
+                    {
+                        // C'est un dossier dans lequel nous n'avons rien à mettre
+                        level++;
+                    }
+                    else
+                    {
+                        // C'est un dossier dans lequel nous avons des choses à mettre
+                        currentFile = sf;
+                        sf->writen = true;
+                        
+                        // Écrire tous les fichiers de sf
+                        _SaveFile *f = sf->first_child;
+                        
+                        while (f)
+                        {
+                            if (!f->first_child && !sf->writen)
+                            {
+                                write(out, f->pkgname.constData(), f->pkgname.size());
+                                write(out, "|", 1);
+                                write(out, &f->flags, sizeof(int));
+                                write(out, &f->itime, sizeof(uint));
+                                write(out, f->name.constData(), f->name.size());
+                                write(out, "\n", 1);
+                                f->writen = true;
+                            }
+                            
+                            f = f->next;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Simple fichier, voir si on en contient une modification
+                _SaveFile *sf;
+                
+                // Trouver le nom du fichier
+                const char *ptrname = buffer;
+                int namelen = 0;
+                
+                while (ptrname[namelen] != '|' && ptrname[namelen] != '\n' && ptrname[namelen] != '\0')
+                {
+                    namelen++;
+                }
+                
+                if (currentFile)
+                {
+                    sf = currentFile->first_child;
+                }
+                else
+                {
+                    sf = d->firstFile;
+                }
+                
+                while (sf && sf->name != QByteArray::fromRawData(ptrname, namelen))
+                {
+                    sf = sf->next;
+                }
+                
+                if (sf == 0)
+                {
+                    // On n'a pas déjà ce fichier;
+                    write(out, buffer, linesize);
+                    write(out, "\n", 1);
+                }
+                else
+                {
+                    // On a ce fichier dans notre liste, le notre le remplace
+                    write(out, sf->pkgname.constData(), sf->pkgname.size());
+                    write(out, "|", 1);
+                    write(out, &sf->flags, sizeof(int));
+                    write(out, &sf->itime, sizeof(uint));
+                    write(out, sf->name.constData(), sf->name.size());
+                    write(out, "\n", 1);
+                    
+                    sf->writen = true;
+                }
+            }
+        }
+    }
+    
+    // Écrire tous les fichiers qui manquent
+    writeCurrentFile(d->firstFile, out);
+    
+    close(out);
+}
+
+void Logram::PackageSystem::saveFile(PackageFile *file)
+{
+    // d->firstFile est le premier fichier
+    
+    // Explorer le chemin de file pour trouver le bon _SaveFile dans lequel l'ajouter
+    QStringList parts = file->path().split('/');
+    _SaveFile *currentFile = 0;
+    
+    for (int i=0; i<parts.count(); ++i)
+    {
+        const QString &part = parts.at(i);
+        
+        if (i == parts.count()-1)
+        {
+            // Dernière partie, fichier, explorer le dossier courant
+            _SaveFile *sf;
+            
+            if (currentFile)
+            {
+                sf = currentFile->first_child;
+            }
+            else
+            {
+                sf = d->firstFile;
+            }
+            
+            while (sf && sf->name != part)
+            {
+                sf = sf->next;
+            }
+            
+            if (sf == 0)
+            {
+                // On doit créer un nouveau fichier
+                sf = new _SaveFile;
+                sf->next = 0;
+                sf->first_child = 0;
+                sf->parent = currentFile;
+                sf->name = part.toUtf8();
+                sf->pkgname = file->package()->name().toUtf8();
+                sf->flags = file->flags();
+                sf->itime = file->installTime();
+                sf->writen = false;
+                
+                if (currentFile)
+                {
+                    // Ajouter ce dossier au dossier parent
+                    sf->next = currentFile->first_child;
+                    currentFile->first_child = sf;
+                }
+                else
+                {
+                    sf->next = d->firstFile;
+                    d->firstFile = sf;
+                }
+            }
+            
+            sf->flags = file->flags();
+            sf->itime = file->installTime();
+        }
+        else
+        {
+            // Explorer le dossier courant et aller dans le bon sous-dossier, s'il existe
+            _SaveFile *sf;
+            
+            if (currentFile)
+            {
+                sf = currentFile->first_child;
+            }
+            else
+            {
+                sf = d->firstFile;
+            }
+            
+            while (sf && sf->name != part)
+            {
+                sf = sf->next;
+            }
+            
+            if (!sf)
+            {
+                // Il n'existe pas encore, le créer
+                sf = new _SaveFile;
+                sf->parent = currentFile;
+                sf->next = 0;
+                sf->first_child = 0;
+                sf->name = part.toUtf8(); // itime et flags non-utilisés
+                sf->writen = false;
+                
+                if (currentFile)
+                {
+                    // Ajouter ce dossier au dossier parent
+                    sf->next = currentFile->first_child;
+                    currentFile->first_child = sf;
+                }
+                else
+                {
+                    sf->next = d->firstFile;
+                    d->firstFile = sf;
+                }
+            }
+            
+            currentFile = sf;
+        }
+    }
 }
