@@ -51,6 +51,7 @@ struct FileFile
     int package_index;  // Index du parent, inutilisé si dossier
     int name_index;     // Index du nom
     int flags;          // Flags (voir PACKAGE_FILE_FLAGS)
+    int itime;          // Timestamp d'installation
     
     FileFile *next;         // Prochain fichier du dossier
     FileFile *package_next; // Prochain fichier du paquet
@@ -919,12 +920,12 @@ bool DatabaseWriter::rebuild()
                         {
                             // On a un fichier.
                             // D'abord, récupérer des informations :
-                            // package_name|flags|file_name.
+                            // package_name|flags|itime|file_name.
                             // cline pointe sur le début de cette ligne
                             const char *pkname = cline;
-                            int length = 0, flags = 0;
+                            int length = 0, flags, itime;
                             
-                            // Avancer jusqu'au |
+                            // Le nom du paquet
                             while (*cline != '|')
                             {
                                 cline++;
@@ -934,13 +935,37 @@ bool DatabaseWriter::rebuild()
                             
                             pkgname = QByteArray::fromRawData(pkname, length);
                             
-                            // Les flags sont 4 octets, simplement sauter le |
-                            cline++;
-                            flags = *(int *)cline;
-                            cline += 4;
+                            // Les flags
+                            cline++;    // Sauter le |
+                            linelength--;
+                            flags = 0;
                             
-                            // Tout le reste est le nom, pas de | à sauter
-                            linelength -= (1 + sizeof(int)); // Garder la bonne taille
+                            while (*cline != '|')
+                            {
+                                flags *= 10;
+                                flags += (*cline - '0');
+                                
+                                cline++;
+                                linelength--;
+                            }
+                            
+                            // La date d'installation
+                            cline++;    // Sauter le |
+                            linelength--;
+                            itime = 0;
+                            
+                            while (*cline != '|')
+                            {
+                                cline++;
+                                linelength--;
+                                
+                                itime *= 10;
+                                itime += (*cline - '0');
+                            }
+                            
+                            // Tout le reste est le nom
+                            cline++;    // Sauter le |
+                            linelength--;
                             
                             name = QByteArray::fromRawData(cline, linelength);
                             
@@ -981,6 +1006,7 @@ bool DatabaseWriter::rebuild()
                             file->package_index = index;
                             file->name_index = name_index;
                             file->flags = flags;
+                            file->itime = itime;
                             file->first_child = 0;
                             file->package_next = 0;
                             
@@ -1198,7 +1224,7 @@ bool DatabaseWriter::rebuild()
         file.next_file_dir = -1;
         file.next_file_pkg = -1;
         file.first_child = -1;
-        file.itime = 0;
+        file.itime = mfile->itime;
         
         if (mfile->next)
         {
