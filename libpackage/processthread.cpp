@@ -32,6 +32,7 @@
 #include <QDate>
 #include <QTime>
 #include <QDateTime>
+#include <QFileInfo>
 
 #include <QtDebug>
 
@@ -233,6 +234,16 @@ bool ProcessThread::Private::install_files()
                     {
                         // Fichier au paquet, normalement on ne sauvegarde pas, mais ici on le fait
                         backup_file(filePath);
+                    }
+                    else if (file->flags() & PACKAGE_FILE_CHECKBACKUP)
+                    {
+                        // Vérifier que ce fichier a été modifié depuis
+                        QFileInfo fi(filePath);
+                        
+                        if (fi.lastModified().toTime_t() > file->installTime())
+                        {
+                            backup_file(filePath);
+                        }
                     }
                 }
                 else

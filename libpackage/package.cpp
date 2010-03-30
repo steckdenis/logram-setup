@@ -216,6 +216,7 @@ void Package::processEnd()
         set->beginGroup(name());
         set->setValue("Name", name());
         set->setValue("Version", version());
+        set->setValue("Arch", arch());
         set->setValue("Source", source());
         set->setValue("Maintainer", maintainer());
         set->setValue("Section", section());
@@ -253,6 +254,7 @@ void Package::processEnd()
         set->beginGroup(name());
         set->setValue("Name", name());
         set->setValue("Version", other->version());
+        set->setValue("Arch", other->arch());
         set->setValue("Source", other->source());
         set->setValue("Maintainer", other->maintainer());
         set->setValue("Section", other->section());

@@ -141,6 +141,7 @@ void DatabaseFile::setFlags(int flags)
 void DatabaseFile::setInstallTime(uint timestamp)
 {
     d->file->itime = timestamp;
+    saveFile();
 }
 
 /*************************************
