@@ -9,7 +9,7 @@ DEPENDPATH += .
 INCLUDEPATH += .
 QT -= gui
 QT += xml network script sql
-LIBS += -larchive -lgpgme -lgpg-error
+LIBS += -larchive -lgpgme -lgpg-error -lm
 QMAKE_CXXFLAGS += -D_FILE_OFFSET_BITS=64 -Werror
 
 # Input

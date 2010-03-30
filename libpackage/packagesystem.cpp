@@ -1105,6 +1105,58 @@ struct _SaveFile
     bool writen;
 };
 
+static const char *itostr(unsigned int i, char *buf, int buflen, int &len)
+{
+    /*
+        Algo: Dans une boucle, prendre le reste de la division de i par 10,
+              et l'écrire à la fin du buffer. Ensuite, diviser ce nombre
+              par 10 et reculer de 1 dans le buffer. Si le nombre vaut 0,
+              quitter. Sinon, on reboucle. Finir par retourner la position
+              du premier caractère du buffer
+    */
+    char *rs = buf;
+    rs += buflen-1;
+    
+    // S'assurer que la chaîne soit finie
+    *rs = 0;
+    len = 0;
+    
+    do
+    {
+        rs--;
+        len++;
+        *rs = char(i % 10) + '0';
+        i /= 10;
+    } while (i);
+    
+    return rs;
+}
+
+static void writeFile(_SaveFile *f, int out)
+{
+    char nbuf[12];
+    int len;
+    const char *n;
+    
+    // Nom du paquet
+    write(out, f->pkgname.constData(), f->pkgname.size());
+    write(out, "|", 1);
+    
+    // Flags
+    n = itostr(f->flags, nbuf, 12, len);
+    write(out, n, len);
+    write(out, "|", 1);
+    
+    // Timestamp d'installation
+    n = itostr(f->itime, nbuf, 12, len);
+    write(out, n, len);
+    write(out, "|", 1);
+    
+    // Nom du fichier
+    write(out, f->name.constData(), f->name.size());
+    write(out, "\n", 1);
+}
+
 static void writeCurrentFile(_SaveFile *currentFile, int out)
 {
     _SaveFile *child = currentFile;
@@ -1122,12 +1174,7 @@ static void writeCurrentFile(_SaveFile *currentFile, int out)
         if (!child->first_child)
         {
             // Fichier
-            write(out, child->pkgname.constData(), child->pkgname.size());
-            write(out, "|", 1);
-            write(out, &child->flags, sizeof(int));
-            write(out, &child->itime, sizeof(uint));
-            write(out, child->name.constData(), child->name.size());
-            write(out, "\n", 1);
+            writeFile(child, out);
         }
         else
         {
@@ -1158,7 +1205,7 @@ void Logram::PackageSystem::syncFiles()
     char c;
     
     in = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/files.list"), O_RDONLY);
-    out = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/files.list.new"), O_WRONLY);
+    out = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/files.list.new"), O_WRONLY | O_CREAT | O_TRUNC);
     
     if (out == -1)
     {
@@ -1225,7 +1272,7 @@ void Logram::PackageSystem::syncFiles()
                         sf = d->firstFile;
                     }
                     
-                    while (sf && sf->name != ptrname)
+                    while (sf && sf->name != QByteArray::fromRawData(ptrname, linesize - 1))
                     {
                         sf = sf->next;
                     }
@@ -1248,12 +1295,7 @@ void Logram::PackageSystem::syncFiles()
                         {
                             if (!f->first_child && !sf->writen)
                             {
-                                write(out, f->pkgname.constData(), f->pkgname.size());
-                                write(out, "|", 1);
-                                write(out, &f->flags, sizeof(int));
-                                write(out, &f->itime, sizeof(uint));
-                                write(out, f->name.constData(), f->name.size());
-                                write(out, "\n", 1);
+                                writeFile(f, out);
                                 f->writen = true;
                             }
                             
@@ -1268,12 +1310,26 @@ void Logram::PackageSystem::syncFiles()
                 _SaveFile *sf;
                 
                 // Trouver le nom du fichier
-                const char *ptrname = buffer;
-                int namelen = 0;
+                const char *ptrname = 0;
+                int namelen = 0, numsep = 0, pos = 0;
                 
-                while (ptrname[namelen] != '|' && ptrname[namelen] != '\n' && ptrname[namelen] != '\0')
+                while (pos < linesize)
                 {
-                    namelen++;
+                    if (buffer[pos] == '|')
+                    {
+                        numsep++;
+                        
+                        if (numsep == 3)
+                        {
+                            ptrname = &buffer[pos + 1];
+                        }
+                    }
+                    else if (numsep == 3)
+                    {
+                        namelen++;
+                    }
+                    
+                    pos++;
                 }
                 
                 if (currentFile)
@@ -1299,13 +1355,7 @@ void Logram::PackageSystem::syncFiles()
                 else
                 {
                     // On a ce fichier dans notre liste, le notre le remplace
-                    write(out, sf->pkgname.constData(), sf->pkgname.size());
-                    write(out, "|", 1);
-                    write(out, &sf->flags, sizeof(int));
-                    write(out, &sf->itime, sizeof(uint));
-                    write(out, sf->name.constData(), sf->name.size());
-                    write(out, "\n", 1);
-                    
+                    writeFile(sf, out);
                     sf->writen = true;
                 }
             }

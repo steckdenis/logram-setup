@@ -1080,7 +1080,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                     if (i == parts.count()-1)
                     {
                         // Fichier
-                        filestream += pkgname + '|' + QByteArray((const char *)&flags, sizeof(int)) + parts.at(i) + '\n';
+                        filestream += pkgname + '|' + QByteArray::number(flags) + "||" + parts.at(i) + '\n';
                     }
                     else
                     {
