@@ -700,7 +700,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
     // Enregistrer le changelog, sans passer par md->changelog() car on a besoin des langues
     QDomElement changelog = md->documentElement().firstChildElement("changelog").firstChildElement("entry");
     QDateTime maxdt, mydt;
-    int m_distro_id, changelogType, changelogID;
+    int m_distro_id, changelogType = ChangeLogEntry::LowPriority, changelogID;
     
     // Trouver l'entrée de changelog la plus récente
     sql = " SELECT \

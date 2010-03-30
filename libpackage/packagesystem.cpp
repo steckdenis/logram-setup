@@ -664,7 +664,7 @@ PackageError *Logram::PackageSystem::lastError()
 int Logram::PackageSystem::parseVersion(const QByteArray &verStr, QByteArray &name, QByteArray &version)
 {
     const char *s = verStr.constData();
-    char c, c2;
+    char c = 0, c2;
     int namesize = 0, versionsize = 0, op = DEPEND_OP_NOVERSION, pos = 0, len = verStr.size();
     const char *n = 0, *v = 0;
     
@@ -1204,8 +1204,8 @@ void Logram::PackageSystem::syncFiles()
     char *buffer = new char[1024];
     char c;
     
-    in = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/files.list"), O_RDONLY);
-    out = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/files.list.new"), O_WRONLY | O_CREAT | O_TRUNC);
+    in = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/installed_files.list"), O_RDONLY);
+    out = open(qPrintable(varRoot() + "/var/cache/lgrpkg/db/installed_files.list.new"), O_WRONLY | O_CREAT | O_TRUNC, S_IFMT | S_IWUSR | S_IRUSR);
     
     if (out == -1)
     {
@@ -1360,12 +1360,19 @@ void Logram::PackageSystem::syncFiles()
                 }
             }
         }
+        
+        close(in);
     }
     
     // Écrire tous les fichiers qui manquent
     writeCurrentFile(d->firstFile, out);
     
+    // Fermer
     close(out);
+    
+    // Copier le fichier .new vers files.list
+    QFile::remove(varRoot() + "/var/cache/lgrpkg/db/installed_files.list");
+    QFile::copy(varRoot() + "/var/cache/lgrpkg/db/installed_files.list.new", varRoot() + "/var/cache/lgrpkg/db/installed_files.list");
 }
 
 void Logram::PackageSystem::saveFile(PackageFile *file)

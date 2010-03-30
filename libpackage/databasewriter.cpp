@@ -395,7 +395,7 @@ bool DatabaseWriter::rebuild()
         return false;
     }
 
-    // On lit également la liste des fichiers installés
+    // On lit également la liste des paquets installés
     QString ipackagelist = parent->varRoot() + "/var/cache/lgrpkg/db/installed_packages.list";
     int installedPackagesListIndex = -1;
     
@@ -403,6 +403,16 @@ bool DatabaseWriter::rebuild()
     {
         installedPackagesListIndex = cacheFiles.count();
         cacheFiles.append(ipackagelist);
+    }
+    
+    // On lit également la liste des fichiers installés
+    QString ifileslist = parent->varRoot() + "/var/cache/lgrpkg/db/installed_files.list";
+    int installedFilesListIndex = -1;
+    
+    if (QFile::exists(ifileslist))
+    {
+        installedFilesListIndex = cacheFiles.count();
+        cacheFiles.append(ifileslist);
     }
     
     for (pass=0; pass<2; ++pass)
@@ -414,12 +424,15 @@ bool DatabaseWriter::rebuild()
             QString fname = file;
             QStringList parts;
             QString reponame, distroname, arch, method;
-            int strDistro, strRepo;
+            int strDistro = -1, strRepo = -1;
             FileDataType datatype = PackagesList;
 
             bool isInstalledPackages = (cfIndex == installedPackagesListIndex);
+            bool isInstalledFiles = (cfIndex == installedFilesListIndex);
             
-            if (!isInstalledPackages)
+            if (isInstalledFiles) datatype = FilesList;
+            
+            if (!isInstalledPackages && !isInstalledFiles)
             {
                 fname.remove(".xz");
 
@@ -457,7 +470,7 @@ bool DatabaseWriter::rebuild()
             if (pass == 0 && datatype != PackagesList) continue;
             
             // Préparation pour les traductions
-            if (datatype != PackagesList)
+            if (datatype != PackagesList && !isInstalledPackages && !isInstalledFiles)
             {
                 strDistro = stringsIndexes.value(distroname.toAscii());
                 strRepo = stringsIndexes.value(reponame.toAscii());
@@ -480,7 +493,7 @@ bool DatabaseWriter::rebuild()
 
             QByteArray name, long_desc, pkgname, pkgver;
             _Package *pkg = 0;
-            int index;
+            int index = -1;
             int linelength;
             bool ignorepackage = false;
             currentDir = 0;
@@ -502,7 +515,7 @@ bool DatabaseWriter::rebuild()
             // Vérifier la signature
             bool signvalid;
             
-            if (!isInstalledPackages && pass == 0 && checkFiles.at(cfIndex))
+            if (!isInstalledPackages && !isInstalledFiles && pass == 0 && checkFiles.at(cfIndex))
             {
                 if (!verifySign(file + ".sig", QByteArray::fromRawData(buffer, flength), signvalid))
                 {
@@ -510,14 +523,7 @@ bool DatabaseWriter::rebuild()
                 }
                 
                 if (!signvalid)
-                {
-                    /*PackageError *err = new PackageError;
-                    err->type = PackageError::SignatureError;
-                    err->info = file;
-                    
-                    parent->setLastError(err);
-                    */
-                    
+                {   
                     return false;
                 }
             }
@@ -978,10 +984,22 @@ bool DatabaseWriter::rebuild()
                             index = -1;
                             foreach(knownEntry *entry, entries)
                             {
-                                if (entry->pkg->distribution == strDistro && entry->pkg->repo == strRepo)
+                                if (!isInstalledFiles)
                                 {
-                                    index = entry->index;
-                                    break;
+                                    if (entry->pkg->distribution == strDistro && entry->pkg->repo == strRepo)
+                                    {
+                                        index = entry->index;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    // Le bon paquet est forcément celui qui est installé
+                                    if (entry->pkg->flags & PACKAGE_FLAG_INSTALLED)
+                                    {
+                                        index = entry->index;
+                                        break;
+                                    }
                                 }
                             }
                             
@@ -999,41 +1017,67 @@ bool DatabaseWriter::rebuild()
                             
                             // TODO: Ecraser les fichiers qui y sont déjà, et les fichiers installés
                             //       ont itime juste après flags
-                            FileFile *file = new FileFile;
+                            FileFile *file;
                             
-                            file->index = knownFiles.count();
-                            file->parent = currentDir;
-                            file->package_index = index;
-                            file->name_index = name_index;
-                            file->flags = flags;
-                            file->itime = itime;
-                            file->first_child = 0;
-                            file->package_next = 0;
-                            
-                            // Ajouter à la liste des fichiers connus
-                            knownFiles.append(file);
-                            
-                            // Le relier à l'arbre des fichiers
                             if (currentDir)
                             {
-                                file->next = currentDir->first_child;
-                                currentDir->first_child = file;
+                                file = currentDir->first_child;
                             }
                             else
                             {
-                                file->next = firstFile;
-                                firstFile = file;
+                                file = firstFile;
                             }
                             
-                            // Le relier à la liste des fichiers de son paquet
-                            _Package *pkg = packages.at(index);
-                            
-                            if (pkg->first_file != 0)
+                            while (file && (file->name_index != name_index || file->package_index != index))
                             {
-                                file->package_next = knownFiles.at(pkg->first_file);
+                                file = file->next;
                             }
                             
-                            pkg->first_file = file->index;
+                            if (file != 0)
+                            {
+                                // Le fichier est déjà connu, l'écraser
+                                file->flags = flags;
+                                file->itime = itime;
+                            }
+                            else
+                            {
+                                // Le fichier n'est pas encore dans la base de donnée
+                                FileFile *file = new FileFile;
+                                
+                                file->index = knownFiles.count();
+                                file->parent = currentDir;
+                                file->package_index = index;
+                                file->name_index = name_index;
+                                file->flags = flags;
+                                file->itime = itime;
+                                file->first_child = 0;
+                                file->package_next = 0;
+                                
+                                // Ajouter à la liste des fichiers connus
+                                knownFiles.append(file);
+                                
+                                // Le relier à l'arbre des fichiers
+                                if (currentDir)
+                                {
+                                    file->next = currentDir->first_child;
+                                    currentDir->first_child = file;
+                                }
+                                else
+                                {
+                                    file->next = firstFile;
+                                    firstFile = file;
+                                }
+                                
+                                // Le relier à la liste des fichiers de son paquet
+                                _Package *pkg = packages.at(index);
+                                
+                                if (pkg->first_file != 0)
+                                {
+                                    file->package_next = knownFiles.at(pkg->first_file);
+                                }
+                                
+                                pkg->first_file = file->index;
+                            }
                         }
                     }
                     else
@@ -1105,7 +1149,7 @@ bool DatabaseWriter::rebuild()
                             {
                                 dep = _dep.trimmed();
         
-                                int32_t oldver;
+                                int32_t oldver = 0;
                                 
                                 QByteArray name, version;
                                 parent->parseVersion(dep, name, version);
@@ -1136,7 +1180,7 @@ bool DatabaseWriter::rebuild()
     {
         const QString &file = cacheFiles.at(cfIndex);
 
-        if (cfIndex != installedPackagesListIndex /* TODO: && != filesListIndex */)
+        if (cfIndex != installedPackagesListIndex && cfIndex != installedFilesListIndex)
         {
             QString fname = file;
             fname.replace(".xz", "");

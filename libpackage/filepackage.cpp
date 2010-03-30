@@ -206,7 +206,14 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         if (path.startsWith("data/"))
         {
             path.remove(0, 5);
-            d->files.append(new FileFile(d->ps, path, 0));
+            FileFile *file = new FileFile(d->ps, path, 0);
+            
+            if (path.startsWith("etc"))
+            {
+                file->setFlagsNoSave(PACKAGE_FILE_CHECKBACKUP);
+            }
+            
+            d->files.append(file);
         }
         
         // Savoir quel type de fichier on a lu
@@ -261,7 +268,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                 if (el.tagName() == "depend")
                 {
                     // Dépendance
-                    int8_t type;
+                    int8_t type = DEPEND_TYPE_DEPEND;
                     QString stype = el.attribute("type", "depend");
                     
                     if (stype == "depend")
@@ -344,6 +351,13 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                         // pour leur permettre de désactiver le flag virtual, au cas où.
                     }
                     
+                    if (path.startsWith("etc"))
+                    {
+                        // Fichier normalement de configuration, lui ajouter checkbackup.
+                        // On fait ça ici pour que l'empaqueteur puisse supprimer ce flag
+                        flags |= PACKAGE_FILE_CHECKBACKUP;
+                    }
+                    
                     // Explorer ses enfants pour voir si ce fichier a des flags
                     QDomElement flag = el.firstChildElement("flag");
                     
@@ -359,6 +373,10 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                         if (name == "backup")
                         {
                             APPLY_FLAG(PACKAGE_FILE_BACKUP)
+                        }
+                        else if (name == "checkbackup")
+                        {
+                            APPLY_FLAG(PACKAGE_FILE_CHECKBACKUP)
                         }
                         else if (name == "dontremove")
                         {

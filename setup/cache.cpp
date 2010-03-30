@@ -111,6 +111,7 @@ static void outFlags(int flags)
     OUT_FLAG(PACKAGE_FILE_DONTREMOVE, 'r')
     OUT_FLAG(PACKAGE_FILE_DONTPURGE, 'p')
     OUT_FLAG(PACKAGE_FILE_BACKUP, 'b')
+    OUT_FLAG(PACKAGE_FILE_CHECKBACKUP, 'c')
     OUT_FLAG(PACKAGE_FILE_OVERWRITE, 'o')
     OUT_FLAG(PACKAGE_FILE_VIRTUAL, 'v')
     
@@ -208,7 +209,7 @@ void App::showFiles(const QString &packageName)
     }
     
     cout << COLOR(tr("Liste des fichiers installés par %1 :").arg(packageName), "32") << endl;
-    cout << qPrintable(tr("Légende : d: dossier, i: installé, r: ne pas supprimer, p: ne pas purger, b: sauvegarder, o: effacer même si modifications locales, v: virtuel")) << endl << endl;
+    cout << qPrintable(tr("Légende : d: dossier, i: installé, r: ne pas supprimer, p: ne pas purger, b: sauvegarder, c: sauvegarder seulement si modifié, o: effacer même si modifié, v: virtuel")) << endl << endl;
     
     QString path;
     QStringList curParts, parts;
@@ -369,14 +370,19 @@ void App::tagFile(const QString &fileName, const QString &tag)
         {
             flag = PACKAGE_FILE_OVERWRITE;
         }
+        else if (t == "checkbackup")
+        {
+            flag = PACKAGE_FILE_CHECKBACKUP;
+        }
         else
         {
             cout << COLOR(tr("Tags disponibles :"), "37") << endl << endl;
             
-            cout << qPrintable(tr("  * dontremove : Ne pas supprimer quand son paquet est supprimé\n"
-                                  "  * dontpurge  : Ne pas supprimer même si son paquet est purgé\n"
-                                  "  * backup     : Toujours sauvegarder (.bak) avant remplacement\n"
-                                  "  * overwrite  : Ne jamais sauvegarder avant remplacement\n"));
+            cout << qPrintable(tr("  * dontremove  : Ne pas supprimer quand son paquet est supprimé\n"
+                                  "  * dontpurge   : Ne pas supprimer même si son paquet est purgé\n"
+                                  "  * backup      : Toujours sauvegarder (.bak) avant remplacement\n"
+                                  "  * checkbackup : Sauvegarder avant remplacement si modifié\n"
+                                  "  * overwrite   : Ne jamais sauvegarder avant remplacement\n"));
                                   
             cout << endl;
             return;

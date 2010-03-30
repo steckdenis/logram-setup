@@ -212,6 +212,7 @@ class PackageFile
 #define PACKAGE_FILE_BACKUP                 0b00010000
 #define PACKAGE_FILE_OVERWRITE              0b00100000
 #define PACKAGE_FILE_VIRTUAL                0b01000000
+#define PACKAGE_FILE_CHECKBACKUP            0b10000000
 
 
 #endif
