@@ -110,3 +110,20 @@ lh_removeservice() {
 
     sed -i -e "s#$1##g" "{{instroot}}/etc/initng/runlevel/$runlevel"
 }
+
+# Run before every script in metadata.xml. We can here define some env vars
+if [ "x$CFLAGS" = "x" ]; then
+    # CFLAGS not already defined
+    case "{{arch}}" in
+        i686)
+            export CFLAGS="-g -O2 -march=pentium3 -mtune=generic -msse -mfpmath=sse"
+            ;;
+        x86_64)
+            export CFLAGS="-g -O2 -mtune=generic -msse -msse2 -mfpmath=sse -mno-3dnow"
+            ;;
+    esac
+fi
+
+if [ "x$CXXFLAGS" = "x" ]; then
+    export CXXFLAGS="$CFLAGS"
+fi
