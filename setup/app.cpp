@@ -824,13 +824,13 @@ void App::progress(Progress *progress)
                         s = tr("Installation de ");
                         break;
                     case Solver::Remove:
-                        s = tr("Suppression de ");
+                        s = tr("Suppression de  ");
                         break;
                     case Solver::Purge:
-                        s = tr("Purge de ");
+                        s = tr("Purge de        ");
                         break;
                     case Solver::Update:
-                        s = tr("Mise à jour de ");
+                        s = tr("Mise à jour de  ");
                         break;
                     default:
                         // N'arrive jamais, juste pour que GCC soit content

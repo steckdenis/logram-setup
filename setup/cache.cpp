@@ -208,8 +208,20 @@ void App::showFiles(const QString &packageName)
         return;
     }
     
-    cout << COLOR(tr("Liste des fichiers installés par %1 :").arg(packageName), "32") << endl;
-    cout << qPrintable(tr("Légende : d: dossier, i: installé, r: ne pas supprimer, p: ne pas purger, b: sauvegarder, c: sauvegarder seulement si modifié, o: effacer même si modifié, v: virtuel")) << endl << endl;
+    if (colored)
+    {
+        cout << COLOR(tr("Liste des fichiers installés par %1 :").arg(packageName), "32") << endl;
+        cout << qPrintable(tr(
+        "Légende : \n"
+        "  * d: dossier\n"
+        "  * i: installé\n"
+        "  * r: ne pas supprimer, sauf si on purge\n"
+        "  * p: ne pas supprimer, même si on purge\n"
+        "  * b: toujours sauvegarder avant remplacement\n"
+        "  * c: sauvegarder seulement si modifié localement depuis l'installation\n"
+        "  * o: toujours écraser, même si un autre paquet le remplace\n"
+        "  * v: n'est pas installé par le paquet, mais créé à l'utilisation")) << endl << endl;
+    }
     
     QString path;
     QStringList curParts, parts;
