@@ -41,36 +41,37 @@ gitversion()
 #
 # example:
 #
-#    (cd "{{builddir}}" && lh_strip bin usr/bin usr/lib usr/share/app/plugins)
+#    lh_strip bin usr/bin usr/lib usr/share/app/plugins
 lh_strip()
 {
-    while [ "$1" != "" ]; do
-        # Trouver les fichiers du dossier
-        for f in $(find "$1" -type f); do
-            # Si le fichier commence par /usr/lib/debug, le sauter
-            case "$f" in
-                *usr/lib/debug/*)
+    oldpwd="$(pwd)"
+
+    cd "{{builddir}}"
+
+    for f in $(find "$1" -type f); do
+        # Si le fichier commence par /usr/lib/debug, le sauter
+        case "$f" in
+            *usr/lib/debug/*)
+                continue
+                ;;
+            *)
+                # Essayer d'en extraire le debug
+                mkdir -p "usr/lib/debug/$(dirname "$f")"
+                objcopy --only-keep-debug "$f" "usr/lib/debug/$f.debug" > /dev/null 2>&1
+
+                # Si objcopy a raté, c'est que le fichier n'était pas un fichier ELF
+                if [ "$?" != "0" ]; then
                     continue
-                    ;;
-                *)
-                    # Essayer d'en extraire le debug
-                    mkdir -p "usr/lib/debug/$(dirname "$f")"
-                    objcopy --only-keep-debug "$f" "usr/lib/debug/$f.debug" > /dev/null 2>&1
-                    
-                    # Si objcopy a raté, c'est que le fichier n'était pas un fichier ELF
-                    if [ "$?" != "0" ]; then
-                        continue
-                    fi
+                fi
 
-                    # Stripper le fichier
-                    echo "Stripping $f ..."
-                    strip --strip-debug "$f"
-            esac
-        done
-
-        # Passer au dossier suivant
-        shift
+                # Stripper le fichier
+                echo "Stripping $f ..."
+                strip --strip-debug "$f"
+        esac
     done
+
+    # Retourner au dossier précédant
+    cd "$oldpwd"
 }
 
 # lh_installservice <service> [runlevel=default.runlevel]
