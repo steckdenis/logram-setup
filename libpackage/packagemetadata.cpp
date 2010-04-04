@@ -167,7 +167,7 @@ void PackageMetaData::loadData(const QByteArray &data)
 
 void PackageMetaData::bindPackage(Package *pkg)
 {
-    QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + pkg->name() + "_" + pkg->version() + "/metadata.xml";
+    QString fname = d->ps->varRoot() + "/var/cache/lgrpkg/db/pkgs/" + pkg->name() + "~" + pkg->version() + ".xml";
     
     if (pkg->origin() == Package::File)
     {
