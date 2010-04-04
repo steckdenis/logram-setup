@@ -25,10 +25,17 @@ communicate()
 
 gitco()
 {
-    (cd "$2" && git pull)
-    
+    cd "$2" &>/dev/null
+
     if [ ! $? -eq 0 ]; then
         git clone --depth 1 "$1" "$2"
+    else
+        rs="$(git pull)"
+
+        if [ "$rs" = "Already up-to-date." ]; then
+            # Tell automatic scripts that we are up-to-date (no need to rebuild)
+            echo "SCM_UP_TO_DATE"
+        fi
     fi
 }
 
@@ -48,7 +55,7 @@ lh_strip()
 
     cd "{{builddir}}"
 
-    for f in $(find "$1" -type f); do
+    for f in $(find $1 -type f); do
         # Si le fichier commence par /usr/lib/debug, le sauter
         case "$f" in
             *usr/lib/debug/*)
