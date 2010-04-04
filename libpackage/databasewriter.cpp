@@ -982,8 +982,10 @@ bool DatabaseWriter::rebuild()
                             const QList<knownEntry *> &entries = knownPackages.value(pkgname);
 
                             index = -1;
-                            foreach(knownEntry *entry, entries)
+                            for (int i=0; i<entries.count(); ++i)
                             {
+                                knownEntry *entry = entries.at(i);
+                                
                                 if (!isInstalledFiles)
                                 {
                                     if (entry->pkg->distribution == strDistro && entry->pkg->repo == strRepo)
@@ -1006,7 +1008,6 @@ bool DatabaseWriter::rebuild()
                             if (index == -1)
                             {
                                 // Oh ? Un fichier avec un mauvais paquet ?
-                                qDebug() << "Index = -1 found for file" << name << ", package" << pkgname;
                                 continue;
                             }
                             
@@ -1014,9 +1015,6 @@ bool DatabaseWriter::rebuild()
                             // du même nom et même paquet existe déjà. Si c'est le cas, 
                             // remplacer ses flags (en effet, les flags utilisateurs sont
                             // lus après ceux de l'empaqueteur, et ont la priorité dessus).
-                            
-                            // TODO: Ecraser les fichiers qui y sont déjà, et les fichiers installés
-                            //       ont itime juste après flags
                             FileFile *file;
                             
                             if (currentDir)

@@ -41,11 +41,11 @@ class Solver : public QObject
 
         enum Action
         {
-            None,
-            Install,
-            Remove,
-            Purge,
-            Update
+            None = 0,
+            Install = 1,
+            Remove = 2,
+            Purge = 3,
+            Update = 4
         };
 
         void addPackage(const QString &nameStr, Action action);

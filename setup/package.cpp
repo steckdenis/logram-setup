@@ -647,7 +647,6 @@ void App::manageResults(Solver *solver)
         packages = solver->result(index);
         
         // Si la liste est vide, c'est qu'on n'a rien à faire
-        // TODO (p.e dans solver) : si la liste est vide et qu'on a demandé une installation, passer le paquet en installé manuellement
         if (packages->count() == 0)
         {
             index++;

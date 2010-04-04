@@ -16,10 +16,7 @@
     aucun problème.
 */
 
-var DOWNLOAD_FACTOR=20;
-var INSTALL_FACTOR=15;
-
-function weight(list, act)
+function weight(list)
 {
     var w;
     w = 0;
@@ -28,8 +25,21 @@ function weight(list, act)
     {
         pkg = list[i];
         
-        w += (pkg.downloadSize * DOWNLOAD_FACTOR / 1048576);
-        w += (pkg.installSize * INSTALL_FACTOR / 1048576);
+        if (w.action == 1)
+        {
+            // Installation
+            w += 1
+        }
+        else if (w.action == 2 || w.action == 3)
+        {
+            // Suppression
+            w += 2
+        }
+        else
+        {
+            // Mise à jour
+            w += 1
+        }
     }
     
     return w;

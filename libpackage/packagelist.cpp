@@ -59,9 +59,6 @@ struct PackageList::Private
     QList<Package *> downloadedPackages;
     QList<int> orphans;
     QList<QString> triggers;
-    
-    // Programme QtScript
-    QScriptValue weightFunction;
 };
 
 Q_DECLARE_METATYPE(Package *)
@@ -78,53 +75,10 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
     
     d->parallelInstalls = ps->parallelInstalls();
     d->parallelDownloads = ps->parallelDownloads();
-    
-    // Lire le programme QtScript
-    QFile fl(d->ps->confRoot() + "/etc/lgrpkg/scripts/weight.qs");
-
-    if (!fl.open(QIODevice::ReadOnly))
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::OpenFileError;
-        err->info = fl.fileName();
-        
-        d->ps->setLastError(err);
-        
-        d->error = true;
-        return;
-    }
-
-    // Parser le script
-    QScriptEngine *engine = new QScriptEngine();
-    engine->evaluate(fl.readAll(), fl.fileName());
-
-    if (engine->hasUncaughtException())
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::ScriptException;
-        err->info = fl.fileName();
-        err->more = engine->uncaughtExceptionLineNumber() + ": " + engine->uncaughtException().toString();
-        
-        d->ps->setLastError(err);
-        
-        d->error = true;
-        delete engine;
-        return;
-    }
-
-    QScriptValue global = engine->globalObject();
-    d->weightFunction = global.property("weight");
-
-    fl.close();
 }
 
 PackageList::~PackageList()
-{
-    if (d->weightFunction.engine() != 0)
-    {
-        delete d->weightFunction.engine();
-    }
-    
+{   
     for (int i=0; i<count(); ++i)
     {
         if (at(i)->origin() != Package::File)
@@ -202,14 +156,51 @@ int PackageList::weight() const
 {
     if (!d->weighted)
     {
+        QScriptValue func, global;
         QScriptValueList args;
         
+        // Lire le programme QtScript
+        QFile fl(d->ps->confRoot() + "/etc/lgrpkg/scripts/weight.qs");
+
+        if (!fl.open(QIODevice::ReadOnly))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::OpenFileError;
+            err->info = fl.fileName();
+            
+            d->ps->setLastError(err);
+            
+            d->error = true;
+            return 0;
+        }
+
+        // Parser le script
+        QScriptEngine engine;
+        engine.evaluate(fl.readAll(), fl.fileName());
+        fl.close();
+
+        if (engine.hasUncaughtException())
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::ScriptException;
+            err->info = fl.fileName();
+            err->more = engine.uncaughtExceptionLineNumber() + ": " + engine.uncaughtException().toString();
+            
+            d->ps->setLastError(err);
+            
+            d->error = true;
+            return 0;
+        }
+
+        global = engine.globalObject();
+        func = global.property("weight");
+        
+        // Appeler la fonction
         const QList<Package *> *l = this;
 
-        args << qScriptValueFromSequence(d->weightFunction.engine(), *l);
-        args << 0; // TODO: savoir si on installe, supprime, etc
+        args << qScriptValueFromSequence(&engine, *l);
         
-        d->weight = d->weightFunction.call(QScriptValue(), args).toInt32();
+        d->weight = func.call(QScriptValue(), args).toNumber();
         d->weighted = true;
     }
     

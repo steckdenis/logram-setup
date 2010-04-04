@@ -305,12 +305,17 @@ QList<_Depend *> DatabaseReader::depends(int pkgIndex)
 QList<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, int op)
 {
     QList<int> rs;
-    QString cmpVersion = QString(string(0, stringIndex));
+    QByteArray cmpVersion;
     
     // Vérifier l'index
-    if (stringIndex >= *(int *)m_strings)
+    if (op != DEPEND_OP_NOVERSION)
     {
-        return rs;
+        if (stringIndex >= *(int *)m_strings)
+        {
+            return rs;
+        }   
+        
+        cmpVersion = QByteArray(string(0, stringIndex));
     }
 
     // Trouver la chaîne à l'index spécifié
@@ -344,7 +349,10 @@ QList<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, int 
         {
             rs.append( ((_StrPackage *)(sptr))->package );
         }
-        else if (PackageSystem::matchVersion(QByteArray(string(0, ((_StrPackage *)(sptr))->version)), cmpVersion.toUtf8(), op))
+        else if (PackageSystem::matchVersion(
+            QByteArray(string(0, ((_StrPackage *)(sptr))->version)), 
+            cmpVersion, 
+            op))
         {
             rs.append( ((_StrPackage *)(sptr))->package );
         }

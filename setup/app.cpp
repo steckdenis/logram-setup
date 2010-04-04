@@ -398,6 +398,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         CHECK_RESULT("2.1alpha8<=2.0alpha11 : no", ps->matchVersion("2.1alpha8", "2.0alpha11", DEPEND_OP_LOEQ) == false)
         CHECK_RESULT("1debian2ubuntu1!=1ubuntu2debian1 : no", ps->matchVersion("1debian2ubuntu1", "1ubuntu2debian1", DEPEND_OP_NE) == false)
         CHECK_RESULT("1.1<1.2 : yes", ps->matchVersion("1.1", "1.2", DEPEND_OP_LO) == true);
+        CHECK_RESULT("7.9+git20100404~3>=7.9+git20100313", ps->matchVersion("7.9+git20100404~3", "7.9+git20100313", DEPEND_OP_GREQ) == true);
         
         // fileSizeFormat
         CHECK_RESULT("3 = 3 o", ps->fileSizeFormat(3) == "3 o");

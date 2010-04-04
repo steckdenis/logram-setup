@@ -567,7 +567,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
                     // Pas en cache
                     sql = " SELECT id \
                             FROM packages_directory \
-                            WHERE name='%1' AND directory_id=%2;";
+                            WHERE name='%1' COLLATE utf8_bin AND directory_id=%2;";
                     
                     if (!query.exec(sql
                             .arg(e(part))
