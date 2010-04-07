@@ -71,6 +71,7 @@ struct Logram::PackageSystem::Private
     bool installSuggests;
     int parallelInstalls, parallelDownloads;
     QString installRoot, confRoot, varRoot;
+    bool triggers;
     int setParams;
     
     // Mirroirs
@@ -929,6 +930,11 @@ QString Logram::PackageSystem::varRoot() const
     return d->varRoot;
 }
 
+bool Logram::PackageSystem::runTriggers() const
+{
+    return d->triggers;
+}
+
 void Logram::PackageSystem::setConfRoot(const QString &root)
 {
     d->setParams |= PACKAGESYSTEM_OPT_CONFROOT;
@@ -969,6 +975,11 @@ void Logram::PackageSystem::setInstallRoot(const QString &root)
     d->setParams |= PACKAGESYSTEM_OPT_INSTALLROOT;
     
     d->installRoot = root;
+}
+
+void Logram::PackageSystem::setRunTriggers(bool enable)
+{
+    d->triggers = enable;
 }
 
 /* Signaux */

@@ -345,48 +345,51 @@ bool PackageList::process()
     d->ps->endProgress(d->processProgress);
     
     // Lancer les triggers
-    int trigProgress = d->ps->startProgress(Progress::Trigger, d->triggers.count());
-    Templatable *tpl = new Templatable(this);
-    
-    // Remplir la template
-    tpl->addKey("instroot", d->ps->installRoot());
-    tpl->addKey("varroot", d->ps->varRoot());
-    tpl->addKey("confroot", d->ps->confRoot());
-    
-    for (int i=0; i<d->triggers.count(); ++i)
+    if (d->ps->runTriggers())
     {
-        const QString &trigger = d->triggers.at(i);
+        int trigProgress = d->ps->startProgress(Progress::Trigger, d->triggers.count());
+        Templatable *tpl = new Templatable(this);
         
-        // Progression
-        if (!d->ps->sendProgress(trigProgress, i, tpl->templateString(trigger), QString()))
+        // Remplir la template
+        tpl->addKey("instroot", d->ps->installRoot());
+        tpl->addKey("varroot", d->ps->varRoot());
+        tpl->addKey("confroot", d->ps->confRoot());
+        
+        for (int i=0; i<d->triggers.count(); ++i)
         {
-            d->ps->endProgress(trigProgress);
-            delete tpl;
-            return false;
+            const QString &trigger = d->triggers.at(i);
+            
+            // Progression
+            if (!d->ps->sendProgress(trigProgress, i, tpl->templateString(trigger), QString()))
+            {
+                d->ps->endProgress(trigProgress);
+                delete tpl;
+                return false;
+            }
+            
+            QProcess *proc = new QProcess;
+            
+            connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)),
+                    this,   SLOT(triggerFinished(int, QProcess::ExitStatus)));
+                    
+            connect(proc, SIGNAL(readyReadStandardOutput()),
+                    this,   SLOT(triggerOut()));
+                    
+            proc->setProcessChannelMode(QProcess::MergedChannels);
+            
+            // Exécuter le processus
+            proc->setProperty("lgr_trigger", tpl->templateString(trigger));  // Qt <3
+            QString exec = d->ps->installRoot() + "/usr/share/triggers/" + tpl->templateString(trigger);
+            proc->start(exec, QIODevice::ReadOnly);
+            
+            rs = d->loop.exec();
+            
+            if (rs != 0) return false;
         }
         
-        QProcess *proc = new QProcess;
-        
-        connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)),
-                this,   SLOT(triggerFinished(int, QProcess::ExitStatus)));
-                
-        connect(proc, SIGNAL(readyReadStandardOutput()),
-                this,   SLOT(triggerOut()));
-                
-        proc->setProcessChannelMode(QProcess::MergedChannels);
-        
-        // Exécuter le processus
-        proc->setProperty("lgr_trigger", tpl->templateString(trigger));  // Qt <3
-        QString exec = d->ps->installRoot() + "/usr/share/triggers/" + tpl->templateString(trigger);
-        proc->start(exec, QIODevice::ReadOnly);
-        
-        rs = d->loop.exec();
-        
-        if (rs != 0) return false;
+        delete tpl;
+        d->ps->endProgress(trigProgress);
     }
-    
-    delete tpl;
-    d->ps->endProgress(trigProgress);
     
     return true;
 }

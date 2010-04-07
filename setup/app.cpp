@@ -130,6 +130,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         {
             license = true;
         }
+        else if (opt == "-t")
+        {
+            ps->setRunTriggers(false);
+        }
         else
         {
             help();
@@ -470,6 +474,7 @@ void App::help()
             "    -C                 Affiche l'historique des modifications d'un paquet\n"
             "                       quand utilisé avec showpkg.\n"
             "    -L                 Affiche la licence d'un paquet quand utilisé avec showpkg.\n"
+            "    -T                 Désactive l'exécution des triggers.\n"
             "    -W                 Désactive les couleurs dans la sortie de Setup.\n");
    
     cout << qPrintable(rs);

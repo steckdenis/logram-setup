@@ -184,12 +184,14 @@ class PackageSystem : public QObject
         QString installRoot() const;
         QString confRoot() const;
         QString varRoot() const;
+        bool runTriggers() const;
         void setInstallSuggests(bool enable);
         void setParallelDownloads(int num);
         void setParallelInstalls(int num);
         void setInstallRoot(const QString &root);
         void setConfRoot(const QString &root);
         void setVarRoot(const QString &root);
+        void setRunTriggers(bool enable);
         
         // Gestion des erreurs
         void setLastError(PackageError *err); // Thread-safe
