@@ -9,9 +9,6 @@
     Cette fonction prend une liste de Packages (voir documentation API des bibliothèques Logram). Du coté
     C++, ces listes sont déclarées «QList<QPackage *>;».
 
-    Elle prend également un deuxième paramètre, «action», qui définit l'action principale demandée (installation/ajout,
-    mise à jour sure, mise à jour complète, changement de distribution, retour à une version stable, etc).
-
     Ce fichier contient du script QtScript, aux normes ECMAScript. Si vous savez coder en Javascript, il n'y a
     aucun problème.
 */
