@@ -50,10 +50,13 @@ struct RepositoryManager::Private
     // BDD
     QSqlDatabase db;
     QRegExp regex;
+    QRegExp slugRegex, slugRegex2;
+    bool websiteIntegration;
     
     // Fonctions
     bool registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type, int changelog_id = 0);
     bool writeXZ(const QString &fileName, const QByteArray &data);
+    QString slugify(const QString &str);
 };
 
 RepositoryManager::RepositoryManager(PackageSystem *ps) : QObject(ps)
@@ -62,6 +65,8 @@ RepositoryManager::RepositoryManager(PackageSystem *ps) : QObject(ps)
     d->ps = ps;
     
     d->regex = QRegExp("\\n[ \\t]+");
+    d->slugRegex = QRegExp("[^\\w\\s-]");
+    d->slugRegex2 = QRegExp("[-\\s]+");
 }
 
 RepositoryManager::~RepositoryManager()
@@ -93,6 +98,8 @@ bool RepositoryManager::loadConfig(const QString &fileName)
         return false;
     }
     
+    d->websiteIntegration = d->set->value("WebsiteIntegration", false).toBool();
+    
     return true;
 }
 
@@ -122,6 +129,27 @@ static QString e(const QString &str)
     rs.replace('%', "\\%");
     
     return rs;
+}
+
+QString RepositoryManager::Private::slugify(const QString &str)
+{
+    // Implémentation en C++ du code Python :
+    /* def slugify(value):
+     *     """
+     *     Normalizes string, converts to lowercase, removes non-alpha characters,
+     *     and converts spaces to hyphens.
+     *     """
+     *     import unicodedata
+     *     import re
+     *     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+     *     value = unicode(re.sub('[^\w\s-]', '', value).strip().lower())
+     *     return re.sub('[-\s]+', '-', value)
+     */
+    QString rs;
+    rs = str.normalized(QString::NormalizationForm_KD);
+    rs = rs.remove(slugRegex);
+    rs = rs.trimmed().toLower();
+    return rs.replace(slugRegex2, "-");
 }
 
 bool RepositoryManager::Private::writeXZ(const QString &fileName, const QByteArray &data)
@@ -322,6 +350,44 @@ struct DirectoryId
     QString name;
     int id;
 };
+
+struct WikiPage
+{
+    QString title;
+    QString shortdesc;
+    QString longdesc;
+    QString lang;
+};
+
+static QString wikiBody(const WikiPage &wikiPage, FilePackage *fpkg)
+{
+    QString rs;
+    
+    rs  = "Here is the wiki page of the package **" + fpkg->name() + "** at the version **" + fpkg->version() + "**.\n";
+    rs += "\n";
+    rs += "These lines are ignored, and you can translate them if you want. The table of contents is also ignored. \
+           The only important thing here is the first-level titles. Only their order is important, you can put whatever \
+           in them.\n";
+    rs += "\n";
+    rs += "The title and short description must fit in one single line. Every newline in them will be truncated. The \
+           long description can be as long as you want.\n";
+    rs += "\n";
+    rs += "[TOC]\n";
+    rs += "\n";
+    rs += "# Title\n";
+    rs += "\n";
+    rs += wikiPage.title + "\n";
+    rs += "\n";
+    rs += "# Short description\n";
+    rs += "\n";
+    rs += wikiPage.shortdesc + "\n";
+    rs += "\n";
+    rs += "# Long description\n";
+    rs += "\n";
+    rs += wikiPage.longdesc + "\n";
+    
+    return rs;
+}
 
 bool RepositoryManager::includePackage(const QString &fileName)
 {
@@ -660,6 +726,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
     // Chaînes
     QDomElement package = md->currentPackageElement();
     QDomElement el = package.firstChildElement();
+    QList<WikiPage> wikiPages;
     
     while (!el.isNull())
     {
@@ -682,12 +749,75 @@ bool RepositoryManager::includePackage(const QString &fileName)
         {
             // Explorer les langues
             QDomElement lang = el.firstChildElement();
+            QString l, text;
             
             while (!lang.isNull())
             {
-                if (!d->registerString(query, package_id, lang.tagName(), lang.text(), type))
+                l = lang.tagName();
+                text = lang.text().trimmed().replace(d->regex, "\n");
+                
+                if (!d->registerString(query, package_id, l, text, type))
                 {
                     return false;
+                }
+                
+                // Enregistrer la langue dans la page de wiki
+                /*
+                    struct WikiPage
+                    {
+                        QString title;
+                        QString shortdesc;
+                        QString longdesc;
+                        QString lang;
+                    };
+                */
+                bool found = false;
+                
+                for (int i=0; i<wikiPages.count(); ++i)
+                {
+                    WikiPage &wikiPage = wikiPages[i];
+                    
+                    if (wikiPage.lang == l)
+                    {
+                        // Bonne langue, mettre à jour l'info
+                        switch (type)
+                        {
+                            case 0:
+                                wikiPage.title = text;
+                                break;
+                            case 1:
+                                wikiPage.shortdesc = text;
+                                break;
+                            case 2:
+                                wikiPage.longdesc = text;
+                                break;
+                        }
+                        
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found)
+                {
+                    // On n'a pas encore cette page
+                    WikiPage wikiPage;
+                    wikiPage.lang = l;
+                    
+                    switch (type)
+                    {
+                        case 0:
+                            wikiPage.title = text;
+                            break;
+                        case 1:
+                            wikiPage.shortdesc = text;
+                            break;
+                        case 2:
+                            wikiPage.longdesc = text;
+                            break;
+                    }
+                    
+                    wikiPages.append(wikiPage);
                 }
                 
                 lang = lang.nextSiblingElement();
@@ -695,6 +825,158 @@ bool RepositoryManager::includePackage(const QString &fileName)
         }
         
         el = el.nextSiblingElement();
+    }
+    
+    // Explorer les wikiPages et les enregistrer dans la base de donnée.
+    if (d->websiteIntegration)
+    {
+        QList<int> ids;
+        int identifier = -1;
+        
+        for (int i=0; i<wikiPages.count(); ++i)
+        {
+            const WikiPage &wikiPage = wikiPages.at(i);
+            
+            // Voir si une page de wiki dont le slug est {{pkgname|slugify}}-{{distro|slugify}} existe
+            // dans la bonne langue
+            QString slug = d->slugify(fpkg->name() + "-" + fpkg->distribution());
+            
+            sql = " SELECT \
+                    id, \
+                    identifier, \
+                    body \
+                    FROM wiki_page \
+                    WHERE slug='%1' AND lang='%2';";
+            
+            if (!query.exec(sql
+                    .arg(e(slug))
+                    .arg(e(wikiPage.lang))))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                
+                d->ps->setLastError(err);
+                
+                return false;
+            }
+            
+            if (query.next())
+            {
+                int id = query.value(0).toInt();
+                identifier = query.value(1).toInt();
+                QString oldBody = query.value(2).toString();
+                QString body = wikiBody(wikiPage, fpkg);
+                
+                if (body != oldBody)
+                {
+                    qDebug() << "Pas les mêmes, mettre à jour";
+                    
+                    // La page existe déjà, la mettre à jour
+                    sql = " UPDATE wiki_page \
+                            SET body='%1' \
+                            WHERE id=%2;";
+                    
+                    if (!query.exec(sql
+                            .arg(e(body))
+                            .arg(id)))
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::QueryError;
+                        err->info = query.lastQuery();
+                        
+                        d->ps->setLastError(err);
+                        
+                        return false;
+                    }
+                    
+                    // Ajouter un enregistrement anonyme dans l'historique
+                    sql = " INSERT INTO wiki_logentry \
+                                (page_id, comment, body, date, author_ip) \
+                            VALUES (%1, 'New package importation', '%2', NOW(), 'Setup import');";
+                    
+                    if (!query.exec(sql
+                            .arg(id)
+                            .arg(e(oldBody))))
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::QueryError;
+                        err->info = query.lastQuery();
+                        
+                        d->ps->setLastError(err);
+                        
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                // La page n'existe pas encore, la créer
+                sql = " INSERT INTO wiki_page \
+                        (title, slug, lang, identifier, body, is_protected, is_private) \
+                        VALUES ('%1', '%2', '%3', %4, '%5', %6, %7);";
+                
+                if (!query.exec(sql
+                        .arg(e(wikiPage.title))
+                        .arg(e(slug))
+                        .arg(e(wikiPage.lang))
+                        .arg(0)
+                        .arg(e(wikiBody(wikiPage, fpkg)))
+                        .arg(0)
+                        .arg(0)))
+                {
+                    PackageError *err = new PackageError;
+                    err->type = PackageError::QueryError;
+                    err->info = query.lastQuery();
+                    
+                    d->ps->setLastError(err);
+                    
+                    return false;
+                }
+                
+                int id = query.lastInsertId().toInt();
+                ids.append(id);
+                
+                // Si on n'a pas encore d'identifier, prendre cette id
+                if (identifier == -1)
+                {
+                    identifier = id;
+                }
+            }
+        }
+        
+        // Mettre à jour toutes les pages listées par ids pour qu'elles aient le même identifiant de groupe
+        if (ids.count() != 0)
+        {
+            QString sids;
+            
+            for (int i=0; i<ids.count(); ++i)
+            {
+                if (i != 0)
+                {
+                    sids += ", ";
+                }
+                
+                sids += QString::number(ids.at(i));
+            }
+            
+            sql = " UPDATE wiki_page \
+                    SET identifier=%1 \
+                    WHERE id IN (%2);";
+            
+            if (!query.exec(sql
+                    .arg(identifier)
+                    .arg(sids)))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                
+                d->ps->setLastError(err);
+                
+                return false;
+            }
+        }
     }
     
     // Enregistrer le changelog, sans passer par md->changelog() car on a besoin des langues
