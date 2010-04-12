@@ -363,7 +363,7 @@ static QString wikiBody(const WikiPage &wikiPage, FilePackage *fpkg)
 {
     QString rs;
     
-    rs  = "Here is the wiki page of the package **" + fpkg->name() + "** at the version **" + fpkg->version() + "**.\n";
+    rs  = "Here is the wiki page of the package **" + fpkg->name() + "**.\n";
     rs += "\n";
     rs += "These lines are ignored, and you can translate them if you want. The table of contents is also ignored. \
            The only important thing here is the first-level titles. Only their order is important, you can put whatever \
@@ -389,6 +389,40 @@ static QString wikiBody(const WikiPage &wikiPage, FilePackage *fpkg)
     return rs;
 }
 
+static QString lpkFileName(const QString &name, const QString &version, const QString &arch)
+{
+    QString rs = "pool/%1/%2/%3~%4.%5.lpk";
+    QString dd;
+    
+    if (name.startsWith("lib"))
+    {
+        dd = name.left(4);
+    }
+    else
+    {
+        dd = name.left(1);
+    }
+    
+    return rs.arg(dd, name, name, version, arch);
+}
+
+static QString metaFileName(const QString &name, const QString &version)
+{
+    QString rs = "metadata/%1/%2~%3.metadata.xml.xz";
+    QString dd;
+    
+    if (name.startsWith("lib"))
+    {
+        dd = name.left(4);
+    }
+    else
+    {
+        dd = name.left(1);
+    }
+    
+    return rs.arg(dd, name, version);
+}
+
 bool RepositoryManager::includePackage(const QString &fileName)
 {
     // Ouvrir le paquet
@@ -412,22 +446,8 @@ bool RepositoryManager::includePackage(const QString &fileName)
     md->setCurrentPackage(fpkg->name());
     
     // Obtenir l'url du paquet
-    QString download_url = "pool/%1/%2/%3";
-    QString metadata_url = "metadata/%1/%2~%3.metadata.xml.xz";
-    QString dd;
-    QString fname = fileName.section('/', -1, -1);
-    
-    if (fpkg->name().startsWith("lib"))
-    {
-        dd = fpkg->name().left(4);
-    }
-    else
-    {
-        dd = fpkg->name().left(1);
-    }
-    
-    download_url = download_url.arg(dd, fpkg->name(), fname);
-    metadata_url = metadata_url.arg(dd, fpkg->name(), fpkg->version());
+    QString download_url = lpkFileName(fpkg->name(), fpkg->version(), fpkg->arch());
+    QString metadata_url = metaFileName(fpkg->name(), fpkg->version());
     
     // Mettre à jour la base de donnée
     QString sql;
@@ -435,12 +455,14 @@ bool RepositoryManager::includePackage(const QString &fileName)
     
     sql = " SELECT \
             section.name, \
+            arch.name, \
             \
             pkg.section_id, \
             pkg.arch_id, \
             pkg.distribution_id, \
             \
-            pkg.id \
+            pkg.id, \
+            pkg.version \
             \
             FROM packages_package pkg \
             LEFT JOIN packages_section section ON pkg.section_id = section.id \
@@ -448,13 +470,11 @@ bool RepositoryManager::includePackage(const QString &fileName)
             LEFT JOIN packages_distribution distro ON pkg.distribution_id = distro.id \
             \
             WHERE pkg.name = '%1' \
-            AND distro.name = '%2' \
-            AND arch.name = '%3';";
+            AND distro.name = '%2';";
             
     // Sélectionner le (ou zéro) paquet qui correspond.
     if (!query.exec(sql.arg(e(fpkg->name()), 
-                            e(fpkg->distribution()), 
-                            e(fpkg->arch()))))
+                            e(fpkg->distribution()))))
     {
         PackageError *err = new PackageError;
         err->type = PackageError::QueryError;
@@ -470,19 +490,22 @@ bool RepositoryManager::includePackage(const QString &fileName)
     int section_id = -1;
     int package_id = -1;
     bool update = false;
+    QString oldver;
+    QString oldarch;
     
     if (query.next())
     {
         // Le paquet est dans la base de donnée, pré-charger les champs
         update = true;
-        arch_id = query.value(2).toInt();
-        distro_id = query.value(3).toInt();
-        package_id = query.value(4).toInt();
+        distro_id = query.value(4).toInt();
+        package_id = query.value(5).toInt();
+        oldver = query.value(6).toString();
+        oldarch = query.value(1).toString();
         
         if (query.value(0).toString() == fpkg->section())
         {
             // La section n'a pas changé
-            section_id = query.value(1).toInt();
+            section_id = query.value(2).toInt();
         }
         else
         {
@@ -492,6 +515,21 @@ bool RepositoryManager::includePackage(const QString &fileName)
             TRY_QUERY(sql.arg(e(fpkg->section())))
             
             section_id = query.value(0).toInt();
+        }
+        
+        if (query.value(1).toString() == fpkg->arch())
+        {
+            // La section n'a pas changé
+            arch_id = query.value(3).toInt();
+        }
+        else
+        {
+            // La section a changé
+            sql = "SELECT id FROM packages_arch WHERE name='%1';";
+            
+            TRY_QUERY(sql.arg(e(fpkg->arch())))
+            
+            arch_id = query.value(0).toInt();
         }
     }
     else
@@ -544,6 +582,10 @@ bool RepositoryManager::includePackage(const QString &fileName)
                 upstream_url='%21' \
                 \
                 WHERE id=") + QString::number(package_id) + ";";
+        
+        // Une autre version du paquet est déjà dans le dépôt, la retirer (TODO: C'est ici qu'on differa)
+        QFile::remove(lpkFileName(fpkg->name(), oldver, oldarch));
+        QFile::remove(metaFileName(fpkg->name(), oldver));
     }
     
     // Lancer la requête
