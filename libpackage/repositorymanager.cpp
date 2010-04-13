@@ -318,8 +318,8 @@ int RepositoryManager::Private::sourcePackageId(const QString &name)
     {
         // Le paquet source n'existe pas encore, l'ajouter
         sql = " INSERT INTO packages_sourcepackage \
-                    (name) \
-                VALUES ('%1');";
+                    (name, topic_id) \
+                VALUES ('%1', 0);";
         
         if (!query.exec(sql
                 .arg(e(name))))
@@ -333,7 +333,50 @@ int RepositoryManager::Private::sourcePackageId(const QString &name)
             return false;
         }
         
-        return query.lastInsertId().toInt();
+        int source_id = query.lastInsertId().toInt();
+        
+        // Créer le sujet pour les commentaires
+        if (websiteIntegration)
+        {
+            sql = " INSERT INTO forum_topic \
+                        (parent_id, p_type, author_id, lang, title, subtitle, last_post_id, last_post_page, num_posts, stick, closed, resolved, poll_id) \
+                    VALUES (%1, 3, NULL, 'en', '%2', '', NULL, 1, 0, 0, 0, 0, NULL);";
+            
+            if (!query.exec(sql
+                    .arg(source_id)
+                    .arg(e(name))))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                
+                ps->setLastError(err);
+                
+                return false;
+            }
+            
+            int topic_id = query.lastInsertId().toInt();
+            
+            // Mettre à jour le topic_id du paquet
+            sql = " UPDATE packages_sourcepackage \
+                    SET topic_id=%1 \
+                    WHERE id=%2;";
+            
+            if (!query.exec(sql
+                    .arg(topic_id)
+                    .arg(source_id)))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                
+                ps->setLastError(err);
+                
+                return false;
+            }
+        }
+        
+        return source_id;
     }
 }
 
