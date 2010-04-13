@@ -37,6 +37,8 @@
 #include <QtXml>
 #include <QtDebug>
 
+#include <archive.h>
+#include <archive_entry.h>
 #include <gpgme.h>
 #include <unistd.h>
 
@@ -57,6 +59,7 @@ struct RepositoryManager::Private
     bool registerString(QSqlQuery &query, int package_id, const QString &lang, const QString &cont, int type, int changelog_id = 0);
     bool writeXZ(const QString &fileName, const QByteArray &data);
     QString slugify(const QString &str);
+    int sourcePackageId(const QString &name);
 };
 
 RepositoryManager::RepositoryManager(PackageSystem *ps) : QObject(ps)
@@ -285,9 +288,61 @@ bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id
     return true;
 }
 
+int RepositoryManager::Private::sourcePackageId(const QString &name)
+{
+    QSqlQuery query;
+    QString sql;
+    
+    sql = " SELECT \
+            id \
+            FROM packages_sourcepackage \
+            WHERE name='%1';";
+    
+    if (!query.exec(sql
+            .arg(e(name))))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::QueryError;
+        err->info = query.lastQuery();
+        
+        ps->setLastError(err);
+        
+        return false;
+    }
+    
+    if (query.next())
+    {
+        return query.value(0).toInt();
+    }
+    else
+    {
+        // Le paquet source n'existe pas encore, l'ajouter
+        sql = " INSERT INTO packages_sourcepackage \
+                    (name) \
+                VALUES ('%1');";
+        
+        if (!query.exec(sql
+                .arg(e(name))))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::QueryError;
+            err->info = query.lastQuery();
+            
+            ps->setLastError(err);
+            
+            return false;
+        }
+        
+        return query.lastInsertId().toInt();
+    }
+}
+
 bool RepositoryManager::includeSource(const QString &fileName)
 {
-    // Simply copy the file in the pool directory
+    QSqlQuery query;
+    QString sql;
+    
+    // Copier le paquet dans le dossier pool
     QString download_url = "pool/%1/%2/%3";
     QString dd;
     QString fname = fileName.section('/', -1, -1);
@@ -342,6 +397,174 @@ bool RepositoryManager::includeSource(const QString &fileName)
         return false;
     }
     
+    // L'enregistrer dans la base de donnée
+    int source_id = d->sourcePackageId(pkname);
+    
+    // Trouver sa distribution
+    struct archive *a;
+    struct archive_entry *entry;
+    int r;
+    
+    a = archive_read_new();
+    archive_read_support_compression_lzma(a);
+    archive_read_support_compression_xz(a);
+    archive_read_support_format_all(a);
+    
+    r = archive_read_open_filename(a, qPrintable(fileName), 10240);
+    
+    if (r != ARCHIVE_OK)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = download_url;
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    QByteArray path;
+    QDomDocument metadata;
+    int size;
+    char *buffer;
+    
+    while (archive_read_next_header(a, &entry) == ARCHIVE_OK)
+    {
+        path = QByteArray(archive_entry_pathname(entry));
+        
+        if (path == "metadata.xml")
+        {
+            // Lire le fichier
+            size = archive_entry_size(entry);
+            buffer = new char[size];
+            archive_read_data(a, buffer, size);
+            
+            metadata.setContent(QByteArray(buffer, size));
+            
+            delete[] buffer;
+            break;
+        }
+    }
+    
+    r = archive_read_finish(a);
+    
+    if (r != ARCHIVE_OK)
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = download_url;
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    // On a maintenant un document DOM permettant d'avoir toutes les infos voulues sur la source (dépendances, mainteneur, et distribution)
+    QDomElement root = metadata.documentElement();
+    QDomElement source = root.firstChildElement("source");
+    
+    QString license = source.attribute("license");
+    QString upstreamurl = source.attribute("upstreamurl");
+    QString depends, conflicts, suggests;
+    
+    // Explorer les dépendances
+    QDomElement depend = source.firstChildElement("depend");
+    
+    while (!depend.isNull())
+    {
+        QString type = depend.attribute("type", "depend");
+        
+        if (type == "depend")
+        {
+            if (!depends.isEmpty())
+            {
+                depends += "; ";
+            }
+            depends += depend.attribute("string");
+        }
+        else if (type == "suggest")
+        {
+            if (!suggests.isEmpty())
+            {
+                suggests += "; ";
+            }
+            suggests += depend.attribute("string");
+        }
+        else if (type == "conflict")
+        {
+            if (!conflicts.isEmpty())
+            {
+                conflicts += "; ";
+            }
+            conflicts += depend.attribute("string");
+        }
+        
+        depend = depend.nextSiblingElement("depend");
+    }
+    
+    // Mainteneur
+    QDomElement maint = source.firstChildElement("maintainer");
+    QString maintainer = maint.attribute("name") + " <" + maint.attribute("email") + ">";
+    
+    // Dernière entrée de changelog pour avoir la version, la distribution et l'auteur de la mise à jour
+    QDomElement changelog = root.firstChildElement("changelog").firstChildElement("entry");
+    QString author = changelog.attribute("author") + " <" + changelog.attribute("email") + ">";
+    QString version = fname.section('~', 1, -1).section('.', 0, -3);
+    QString distro = changelog.attribute("distribution");
+    
+    // Prendre l'ID de la distribution
+    sql = "SELECT id FROM packages_distribution WHERE name='%1';";
+    TRY_QUERY(sql.arg(e(distro)))
+    int distro_id = query.value(0).toInt();
+    
+    // Supprimer les flags LASTEST, REBUILD et CONITNUOUS des anciens enregistrements
+    sql = " UPDATE packages_sourcelog \
+            SET flags=flags & ~(%1) \
+            WHERE source_id=%2 \
+            AND distribution_id=%3;";
+    
+    if (!query.exec(sql
+            .arg(SOURCEPACKAGE_FLAG_LASTEST | SOURCEPACKAGE_FLAG_REBUILD | SOURCEPACKAGE_FLAG_CONTINUOUS)
+            .arg(source_id)
+            .arg(distro_id)))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::QueryError;
+        err->info = query.lastQuery();
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    // Insérer un nouvel enregistrement
+    sql = " INSERT INTO packages_sourcelog \
+                (source_id, flags, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
+            VALUES (%1, %2, NOW(), '%3', '%4', '%5', '%6', %7, '%8', NULL, '%9', '%10', '%11');";
+    
+    if (!query.exec(sql
+            .arg(source_id)
+            .arg(SOURCEPACKAGE_FLAG_LASTEST | SOURCEPACKAGE_FLAG_MANUAL)
+            .arg(author)
+            .arg(maintainer)
+            .arg(upstreamurl)
+            .arg(version)
+            .arg(distro_id)
+            .arg(license)
+            .arg(depends)
+            .arg(suggests)
+            .arg(conflicts)))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::QueryError;
+        err->info = query.lastQuery();
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    // On a fini
     return true;
 }
 
@@ -548,12 +771,15 @@ bool RepositoryManager::includePackage(const QString &fileName)
         distro_id = query.value(0).toInt();
     }
     
+    // Trouver le paquet source
+    int source_id = d->sourcePackageId(fpkg->source());
+    
     // Insérer ou mettre à jour le paquet
     if (!update)
     {
         sql = " INSERT INTO \
-                packages_package(name, maintainer, section_id, version, arch_id, distribution_id, primarylang, download_size, install_size, date, depends, suggests, conflicts, provides, replaces, source, license, flags, packageHash, metadataHash, download_url, upstream_url) \
-                VALUES ('%1', '%2', %3, '%4', %5, %6, '%7', %8, %9, NOW(), '%10', '%11', '%12', '%13', '%14', '%15', '%16', %17, '%18', '%19', '%20', '%21');";
+                packages_package(name, maintainer, section_id, version, arch_id, distribution_id, primarylang, download_size, install_size, date, depends, suggests, conflicts, provides, replaces, source, license, flags, packageHash, metadataHash, download_url, upstream_url, source_id) \
+                VALUES ('%1', '%2', %3, '%4', %5, %6, '%7', %8, %9, NOW(), '%10', '%11', '%12', '%13', '%14', '%15', '%16', %17, '%18', '%19', '%20', '%21', %22);";
     }
     else
     {
@@ -579,7 +805,8 @@ bool RepositoryManager::includePackage(const QString &fileName)
                 packageHash='%18', \
                 metadataHash='%19', \
                 download_url='%20', \
-                upstream_url='%21' \
+                upstream_url='%21', \
+                source_id=%22 \
                 \
                 WHERE id=") + QString::number(package_id) + ";";
         
@@ -610,6 +837,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
             .arg(e(QString(fpkg->metadataHash())))
             .arg(e(download_url))
             .arg(e(fpkg->upstreamUrl()))
+            .arg(source_id)
             ))
     {
         PackageError *err = new PackageError;
