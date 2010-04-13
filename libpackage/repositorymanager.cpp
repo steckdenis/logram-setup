@@ -778,7 +778,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
     if (!update)
     {
         sql = " INSERT INTO \
-                packages_package(name, maintainer, section_id, version, arch_id, distribution_id, primarylang, download_size, install_size, date, depends, suggests, conflicts, provides, replaces, source, license, flags, packageHash, metadataHash, download_url, upstream_url, source_id) \
+                packages_package(name, maintainer, section_id, version, arch_id, distribution_id, primarylang, download_size, install_size, date, depends, suggests, conflicts, provides, replaces, source, license, flags, packageHash, metadataHash, download_url, upstream_url, sourcepkg_id) \
                 VALUES ('%1', '%2', %3, '%4', %5, %6, '%7', %8, %9, NOW(), '%10', '%11', '%12', '%13', '%14', '%15', '%16', %17, '%18', '%19', '%20', '%21', %22);";
     }
     else
@@ -806,7 +806,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
                 metadataHash='%19', \
                 download_url='%20', \
                 upstream_url='%21', \
-                source_id=%22 \
+                sourcepkg_id=%22 \
                 \
                 WHERE id=") + QString::number(package_id) + ";";
         
