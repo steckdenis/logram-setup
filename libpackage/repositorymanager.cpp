@@ -560,14 +560,14 @@ bool RepositoryManager::includeSource(const QString &fileName)
     TRY_QUERY(sql.arg(e(distro)))
     int distro_id = query.value(0).toInt();
     
-    // Supprimer les flags LASTEST, REBUILD et CONITNUOUS des anciens enregistrements
+    // Supprimer les flags LATEST, REBUILD et CONITNUOUS des anciens enregistrements
     sql = " UPDATE packages_sourcelog \
             SET flags=flags & ~(%1) \
             WHERE source_id=%2 \
             AND distribution_id=%3;";
     
     if (!query.exec(sql
-            .arg(SOURCEPACKAGE_FLAG_LASTEST | SOURCEPACKAGE_FLAG_REBUILD | SOURCEPACKAGE_FLAG_CONTINUOUS)
+            .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_REBUILD | SOURCEPACKAGE_FLAG_CONTINUOUS)
             .arg(source_id)
             .arg(distro_id)))
     {
@@ -587,7 +587,7 @@ bool RepositoryManager::includeSource(const QString &fileName)
     
     if (!query.exec(sql
             .arg(source_id)
-            .arg(SOURCEPACKAGE_FLAG_LASTEST | SOURCEPACKAGE_FLAG_MANUAL)
+            .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_MANUAL)
             .arg(author)
             .arg(maintainer)
             .arg(upstreamurl)

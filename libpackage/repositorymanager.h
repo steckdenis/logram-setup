@@ -50,7 +50,7 @@ class RepositoryManager : public QObject
 
 } /* Namespace */
 
-#define SOURCEPACKAGE_FLAG_LASTEST              0b0000001
+#define SOURCEPACKAGE_FLAG_LATEST              0b0000001
 #define SOURCEPACKAGE_FLAG_MANUAL               0b0000010
 #define SOURCEPACKAGE_FLAG_FAILED               0b0000100
 #define SOURCEPACKAGE_FLAG_OVERWRITECHANGELOG   0b0001000
