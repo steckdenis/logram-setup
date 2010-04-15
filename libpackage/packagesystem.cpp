@@ -79,6 +79,7 @@ struct Logram::PackageSystem::Private
     
     // Sauvegarde des fichiers
     _SaveFile *firstFile;
+    QList<_SaveFile *> saveFiles;
 };
 
 Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
@@ -1378,6 +1379,14 @@ void Logram::PackageSystem::syncFiles()
     // Écrire tous les fichiers qui manquent
     writeCurrentFile(d->firstFile, out);
     
+    // Nettoyer
+    for (int i=0; i<d->saveFiles.count(); ++i)
+    {
+        _SaveFile *sf = d->saveFiles.at(i);
+        
+        delete sf;
+    }
+    
     // Fermer
     close(out);
     
@@ -1441,6 +1450,8 @@ void Logram::PackageSystem::saveFile(PackageFile *file)
                     sf->next = d->firstFile;
                     d->firstFile = sf;
                 }
+                
+                d->saveFiles.append(sf);
             }
             
             sf->flags = file->flags();
@@ -1486,6 +1497,8 @@ void Logram::PackageSystem::saveFile(PackageFile *file)
                     sf->next = d->firstFile;
                     d->firstFile = sf;
                 }
+                
+                d->saveFiles.append(sf);
             }
             
             currentFile = sf;

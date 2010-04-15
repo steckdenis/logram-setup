@@ -402,6 +402,11 @@ PackageFile::PackageFile(PackageSystem *ps)
     d->ps = ps;
 }
 
+PackageFile::~PackageFile()
+{
+    delete d;
+}
+
 void PackageFile::saveFile()
 {
     d->ps->saveFile(this);

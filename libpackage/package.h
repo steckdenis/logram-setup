@@ -70,7 +70,7 @@ class Package : public QObject
         Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
         Package(QObject *parent, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
         Package(const Package &other);
-        ~Package();
+        virtual ~Package();
         
         enum Origin
         {
@@ -146,6 +146,7 @@ class Depend
 {
     public:
         Depend();
+        virtual ~Depend() {}
 
         virtual QString name() = 0;
         virtual QString version() = 0;
@@ -157,6 +158,7 @@ class PackageFile
 {
     public:
         PackageFile(PackageSystem *ps);
+        virtual ~PackageFile();
         
         virtual QString path() = 0;
         virtual int flags() = 0;

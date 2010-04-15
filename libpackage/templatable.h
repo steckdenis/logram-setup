@@ -33,7 +33,7 @@ class Templatable : public QObject
 {
     public:
         Templatable(QObject *parent);
-        ~Templatable();
+        virtual ~Templatable();
         
         void addKey(const QString &key, const QString &value);
         QString getKey(const QString &key) const;

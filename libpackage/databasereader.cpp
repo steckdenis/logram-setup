@@ -40,6 +40,7 @@ DatabaseReader::DatabaseReader(PackageSystem *_ps)
     f_translate = 0;
     f_depends = 0;
     f_strpackages = 0;
+    f_files = 0;
 }
 
 bool DatabaseReader::init()
@@ -91,6 +92,13 @@ DatabaseReader::~DatabaseReader()
         f_strpackages->unmap(m_strpackages);
         delete f_strpackages;
         f_strpackages = 0;
+    }
+    if (f_files != 0)
+    {
+        f_files->close();
+        f_files->unmap(m_files);
+        delete f_files;
+        f_files = 0;
     }
 }
 

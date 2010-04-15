@@ -477,6 +477,8 @@ void ProcessThread::run()
             {
                 archive_read_finish(d->a);
                 d->error = true;
+                delete tpl;
+                delete md;
                 return;
             }
             
@@ -485,6 +487,7 @@ void ProcessThread::run()
             
             if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
             {
+                archive_read_finish(d->a);
                 PackageError *err = new PackageError;
                 err->type = PackageError::OpenFileError;
                 err->info = fl.fileName();
@@ -492,6 +495,8 @@ void ProcessThread::run()
                 d->ps->setLastError(err);
                 
                 d->error = true;
+                delete tpl;
+                delete md;
                 return;
             }
             
@@ -508,6 +513,8 @@ void ProcessThread::run()
             if (!d->remove_files())
             {
                 d->error = true;
+                delete tpl;
+                delete md;
                 return;
             }
             
@@ -531,6 +538,8 @@ void ProcessThread::run()
             {
                 archive_read_finish(d->a);
                 d->error = true;
+                delete tpl;
+                delete md;
                 return;
             }
             
@@ -542,6 +551,8 @@ void ProcessThread::run()
             {
                 archive_read_finish(d->a);
                 d->error = true;
+                delete tpl;
+                delete md;
                 return;
             }
             
@@ -550,6 +561,7 @@ void ProcessThread::run()
             
             if (!fl.open(QIODevice::WriteOnly | QIODevice::Truncate))
             {
+                archive_read_finish(d->a);
                 PackageError *err = new PackageError;
                 err->type = PackageError::OpenFileError;
                 err->info = fl.fileName();
@@ -557,6 +569,8 @@ void ProcessThread::run()
                 d->ps->setLastError(err);
                 
                 d->error = true;
+                delete tpl;
+                delete md;
                 return;
             }
             
@@ -571,8 +585,13 @@ void ProcessThread::run()
             break;
     }
     
+    
+    // Nettoyage
     if (d->a)
     {
         archive_read_finish(d->a);
     }
+    
+    delete tpl;
+    delete md;
 }
