@@ -1290,6 +1290,8 @@ bool DatabaseWriter::rebuild()
         
         // Écriture
         fl.write((const char *)&file, sizeof(_File));
+        
+        delete mfile;
     }
     
     for (int i=0; i<fileStrings.count(); ++i)
