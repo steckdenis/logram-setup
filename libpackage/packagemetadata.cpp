@@ -614,7 +614,7 @@ void PackageMetaData::processDataOut()
     {
         line = sh->readLine().trimmed();
         
-        d->buffer += line + '\n';
+        d->buffer = line;
         
         // Envoyer la progression
         if (!d->ps->processOut(d->commandLine, line))

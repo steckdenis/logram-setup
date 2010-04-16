@@ -211,7 +211,7 @@ bool PackageSource::binaries()
                 return false;
             }
             
-            addKey("develver", d->md->scriptOut().trimmed());
+            addKey("develver", d->md->scriptOut());
         }
         
         // Templater la version

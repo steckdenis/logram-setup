@@ -84,21 +84,29 @@ bool RepositoryManager::loadConfig(const QString &fileName)
     // Se connecter à la base de donnée
     QSqlDatabase &db = d->db;
     
-    db = QSqlDatabase::addDatabase("QMYSQL");
-    db.setHostName(d->set->value("Database/Hostname", "localhost").toString());
-    db.setDatabaseName(d->set->value("Database/Name").toString());
-    db.setUserName(d->set->value("Database/User", "root").toString());
-    db.setPassword(d->set->value("Database/Password").toString());
-    
-    if (!db.open())
+    // Si l'application cliente s'est déjà connectée, ne pas le refaire (en plus, c'est peristant)
+    if (QSqlDatabase::contains("logram_repo_database"))
     {
-        PackageError *err = new PackageError;
-        err->type = PackageError::OpenDatabaseError;
-        err->info = db.userName() + ':' + db.password() + '@' + db.hostName() + ' ' + db.databaseName();
+        db = QSqlDatabase::database("logram_repo_database");
+    }
+    else
+    {
+        db = QSqlDatabase::addDatabase("QMYSQL", "logram_repo_database");
+        db.setHostName(d->set->value("Database/Hostname", "localhost").toString());
+        db.setDatabaseName(d->set->value("Database/Name").toString());
+        db.setUserName(d->set->value("Database/User", "root").toString());
+        db.setPassword(d->set->value("Database/Password").toString());
         
-        d->ps->setLastError(err);
-        
-        return false;
+        if (!db.open())
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::OpenDatabaseError;
+            err->info = db.userName() + ':' + db.password() + '@' + db.hostName() + ' ' + db.databaseName();
+            
+            d->ps->setLastError(err);
+            
+            return false;
+        }
     }
     
     d->websiteIntegration = d->set->value("WebsiteIntegration", false).toBool();
@@ -290,7 +298,7 @@ bool RepositoryManager::Private::registerString(QSqlQuery &query, int package_id
 
 int RepositoryManager::Private::sourcePackageId(const QString &name)
 {
-    QSqlQuery query;
+    QSqlQuery query(db);
     QString sql;
     
     sql = " SELECT \
@@ -380,9 +388,9 @@ int RepositoryManager::Private::sourcePackageId(const QString &name)
     }
 }
 
-bool RepositoryManager::includeSource(const QString &fileName)
+bool RepositoryManager::includeSource(const QString &fileName, bool appendHistory)
 {
-    QSqlQuery query;
+    QSqlQuery query(d->db);
     QString sql;
     
     // Copier le paquet dans le dossier pool
@@ -440,171 +448,174 @@ bool RepositoryManager::includeSource(const QString &fileName)
         return false;
     }
     
-    // L'enregistrer dans la base de donnée
-    int source_id = d->sourcePackageId(pkname);
-    
-    // Trouver sa distribution
-    struct archive *a;
-    struct archive_entry *entry;
-    int r;
-    
-    a = archive_read_new();
-    archive_read_support_compression_lzma(a);
-    archive_read_support_compression_xz(a);
-    archive_read_support_format_all(a);
-    
-    r = archive_read_open_filename(a, qPrintable(fileName), 10240);
-    
-    if (r != ARCHIVE_OK)
+    if (appendHistory)
     {
-        PackageError *err = new PackageError;
-        err->type = PackageError::OpenFileError;
-        err->info = download_url;
+        // L'enregistrer dans la base de donnée
+        int source_id = d->sourcePackageId(pkname);
         
-        d->ps->setLastError(err);
+        // Trouver sa distribution
+        struct archive *a;
+        struct archive_entry *entry;
+        int r;
         
-        return false;
-    }
-    
-    QByteArray path;
-    QDomDocument metadata;
-    int size;
-    char *buffer;
-    
-    while (archive_read_next_header(a, &entry) == ARCHIVE_OK)
-    {
-        path = QByteArray(archive_entry_pathname(entry));
+        a = archive_read_new();
+        archive_read_support_compression_lzma(a);
+        archive_read_support_compression_xz(a);
+        archive_read_support_format_all(a);
         
-        if (path == "metadata.xml")
+        r = archive_read_open_filename(a, qPrintable(fileName), 10240);
+        
+        if (r != ARCHIVE_OK)
         {
-            // Lire le fichier
-            size = archive_entry_size(entry);
-            buffer = new char[size];
-            archive_read_data(a, buffer, size);
+            PackageError *err = new PackageError;
+            err->type = PackageError::OpenFileError;
+            err->info = download_url;
             
-            metadata.setContent(QByteArray(buffer, size));
+            d->ps->setLastError(err);
             
-            delete[] buffer;
-            break;
+            return false;
         }
-    }
-    
-    r = archive_read_finish(a);
-    
-    if (r != ARCHIVE_OK)
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::OpenFileError;
-        err->info = download_url;
         
-        d->ps->setLastError(err);
+        QByteArray path;
+        QDomDocument metadata;
+        int size;
+        char *buffer;
         
-        return false;
-    }
-    
-    // On a maintenant un document DOM permettant d'avoir toutes les infos voulues sur la source (dépendances, mainteneur, et distribution)
-    QDomElement root = metadata.documentElement();
-    QDomElement source = root.firstChildElement("source");
-    
-    QString license = source.attribute("license");
-    QString upstreamurl = source.attribute("upstreamurl");
-    QString depends, conflicts, suggests;
-    
-    // Explorer les dépendances
-    QDomElement depend = source.firstChildElement("depend");
-    
-    while (!depend.isNull())
-    {
-        QString type = depend.attribute("type", "depend");
-        
-        if (type == "depend")
+        while (archive_read_next_header(a, &entry) == ARCHIVE_OK)
         {
-            if (!depends.isEmpty())
+            path = QByteArray(archive_entry_pathname(entry));
+            
+            if (path == "metadata.xml")
             {
-                depends += "; ";
+                // Lire le fichier
+                size = archive_entry_size(entry);
+                buffer = new char[size];
+                archive_read_data(a, buffer, size);
+                
+                metadata.setContent(QByteArray(buffer, size));
+                
+                delete[] buffer;
+                break;
             }
-            depends += depend.attribute("string");
         }
-        else if (type == "suggest")
+        
+        r = archive_read_finish(a);
+        
+        if (r != ARCHIVE_OK)
         {
-            if (!suggests.isEmpty())
-            {
-                suggests += "; ";
-            }
-            suggests += depend.attribute("string");
+            PackageError *err = new PackageError;
+            err->type = PackageError::OpenFileError;
+            err->info = download_url;
+            
+            d->ps->setLastError(err);
+            
+            return false;
         }
-        else if (type == "conflict")
+        
+        // On a maintenant un document DOM permettant d'avoir toutes les infos voulues sur la source (dépendances, mainteneur, et distribution)
+        QDomElement root = metadata.documentElement();
+        QDomElement source = root.firstChildElement("source");
+        
+        QString license = source.attribute("license");
+        QString upstreamurl = source.attribute("upstreamurl");
+        QString depends, conflicts, suggests;
+        
+        // Explorer les dépendances
+        QDomElement depend = source.firstChildElement("depend");
+        
+        while (!depend.isNull())
         {
-            if (!conflicts.isEmpty())
+            QString type = depend.attribute("type", "depend");
+            
+            if (type == "depend")
             {
-                conflicts += "; ";
+                if (!depends.isEmpty())
+                {
+                    depends += "; ";
+                }
+                depends += depend.attribute("string");
             }
-            conflicts += depend.attribute("string");
+            else if (type == "suggest")
+            {
+                if (!suggests.isEmpty())
+                {
+                    suggests += "; ";
+                }
+                suggests += depend.attribute("string");
+            }
+            else if (type == "conflict")
+            {
+                if (!conflicts.isEmpty())
+                {
+                    conflicts += "; ";
+                }
+                conflicts += depend.attribute("string");
+            }
+            
+            depend = depend.nextSiblingElement("depend");
         }
         
-        depend = depend.nextSiblingElement("depend");
-    }
-    
-    // Mainteneur
-    QDomElement maint = source.firstChildElement("maintainer");
-    QString maintainer = maint.attribute("name") + " <" + maint.attribute("email") + ">";
-    
-    // Dernière entrée de changelog pour avoir la version, la distribution et l'auteur de la mise à jour
-    QDomElement changelog = root.firstChildElement("changelog").firstChildElement("entry");
-    QString author = changelog.attribute("author") + " <" + changelog.attribute("email") + ">";
-    QString version = fname.section('~', 1, -1).section('.', 0, -3);
-    QString distro = changelog.attribute("distribution");
-    
-    // Prendre l'ID de la distribution
-    sql = "SELECT id FROM packages_distribution WHERE name='%1';";
-    TRY_QUERY(sql.arg(e(distro)))
-    int distro_id = query.value(0).toInt();
-    
-    // Supprimer les flags LATEST, REBUILD et CONITNUOUS des anciens enregistrements
-    sql = " UPDATE packages_sourcelog \
-            SET flags=flags & ~(%1) \
-            WHERE source_id=%2 \
-            AND distribution_id=%3;";
-    
-    if (!query.exec(sql
-            .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_REBUILD | SOURCEPACKAGE_FLAG_CONTINUOUS)
-            .arg(source_id)
-            .arg(distro_id)))
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::QueryError;
-        err->info = query.lastQuery();
+        // Mainteneur
+        QDomElement maint = source.firstChildElement("maintainer");
+        QString maintainer = maint.attribute("name") + " <" + maint.attribute("email") + ">";
         
-        d->ps->setLastError(err);
+        // Dernière entrée de changelog pour avoir la version, la distribution et l'auteur de la mise à jour
+        QDomElement changelog = root.firstChildElement("changelog").firstChildElement("entry");
+        QString author = changelog.attribute("author") + " <" + changelog.attribute("email") + ">";
+        QString version = fname.section('~', 1, -1).section('.', 0, -3);
+        QString distro = changelog.attribute("distribution");
         
-        return false;
-    }
-    
-    // Insérer un nouvel enregistrement
-    sql = " INSERT INTO packages_sourcelog \
-                (source_id, flags, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
-            VALUES (%1, %2, NOW(), '%3', '%4', '%5', '%6', %7, '%8', NULL, '%9', '%10', '%11');";
-    
-    if (!query.exec(sql
-            .arg(source_id)
-            .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_MANUAL)
-            .arg(author)
-            .arg(maintainer)
-            .arg(upstreamurl)
-            .arg(version)
-            .arg(distro_id)
-            .arg(license)
-            .arg(depends)
-            .arg(suggests)
-            .arg(conflicts)))
-    {
-        PackageError *err = new PackageError;
-        err->type = PackageError::QueryError;
-        err->info = query.lastQuery();
+        // Prendre l'ID de la distribution
+        sql = "SELECT id FROM packages_distribution WHERE name='%1';";
+        TRY_QUERY(sql.arg(e(distro)))
+        int distro_id = query.value(0).toInt();
         
-        d->ps->setLastError(err);
+        // Supprimer les flags LATEST, REBUILD et CONITNUOUS des anciens enregistrements
+        sql = " UPDATE packages_sourcelog \
+                SET flags=flags & ~(%1) \
+                WHERE source_id=%2 \
+                AND distribution_id=%3;";
         
-        return false;
+        if (!query.exec(sql
+                .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_REBUILD | SOURCEPACKAGE_FLAG_CONTINUOUS)
+                .arg(source_id)
+                .arg(distro_id)))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::QueryError;
+            err->info = query.lastQuery();
+            
+            d->ps->setLastError(err);
+            
+            return false;
+        }
+        
+        // Insérer un nouvel enregistrement
+        sql = " INSERT INTO packages_sourcelog \
+                    (source_id, flags, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
+                VALUES (%1, %2, NOW(), '%3', '%4', '%5', '%6', %7, '%8', NULL, '%9', '%10', '%11');";
+        
+        if (!query.exec(sql
+                .arg(source_id)
+                .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_MANUAL)
+                .arg(author)
+                .arg(maintainer)
+                .arg(upstreamurl)
+                .arg(version)
+                .arg(distro_id)
+                .arg(license)
+                .arg(depends)
+                .arg(suggests)
+                .arg(conflicts)))
+        {
+            PackageError *err = new PackageError;
+            err->type = PackageError::QueryError;
+            err->info = query.lastQuery();
+            
+            d->ps->setLastError(err);
+            
+            return false;
+        }
     }
     
     // On a fini
@@ -717,7 +728,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
     
     // Mettre à jour la base de donnée
     QString sql;
-    QSqlQuery query;
+    QSqlQuery query(d->db);
     
     sql = " SELECT \
             section.name, \
@@ -1447,7 +1458,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
 
 bool RepositoryManager::exp(const QStringList &distros)
 {
-    QSqlQuery query;
+    QSqlQuery query(d->db);
     QString sql;
     QStringList distributions = distros;
     QStringList archs, langs;
