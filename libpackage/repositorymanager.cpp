@@ -1194,8 +1194,6 @@ bool RepositoryManager::includePackage(const QString &fileName)
                 
                 if (body != oldBody)
                 {
-                    qDebug() << "Pas les mêmes, mettre à jour";
-                    
                     // La page existe déjà, la mettre à jour
                     sql = " UPDATE wiki_page \
                             SET body='%1' \
