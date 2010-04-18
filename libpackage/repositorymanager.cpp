@@ -315,7 +315,7 @@ int RepositoryManager::Private::sourcePackageId(const QString &name)
         
         ps->setLastError(err);
         
-        return false;
+        return -1;
     }
     
     if (query.next())
@@ -338,7 +338,7 @@ int RepositoryManager::Private::sourcePackageId(const QString &name)
             
             ps->setLastError(err);
             
-            return false;
+            return -1;
         }
         
         int source_id = query.lastInsertId().toInt();
@@ -360,7 +360,7 @@ int RepositoryManager::Private::sourcePackageId(const QString &name)
                 
                 ps->setLastError(err);
                 
-                return false;
+                return -1;
             }
             
             int topic_id = query.lastInsertId().toInt();
@@ -380,7 +380,7 @@ int RepositoryManager::Private::sourcePackageId(const QString &name)
                 
                 ps->setLastError(err);
                 
-                return false;
+                return -1;
             }
         }
         
@@ -452,6 +452,11 @@ bool RepositoryManager::includeSource(const QString &fileName, bool appendHistor
     {
         // L'enregistrer dans la base de donnée
         int source_id = d->sourcePackageId(pkname);
+        
+        if (source_id == -1)
+        {
+            return false;
+        }
         
         // Trouver sa distribution
         struct archive *a;
@@ -827,6 +832,11 @@ bool RepositoryManager::includePackage(const QString &fileName)
     
     // Trouver le paquet source
     int source_id = d->sourcePackageId(fpkg->source());
+    
+    if (source_id == -1)
+    {
+        return false;
+    }
     
     // Insérer ou mettre à jour le paquet
     if (!update)
