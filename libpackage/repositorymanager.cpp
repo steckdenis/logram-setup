@@ -598,7 +598,7 @@ bool RepositoryManager::includeSource(const QString &fileName, bool appendHistor
         // Insérer un nouvel enregistrement
         sql = " INSERT INTO packages_sourcelog \
                     (source_id, flags, arch_id, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
-                VALUES (%1, %2, NULL, NOW(), '%3', '%4', '%5', '%6', %7, '%8', NULL, '%9', '%10', '%11');";
+                VALUES (%1, %2, NULL, NOW(), '%3', '%4', '%5', '%6', %7, '%8', NOW(), '%9', '%10', '%11');";
         
         if (!query.exec(sql
                 .arg(source_id)
