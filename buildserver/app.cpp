@@ -146,6 +146,25 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     {
         distroIds.insert(query.value(1).toString(), query.value(0).toInt());
     }
+    
+    // Association entre le nom et l'ID d'une architecture
+    log(Operation, "Fetching the IDs of all the architectures");
+    
+    sql = " SELECT \
+            id, \
+            name \
+            FROM packages_arch;";
+    
+    if (!query.exec(sql))
+    {
+        QUERY_ERROR(query);
+        return;
+    }
+    
+    while (query.next())
+    {
+        archIds.insert(query.value(1).toString(), query.value(0).toInt());
+    }
 }
 
 void App::cleanup()
@@ -275,7 +294,8 @@ void App::endPackage(int log_id, int flags)
     // Obtenir des informations sur log_id
     sql = " SELECT \
             distribution_id, \
-            source_id \
+            source_id, \
+            arch_id \
             FROM packages_sourcelog \
             WHERE id=%1;";
     
@@ -287,6 +307,7 @@ void App::endPackage(int log_id, int flags)
     
     int distro_id = query.value(0).toInt();
     int source_id = query.value(1).toInt();
+    int arch_id = query.value(2).toInt();
     
     // Tous les logs de ce paquet et cette distribution doivent avoir des flags sans
     // LATEST, REBUILD et CONTINUOUS, seulement si cette construction n'a pas eu d'erreurs
@@ -295,12 +316,14 @@ void App::endPackage(int log_id, int flags)
         sql = " UPDATE packages_sourcelog \
                 SET flags=flags & ~(%1) \
                 WHERE source_id=%2 \
-                AND distribution_id=%3;";
+                AND distribution_id=%3 \
+                AND arch_id=%4;";
         
         if (!query.exec(sql
                 .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_REBUILD | SOURCEPACKAGE_FLAG_CONTINUOUS)
                 .arg(source_id)
-                .arg(distro_id)))
+                .arg(distro_id)
+                .arg(arch_id)))
         {
             log(Warning, "Impossible to clear the flags of older Source Log entries");
             flags |= SOURCEPACKAGE_FLAG_WARNINGS;
@@ -472,6 +495,7 @@ static void truncateLogs(const QString &root, int log_id)
 
 bool App::buildWorker()
 {
+    QString arch = set->value("Arch").toString();
     QSqlQuery query(db);
     QString sql;
     
@@ -492,15 +516,18 @@ bool App::buildWorker()
             log.maintainer, \
             log.upstream_url, \
             log.distribution_id, \
-            log.license \
+            log.license, \
+            log.arch_id \
             FROM packages_sourcelog log \
             LEFT JOIN packages_sourcepackage source ON source.id = log.source_id \
             LEFT JOIN packages_distribution distro ON distro.id = log.distribution_id \
-            WHERE (log.flags & %1 ) != 0\
+            LEFT JOIN packages_arch arch ON arch.id = log.arch_id \
+            WHERE (log.arch_id IS NULL OR log.arch_id=%1) AND (log.flags & %2 ) != 0\
             ORDER BY log.date_rebuild_asked ASC \
             LIMIT 1;";
     
     if (!query.exec(sql
+            .arg(archIds.value(arch))
             .arg(SOURCEPACKAGE_FLAG_REBUILD | SOURCEPACKAGE_FLAG_CONTINUOUS)))
     {
         QUERY_ERROR(query)
@@ -528,7 +555,14 @@ bool App::buildWorker()
     QString upstream_url = query.value(11).toString();
     int distro_id = query.value(12).toInt();
     QString license = query.value(13).toString();
+    int arch_id = query.value(14).toInt();
     int new_flags = 0;
+    
+    // Si arch_id vaut zéro, c'est une importation manuelle de source qui a été faite, trouver l'arch
+    if (arch_id == 0)
+    {
+        arch_id = archIds.value(arch);
+    }
     
     // Calculer la nouvelle version
     QString version = old_version;
@@ -538,6 +572,8 @@ bool App::buildWorker()
         QString mainvers = old_version.section('~', 0, -2);
         int logramVer = old_version.section('~', -1, -1).toInt();
         version = mainvers + '~' + QString::number(logramVer + 1);
+        
+        new_flags |= SOURCEPACKAGE_FLAG_OVERWRITECHANGELOG;
     }
     
     // Gérer les always_rebuild
@@ -551,12 +587,13 @@ bool App::buildWorker()
     
     // Insérer le nouvel enregistrement
     sql = " INSERT INTO packages_sourcelog \
-                (source_id, flags, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
-            VALUES (%1, %2, NOW(), '%3', '%4', '%5', '%6', %7, '%8', %9, '%10', '%11', '%12');";
+                (source_id, flags, arch_id, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
+            VALUES (%1, %2, %3, NOW(), '%4', '%5', '%6', '%7', %8, '%9', %10, '%11', '%12', '%13');";
     
     if (!query.exec(sql
             .arg(source_id)
             .arg(SOURCEPACKAGE_FLAG_BUILDING)
+            .arg(arch_id)
             .arg(author)
             .arg(maintainer)
             .arg(upstream_url)
@@ -879,303 +916,302 @@ bool App::buildWorker()
     
     // Faire ça pour chaque architecture
     QString enabledDistros = set->value("DistroDeps/" + distro, distro).toString();
-    QStringList archs = set->value("Archs").toString().split(' ');
     
-    foreach (const QString &arch, archs)
-    {
 #if 1
-        // S'assurer d'être dans le bon état
-        setState(Downloading, log_id);
-        log(Operation, "Beginning of the build of " + name + " for the architecture " + arch);
-        curArch = arch;
+    // S'assurer d'être dans le bon état
+    setState(Downloading, log_id);
+    log(Operation, "Beginning of the build of " + name + " for the architecture " + arch);
+    curArch = arch;
+    
+    // Générer les fichiers nécessaires au Setup chrooté :
+    // /etc/lgrpkg/sources.list
+    // /etc/lgrpkg/scripts/weight.qs (pris d'une resource)
+    // /var/cache/lgrpkg/{db/pkgs,download}
+    curDir.mkpath("tmp/etc/lgrpkg/scripts");
+    curDir.mkpath("tmp/var/cache/lgrpkg/db/pkgs");
+    curDir.mkpath("tmp/var/cache/lgrpkg/download");
+    curDir.mkpath("tmp/usr/libexec");
+    
+    // Sources.list
+    QSettings sourcesList("tmp/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
+    
+    sourcesList.setValue("Language", "en");
+    sourcesList.beginGroup("repo");
+    sourcesList.setValue("Type", "local");
+    sourcesList.setValue("Mirrors", set->value("Repository/Root").toString());
+    sourcesList.setValue("Distributions", enabledDistros);
+    sourcesList.setValue("Archs", arch + " all");
+    sourcesList.setValue("Active", true);
+    sourcesList.setValue("Description", "Automatic building repository");
+    sourcesList.setValue("Sign", false);
+    sourcesList.endGroup();
+    
+    sourcesList.sync();
+    
+    // weight.qs
+    QFile in(":weight.qs");
+    QFile out("tmp/etc/lgrpkg/scripts/weight.qs");
+    
+    if (!in.open(QIODevice::ReadOnly))
+    {
+        log(Error, "Unable to open the resource :weight.qs");
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
         
-        // Générer les fichiers nécessaires au Setup chrooté :
-        // /etc/lgrpkg/sources.list
-        // /etc/lgrpkg/scripts/weight.qs (pris d'une resource)
-        // /var/cache/lgrpkg/{db/pkgs,download}
-        curDir.mkpath("tmp/etc/lgrpkg/scripts");
-        curDir.mkpath("tmp/var/cache/lgrpkg/db/pkgs");
-        curDir.mkpath("tmp/var/cache/lgrpkg/download");
-        curDir.mkpath("tmp/usr/libexec");
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        log(Error, "Unable to open tmp/etc/lgrpkg/scripts/weight.qs for writing");
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
         
-        // Sources.list
-        QSettings sourcesList("tmp/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    out.write(in.readAll());
+    out.close();
+    
+    // /usr/libexec/scriptapi
+    if (!QFile::copy("/usr/libexec/scriptapi", "tmp/usr/libexec/scriptapi"))
+    {
+        log(Error, "Unable to copy /usr/libexec/scriptapi to tmp/usr/libexec/scriptapi");
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
         
-        sourcesList.setValue("Language", "en");
-        sourcesList.beginGroup("repo");
-        sourcesList.setValue("Type", "local");
-        sourcesList.setValue("Mirrors", set->value("Repository/Root").toString());
-        sourcesList.setValue("Distributions", enabledDistros);
-        sourcesList.setValue("Archs", arch + " all");
-        sourcesList.setValue("Active", true);
-        sourcesList.setValue("Description", "Automatic building repository");
-        sourcesList.setValue("Sign", false);
-        sourcesList.endGroup();
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    // Initialiser la gestion des paquets
+    log(Operation, "Updating the repository informations");
+    PackageSystem *ps = new PackageSystem(this);
+    QString rootDir = QDir::currentPath() + "/tmp";
+    
+    connect(ps, SIGNAL(progress(Logram::Progress *)), 
+            this, SLOT(progress(Logram::Progress *)));
+    
+    ps->setInstallRoot(rootDir);
+    ps->setConfRoot(rootDir);
+    ps->setVarRoot(rootDir);
+    ps->setRunTriggers(false);
+    
+    ps->loadConfig();
+    
+    // Mettre à jour la base de donnée, pas besoin d'init, on fera ça après
+    if (!ps->update())
+    {
+        log(Error, "Updating of the database failed");
+        psError(ps);
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
         
-        sourcesList.sync();
+        delete ps;
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    // Installer les dépendances de construction de ce paquet
+    if (!ps->init())     // On peut maintenant qu'on a les fichiers de la BDD
+    {
+        log(Error, "Unable to init the PackageSystem");
+        psError(ps);
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
         
-        // weight.qs
-        QFile in(":weight.qs");
-        QFile out("tmp/etc/lgrpkg/scripts/weight.qs");
+        delete ps;
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    log(Operation, "Installation of the build dependencies");
+    
+    QStringList deps = depends.split("; ");
+    Solver *solver = ps->newSolver();
+    
+    solver->addPackage("build-essential", Solver::Install); // Besoin de build-essential
+    
+    foreach (const QString &dep, deps)
+    {
+        if (dep.isEmpty()) continue;
         
-        if (!in.open(QIODevice::ReadOnly))
-        {
-            log(Error, "Unable to open the resource :weight.qs");
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            recurseRemove("tmp", 0);
-            return true;
-        }
+        solver->addPackage(dep, Solver::Install);
+    }
+    
+    // Éliminer les conflits
+    deps = conflicts.split("; ");
+    
+    foreach (const QString &dep, deps)
+    {
+        if (dep.isEmpty()) continue;
         
-        if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate))
-        {
-            log(Error, "Unable to open tmp/etc/lgrpkg/scripts/weight.qs for writing");
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            recurseRemove("tmp", 0);
-            return true;
-        }
-        
-        out.write(in.readAll());
-        out.close();
-        
-        // /usr/libexec/scriptapi
-        if (!QFile::copy("/usr/libexec/scriptapi", "tmp/usr/libexec/scriptapi"))
-        {
-            log(Error, "Unable to copy /usr/libexec/scriptapi to tmp/usr/libexec/scriptapi");
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            recurseRemove("tmp", 0);
-            return true;
-        }
-        
-        // Initialiser la gestion des paquets
-        log(Operation, "Updating the repository informations");
-        PackageSystem *ps = new PackageSystem(this);
-        QString root = QDir::currentPath() + "/tmp";
-        
-        connect(ps, SIGNAL(progress(Logram::Progress *)), 
-                this, SLOT(progress(Logram::Progress *)));
-        
-        ps->setInstallRoot(root);
-        ps->setConfRoot(root);
-        ps->setVarRoot(root);
-        ps->setRunTriggers(false);
-        
-        ps->loadConfig();
-        
-        // Mettre à jour la base de donnée, pas besoin d'init, on fera ça après
-        if (!ps->update())
-        {
-            log(Error, "Updating of the database failed");
-            psError(ps);
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            delete ps;
-            recurseRemove("tmp", 0);
-            return true;
-        }
-        
-        // Installer les dépendances de construction de ce paquet
-        if (!ps->init())     // On peut maintenant qu'on a les fichiers de la BDD
-        {
-            log(Error, "Unable to init the PackageSystem");
-            psError(ps);
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            delete ps;
-            recurseRemove("tmp", 0);
-            return true;
-        }
-        
-        log(Operation, "Installation of the build dependencies");
-        
-        QStringList deps = depends.split("; ");
-        Solver *solver = ps->newSolver();
-        
-        solver->addPackage("build-essential", Solver::Install); // Besoin de build-essential
-        
-        foreach (const QString &dep, deps)
-        {
-            if (dep.isEmpty()) continue;
-            
-            solver->addPackage(dep, Solver::Install);
-        }
-        
-        // Éliminer les conflits
-        deps = conflicts.split("; ");
-        
-        foreach (const QString &dep, deps)
-        {
-            if (dep.isEmpty()) continue;
-            
-            solver->addPackage(dep, Solver::Remove);
-        }
-        
-        if (!solver->solve())
-        {
-            log(Error, "Solving of the dependencies failed");
-            psError(ps);
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            delete solver;
-            delete ps;
-            recurseRemove("tmp", 0);
-            return true;
-        }
-        
-        // Gérer les résultats
-        PackageList *packages;
-        int tot = solver->results();
-        int index = -1;
-        
-        for (int i=0; i<tot; ++i)
-        {
-            packages = solver->result(i);
-            
-            if (!packages->wrong() && index == -1)
-            {
-                index = i;
-                break;
-            }
-        }
-        
-        if (index == -1)
-        {
-            log(Error, "Unable to handle the dependencies of the package : " + depends + " | conflicts : " + conflicts);
-            
-            for (int j=0; j<tot; ++j)
-            {
-                packages = solver->result(j);
-                
-                log(Error, QString("Tried solution %1 :").arg(j+1));
-                
-                for (int i=0; i<packages->errors(); ++i)
-                {
-                    PackageList::Error *err = packages->error(i);
-                    QString s;
-                    
-                    switch (err->type)
-                    {
-                        case PackageList::Error::SameNameSameVersionDifferentAction:
-                            s = QString("%1~%2 wants to be installed and removed")
-                                        .arg(err->package)
-                                        .arg(err->version);
-                            break;
-                            
-                        case PackageList::Error::SameNameDifferentVersionSameAction:
-                            s = QString("%1 wants to be installed or removed at the versions %2 and %3")
-                                        .arg(err->package)
-                                        .arg(err->version)
-                                        .arg(err->otherVersion);
-                            break;
-                            
-                        case PackageList::Error::NoPackagesMatchingPattern:
-                            s = QString("Unable to find a package matching %1 to satisfy %2~%3")
-                                        .arg(err->pattern)
-                                        .arg(err->package)
-                                        .arg(err->version);
-                            break;
-                            
-                        case PackageList::Error::UninstallablePackageInstalled:
-                            s = QString("%1~%2 wants to be installed but is tagged non-installable")
-                                        .arg(err->package)
-                                        .arg(err->version);
-                            break;
-                            
-                        case PackageList::Error::UnremovablePackageRemoved:
-                            s = QString("%1~%2 wants to be removed but is tagged non-removable")
-                                        .arg(err->package)
-                                        .arg(err->version);
-                            break;
-                            
-                        case PackageList::Error::UnupdateablePackageUpdated:
-                            s = QString("%1~%2 wants to be updated to %3 but is tagged non-updateable")
-                                        .arg(err->package)
-                                        .arg(err->version)
-                                        .arg(err->otherVersion);
-                            break;
-                    }
-                    
-                    log(Error, " >> " + s);
-                }
-            }
-            
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            delete solver;
-            delete ps;
-            recurseRemove("tmp", 0);
-            return true;
-        }
-        
-        // Installer les paquets
-        packages = solver->result(index);
-        
-        if (!packages->process())
-        {
-            log(Error, "Error when installing the dependencies");
-            psError(ps);
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            delete solver;
-            delete ps;
-            recurseRemove("tmp", 0);
-            return true;
-        }
-        
-        // Nettoyer de l'installation
-        for (int i=0; i<tot; ++i)
-        {
-            packages = solver->result(i);
-            
-            delete packages;
-        }
+        solver->addPackage(dep, Solver::Remove);
+    }
+    
+    if (!solver->solve())
+    {
+        log(Error, "Solving of the dependencies failed");
+        psError(ps);
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
         
         delete solver;
-        
-        // On a fini la préparation
         delete ps;
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    // Gérer les résultats
+    PackageList *packages;
+    int tot = solver->results();
+    int index = -1;
+    
+    for (int i=0; i<tot; ++i)
+    {
+        packages = solver->result(i);
         
-        // Lancer la construction du paquet
-        log(Operation, "Launching of a child process, chrooted in the working directory, to build the package");
-        
-        QProcess *proc = new QProcess(this);
-        
-        proc->setProcessChannelMode(QProcess::MergedChannels);
-        
-        connect(proc, SIGNAL(readyReadStandardOutput()), this, SLOT(processOut()));
-        connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
-        
-        proc->start(arguments().at(0), QStringList() << "--worker", QIODevice::ReadOnly);
-        
-        if (!proc->waitForStarted())
+        if (!packages->wrong() && index == -1)
         {
-            log(Error, "Cannot launch the worker process");
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
+            index = i;
+            break;
+        }
+    }
+    
+    if (index == -1)
+    {
+        log(Error, "Unable to handle the dependencies of the package : " + depends + " | conflicts : " + conflicts);
+        
+        for (int j=0; j<tot; ++j)
+        {
+            packages = solver->result(j);
             
-            delete proc;
-            recurseRemove("tmp", 0);
-            return true;
+            log(Error, QString("Tried solution %1 :").arg(j+1));
+            
+            for (int i=0; i<packages->errors(); ++i)
+            {
+                PackageList::Error *err = packages->error(i);
+                QString s;
+                
+                switch (err->type)
+                {
+                    case PackageList::Error::SameNameSameVersionDifferentAction:
+                        s = QString("%1~%2 wants to be installed and removed")
+                                    .arg(err->package)
+                                    .arg(err->version);
+                        break;
+                        
+                    case PackageList::Error::SameNameDifferentVersionSameAction:
+                        s = QString("%1 wants to be installed or removed at the versions %2 and %3")
+                                    .arg(err->package)
+                                    .arg(err->version)
+                                    .arg(err->otherVersion);
+                        break;
+                        
+                    case PackageList::Error::NoPackagesMatchingPattern:
+                        s = QString("Unable to find a package matching %1 to satisfy %2~%3")
+                                    .arg(err->pattern)
+                                    .arg(err->package)
+                                    .arg(err->version);
+                        break;
+                        
+                    case PackageList::Error::UninstallablePackageInstalled:
+                        s = QString("%1~%2 wants to be installed but is tagged non-installable")
+                                    .arg(err->package)
+                                    .arg(err->version);
+                        break;
+                        
+                    case PackageList::Error::UnremovablePackageRemoved:
+                        s = QString("%1~%2 wants to be removed but is tagged non-removable")
+                                    .arg(err->package)
+                                    .arg(err->version);
+                        break;
+                        
+                    case PackageList::Error::UnupdateablePackageUpdated:
+                        s = QString("%1~%2 wants to be updated to %3 but is tagged non-updateable")
+                                    .arg(err->package)
+                                    .arg(err->version)
+                                    .arg(err->otherVersion);
+                        break;
+                }
+                
+                log(Error, " >> " + s);
+            }
         }
         
-        // Attendre
-        int rs = dl.exec();
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
+        
+        delete solver;
+        delete ps;
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    // Installer les paquets
+    packages = solver->result(index);
+    
+    if (!packages->process())
+    {
+        log(Error, "Error when installing the dependencies");
+        psError(ps);
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
+        
+        delete solver;
+        delete ps;
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    // Nettoyer de l'installation
+    for (int i=0; i<tot; ++i)
+    {
+        packages = solver->result(i);
+        
+        delete packages;
+    }
+    
+    delete solver;
+    
+    // On a fini la préparation
+    delete ps;
+    
+    // Lancer la construction du paquet
+    log(Operation, "Launching of a child process, chrooted in the working directory, to build the package");
+    
+    QProcess *proc = new QProcess(this);
+    
+    proc->setProcessChannelMode(QProcess::MergedChannels);
+    
+    connect(proc, SIGNAL(readyReadStandardOutput()), this, SLOT(processOut()));
+    connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
+    
+    proc->start(arguments().at(0), QStringList() << "--worker", QIODevice::ReadOnly);
+    
+    if (!proc->waitForStarted())
+    {
+        log(Error, "Cannot launch the worker process");
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
         
         delete proc;
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    // Attendre
+    int rs = dl.exec();
+    
+    delete proc;
+    
+    if (rs != 0)
+    {
+        log(Error, "An error occured during the package building");
+        endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
         
-        if (rs != 0)
-        {
-            log(Error, "An error occured during the package building");
-            endPackage(log_id, new_flags | SOURCEPACKAGE_FLAG_FAILED);
-            
-            recurseRemove("tmp", 0);
-            return true;
-        }
-        
-        // Le paquet est maintenant construit, il y a des fichiers .lpk dans tmp/src
-        setState(Packaging, log_id);
-        log(Operation, "Copying of the built packages in the working directory");
+        recurseRemove("tmp", 0);
+        return true;
+    }
+    
+    // Le paquet est maintenant construit, il y a des fichiers .lpk dans tmp/src
+    setState(Packaging, log_id);
+    log(Operation, "Copying of the built packages in the working directory");
+    
+    {
         QDirIterator it("tmp/src", QStringList() << "*.lpk", QDir::Files);
         
         if (!it.hasNext())
@@ -1219,12 +1255,12 @@ bool App::buildWorker()
             
             it.next();
         }
-        
-        // Effacer sélectivement le contenu de tmp
-        log(Operation, "Cleaning up the temporary directory");
-        recurseRemove("tmp", 0);
-#endif
     }
+    
+    // Effacer sélectivement le contenu de tmp
+    log(Operation, "Cleaning up the temporary directory");
+    recurseRemove("tmp", 0);
+#endif
 #if 1
     // On a maintenant les fichiers .lpk dans ce dossier. Les importer
     setState(Packaging, log_id);
@@ -1234,7 +1270,7 @@ bool App::buildWorker()
     QDir::setCurrent(set->value("Repository/Root").toString());
     
     // On a besoin d'un PackageSystem
-    PackageSystem *ps = new PackageSystem(this);
+    ps = new PackageSystem(this);
         
     connect(ps, SIGNAL(progress(Logram::Progress *)), 
             this, SLOT(progress(Logram::Progress *)));
@@ -1270,14 +1306,14 @@ bool App::buildWorker()
     
     it.next();
     
-    QString arch, fname;
+    QString farch, fname;
     
     while (true)
     {
         fname = it.filePath();
-        arch = fname.section('.', -2, -2);
+        farch = fname.section('.', -2, -2);
         
-        if (arch == "src")
+        if (farch == "src")
         {
             if (!mg->includeSource(fname, false))
             {

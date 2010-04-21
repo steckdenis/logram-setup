@@ -92,6 +92,7 @@ class App : public QCoreApplication
         QString curArch;
         
         QHash<QString, int> distroIds;
+        QHash<QString, int> archIds;
         
         // Options
         bool debug, quitApp, worker;
