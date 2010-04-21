@@ -575,26 +575,6 @@ bool RepositoryManager::includeSource(const QString &fileName, bool appendHistor
         TRY_QUERY(sql.arg(e(distro)))
         int distro_id = query.value(0).toInt();
         
-        // Supprimer les flags LATEST, REBUILD et CONITNUOUS des anciens enregistrements
-        sql = " UPDATE packages_sourcelog \
-                SET flags=flags & ~(%1) \
-                WHERE source_id=%2 \
-                AND distribution_id=%3;";
-        
-        if (!query.exec(sql
-                .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_REBUILD | SOURCEPACKAGE_FLAG_CONTINUOUS)
-                .arg(source_id)
-                .arg(distro_id)))
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::QueryError;
-            err->info = query.lastQuery();
-            
-            d->ps->setLastError(err);
-            
-            return false;
-        }
-        
         // Insérer un nouvel enregistrement
         sql = " INSERT INTO packages_sourcelog \
                     (source_id, flags, arch_id, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
