@@ -575,23 +575,10 @@ bool RepositoryManager::includeSource(const QString &fileName, bool appendHistor
         TRY_QUERY(sql.arg(e(distro)))
         int distro_id = query.value(0).toInt();
         
-        // Insérer un nouvel enregistrement
-        sql = " INSERT INTO packages_sourcelog \
-                    (source_id, flags, arch_id, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
-                VALUES (%1, %2, NULL, NOW(), '%3', '%4', '%5', '%6', %7, '%8', NOW(), '%9', '%10', '%11');";
+        // Prendre la liste des architectures connues
+        sql = "SELECT id FROM packages_arch WHERE name <> 'all';";
         
-        if (!query.exec(sql
-                .arg(source_id)
-                .arg(SOURCEPACKAGE_FLAG_MANUAL | SOURCEPACKAGE_FLAG_REBUILD)
-                .arg(author)
-                .arg(maintainer)
-                .arg(upstreamurl)
-                .arg(version)
-                .arg(distro_id)
-                .arg(license)
-                .arg(depends)
-                .arg(suggests)
-                .arg(conflicts)))
+        if (!query.exec(sql))
         {
             PackageError *err = new PackageError;
             err->type = PackageError::QueryError;
@@ -600,6 +587,45 @@ bool RepositoryManager::includeSource(const QString &fileName, bool appendHistor
             d->ps->setLastError(err);
             
             return false;
+        }
+        
+        QList<int> archsIds;
+        
+        while (query.next())
+        {
+            archsIds.append(query.value(0).toInt());
+        }
+        
+        // Insérer un enregistrement par architecture (permet de reconstruire les archis
+        // indépendamment les unes des autres
+        foreach (int arch_id, archsIds)
+        {
+            sql = " INSERT INTO packages_sourcelog \
+                        (source_id, flags, arch_id, date, author, maintainer, upstream_url, version, distribution_id, license, date_rebuild_asked, depends, suggests, conflicts) \
+                    VALUES (%1, %2, %3, NOW(), '%4', '%5', '%6', '%7', %8, '%9', NOW(), '%10', '%11', '%12');";
+            
+            if (!query.exec(sql
+                    .arg(source_id)
+                    .arg(SOURCEPACKAGE_FLAG_MANUAL | SOURCEPACKAGE_FLAG_REBUILD)
+                    .arg(arch_id)
+                    .arg(author)
+                    .arg(maintainer)
+                    .arg(upstreamurl)
+                    .arg(version)
+                    .arg(distro_id)
+                    .arg(license)
+                    .arg(depends)
+                    .arg(suggests)
+                    .arg(conflicts)))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                
+                d->ps->setLastError(err);
+                
+                return false;
+            }
         }
     }
     

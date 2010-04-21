@@ -522,7 +522,7 @@ bool App::buildWorker()
             LEFT JOIN packages_sourcepackage source ON source.id = log.source_id \
             LEFT JOIN packages_distribution distro ON distro.id = log.distribution_id \
             LEFT JOIN packages_arch arch ON arch.id = log.arch_id \
-            WHERE (log.arch_id IS NULL OR log.arch_id=%1) AND (log.flags & %2 ) != 0\
+            WHERE log.arch_id=%1 AND (log.flags & %2 ) != 0\
             ORDER BY log.date_rebuild_asked ASC \
             LIMIT 1;";
     
