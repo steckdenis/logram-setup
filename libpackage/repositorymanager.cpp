@@ -602,7 +602,7 @@ bool RepositoryManager::includeSource(const QString &fileName, bool appendHistor
         
         if (!query.exec(sql
                 .arg(source_id)
-                .arg(SOURCEPACKAGE_FLAG_LATEST | SOURCEPACKAGE_FLAG_MANUAL)
+                .arg(SOURCEPACKAGE_FLAG_MANUAL)
                 .arg(author)
                 .arg(maintainer)
                 .arg(upstreamurl)
