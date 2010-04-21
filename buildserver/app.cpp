@@ -533,7 +533,7 @@ bool App::buildWorker()
     // Calculer la nouvelle version
     QString version = old_version;
     
-    if ((log_flags & SOURCEPACKAGE_FLAG_OVERWRITECHANGELOG) == 0)
+    if ((log_flags & SOURCEPACKAGE_FLAG_OVERWRITECHANGELOG) != 0)
     {
         QString mainvers = old_version.section('~', 0, -2);
         int logramVer = old_version.section('~', -1, -1).toInt();
@@ -824,12 +824,12 @@ bool App::buildWorker()
     }
     
     // Gérer le changelog en fonction des flags et du type de source :
-    //              | Overwrite Changelog |  Pas Overwrite Changelog  
-    // ---------------------------------------------------------------
-    // Paquet devel |    Ne rien faire    | «New development snapshot»
-    // Pas devel    |    Ne rien faire    |    «Automatic rebuild»    
+    //              |    Overwrite Changelog     | Pas Overwrite Changelog |
+    // ---------------------------------------------------------------------
+    // Paquet devel | «New development snapshot» |      Ne rien faire      |
+    // Pas devel    |    «Automatic rebuild»     |      Ne rien faire      |
     
-    if ((log_flags & SOURCEPACKAGE_FLAG_OVERWRITECHANGELOG) == 0)
+    if ((log_flags & SOURCEPACKAGE_FLAG_OVERWRITECHANGELOG) != 0)
     {
         // Le packageur ne souhaite pas qu'on récupère implement son changelog
         // Il peut souhaiter le contraire s'il upload uniquement un paquet source, 
