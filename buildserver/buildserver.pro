@@ -12,5 +12,5 @@ LIBS += -llgrpkg -larchive
 QMAKE_CXXFLAGS += -D_FILE_OFFSET_BITS=64 -Wall
 
 # Input
-HEADERS += app.h
-SOURCES += app.cpp main.cpp
+HEADERS += app.h worker.h thread.h
+SOURCES += app.cpp main.cpp worker.cpp thread.cpp

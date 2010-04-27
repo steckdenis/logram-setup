@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# cleanup <dir> : unmounts dir/{proc,dev,sys} and rm -rf dir
+
+dir="$1"
+
+umount "$dir/dev"
+umount "$dir/proc"
+umount "$dir/sys"
+
+rm -rf $dir

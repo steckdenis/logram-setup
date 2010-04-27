@@ -26,17 +26,13 @@
 #include <QCoreApplication>
 #include <QStringList>
 #include <QHash>
-#include <QFile>
-#include <QEventLoop>
-#include <QProcess>
 
 #include <QSqlDatabase>
-
-#include <QtDebug>
 
 #include <logram/packagesystem.h>
 
 class QSettings;
+class Thread;
 
 enum LogType
 {
@@ -62,45 +58,53 @@ class App : public QCoreApplication
     
     public:
         App(int &argc, char **argv);
+        
         bool failed() const;
         bool mustExit() const;
-        
-        bool buildWorker();
+        bool verbose() const;
+        bool useWebsite() const;
         void cleanup();
-        bool workerProcess();
+        QSqlDatabase &database();
+        int distributionId(const QString &name) const;
+        int archId(const QString &name) const;
+        QString architecture() const;
+        QString root() const;
+        QString enabledDistros(const QString &name) const;
+        QString sourceType() const;
+        QString sourceUrl() const;
+        QString execName() const;
         
-        void setState(State _state, int log_id);
-        void log(LogType type, const QString &message);
-
+        static void recurseRemove(const QString &path);
+        static QString psErrorString(Logram::PackageSystem *ps);
+        static QString progressString(Logram::Progress *progress);
+        
     public slots:
-        void progress(Logram::Progress *progress);
         void buildPackage();
+        void threadFinished();
+        void progress(Logram::Progress *progress);
         
-        void processOut();
-        void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    private:
+        bool workerProcess(const QString &root);
+        
+        void psError(Logram::PackageSystem *ps);
+        void log(LogType type, const QString &message);
 
     private:
         Logram::PackageSystem *ps;
         QSqlDatabase db;
         QSettings *set;
-        QFile logFile;
         
         bool error;
-        State state;
-        QEventLoop dl;
-        int log_id;
-        QString curArch;
         
         QHash<QString, int> distroIds;
         QHash<QString, int> archIds;
         
-        // Options
-        bool debug, quitApp, worker;
-        QString confFileName;
+        QList<Thread *> threads;
         
-        // Fonctions
-        void psError(Logram::PackageSystem *ps);
-        void endPackage(int log_id, int flags);
+        // Options
+        bool debug, quitApp, worker, websiteIntegration;
+        int maxThreads;
+        QString confFileName, arch, name;
 };
 
 #endif

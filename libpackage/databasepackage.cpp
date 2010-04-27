@@ -156,6 +156,7 @@ DatabasePackage::DatabasePackage(int index, PackageSystem *ps, DatabaseReader *p
     d->ps = ps;
     d->psd = psd;
     d->depok = false;
+    d->waitingMd = 0;
     
     connect(ps, SIGNAL(downloadEnded(Logram::ManagedDownload *)), this, SLOT(downloadEnded(Logram::ManagedDownload *)));
 }
@@ -168,6 +169,7 @@ DatabasePackage::DatabasePackage(QObject *parent, int index, PackageSystem *ps, 
     d->ps = ps;
     d->psd = psd;
     d->depok = false;
+    d->waitingMd = 0;
     
     connect(ps, SIGNAL(downloadEnded(Logram::ManagedDownload *)), this, SLOT(downloadEnded(Logram::ManagedDownload *)));
 }
