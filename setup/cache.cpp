@@ -22,9 +22,9 @@
 
 #include "app.h"
 
-#include <logram/databasepackage.h>
-#include <logram/filepackage.h>
-#include <logram/packagemetadata.h>
+#include <databasepackage.h>
+#include <filepackage.h>
+#include <packagemetadata.h>
 
 #include <QString>
 
@@ -80,6 +80,19 @@ void App::find(const QString &pattern)
         }
         
         sz = 20 - sz;
+        
+        if (pkg->flags() & PACKAGE_FLAG_INSTALLED)
+        {
+            cout << COLOR("I ", "34");
+        }
+        else if (pkg->flags() & PACKAGE_FLAG_REMOVED)
+        {
+            cout << COLOR("R ", "31");
+        }
+        else
+        {
+            cout << "  ";
+        }
         
         cout
         << COLOR(pkg->name().leftJustified(20, ' ', false), "33") << ' '
