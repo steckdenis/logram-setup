@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# Create a skel/ directory with all the needed parts for running a build server
+
+mkdir -p skel
+mkdir -p skel/var/cache/lgrpkg/db/pkgs
+mkdir -p skel/var/cache/lgrpkg/db/download
+mkdir -p skel/etc/lgrpkg/scripts
+mkdir -p skel/usr/libexec
+mkdir -p skel/bin
+mkdir -p skel/{dev,proc,sys,tmp,src}
+
+ln -s bash skel/bin/sh
+
+cp /etc/hosts skel/etc/hosts
+cp /etc/resolv.conf skel/etc/resolv.conf
