@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
 #include "app.h"
 #include "thread.h"
 
@@ -50,7 +51,12 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     debug = false;
     worker = false;
     quitApp = false;
-    confFileName = "buildserver.conf";
+    confFileName = QDir::currentPath() + "/buildserver.conf";
+    
+    if (!QFile::exists(confFileName))
+    {
+        confFileName = "/etc/buildserver.conf";
+    }
     
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
@@ -77,6 +83,28 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         {
             worker = true;
             error = workerProcess(args.takeFirst());
+            
+            quitApp = true;
+            return;
+        }
+        else
+        {
+            cout << "Logram Build Server v" << VERSION << endl;
+            cout << endl;
+            cout << "Logram is free software; you can redistribute it and/or modify" << endl
+                 << "it under the terms of the GNU General Public License as published by" << endl
+                 << "the Free Software Foundation; either version 3 of the License, or" << endl
+                 << "(at your option) any later version." << endl;
+            cout << endl;
+            cout << "Usage : buildserver [-d] [--config <configfile>] [--worker <dir> (internal)]" << endl;
+            cout << endl;
+            cout << "Options :" << endl;
+            cout << "    -d" << endl;
+            cout << "        Enable the verbose (debug) mode. All output is put in the logs of the packages and in stdout, with nice colors" << endl;
+            cout << "    --config <configfile>" << endl;
+            cout << "        Use <configfile> as config file instead of " << qPrintable(confFileName) << endl;
+            cout << "    --worker <dir>" << endl;
+            cout << "        Internal command. Chroot in <dir> and launche the equivalent of setup download && setup build && setup binaries on the file <dir>/src/metadata.xml" << endl;
             
             quitApp = true;
             return;
@@ -690,3 +718,5 @@ void App::recurseRemove(const QString &path)
         }
     }
 }
+
+#include "app.moc"

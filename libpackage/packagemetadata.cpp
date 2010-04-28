@@ -656,3 +656,5 @@ void PackageMetaData::processTerminated(int exitCode, QProcess::ExitStatus exitS
     // Quitter la boucle
     d->loop.exit(rs);
 }
+
+#include "packagemetadata.moc"

@@ -30,9 +30,8 @@
 
 #include <QtDebug>
 
-#include <logram/packagesystem.h>
-
-#define VERSION "0.1-alpha1"
+#include <packagesystem.h>
+#include "config.h"
 
 #define COLORS(text, color) (colored ? QString("\033[1m\033[") + (color) + "m" + (text) + "\033[0m" : text)
 #define COLOR(text, color) qPrintable(COLORS(text, color))

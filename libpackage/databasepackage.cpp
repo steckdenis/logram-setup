@@ -614,3 +614,5 @@ int8_t DatabaseDepend::op()
 {
     return d->dep->op;
 }
+
+#include "databasepackage.moc"

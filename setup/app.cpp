@@ -22,7 +22,7 @@
 
 #include "app.h"
 
-#include <logram/package.h>
+#include <package.h>
 
 #include <QStringList>
 #include <QTextCodec>
@@ -940,3 +940,5 @@ void App::progress(Progress *progress)
     // Mettre à jour les barres de progression
     updatePgs(progress);
 }
+
+#include "app.moc"

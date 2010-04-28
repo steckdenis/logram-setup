@@ -22,9 +22,9 @@
 
 #include "app.h"
 
-#include <logram/solver.h>
-#include <logram/package.h>
-#include <logram/communication.h>
+#include <solver.h>
+#include <package.h>
+#include <communication.h>
 
 #include <iostream>
 #include <limits>

@@ -22,7 +22,7 @@
 
 #include "app.h"
 
-#include <logram/repositorymanager.h>
+#include <repositorymanager.h>
 
 #include <QtDebug>
 

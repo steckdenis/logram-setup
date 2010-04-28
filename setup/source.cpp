@@ -22,7 +22,7 @@
 
 #include "app.h"
 
-#include <logram/packagesource.h>
+#include <packagesource.h>
 
 using namespace Logram;
 

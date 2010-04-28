@@ -411,3 +411,5 @@ void PackageFile::saveFile()
 {
     d->ps->saveFile(this);
 }
+
+#include "package.moc"

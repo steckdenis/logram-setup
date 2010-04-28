@@ -686,3 +686,5 @@ int8_t FileDepend::op()
 {
     return d->op;
 }
+
+#include "filepackage.moc"

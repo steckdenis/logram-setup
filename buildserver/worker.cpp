@@ -1421,3 +1421,5 @@ void Worker::progress(Progress *progress)
     
     log(Progression, App::progressString(progress) + progress->info);
 }
+
+#include "worker.moc"

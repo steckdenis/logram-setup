@@ -22,10 +22,10 @@
 
 #include "app.h"
 
-#include <logram/solver.h>
-#include <logram/databasepackage.h>
-#include <logram/packagelist.h>
-#include <logram/packagemetadata.h>
+#include <solver.h>
+#include <databasepackage.h>
+#include <packagelist.h>
+#include <packagemetadata.h>
 
 #include <iostream>
 using namespace std;

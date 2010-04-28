@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
 #include "packagesystem.h"
 #include "databasereader.h"
 #include "databasewriter.h"
@@ -41,7 +42,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <gpgme.h>
+#ifdef GPGME_FOUND
+    #include <gpgme.h>
+#endif
 
 #include <QtDebug>
 
@@ -97,8 +100,10 @@ Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     
     d->processOutProgress = startProgress(Progress::ProcessOut, 1);
     
+#ifdef GPGME_FOUND
     // Initialiser GPG
     gpgme_check_version(NULL);
+#endif
     
     connect(d->nmanager, SIGNAL(finished(QNetworkReply *)), this, SLOT(downloadFinished(QNetworkReply *)));
 }
@@ -1505,3 +1510,5 @@ void Logram::PackageSystem::saveFile(PackageFile *file)
         }
     }
 }
+
+#include "packagesystem.moc"

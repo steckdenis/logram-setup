@@ -129,8 +129,12 @@ bool Solver::solve()
     lists.append(0);
 
     // Explorer les paquets voulus
-    foreach(const QString &pkg, d->wantedPackages.keys())
+    QHash<QString, Solver::Action>::const_iterator i;
+    
+    for (i = d->wantedPackages.constBegin(); i != d->wantedPackages.constEnd(); ++i)
     {
+        const QString &pkg = i.key();
+        
         if (pkg.endsWith(".lpk"))
         {
             // Paquet local

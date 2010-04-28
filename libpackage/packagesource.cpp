@@ -468,3 +468,5 @@ bool PackageSource::checkSource(const QString &dir, bool fail)
     
     return true;
 }
+
+#include "packagesource.moc"

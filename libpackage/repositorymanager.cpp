@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
 #include "repositorymanager.h"
 #include "packagesystem.h"
 #include "filepackage.h"
@@ -39,8 +40,11 @@
 
 #include <archive.h>
 #include <archive_entry.h>
-#include <gpgme.h>
 #include <unistd.h>
+
+#ifdef GPGME_FOUND
+    #include <gpgme.h>
+#endif
 
 using namespace Logram;
 
@@ -1516,7 +1520,8 @@ bool RepositoryManager::exp(const QStringList &distros)
     
     QByteArray &pkgstream = streams[langs.count()];
     QByteArray &filestream = streams[langs.count()+1];
-    
+
+#ifdef GPGME_FOUND
     // Initialiser GPGME
     bool useGpg = d->set->value("Sign/Enabled", true).toBool();
     gpgme_ctx_t ctx;
@@ -1559,6 +1564,7 @@ bool RepositoryManager::exp(const QStringList &distros)
         
         gpgme_key_unref(gpgme_key);
     }
+#endif
     
     // Explorer les distributions
     int arch_id, distro_id;
@@ -1863,6 +1869,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                 d->writeXZ(fileName, stream);
                 
                 // Écrire la signature du flux non-compressé
+#ifdef GPGME_FOUND
                 if (useGpg)
                 {
                     gpgme_data_t in, out;
@@ -1956,6 +1963,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                     gpgme_data_release(in);
                     free(userret);
                 }
+#endif
                 
                 // Supprimer le flux
                 streams[i].clear();
@@ -1965,10 +1973,12 @@ bool RepositoryManager::exp(const QStringList &distros)
     
     d->ps->endProgress(progress);
     
+#ifdef GPGME_FOUND
     if (useGpg)
     {
         gpgme_release(ctx);
     }
+#endif
     
     return true;
 }

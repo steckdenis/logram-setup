@@ -559,3 +559,5 @@ void PackageList::communication(Logram::Package *pkg, Logram::Communication *com
 {
     d->ps->sendCommunication(pkg, comm);
 }
+
+#include "packagelist.moc"

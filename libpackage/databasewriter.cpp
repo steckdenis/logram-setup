@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
 #include "databasewriter.h"
 #include "databaseformat.h"
 #include "packagesystem.h"
@@ -35,7 +36,9 @@
 #include <QProcess>
 #include <QtDebug>
 
-#include <gpgme.h>
+#ifdef GPGME_FOUND
+    #include <gpgme.h>
+#endif
 
 #include <iostream>
 #include <fstream>
@@ -99,6 +102,7 @@ bool DatabaseWriter::download(const QString &source, const QString &url, Reposit
     return true;
 }
 
+#ifdef GPGME_FOUND
 bool DatabaseWriter::verifySign(const QString &signFileName, const QByteArray &sigtext, bool &rs)
 {
     // Ouvrir les fichiers de signature
@@ -120,7 +124,7 @@ bool DatabaseWriter::verifySign(const QString &signFileName, const QByteArray &s
     
     signature = fl.readAll();
     fl.close();
-    
+
     // Vérifier la signature
     gpgme_ctx_t ctx;
     gpgme_data_t gpgme_text, gpgme_sig;
@@ -187,6 +191,7 @@ bool DatabaseWriter::verifySign(const QString &signFileName, const QByteArray &s
     
     return true;
 }
+#endif /* GPGME_FOUND */
 
 int DatabaseWriter::fileStringIndex(const QByteArray &str)
 {
@@ -512,6 +517,7 @@ bool DatabaseWriter::rebuild()
             
             fd.close();
             
+#ifdef GPGME_FOUND
             // Vérifier la signature
             bool signvalid;
             
@@ -527,6 +533,7 @@ bool DatabaseWriter::rebuild()
                     return false;
                 }
             }
+#endif
 
             // Lire le fichier
             while (fpos < flength)
@@ -1495,3 +1502,5 @@ bool DatabaseWriter::rebuild()
     
     return true;
 }
+
+#include "databasewriter.moc"
