@@ -36,12 +36,12 @@
 #include <QtSql>
 #include <QtXml>
 
-#include <logram/repositorymanager.h>
-#include <logram/packagesystem.h>
-#include <logram/package.h>
-#include <logram/solver.h>
-#include <logram/packagelist.h>
-#include <logram/packagesource.h>
+#include <repositorymanager.h>
+#include <packagesystem.h>
+#include <package.h>
+#include <solver.h>
+#include <packagelist.h>
+#include <packagesource.h>
 
 #include <iostream>
 #include <cerrno>

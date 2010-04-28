@@ -27,10 +27,10 @@
 #include <QTextCodec>
 #include <QSettings>
 
-#include <logram/solver.h>
-#include <logram/package.h>
-#include <logram/packagesource.h>
-#include <logram/repositorymanager.h>
+#include <solver.h>
+#include <package.h>
+#include <packagesource.h>
+#include <repositorymanager.h>
 
 #include <QtSql>
 
