@@ -149,7 +149,7 @@ bool Mail::sendMail(const QString &from, const QString &to, const QString &subje
     // Buffer à envoyer, sans le \r\n final ajouté par sendCommand
     QByteArray mail;
     
-    mail += "Date: " + QDateTime::currentDateTime().toUTC().toString("ddd, dd MMM yyyy hh:mm:ss +0000");
+    mail += "Date: " + QDateTime::currentDateTime().toUTC().toString("ddd, dd MMM yyyy hh:mm:ss +0000") + "\r\n";
     mail += "To: " + to.toUtf8() + "\r\n";
     mail += "From: " + from.toUtf8() + "\r\n";
     mail += "Subject: " + subject.toUtf8() + "\r\n";
