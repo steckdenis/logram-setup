@@ -21,6 +21,7 @@
  */
 
 #include "worker.h"
+#include "smtp.h"
 
 #include <QStringList>
 #include <QTextCodec>
@@ -1033,6 +1034,39 @@ void Worker::error(bool cleanup)
         cleanupTemp();
     }
     
+    // Envoyer un mail au mainteneur du paquet
+    QString content;
+    QString to = maintainer.section('<', 1, 1).section('>', 0, 0);
+    Mail *mail = new Mail(this);
+    
+    if (!mail->connectToHost(app->mailServer(), app->mailPort(), app->mailEncrypted())) goto End;
+    
+    if (app->mailUseTLS())
+    {
+        if (!mail->startTls()) goto End;
+    }
+    
+    if (!app->mailUser().isNull())
+    {
+        if (!mail->login(app->mailUser(), app->mailPassword())) goto End;
+    }
+    
+    content  = "Hello " + maintainer.section('<', 0, 0) + ",\n";
+    content += "\n";
+    content += "The source package " + name + " at the version " + old_version + " failed to compile !\n";
+    content += "\n";
+    content += "You can see the logs of your package at these addresses :\n";
+    content += "\n";
+    content += "  * " + app->mailLogRoot() + logFilePath("download") + " : Downloading\n";
+    content += "  * " + app->mailLogRoot() + logFilePath("build") + " : Building\n";
+    content += "  * " + app->mailLogRoot() + logFilePath("package") + " : Packaging\n";
+    content += "\n";
+    content += "Cheers,\n";
+    content += "The Logram Build Server.";
+    
+    if (!mail->sendMail("noreply-buildserver@logram-project.org", to, "Package " + name + "~" + old_version + " failed to build", content)) goto End;
+    
+End:
     endPackage();
 }
 

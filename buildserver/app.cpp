@@ -2,7 +2,7 @@
  * app.cpp
  * This file is part of Logram
  *
- * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
+ * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
  *
  * Logram is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -287,7 +287,7 @@ bool App::failed() const
     return error;
 }
 
-bool App::mustExit() const
+bool App::finished() const
 {
     return quitApp;
 }
@@ -345,6 +345,41 @@ QString App::sourceUrl() const
 QString App::execName() const
 {
     return name;
+}
+
+QString App::mailServer() const
+{
+    return set->value("Mail/Server").toString();
+}
+
+int App::mailPort() const
+{
+    return set->value("Mail/Port", 25).toInt();
+}
+
+bool App::mailEncrypted() const
+{
+    return set->value("Mail/Encrypted", false).toBool();
+}
+
+bool App::mailUseTLS() const
+{
+    return set->value("Mail/UseTLS", false).toBool();
+}
+
+QString App::mailPassword() const
+{
+    return set->value("Mail/Password").toString();
+}
+
+QString App::mailUser() const
+{
+    return set->value("Mail/User").toString();
+}
+
+QString App::mailLogRoot() const
+{
+    return set->value("Mail/LogRoot").toString();
 }
 
 void App::threadFinished()

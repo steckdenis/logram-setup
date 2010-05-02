@@ -2,7 +2,7 @@ Arch=i686
 MaxThreads=1
 
 [Repository]
-Root=/mnt/lfs/source/repo/
+Root=/home/moi/repo
 SourceType=remote
 SourceMirrors=http://archive.logram-project.org
 
@@ -11,6 +11,15 @@ experimental=experimental
 
 [Database]
 HostName=localhost
-Name=pyv4
+Name=setup
 User=root
-Password=2B7Q8
+Password=
+
+[Mail]
+Server=
+Port=25
+Encrypted=false
+UseTLS=false
+User=foo
+Password=bar
+LogRoot=http://archive.logram-project.org/

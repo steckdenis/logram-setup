@@ -60,19 +60,28 @@ class App : public QCoreApplication
         App(int &argc, char **argv);
         
         bool failed() const;
-        bool mustExit() const;
+        bool finished() const;
         bool verbose() const;
         bool useWebsite() const;
         void cleanup();
         QSqlDatabase &database();
         int distributionId(const QString &name) const;
         int archId(const QString &name) const;
+        
+        // Configuration
         QString architecture() const;
         QString root() const;
         QString enabledDistros(const QString &name) const;
         QString sourceType() const;
         QString sourceUrl() const;
         QString execName() const;
+        QString mailServer() const;
+        int mailPort() const;
+        bool mailEncrypted() const;
+        bool mailUseTLS() const;
+        QString mailUser() const;
+        QString mailPassword() const;
+        QString mailLogRoot() const;
         
         static void recurseRemove(const QString &path);
         static QString psErrorString(Logram::PackageSystem *ps);

@@ -12,6 +12,7 @@ include_directories(
         ${QT_QTCORE_INCLUDE_DIR}
         ${QT_QTSQL_INCLUDE_DIR}
         ${QT_QTXML_INCLUDE_DIR}
+        ${QT_QTNETWORK_INCLUDE_DIR}
         ${QT_INCLUDE_DIR}
         ${QT_QT_INCLUDE_DIR}
 )
@@ -21,6 +22,7 @@ set(buildserver_SRCS
         app.cpp
         thread.cpp
         worker.cpp
+        smtp.cpp
 )
 
 qt4_automoc(${buildserver_SRCS})
@@ -32,10 +34,11 @@ target_link_libraries(buildserver
         ${QT_QTCORE_LIBRARY}
         ${QT_QTXML_LIBRARY}
         ${QT_QTSQL_LIBRARY}
+        ${QT_QTNETWORK_LIBRARY}
         lgrpkg
 )
 
 install(TARGETS buildserver DESTINATION /usr/bin)
-install(FILES buildserver.conf DESTINATION /etc)
+install(FILES buildserver.conf.sample DESTINATION /etc)
 
-install(CODE "message(\"The files cleanup and mkskel are not installed, but they are useful for managing the server. They are in buildserver/ .\")")
+install(CODE "message(\"The files cleanup and mkskel are not installed, but they are useful for managing the server. They are in buildserver/ . Also remember to copy /etc/buildserver.conf.sample to buildserver.conf, and edit it.\")")

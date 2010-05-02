@@ -52,9 +52,10 @@ class Worker : public QObject
         
         void run();
         
+        void log(LogType type, const QString &message);
+        
     private:
         void setState(State _state);
-        void log(LogType type, const QString &message);
         
         void psError(Logram::PackageSystem *ps);
         void endPackage();

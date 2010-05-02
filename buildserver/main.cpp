@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     }
     
     // Si on était un processus worker dans le chroot, quitter
-    if (app.mustExit())
+    if (app.finished())
     {
         return 0;
     }
