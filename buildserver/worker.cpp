@@ -1234,7 +1234,7 @@ QString Worker::logFilePath(const QString &operation)
     
     QString fileName = "logs/%1-%2/%3_%4";
     
-    fileName = fileName.arg(part).arg(part + 64).arg(operation).arg(log_id);
+    fileName = fileName.arg(part).arg(part + 1024).arg(operation).arg(log_id);
     
     return fileName;
 }
