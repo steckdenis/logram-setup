@@ -32,7 +32,7 @@
 
 #include "app.h"
 
-#include <logram/packagesystem.h>
+#include <packagesystem.h>
 
 class App;
 

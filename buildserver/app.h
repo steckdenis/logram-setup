@@ -29,7 +29,7 @@
 
 #include <QSqlDatabase>
 
-#include <logram/packagesystem.h>
+#include <packagesystem.h>
 
 class QSettings;
 class Thread;
