@@ -106,8 +106,8 @@ bool PackageSource::setMetaData(const QByteArray &data)
     d->md = new PackageMetaData(d->ps);
     
     d->md->loadData(data);
-    d->metaFileName = "/tmp/metadata_" + d->md->documentElement() \
-                                         .firstChildElement("source") \
+    d->metaFileName = "/tmp/metadata_" + d->md->documentElement()
+                                         .firstChildElement("source")
                                          .attribute("name");
 
     return !d->md->error();
@@ -195,6 +195,8 @@ bool PackageSource::binaries()
     if (!changelog.isNull())
     {
         // Savoir s'il faut ajouter la version de développement
+        bool devel = false;
+        
         if (d->md->documentElement()
             .firstChildElement("source")
             .attribute("devel", "false") == "true")
@@ -212,13 +214,33 @@ bool PackageSource::binaries()
             }
             
             addKey("develver", d->md->scriptOut());
+            devel = true;
         }
         
         // Templater la version
         version = templateString(changelog.attribute("version"));
         
         addKey("version", version);
+        
+        // Si version de développement, mettre le vraie version sans le {{develver}} à des fins de documentation
+        if (devel)
+        {
+            changelog.setAttribute("realversion", version);
+        }
     }
+    
+    // Sauvegarder une copie du changelog dans /tmp, maintenant qu'on l'a modifié
+    QString metaFileName = "/tmp/%1~%2.metadata.xml";
+    metaFileName = metaFileName.arg(d->md->documentElement().firstChildElement("source").attribute("name"), version);
+    QFile fl(metaFileName);
+    
+    if (!fl.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+    
+    fl.write(d->md->toByteArray(4));
+    fl.close();
     
     // Explorer les paquets
     QDomElement package = d->md->documentElement()
@@ -340,7 +362,7 @@ bool PackageSource::binaries()
         _PackageFile pf;
         
         // D'abord, le fichier de métadonnées
-        pf.from = d->metaFileName;
+        pf.from = metaFileName;
         
         if (isSource)
         {
