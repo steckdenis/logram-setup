@@ -229,6 +229,15 @@ bool PackageSource::binaries()
         }
     }
     
+    // Voir si on a un enregistrement précédant qu'il faut gérer
+    changelog = changelog.nextSiblingElement("entry");
+    
+    if (!changelog.isNull() && changelog.hasAttribute("realversion"))
+    {
+        changelog.setAttribute("version", changelog.attribute("realversion"));
+        changelog.removeAttribute("realversion");
+    }
+    
     // Sauvegarder une copie du changelog dans /tmp, maintenant qu'on l'a modifié
     QString metaFileName = "/tmp/%1~%2.metadata.xml";
     metaFileName = metaFileName.arg(d->md->documentElement().firstChildElement("source").attribute("name"), version);
