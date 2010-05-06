@@ -24,6 +24,9 @@
 
 #include <packagesource.h>
 
+#include <iostream>
+
+using namespace std;
 using namespace Logram;
 
 #define CALL_PACKAGESOURCE(function) \
@@ -41,21 +44,58 @@ using namespace Logram;
     { \
         error(); \
         return; \
-    } \
-    \
-    delete src;
+    }
 
 void App::sourceDownload(const QString &fileName)
 {
     CALL_PACKAGESOURCE(getSource);
+    
+    delete src;
 }
 
 void App::sourceBuild(const QString &fileName)
 {
     CALL_PACKAGESOURCE(build);
+    
+    delete src;
 }
 
 void App::sourceBinaries(const QString &fileName)
 {
     CALL_PACKAGESOURCE(binaries);
+    
+    // Explorer les messages du PackageSource
+    bool first = true;
+    
+    foreach (PackageRemark *remark, src->remarks())
+    {
+        if (first)
+        {
+            cout << endl;
+            cout << COLOR(tr("Remarques sur le paquet :"), "35") << endl;
+            cout << endl;
+        }
+        
+        cout << "  * [";
+        cout << qPrintable(remark->packageName) << "] ";
+        
+        switch (remark->severity)
+        {
+            case PackageRemark::Information:
+                cout << COLOR(tr("Information : "), "32");
+                break;
+                
+            case PackageRemark::Warning:
+                cout << COLOR(tr("Attention   : "), "33");
+                break;
+                
+            case PackageRemark::Error:
+                cout << COLOR(tr("Erreur      : "), "31");
+                break;
+        }
+        
+        cout << qPrintable(remark->message) << endl;
+    }
+    
+    delete src;
 }

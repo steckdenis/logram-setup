@@ -122,6 +122,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         {
             ps->setVarRoot(args.takeAt(2));
         }
+        else if (opt == "-p")
+        {
+            ps->addPluginPath(args.takeAt(2));
+        }
         else if (opt == "-c")
         {
             changelog = true;
@@ -310,6 +314,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         exp(args);
     }
+#ifdef BUILD_TESTS
     else if (cmd == "testprogress")
     {
         // Envoyer des progressions
@@ -350,7 +355,6 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             usleep(50000);
         }
     }
-#ifdef BUILD_TESTS
     else if (cmd == "test")
     {
         #define CHECK_RESULT(title, op) \
@@ -471,6 +475,8 @@ void App::help()
             "                       Sert à installer un «Logram dans le Logram».\n"
             "    -cR <conf root>    Chemin racine de la configuration (\"/\" par défaut).\n"
             "    -vR <var root>     Chemin racine des fichiers temporaires (\"/\" par défaut).\n"
+            "    -P path            Ajoute un chemin à inspecter pour trouver les plugins\n"
+            "                       de vérification des paquets (setup binaries).\n"
             "    -C                 Affiche l'historique des modifications d'un paquet\n"
             "                       quand utilisé avec showpkg.\n"
             "    -L                 Affiche la licence d'un paquet quand utilisé avec showpkg.\n"
