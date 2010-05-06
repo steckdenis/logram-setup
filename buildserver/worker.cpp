@@ -1280,6 +1280,9 @@ void Worker::processOut()
                     setState(Packaging);
                     log(Operation, "Beginning of the packaging");
                     break;
+                case '3':
+                    flags |= SOURCEPACKAGE_FLAG_WARNINGS;
+                    break;
                 case 'E':
                     log(Error, line);
                     break;

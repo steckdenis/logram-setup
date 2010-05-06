@@ -479,11 +479,42 @@ bool App::workerProcess(const QString &root)
         return true;
     }
     
+    // Gérer les remarques à la construction
+    bool raiseWarning = false, raiseError = false;
+    
+    foreach (PackageRemark *remark, src->remarks())
+    {
+        QString rs("[%1] %2");
+        rs = rs.arg(remark->packageName, remark->message);
+        
+        switch (remark->severity)
+        {
+            case PackageRemark::Information:
+                log(Message, rs);
+                break;
+                
+            case PackageRemark::Warning:
+                log(Warning, rs);
+                raiseWarning = true;
+                break;
+                
+            case PackageRemark::Error:
+                log(Error, rs);
+                raiseError = true;
+                break;
+        }
+    }
+    
+    if (raiseWarning)
+    {
+        cout << SERVER_COMMUNICATION_TOKEN << '3' << endl;
+    }
+    
     // On a fini !
     delete src;
     delete ps;
     
-    return false;
+    return raiseError;
 }
 
 void App::log(LogType type, const QString &message)
