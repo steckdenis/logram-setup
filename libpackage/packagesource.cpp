@@ -450,7 +450,13 @@ bool PackageSource::binaries()
             
             if (p == 0)
             {
-                // TODO: Ajouter un warning comme quoi le plugin n'est pas trouvé
+                PackageRemark *remark = new PackageRemark;
+                
+                remark->severity = PackageRemark::Warning;
+                remark->packageName = packageName;
+                remark->message = tr("Le plugin %1 est activé pour ce paquet mais n'existe pas").arg(pluginName);
+                
+                addRemark(remark);
             }
             else
             {

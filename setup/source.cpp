@@ -74,6 +74,8 @@ void App::sourceBinaries(const QString &fileName)
             cout << endl;
             cout << COLOR(tr("Remarques sur le paquet :"), "35") << endl;
             cout << endl;
+            
+            first = false;
         }
         
         cout << "  * [";
