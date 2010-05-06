@@ -184,6 +184,7 @@ class PackageSystem : public QObject
         QString installRoot() const;
         QString confRoot() const;
         QString varRoot() const;
+        QStringList pluginPaths() const;
         bool runTriggers() const;
         void setInstallSuggests(bool enable);
         void setParallelDownloads(int num);
@@ -192,6 +193,7 @@ class PackageSystem : public QObject
         void setConfRoot(const QString &root);
         void setVarRoot(const QString &root);
         void setRunTriggers(bool enable);
+        void addPluginPath(const QString &path);
         
         // Gestion des erreurs
         void setLastError(PackageError *err); // Thread-safe

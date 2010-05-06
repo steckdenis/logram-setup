@@ -36,6 +36,20 @@ class PackageSystem;
 class FilePackage;
 class PackageMetaData;
 
+struct PackageRemark
+{
+    enum Severity
+    {
+        Information,
+        Warning,
+        Error
+    };
+    
+    Severity severity;
+    QString packageName;
+    QString message;
+};
+
 class PackageSource : public Templatable
 {
     Q_OBJECT
@@ -63,11 +77,28 @@ class PackageSource : public Templatable
         bool build();
         bool binaries();
         
+        QList<PackageRemark *> remarks();
+        void addRemark(PackageRemark *remark);
+        
     private:
         struct Private;
         Private *d;
 };
+
+class PackageSourceInterface
+{
+    public:
+        virtual ~PackageSourceInterface() {}
+        
+        virtual QString name() const = 0;
+        virtual bool byDefault() const = 0;
+        
+        virtual void init(PackageMetaData *md, PackageSource *src) = 0;
+        virtual void processPackage(const QString &name, QStringList &files, bool isSource) = 0;
+};
     
 } /* Namespace */
+
+Q_DECLARE_INTERFACE(Logram::PackageSourceInterface, "org.logram-project.org.lgrpkg.PackageSourceInterface/0.1");
 
 #endif

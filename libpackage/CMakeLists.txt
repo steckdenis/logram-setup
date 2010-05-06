@@ -88,4 +88,6 @@ install(FILES weight.qs DESTINATION /etc/lgrpkg/scripts)
 install(FILES sources.list.sample DESTINATION /etc/lgrpkg)
 install(FILES scriptapi DESTINATION /usr/libexec)
 
+add_subdirectory(plugins)
+
 install(CODE "message(\"/etc/lgrpkg/sources.list.sample has been installed. Rename it to sources.list before using Setup. Its configuration is normally correct.\")")

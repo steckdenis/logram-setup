@@ -32,6 +32,7 @@
 #include <QRegExp>
 #include <QVector>
 #include <QDirIterator>
+#include <QPluginLoader>
 
 #include <archive.h>
 #include <archive_entry.h>
@@ -51,6 +52,9 @@ struct PackageSource::Private
     QString metaFileName;
     
     QHash<Option, QVariant> options;
+    QHash<QString, PackageSourceInterface *> plugins;
+    
+    QList<PackageRemark *> remarks;
 };
 
 static void listFiles(const QString &dir, const QString &prefix, QStringList &list)
@@ -81,11 +85,34 @@ PackageSource::PackageSource(PackageSystem *ps) : Templatable(ps)
     
     d->ps = ps;
     d->src = this;
+    
+    // Charger les plugins
+    foreach (const QString &pluginPath, ps->pluginPaths())
+    {
+        QDir pluginDir(pluginPath);
+        
+        foreach (const QString &fileName, pluginDir.entryList(QDir::Files))
+        {
+            QPluginLoader loader(pluginDir.absoluteFilePath(fileName));
+            PackageSourceInterface *plugin = qobject_cast<PackageSourceInterface *>(loader.instance());
+            
+            if (plugin)
+            {
+                qDebug() << "Insertion de" << plugin->name();
+                d->plugins.insert(plugin->name(), plugin);
+            }
+        }
+    }
 }
 
 PackageSource::~PackageSource()
 {
     delete d->md;
+    
+    while (d->remarks.count())
+    {
+        delete d->remarks.takeAt(0);
+    }
     
     delete d;
 }
@@ -121,6 +148,16 @@ void PackageSource::setOption(Option opt, const QVariant &value)
 QVariant PackageSource::option(Option opt, const QVariant &defaultValue)
 {
     return d->options.value(opt, defaultValue);
+}
+
+QList <PackageRemark *> PackageSource::remarks()
+{
+    return d->remarks;
+}
+
+void PackageSource::addRemark(PackageRemark *remark)
+{
+    d->remarks.append(remark);
 }
 
 void PackageSource::loadKeys()
@@ -251,6 +288,14 @@ bool PackageSource::binaries()
     fl.write(d->md->toByteArray(4));
     fl.close();
     
+    // Initialiser les plugins
+    QHash<QString, PackageSourceInterface *>::const_iterator it;
+        
+    for (it = d->plugins.constBegin(); it != d->plugins.constEnd(); ++it)
+    {
+        it.value()->init(d->md, this);
+    }
+    
     // Explorer les paquets
     QDomElement package = d->md->documentElement()
                             .firstChildElement();
@@ -363,6 +408,53 @@ bool PackageSource::binaries()
                 }
                 
                 pattern = pattern.nextSiblingElement("files");
+            }
+        }
+        
+        // Explorer les plugins, construire la liste de ceux à lancer sur le paquet, et les lancer
+        QStringList plugins;
+        QHash<QString, PackageSourceInterface *>::const_iterator it;
+        
+        for (it = d->plugins.constBegin(); it != d->plugins.constEnd(); ++it)
+        {
+            if (it.value()->byDefault())
+            {
+                plugins.append(it.value()->name());
+            }
+        }
+        
+        QDomElement plugin = package.firstChildElement("plugin");
+        
+        while (!plugin.isNull())
+        {
+            int index = plugins.indexOf(plugin.attribute("name"));
+            
+            bool contains = (index != -1);
+            bool enable = (plugin.attribute("enable", "true") == "true");
+            
+            if (contains && !enable)
+            {
+                plugins.removeAt(index);
+            }
+            else if (!contains && enable)
+            {
+                plugins.append(plugin.attribute("name"));
+            }
+            
+            plugin = plugin.nextSiblingElement("plugin");
+        }
+        
+        foreach (const QString &pluginName, plugins)
+        {
+            PackageSourceInterface *p = d->plugins.value(pluginName, 0);
+            
+            if (p == 0)
+            {
+                // TODO: Ajouter un warning comme quoi le plugin n'est pas trouvé
+            }
+            else
+            {
+                p->processPackage(packageName, okFiles, isSource);
             }
         }
         

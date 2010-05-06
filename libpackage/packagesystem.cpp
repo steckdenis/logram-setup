@@ -76,6 +76,7 @@ struct Logram::PackageSystem::Private
     QString installRoot, confRoot, varRoot;
     bool triggers;
     int setParams;
+    QStringList pluginPaths;
     
     // Mirroirs
     QHash<QString, int> usedMirrors;
@@ -150,6 +151,8 @@ void Logram::PackageSystem::loadConfig()
     {
         d->varRoot = d->set->value("VarRoot", "/").toString();
     }
+    
+    d->pluginPaths << d->set->value("PluginPaths", "/usr/lib/lgrpkg").toString().split(':', QString::SkipEmptyParts);
     
     d->ipackages = new QSettings(varRoot() + "/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
 }
@@ -936,6 +939,11 @@ QString Logram::PackageSystem::varRoot() const
     return d->varRoot;
 }
 
+QStringList PackageSystem::pluginPaths() const
+{
+    return d->pluginPaths;
+}
+
 bool Logram::PackageSystem::runTriggers() const
 {
     return d->triggers;
@@ -986,6 +994,11 @@ void Logram::PackageSystem::setInstallRoot(const QString &root)
 void Logram::PackageSystem::setRunTriggers(bool enable)
 {
     d->triggers = enable;
+}
+
+void PackageSystem::addPluginPath(const QString& path)
+{
+    d->pluginPaths.append(path);
 }
 
 /* Signaux */
