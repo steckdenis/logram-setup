@@ -131,6 +131,11 @@ Package *DatabaseFile::package()
 {
     return d->pkg;
 }
+
+void DatabaseFile::setPackageBinded(bool binded)
+{
+    d->packagebinded = binded;
+}
         
 void DatabaseFile::setFlags(int flags)
 {

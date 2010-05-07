@@ -162,6 +162,8 @@ class DatabaseReader
             @return true si tout s'est bien passé, false sinon
         */
         bool init();
+        
+        bool initialized() const; /*!< Permet de savoir si init() a déjà été appelé */
 
         /**
             @brief Récupérer un paquet en fonction de son nom et de sa version
@@ -413,6 +415,8 @@ class DatabaseReader
         bool mapFile(const QString &file, QFile **ptr, uchar **map);
 
     private:
+        bool _initialized;
+        
         QFile *f_packages, *f_strings, *f_translate, *f_depends, *f_strpackages, *f_files;
         uchar *m_packages, *m_strings, *m_translate, *m_depends, *m_strpackages, *m_files;
 

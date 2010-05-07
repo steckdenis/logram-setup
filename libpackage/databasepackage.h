@@ -289,6 +289,7 @@ class DatabaseFile : public PackageFile
         
         void setFlags(int flags);
         void setInstallTime(uint timestamp);
+        void setPackageBinded(bool binded);
         
     private:
         struct Private;

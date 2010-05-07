@@ -98,7 +98,6 @@ PackageSource::PackageSource(PackageSystem *ps) : Templatable(ps)
             
             if (plugin)
             {
-                qDebug() << "Insertion de" << plugin->name();
                 d->plugins.insert(plugin->name(), plugin);
             }
         }
@@ -115,6 +114,11 @@ PackageSource::~PackageSource()
     }
     
     delete d;
+}
+
+PackageSystem *PackageSource::packageSystem()
+{
+    return d->ps;
 }
 
 bool PackageSource::setMetaData(const QString &fileName)
@@ -147,7 +151,13 @@ void PackageSource::setOption(Option opt, const QVariant &value)
 
 QVariant PackageSource::option(Option opt, const QVariant &defaultValue)
 {
-    return d->options.value(opt, defaultValue);
+    if (!d->options.contains(opt))
+    {
+        d->options.insert(opt, defaultValue);
+        return defaultValue;
+    }
+    
+    return d->options.value(opt);
 }
 
 QList <PackageRemark *> PackageSource::remarks()
@@ -275,18 +285,9 @@ bool PackageSource::binaries()
         changelog.removeAttribute("realversion");
     }
     
-    // Sauvegarder une copie du changelog dans /tmp, maintenant qu'on l'a modifié
+    // Nom du fichier qui va contenir les nouvelles métadonnées
     QString metaFileName = "/tmp/%1~%2.metadata.xml";
     metaFileName = metaFileName.arg(d->md->documentElement().firstChildElement("source").attribute("name"), version);
-    QFile fl(metaFileName);
-    
-    if (!fl.open(QIODevice::WriteOnly))
-    {
-        return false;
-    }
-    
-    fl.write(d->md->toByteArray(4));
-    fl.close();
     
     // Initialiser les plugins
     QHash<QString, PackageSourceInterface *>::const_iterator it;
@@ -462,6 +463,19 @@ bool PackageSource::binaries()
             {
                 p->processPackage(packageName, okFiles, isSource);
             }
+        }
+        
+        // Écrire les métadonnées
+        {
+            QFile fl(metaFileName);
+        
+            if (!fl.open(QIODevice::WriteOnly))
+            {
+                return false;
+            }
+
+            fl.write(d->md->toByteArray(4));
+            fl.close();
         }
         
         // Créer la liste des _PackageFiles permettant de créer l'archive

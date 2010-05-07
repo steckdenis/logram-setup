@@ -58,6 +58,8 @@ class PackageSource : public Templatable
         PackageSource(PackageSystem *ps);
         ~PackageSource();
         
+        PackageSystem *packageSystem();
+        
         enum Option
         {
             SourceDir,

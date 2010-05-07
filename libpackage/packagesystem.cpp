@@ -157,6 +157,11 @@ void Logram::PackageSystem::loadConfig()
     d->ipackages = new QSettings(varRoot() + "/var/cache/lgrpkg/db/installed_packages.list", QSettings::IniFormat, this);
 }
 
+bool Logram::PackageSystem::initialized() const
+{
+    return d->dr->initialized();
+}
+
 bool Logram::PackageSystem::init()
 {
     return d->dr->init();

@@ -148,6 +148,7 @@ class PackageSystem : public QObject
         PackageSystem(QObject *parent = 0);
         ~PackageSystem();
         bool init();
+        bool initialized() const;
         void loadConfig();
 
         // API publique

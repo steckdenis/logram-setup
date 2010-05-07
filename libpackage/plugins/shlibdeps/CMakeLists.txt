@@ -1,4 +1,6 @@
-project(noinfodir)
+project(shlibdeps)
+
+find_package(ELF REQUIRED)
 
 include_directories(
         ${CMAKE_CURRENT_BINARY_DIR}
@@ -7,10 +9,11 @@ include_directories(
         ${QT_INCLUDE_DIR}
         ${QT_QT_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/libpackage
+        ${ELF_INCLUDE_DIR}
 )
 
-set(noinfodir_SRCS
-        noinfodir.cpp
+set(shlibdeps_SRCS
+        shlibdeps.cpp
 )
 
 add_definitions(
@@ -19,12 +22,13 @@ add_definitions(
         -DQT_SHARED
         ${QT_DEFINITIONS})
 
-qt4_automoc(${noinfodir_SRCS})
-add_library(noinfodir SHARED ${noinfodir_SRCS})
+qt4_automoc(${shlibdeps_SRCS})
+add_library(shlibdeps SHARED ${shlibdeps_SRCS})
 
-target_link_libraries(noinfodir
+target_link_libraries(shlibdeps
         ${QT_QTCORE_LIBRARY}
         ${QT_QTXML_LIBRARY}
+        ${ELF_LIBRARY}
 )
 
-install(TARGETS noinfodir LIBRARY DESTINATION /usr/lib/lgrpkg)
+install(TARGETS shlibdeps LIBRARY DESTINATION /usr/lib/lgrpkg)

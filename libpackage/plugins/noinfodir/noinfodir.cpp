@@ -1,5 +1,5 @@
 /*
- * packagesource.h
+ * noinfodir.h
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>

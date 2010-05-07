@@ -34,6 +34,7 @@ using namespace Logram;
 DatabaseReader::DatabaseReader(PackageSystem *_ps)
 {
     ps = _ps;
+    _initialized = false;
     
     f_packages = 0;
     f_strings = 0;
@@ -41,6 +42,11 @@ DatabaseReader::DatabaseReader(PackageSystem *_ps)
     f_depends = 0;
     f_strpackages = 0;
     f_files = 0;
+}
+
+bool DatabaseReader::initialized() const
+{
+    return _initialized;
 }
 
 bool DatabaseReader::init()
@@ -52,6 +58,8 @@ bool DatabaseReader::init()
     if (!mapFile("depends", &f_depends, &m_depends)) return false;
     if (!mapFile("strpackages", &f_strpackages, &m_strpackages)) return false;
     if (!mapFile("files", &f_files, &m_files)) return false;
+    
+    _initialized = true;
     
     return true;
 }
@@ -236,7 +244,7 @@ QList<PackageFile *> DatabaseReader::files(const QRegExp &regex)
 QList<PackageFile *> DatabaseReader::files(const QString &name)
 {
     QList<PackageFile *> rs;
-    QStringList parts = name.split('/');
+    QStringList parts = name.split('/', QString::SkipEmptyParts);
     uchar *ptr = m_files;
     int index = 0, curPart = 0;
     
