@@ -79,7 +79,7 @@ void App::sourceBinaries(const QString &fileName)
         }
         
         cout << "  * [";
-        cout << qPrintable(remark->packageName) << "] ";
+        cout << COLOR(remark->packageName, "37") << "] ";
         
         switch (remark->severity)
         {
