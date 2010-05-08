@@ -513,8 +513,8 @@ bool Worker::patchMetadata()
         if (!query.exec(sql
                 .arg(pkgname + '-' + distro)) || !query.next())
         {
-            log(Error, "Unable to fetch the wiki pages for the package " + pkgname + " in " + distro);
-            return false;
+            log(Warning, "Unable to fetch the wiki pages for the package " + pkgname + " in " + distro);
+            break;
         }
         
         int wiki_identifier = query.value(0).toInt();
@@ -529,7 +529,7 @@ bool Worker::patchMetadata()
         if (!query.exec(sql
                 .arg(wiki_identifier)))
         {
-            log(Error, "Unable to fetch the wiki page with identifier " + QString::number(wiki_identifier));
+            log(Error, "Unable to fetch the wiki pages with identifier " + QString::number(wiki_identifier));
             return false;
         }
         

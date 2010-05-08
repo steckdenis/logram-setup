@@ -4,7 +4,7 @@
 
 mkdir -p skel
 mkdir -p skel/var/cache/lgrpkg/db/pkgs
-mkdir -p skel/var/cache/lgrpkg/db/download
+mkdir -p skel/var/cache/lgrpkg/download
 mkdir -p skel/etc/lgrpkg/scripts
 mkdir -p skel/usr/libexec
 mkdir -p skel/bin

@@ -26,9 +26,9 @@ set(buildserver_SRCS
 )
 
 qt4_automoc(${buildserver_SRCS})
-qt4_add_resources(buildserver.qrc)
+qt4_add_resources(buildserver_resources buildserver.qrc)
 
-add_executable(buildserver ${buildserver_SRCS})
+add_executable(buildserver ${buildserver_SRCS} ${buildserver_resources})
 
 target_link_libraries(buildserver
         ${QT_QTCORE_LIBRARY}

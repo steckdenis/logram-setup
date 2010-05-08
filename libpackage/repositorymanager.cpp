@@ -931,7 +931,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
     // Liste des fichiers
     QStringList fileParts;
     
-    sql = "DELETE FROM packages_file WHERE package_id=%1";
+    sql = "DELETE FROM packages_file WHERE package_id=%1;";
           
     if (!query.exec(sql.arg(package_id)))
     {
