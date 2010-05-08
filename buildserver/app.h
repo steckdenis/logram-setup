@@ -72,6 +72,7 @@ class App : public QCoreApplication
         QString architecture() const;
         QString root() const;
         QString enabledDistros(const QString &name) const;
+        QStringList dependDistros(const QString &name) const;
         QString sourceType() const;
         QString sourceUrl() const;
         QString execName() const;

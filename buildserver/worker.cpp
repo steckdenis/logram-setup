@@ -251,6 +251,13 @@ void Worker::run()
         return;
     }
     
+    // Déclencher la reconstrution de tous les paquets qui en dépendant
+    if (!buildDepends())
+    {
+        error(false);
+        return;
+    }
+    
     // On a fini
     endPackage();
 }
@@ -288,7 +295,7 @@ bool Worker::appendLog()
             .arg(suggests)
             .arg(conflicts)))
     {
-        log(Error, "Impossible to insert the new log entry");
+        QUERY_ERROR(query);
         return false;
     }
     
@@ -502,6 +509,7 @@ bool Worker::patchMetadata()
     while (!package.isNull())
     {
         pkgname = package.attribute("name");
+        binaries.append(pkgname);
         
         // Récupérer la première page de wiki qui a comme slug <pkgname>-<distro>.
         sql = " SELECT \
@@ -514,7 +522,8 @@ bool Worker::patchMetadata()
                 .arg(pkgname + '-' + distro)) || !query.next())
         {
             log(Warning, "Unable to fetch the wiki pages for the package " + pkgname + " in " + distro);
-            break;
+            package = package.nextSiblingElement("package");
+            continue;
         }
         
         int wiki_identifier = query.value(0).toInt();
@@ -529,7 +538,7 @@ bool Worker::patchMetadata()
         if (!query.exec(sql
                 .arg(wiki_identifier)))
         {
-            log(Error, "Unable to fetch the wiki pages with identifier " + QString::number(wiki_identifier));
+            QUERY_ERROR(query)
             return false;
         }
         
@@ -997,6 +1006,97 @@ bool Worker::exportDistros(PackageSystem *ps, RepositoryManager *mg)
     return true;
 }
 
+bool Worker::buildDepends()
+{
+    QSqlQuery query(app->database());
+    QString sql;
+    
+    // Prendre la liste des ID des distributions qui pourraient contenir des paquets dépendant de ce paquet
+    QStringList distros = app->dependDistros(distro);
+    
+    if (distros.count() == 0) return true;
+    
+    QList<int> ids;
+    
+    foreach (const QString &distro, distros)
+    {
+        ids.append(app->distributionId(distro));
+    }
+    
+    // Construire la liste des IDs
+    QString dids;
+    
+    foreach (int id, ids)
+    {
+        if (!dids.isNull())
+        {
+            dids += ", ";
+        }
+        
+        dids += QString::number(id);
+    }
+    
+    // Sélectionner les sourcelogs LATEST qui dépendent d'un des paquets binaires construits par cette source.
+    QList<int> logIds;
+    
+    foreach (const QString &binary, binaries)
+    {
+        sql = " SELECT \
+                id \
+                FROM packages_sourcelog \
+                WHERE distribution_id IN (%1) \
+                AND (flags & %2) <> 0 \
+                AND arch_id = %3 \
+                AND depends LIKE '%%4%';";
+                
+        if (!query.exec(sql
+                .arg(dids)
+                .arg(SOURCEPACKAGE_FLAG_LATEST)
+                .arg(arch_id)
+                .arg(binary)))
+        {
+            QUERY_ERROR(query)
+            return false;
+        }
+        
+        while (query.next())
+        {
+            if (!logIds.contains(query.value(0).toInt()))
+            {
+                logIds.append(query.value(0).toInt());
+            }
+        }
+    }
+    
+    // Mettre le flag REBUILD à ces résultats
+    dids.clear();
+    
+    foreach (int id, logIds)
+    {
+        if (!dids.isEmpty())
+        {
+            dids += ", ";
+        }
+        
+        dids += QString::number(id);
+    }
+    
+    sql = " UPDATE packages_sourcelog \
+            SET flags = (flags | %1) \
+            WHERE id IN (%2);";
+            
+    if (!query.exec(sql
+            .arg(SOURCEPACKAGE_FLAG_REBUILD)
+            .arg(dids)))
+    {
+        QUERY_ERROR(query)
+        return false;
+    }
+    
+    // On a fini
+    return true;
+}
+
 bool Worker::cleanupTemp()
 {
     // Démonter proc, dev et sys (errno... : c'est peut-être pas monté)
@@ -1151,7 +1251,7 @@ void Worker::endPackage()
             .arg(flags | SOURCEPACKAGE_FLAG_LATEST)
             .arg(new_log_id)))
     {
-        log(Error, "Impossible to update the new log entry");
+        QUERY_ERROR(query)
         return;
     }
 }

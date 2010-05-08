@@ -75,6 +75,7 @@ class Worker : public QObject
         bool copyPackages();
         bool importPackages(Logram::PackageSystem* &ps, Logram::RepositoryManager* &mg);
         bool exportDistros(Logram::PackageSystem *ps, Logram::RepositoryManager *mg);
+        bool buildDepends();
         
         bool cleanupTemp();
         bool recurseCopy(const QString &from, const QString &to);
@@ -111,6 +112,7 @@ class Worker : public QObject
         QString tmpRoot;
         QEventLoop dl;
         QStringList builtPackages;
+        QStringList binaries;
         
         QFile logFile;
         State state;

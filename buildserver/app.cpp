@@ -237,7 +237,7 @@ void App::buildPackage()
             LEFT JOIN packages_sourcepackage source ON source.id = log.source_id \
             LEFT JOIN packages_distribution distro ON distro.id = log.distribution_id \
             LEFT JOIN packages_arch arch ON arch.id = log.arch_id \
-            WHERE log.arch_id=%1 AND (log.flags & %2 ) != 0 %3\
+            WHERE log.arch_id=%1 AND (log.flags & %2 ) <> 0 %3\
             ORDER BY log.date_rebuild_asked ASC \
             LIMIT %4;";
     
@@ -330,6 +330,27 @@ bool App::useWebsite() const
 QString App::enabledDistros(const QString &name) const
 {
     return set->value("DistroDeps/" + name).toString();
+}
+
+QStringList App::dependDistros(const QString &name) const
+{
+    set->beginGroup("DistroDeps");
+    
+    // Explorer toutes les clefs et ne retenir que celles qui contiennent name.
+    QStringList keys = set->childKeys();
+    QStringList rs;
+    
+    foreach (const QString &key, keys)
+    {
+        if (set->value(key).toString().split(' ', QString::SkipEmptyParts).contains(name))
+        {
+            rs.append(key);
+        }
+    }
+    
+    set->endGroup();
+    
+    return rs;
 }
 
 QString App::sourceType() const
