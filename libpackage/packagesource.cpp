@@ -588,6 +588,12 @@ bool PackageSource::binaries()
         package = package.nextSiblingElement();
     }
     
+    // Informer les plugins qu'on a fini
+    for (it = d->plugins.constBegin(); it != d->plugins.constEnd(); ++it)
+    {
+        it.value()->end();
+    }
+    
     d->ps->endProgress(progress);
     
     return true;

@@ -1,5 +1,5 @@
 /*
- * noinfodir.h
+ * noinfodir.cpp
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -44,6 +44,11 @@ void NoInfoDir::init(PackageMetaData* md, PackageSource* src)
     this->src = src;
     
     (void) md;
+}
+
+void NoInfoDir::end()
+{
+    return;
 }
 
 void NoInfoDir::processPackage(const QString& name, QStringList& files, bool isSource)

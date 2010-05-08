@@ -87,6 +87,44 @@ class PackageSource : public Templatable
         Private *d;
 };
 
+/**
+    @class PackageSourceInterface
+    @brief Interface pour les plugins de gestion des sources
+    
+    Cette interface permet de créer des plugins effectuant des opérations
+    sur les paquets construits par PackageSource.
+    
+    Ces plugins ont une grande liberté, et peuvent accéder au PackageSystem
+    courant, ainsi qu'à tout l'arbre XML du paquet construit et au
+    PackageSource utilisé.
+    
+    Les différentes fonctions de cette classe sont appelées par PackageSource
+    comme ceci :
+    
+    @code
+    // Dans le constructeur
+    ///////////////////////
+    
+    QString name = plugin->name();
+    // Un hash(name, plugin) est maintenu.
+    
+    // Pour chaque paquet source
+    ////////////////////////////
+    
+    plugin->init(le PackageMetaData de la source, this);
+    
+    // Pour chaque paquet binaire
+    /////////////////////////////
+    
+    bool enable = plugin->byDefault();
+    allowSourceToChangeEnable(enable);   // <plugin name="..." enable="true|false" />
+    
+    plugin->processPackage(currentPackageName, listOfFilesInPackage, true si c'est le paquet <source />, sinon false);
+    
+    // Quand les paquets binaires sont finis, toujours dans le même paquet source
+    plugin->end();
+    @endcode
+*/            
 class PackageSourceInterface
 {
     public:
@@ -97,6 +135,7 @@ class PackageSourceInterface
         
         virtual void init(PackageMetaData *md, PackageSource *src) = 0;
         virtual void processPackage(const QString &name, QStringList &files, bool isSource) = 0;
+        virtual void end() = 0;
 };
     
 } /* Namespace */

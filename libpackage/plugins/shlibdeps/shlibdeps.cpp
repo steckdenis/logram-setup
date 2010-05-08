@@ -1,5 +1,5 @@
 /*
- * shlibdeps.h
+ * shlibdeps.cpp
  * This file is part of Logram
  *
  * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -63,6 +63,11 @@ void ShLibDeps::init(PackageMetaData* md, PackageSource* src)
     this->md = md;
 }
 
+void ShLibDeps::end()
+{
+    return;
+}
+
 static void getSection(QByteArray &ba, GElf_Shdr &shdr, Elf_Scn *scn)
 {
     Elf_Data *data = NULL;
@@ -76,7 +81,7 @@ static void getSection(QByteArray &ba, GElf_Shdr &shdr, Elf_Scn *scn)
 
 void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isSource)
 {
-    if (isSource) return;   // On ne s'occupe pas des sources
+    if (isSource || error) return;   // On ne s'occupe pas des sources
         
     QByteArray buildRoot = src->option(PackageSource::BuildDir, QVariant()).toByteArray();
     

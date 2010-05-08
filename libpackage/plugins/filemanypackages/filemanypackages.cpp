@@ -47,6 +47,11 @@ void FileManyPackages::init(PackageMetaData* md, PackageSource* src)
     (void) md;
 }
 
+void FileManyPackages::end()
+{
+    return;
+}
+
 void FileManyPackages::processPackage(const QString& name, QStringList& files, bool isSource)
 {
     // Lister les fichiers et ajouter une erreur si /usr/share/info/dir est présent

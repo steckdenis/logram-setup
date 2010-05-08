@@ -45,6 +45,7 @@ class FileManyPackages : public QObject, public PackageSourceInterface
         
         void init(PackageMetaData *md, PackageSource *src);
         void processPackage(const QString &name, QStringList &files, bool isSource);
+        void end();
         
     private:
         PackageSource *src;
