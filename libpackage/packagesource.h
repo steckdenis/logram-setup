@@ -59,6 +59,7 @@ class PackageSource : public Templatable
         ~PackageSource();
         
         PackageSystem *packageSystem();
+        static void listFiles(const QString &dir, const QString &prefix, QStringList &list);
         
         enum Option
         {

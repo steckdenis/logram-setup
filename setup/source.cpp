@@ -67,6 +67,18 @@ void App::sourceBinaries(const QString &fileName)
     // Explorer les messages du PackageSource
     bool first = true;
     
+    int maxlength = 0;
+    
+    foreach (PackageRemark *remark, src->remarks())
+    {
+        QString &pkgname = remark->packageName;
+        
+        if (pkgname.length() > maxlength)
+        {
+            maxlength = pkgname.length();
+        }
+    }
+    
     foreach (PackageRemark *remark, src->remarks())
     {
         if (first)
@@ -78,8 +90,19 @@ void App::sourceBinaries(const QString &fileName)
             first = false;
         }
         
-        cout << "  * [";
-        cout << COLOR(remark->packageName, "37") << "] ";
+        cout << "  * ";
+        
+        if (!remark->packageName.isNull())
+        {
+            cout << '[' << COLOR(remark->packageName.leftJustified(maxlength), "37") << "] ";
+        }
+        else
+        {
+            for (int i=0; i<maxlength + 3; ++i)
+            {
+                cout << ' ';
+            }
+        }
         
         switch (remark->severity)
         {

@@ -57,7 +57,7 @@ struct PackageSource::Private
     QList<PackageRemark *> remarks;
 };
 
-static void listFiles(const QString &dir, const QString &prefix, QStringList &list)
+void PackageSource::listFiles(const QString &dir, const QString &prefix, QStringList &list)
 {
     QDir mdir(dir);
     QFileInfoList files = mdir.entryInfoList(QDir::Dirs | QDir::Files | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);

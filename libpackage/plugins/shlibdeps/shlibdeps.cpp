@@ -228,6 +228,8 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
             
             src->addRemark(remark);
         }
+        
+        return;
     }
     
     // Explorer les needs dans runpaths pour trouver les paquets les contenant, et leurs versions

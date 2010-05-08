@@ -42,14 +42,13 @@ bool FileManyPackages::byDefault() const
 void FileManyPackages::init(PackageMetaData* md, PackageSource* src)
 {
     this->src = src;
-    this->enrgs.clear();
     
     (void) md;
 }
 
 void FileManyPackages::end()
 {
-    return;
+    enrgs.clear();
 }
 
 void FileManyPackages::processPackage(const QString& name, QStringList& files, bool isSource)
