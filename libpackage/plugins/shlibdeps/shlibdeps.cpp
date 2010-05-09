@@ -180,10 +180,7 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
             }
             
             if ((sname = elf_strptr(e, shstrndx, (is32 ? shdr32->sh_name : shdr64->sh_name))) == NULL)
-            {
-                if (is32) free(shdr32);
-                else free(shdr64);
-                
+            {   
                 err = true;
                 break;
             }
@@ -198,9 +195,6 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
                 if (is32) getSection32(dynstr, shdr32, scn);
                 else getSection64(dynstr, shdr64, scn);
             }
-            
-            if (is32) free(shdr32);
-            else free(shdr64);
         }
         
         if (dynamic.size() == 0 || dynstr.size() == 0) err = true;
