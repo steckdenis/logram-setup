@@ -68,12 +68,23 @@ void ShLibDeps::end()
     return;
 }
 
-static void getSection(QByteArray &ba, GElf_Shdr &shdr, Elf_Scn *scn)
+static void getSection32(QByteArray &ba, Elf32_Shdr *shdr, Elf_Scn *scn)
 {
     Elf_Data *data = NULL;
     size_t n = 0;
     
-    while (n < shdr.sh_size && (data = elf_getdata(scn, data)) != NULL)
+    while (n < shdr->sh_size && (data = elf_getdata(scn, data)) != NULL)
+    {
+        ba += QByteArray((const char *) data->d_buf, data->d_size);
+    }
+}
+
+static void getSection64(QByteArray &ba, Elf64_Shdr *shdr, Elf_Scn *scn)
+{
+    Elf_Data *data = NULL;
+    size_t n = 0;
+    
+    while (n < shdr->sh_size && (data = elf_getdata(scn, data)) != NULL)
     {
         ba += QByteArray((const char *) data->d_buf, data->d_size);
     }
@@ -90,9 +101,11 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
     int fd;
     char *sname;
     Elf_Scn *scn;
-    const GElf_Dyn *dyn;
+    const Elf32_Dyn *dyn32;
+    const Elf64_Dyn *dyn64;
     
-    GElf_Shdr shdr;
+    Elf32_Shdr *shdr32;
+    Elf64_Shdr *shdr64;
     size_t shstrndx;
     
     QByteArray dynamic, dynstr;
@@ -125,6 +138,17 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
             continue;
         }
         
+        int eclass =  gelf_getclass(e);
+        
+        if (eclass == ELFCLASSNONE)
+        {
+            elf_end(e);
+            close(fd);
+            continue;
+        }
+        
+        bool is32 = (eclass == ELFCLASS32);
+        
         // Parcourir les sections
         scn = NULL;
         dynamic.clear();
@@ -134,26 +158,49 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
         
         while ((scn = elf_nextscn(e, scn)) != NULL)
         {
-            if (gelf_getshdr(scn, &shdr) != &shdr)
+            if (is32)
             {
-                err = true;
-                break;
+                shdr32 = elf32_getshdr(scn);
+                
+                if (shdr32 == NULL)
+                {
+                    err = true;
+                    break;
+                }
+            }
+            else
+            {
+                shdr64 = elf64_getshdr(scn);
+                
+                if (shdr64 == NULL)
+                {
+                    err = true;
+                    break;
+                }
             }
             
-            if ((sname = elf_strptr(e, shstrndx, shdr.sh_name)) == NULL)
+            if ((sname = elf_strptr(e, shstrndx, (is32 ? shdr32->sh_name : shdr64->sh_name))) == NULL)
             {
+                if (is32) free(shdr32);
+                else free(shdr64);
+                
                 err = true;
                 break;
             }
             
             if (strcmp(sname, ".dynamic") == 0)
             {
-                getSection(dynamic, shdr, scn);
+                if (is32) getSection32(dynamic, shdr32, scn);
+                else getSection64(dynamic, shdr64, scn);
             }
             else if (strcmp(sname, ".dynstr") == 0)
             {
-                getSection(dynstr, shdr, scn);
+                if (is32) getSection32(dynstr, shdr32, scn);
+                else getSection64(dynstr, shdr64, scn);
             }
+            
+            if (is32) free(shdr32);
+            else free(shdr64);
         }
         
         if (dynamic.size() == 0 || dynstr.size() == 0) err = true;
@@ -166,16 +213,21 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
         }
         
         // Explorer dynamic, qui contient des enregistrements de type GElf_Dyn
-        dyn = (const GElf_Dyn *)dynamic.constData();
+        dyn32 = (const Elf32_Dyn *)dynamic.constData();
+        dyn64 = (const Elf64_Dyn *)dyn32;
+        
         int j = 0;
         QByteArray ba;
         
-        while (j * sizeof(dyn) <= dynamic.size())
+        while (j * (is32 ? sizeof(Elf32_Dyn) : sizeof(Elf64_Dyn)) <= dynamic.size())
         {
-            if (dyn->d_tag == DT_NEEDED && dyn->d_un.d_ptr < dynstr.size())
+            int tag = (is32 ? dyn32->d_tag : dyn64->d_tag);
+            int dptr = (is32 ? dyn32->d_un.d_ptr : dyn64->d_un.d_ptr);
+            
+            if (tag == DT_NEEDED && dptr < dynstr.size())
             {
                 const char *tmp = dynstr.constData();
-                tmp += dyn->d_un.d_ptr;
+                tmp += dptr;
                 ba = QByteArray(tmp);
                 
                 if (!needs.contains(ba))
@@ -183,10 +235,10 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
                     needs.append(ba);
                 }
             }
-            else if ((dyn->d_tag == DT_RUNPATH || dyn->d_tag == DT_RPATH) && dyn->d_un.d_ptr < dynstr.size())
+            else if ((tag == DT_RUNPATH || tag == DT_RPATH) && dptr < dynstr.size())
             {
                 const char *tmp = dynstr.constData();
-                tmp += dyn->d_un.d_ptr;
+                tmp += dptr;
                 ba = QByteArray(tmp);
                 
                 if (!runpaths.contains(ba))
@@ -195,7 +247,8 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
                 }
             }
             
-            dyn++;
+            dyn32++;
+            dyn64++;
             j++;
         }
         
