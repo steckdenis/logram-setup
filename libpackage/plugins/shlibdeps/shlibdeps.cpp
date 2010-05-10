@@ -378,6 +378,7 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
             remark->message = tr("Impossible de trouver le paquet contenant %1").arg(QString::fromUtf8(need));
             
             src->addRemark(remark);
+            continue;
         }
         
         // Ajouter le paquet à la liste
