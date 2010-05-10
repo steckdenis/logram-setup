@@ -324,6 +324,18 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
                             if (regex.exactMatch(pth))
                             {
                                 // On a trouvé le binaire qui contient la bibliothèque
+                                foreach (const Pkg &p, pkgs)
+                                {
+                                    if (p.name == package.attribute("name"))
+                                    {
+                                        // Pas besoin de l'ajouter
+                                        my = true;
+                                        break;
+                                    }
+                                }
+                                
+                                if (my) break;
+                                
                                 pkg.name = package.attribute("name");
                                 pkg.version = "{{version}}";
                                 pkg.local = true;
@@ -391,6 +403,9 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
     // Ajouter les enregistrements XML
     foreach (const Pkg &p, pkgs)
     {   
+        // Sauter le paquet si c'est nous
+        if (p.name == name) continue;
+        
         // Opération : >= normalement, mais = si c'est une dépendance de la même source
         QString op = (p.local ? "=" : ">=");
         
