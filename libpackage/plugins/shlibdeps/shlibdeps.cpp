@@ -34,6 +34,7 @@
 #include <QFile>
 #include <QDomElement>
 #include <QDomDocument>
+#include <QRegExp>
 
 #include <QtDebug>
 
@@ -89,6 +90,13 @@ static void getSection64(QByteArray &ba, Elf64_Shdr *shdr, Elf_Scn *scn)
         ba += QByteArray((const char *) data->d_buf, data->d_size);
     }
 }
+
+struct Pkg
+{
+    QString name;
+    QString version;
+    bool local;
+};
 
 void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isSource)
 {
@@ -282,6 +290,8 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
     // Explorer les needs dans runpaths pour trouver les paquets les contenant, et leurs versions
     // Si un fichier n'est pas trouvé, et ne se trouve dans dans buildDir
     QList<PackageFile *> pfiles;
+    QList<Pkg> pkgs;
+    Pkg pkg;
     
     foreach (const QByteArray &need, needs)
     {
@@ -290,17 +300,52 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
         
         foreach (const QByteArray &runpath, runpaths)
         {
-            if (QFile::exists(buildRoot + "/" + runpath + "/" + need))
+            QString pth = QString::fromUtf8(runpath + "/" + need);
+            
+            if (QFile::exists(buildRoot + pth))
             {
-                // Fichier construit par nous-même, ignorer
-                my = true;
-                break;
+                // Fichier construit par nous-même : chercher le binaire qui le contient
+                QDomElement package = md->documentElement().firstChildElement("package");
+                
+                while (!package.isNull())
+                {
+                    QString arch = package.attribute("arch");
+                    
+                    // Le paquet doit être de la bonne architecture
+                    if (arch == "all" || arch == "any" || arch == SETUP_ARCH)
+                    {
+                        // Explorer les éléments files de ce paquet et voir si notre fichier correspond
+                        QDomElement files = package.firstChildElement("files");
+                        
+                        while (!files.isNull())
+                        {
+                            QRegExp regex(files.attribute("pattern", "*"), Qt::CaseSensitive, QRegExp::Wildcard);
+                            
+                            if (regex.exactMatch(pth))
+                            {
+                                // On a trouvé le binaire qui contient la bibliothèque
+                                pkg.name = package.attribute("name");
+                                pkg.version = "{{version}}";
+                                pkg.local = true;
+                                
+                                pkgs.append(pkg);
+                                my = true;
+                                break;
+                            }
+                            
+                            files = files.nextSiblingElement("files");
+                        }
+                        
+                        if (my) break;
+                    }
+                    package = package.nextSiblingElement("package");
+                }
+                
+                if (my) break;
             }
             
             // Utiliser la BDD Setup pour trouver quel paquet contient ce fichier, s'il existe
             pfiles.clear();
-            
-            QString pth = QString::fromUtf8(runpath + "/" + need);
             pth.remove(0, 1);
             
             pfiles = ps->files(pth);
@@ -322,7 +367,7 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
             }
         }
         
-        if (my) continue;   // Ignorer les fichiers qu'on fourni nous-même
+        if (my) continue;   // Déjà traité
         
         if (dname.isNull())
         {
@@ -335,19 +380,33 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
             src->addRemark(remark);
         }
         
+        // Ajouter le paquet à la liste
+        pkg.name = dname;
+        pkg.version = version;
+        pkg.local = false;
+        
+        pkgs.append(pkg);
+    }
+    
+    // Ajouter les enregistrements XML
+    foreach (const Pkg &p, pkgs)
+    {   
+        // Opération : >= normalement, mais = si c'est une dépendance de la même source
+        QString op = (p.local ? "=" : ">=");
+        
         // Remarque
         PackageRemark *remark = new PackageRemark;
             
         remark->severity = PackageRemark::Information;
         remark->packageName = name;
-        remark->message = tr("Ajout de %1>=%2 comme dépendance automatique").arg(dname, version);
+        remark->message = tr("Ajout de %1%2%3 comme dépendance automatique").arg(p.name, op, p.version);
         
         src->addRemark(remark);
         
         // Ajouter un élément de dépendance au <package> de ce paquet.
         QDomElement depend = md->createElement("depend");
         depend.setAttribute("type", "depend");
-        depend.setAttribute("string", dname + ">=" + version);
+        depend.setAttribute("string", p.name + op + p.version);
         
         QDomElement package = md->documentElement().firstChildElement("package");
         
