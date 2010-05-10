@@ -44,6 +44,26 @@ gitversion()
     (cd "$1" && git log --pretty=format:'%ai' -1 | cut -d ' ' -f 1 | sed -e 's/-//g')
 }
 
+svnco()
+{
+    cd "$2" &>/dev/null
+
+    if [ ! $? -eq 0 ]; then
+        svn co "$1" "$2"
+    else
+        rs="$(svn up | wc -l)"
+
+        if [ "$rs" = "1" ]; then
+            echo "SCM_UP_TO_DATE"
+        fi
+    fi
+}
+
+svnversion()
+{
+    (cd "$1" && svn info --xml | grep date | cut -d '>' -f 2 | cut -d 'T' -f 1 | sed -e 's/-//g')
+}
+
 # lh_strip <dirs>
 #
 # example:
