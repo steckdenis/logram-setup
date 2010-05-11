@@ -235,7 +235,7 @@ bool DatabasePackage::download()
         
         fname = d->ps->varRoot() + "/var/cache/lgrpkg/download/" + other->url().section('/', -1, -1);
         
-        d->ps->repository(repo(), d->usedRepo);
+        d->ps->repository(other->repo(), d->usedRepo);
         type = d->usedRepo.type;
         
         d->usedMirror = d->ps->bestMirror(d->usedRepo);

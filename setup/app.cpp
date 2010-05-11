@@ -375,6 +375,8 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         CHECK_RESULT("14.7 < 14.7.1", ps->compareVersions("14.7", "14.7.1") == -1)
         CHECK_RESULT("1.1alpha1 = 1-1.1", ps->compareVersions("1.1alpha1", "1-1.1") == 0)
         CHECK_RESULT("1.0machin = 1machin0", ps->compareVersions("1.0machin", "1machin0") == 0)
+        CHECK_RESULT("1.0.1~1 > 1.0~2", ps->compareVersions("1.0.1~1", "1.0~2") ==  1);
+        CHECK_RESULT("2.3~4 < 2.3.1~1", ps->compareVersions("2.3~4", "2.3.1~1") == -1);
         
         // parseVersion
         int op;

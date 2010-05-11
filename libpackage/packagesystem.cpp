@@ -794,12 +794,38 @@ int Logram::PackageSystem::compareVersions(const char *a, const char *b)
     
     // Explorer chaque caractère
     int numa, numb;
+    bool atilde, btilde;
+    char olda = 0, oldb = 0;
     
     while (*a || *b)
     {
         //Sauter tout ce qui n'est pas nombre
-        while (*a && !isdigit(*a)) a++;
-        while (*b && !isdigit(*b)) b++;
+        while (*a && !isdigit(*a))
+        { 
+            olda = *a; 
+            a++;
+        }
+        
+        while (*b && !isdigit(*b))
+        {
+            oldb = *b;
+            b++;
+        }
+        
+        // Savoir si une version a sa partie upstream finie
+        atilde = (olda == '~');
+        btilde = (oldb == '~');
+        
+        if (atilde && !btilde)
+        {
+            // Version A plus courte, donc < B
+            return -1;
+        }
+        else if (btilde && !atilde)
+        {
+            // Version B plus courte, donc < A
+            return 1;
+        }
         
         // On a donc maintenant des digits sous la dent, les transformer en entiers
         numa = 0;

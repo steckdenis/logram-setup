@@ -425,7 +425,8 @@ QList<UpgradeInfo> DatabaseReader::upgradePackages()
                 if (opkg != 0 &&
                     pkg->version != opkg->version && 
                     pkg->distribution == opkg->distribution &&
-                    pkg->name == opkg->name)
+                    pkg->name == opkg->name &&
+                    PackageSystem::compareVersions(string(0, pkg->version), string(0, opkg->version)) == -1)
                 {
                     ui.installedPackage = i;
                     ui.newPackage = otherVersions.at(j);
