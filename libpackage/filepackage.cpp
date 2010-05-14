@@ -205,6 +205,14 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         
         if (path.startsWith("data/"))
         {
+            // Ignorer les dossiers
+            mode_t mode = archive_entry_filetype(entry);
+            
+            if (S_ISDIR(mode))
+            {
+                continue;
+            }
+            
             path.remove(0, 5);
             FileFile *file = new FileFile(d->ps, path, 0);
             

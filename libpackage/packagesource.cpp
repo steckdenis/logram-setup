@@ -72,7 +72,15 @@ void PackageSource::listFiles(const QString &dir, const QString &prefix, QString
         else if (fi.isDir())
         {
             // L'explorer
+            int oldcount = list.count();
+            
             listFiles(fi.absoluteFilePath(), prefix + fi.fileName() + '/', list);
+
+            // Si on n'a pas ajouté d'entrées, alors le dossier est vide et il faut le gérer
+            if (oldcount == list.count())
+            {
+                list.append(prefix + fi.fileName());
+            }
         }
     }
 }

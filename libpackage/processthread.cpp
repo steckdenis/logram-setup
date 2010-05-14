@@ -205,59 +205,65 @@ bool ProcessThread::Private::install_files()
         // Calculer le chemin du fichier
         filePath = instroot + path;
         
-        // Trouver les PackageFiles allant avec ce fichier
-        files = ps->files(QString(path));
+        // Ne pas gérer les fichiers des dossiers
+        mode_t mode = archive_entry_filetype(entry);
         
-        if (files.count() == 0)
+        if (!S_ISDIR(mode))
         {
-            PackageError *err = new PackageError;
-            err->type = PackageError::InstallError;
-            err->info = tr("Aucun fichier dans la base de donnée Setup ne correspond à %1").arg(QString(path));
-            err->more = pkg->name() + '~' + pkg->version();
+            // Trouver les PackageFiles allant avec ce fichier
+            files = ps->files(QString(path));
             
-            ps->setLastError(err);
-            
-            archive_write_finish(ext);
-            return false;
-        }
-        
-        // Explorer ces fichiers
-        for (int i=0; i<files.count(); ++i)
-        {
-            PackageFile *file = files.at(i);
-            
-            if (file->flags() & PACKAGE_FILE_INSTALLED)
+            if (files.count() == 0)
             {
-                if (file->package()->name() == pkg->name())
+                PackageError *err = new PackageError;
+                err->type = PackageError::InstallError;
+                err->info = tr("Aucun fichier dans la base de donnée Setup ne correspond à %1").arg(QString(path));
+                err->more = pkg->name() + '~' + pkg->version();
+                
+                ps->setLastError(err);
+                
+                archive_write_finish(ext);
+                return false;
+            }
+            
+            // Explorer ces fichiers
+            for (int i=0; i<files.count(); ++i)
+            {
+                PackageFile *file = files.at(i);
+                
+                if (file->flags() & PACKAGE_FILE_INSTALLED)
                 {
-                    if (file->flags() & PACKAGE_FILE_BACKUP)
+                    if (file->package()->name() == pkg->name())
                     {
-                        // Fichier au paquet, normalement on ne sauvegarde pas, mais ici on le fait
-                        backup_file(filePath);
-                    }
-                    else if (file->flags() & PACKAGE_FILE_CHECKBACKUP)
-                    {
-                        // Vérifier que ce fichier a été modifié depuis
-                        QFileInfo fi(filePath);
-                        
-                        if (fi.lastModified().toTime_t() > file->installTime())
+                        if (file->flags() & PACKAGE_FILE_BACKUP)
                         {
+                            // Fichier au paquet, normalement on ne sauvegarde pas, mais ici on le fait
+                            backup_file(filePath);
+                        }
+                        else if (file->flags() & PACKAGE_FILE_CHECKBACKUP)
+                        {
+                            // Vérifier que ce fichier a été modifié depuis
+                            QFileInfo fi(filePath);
+                            
+                            if (fi.lastModified().toTime_t() > file->installTime())
+                            {
+                                backup_file(filePath);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!(file->flags() & PACKAGE_FILE_OVERWRITE))
+                        {
+                            // Fichier d'un autre paquet, on sauvegarde sauf si OVERWRITE est utilisé
                             backup_file(filePath);
                         }
                     }
                 }
-                else
-                {
-                    if (!(file->flags() & PACKAGE_FILE_OVERWRITE))
-                    {
-                        // Fichier d'un autre paquet, on sauvegarde sauf si OVERWRITE est utilisé
-                        backup_file(filePath);
-                    }
-                }
+                
+                // Supprimer le fichier, plus besoin
+                delete file;
             }
-            
-            // Supprimer le fichier, plus besoin
-            delete file;
         }
         
         // Écrire le fichier sur le disque
