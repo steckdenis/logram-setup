@@ -39,15 +39,11 @@ using namespace Logram;
 struct PackageList::Private
 {
     PackageSystem *ps;
-    bool error;
     bool needsReboot;
     int numLicenses;
     
     int downloadProgress, processProgress;
     
-    bool wrong, weighted;
-    int weight;
-    QList<PackageList::Error *> errs;
     int parallelInstalls, parallelDownloads;
     
     // Pour l'installation
@@ -67,8 +63,6 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
 {
     d = new Private;
     
-    d->weighted = false;
-    d->error = false;
     d->needsReboot = false;
     d->numLicenses = 0;
     d->ps = ps;
@@ -88,11 +82,6 @@ PackageList::~PackageList()
     }
     
     delete d;
-}
-
-bool PackageList::error() const
-{
-    return d->error;
 }
 
 bool PackageList::needsReboot() const
@@ -125,86 +114,6 @@ void PackageList::addPackage(Package *pkg)
     {
         d->numLicenses++;
     }
-}
-
-void PackageList::addError(Error *err)
-{
-    d->errs.append(err);
-}
-
-void PackageList::setWrong(bool wrong)
-{
-    d->wrong = wrong;
-}
-
-int PackageList::errors() const
-{
-    return d->errs.count();
-}
-
-PackageList::Error *PackageList::error(int i) const
-{
-    return d->errs.at(i);
-}
-
-bool PackageList::wrong() const
-{
-    return d->wrong;
-}
-
-int PackageList::weight() const
-{
-    if (!d->weighted)
-    {
-        QScriptValue func, global;
-        QScriptValueList args;
-        
-        // Lire le programme QtScript
-        QFile fl(d->ps->confRoot() + "/etc/lgrpkg/scripts/weight.qs");
-
-        if (!fl.open(QIODevice::ReadOnly))
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::OpenFileError;
-            err->info = fl.fileName();
-            
-            d->ps->setLastError(err);
-            
-            d->error = true;
-            return 0;
-        }
-
-        // Parser le script
-        QScriptEngine engine;
-        engine.evaluate(fl.readAll(), fl.fileName());
-        fl.close();
-
-        if (engine.hasUncaughtException())
-        {
-            PackageError *err = new PackageError;
-            err->type = PackageError::ScriptException;
-            err->info = fl.fileName();
-            err->more = engine.uncaughtExceptionLineNumber() + ": " + engine.uncaughtException().toString();
-            
-            d->ps->setLastError(err);
-            
-            d->error = true;
-            return 0;
-        }
-
-        global = engine.globalObject();
-        func = global.property("weight");
-        
-        // Appeler la fonction
-        const QList<Package *> *l = this;
-
-        args << qScriptValueFromSequence(&engine, *l);
-        
-        d->weight = func.call(QScriptValue(), args).toNumber();
-        d->weighted = true;
-    }
-    
-    return d->weight;
 }
 
 Package *PackageList::installingPackage() const

@@ -45,36 +45,9 @@ class PackageList : public QObject, public QList<Package *>
         ~PackageList();
         bool error() const;
         
-        struct Error
-        {
-            enum Type
-            {
-                SameNameSameVersionDifferentAction,
-                SameNameDifferentVersionSameAction,
-                NoPackagesMatchingPattern,
-                UninstallablePackageInstalled,
-                UnremovablePackageRemoved,
-                UnupdateablePackageUpdated
-            };
-            
-            Type type;
-            
-            QString package, otherPackage;
-            QString version, otherVersion;
-            Solver::Action action, otherAction;
-            
-            QString pattern;
-        };
-        
         void addPackage(Package *pkg);
-        void addError(Error *err);
-        void setWrong(bool wrong);
         
         Package *installingPackage() const;
-        int errors() const;
-        Error *error(int i) const;
-        bool wrong() const;
-        int weight() const;
         bool needsReboot() const;
         int numLicenses() const;
         QList<int> orphans() const;

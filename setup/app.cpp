@@ -68,6 +68,9 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     QString opt = args.at(1).toLower();
     bool changelog = false;
     bool license = false;
+    useDeps = true;
+    useInstalled = true;
+    depsTree = false;
 
     while (opt.startsWith('-'))
     {
@@ -133,6 +136,18 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         else if (opt == "-l")
         {
             license = true;
+        }
+        else if (opt == "-nd")
+        {
+            useDeps = false;
+        }
+        else if (opt == "-ni")
+        {
+            useInstalled = false;
+        }
+        else if (opt == "-g")
+        {
+            depsTree = true;
         }
         else if (opt == "-t")
         {
@@ -408,7 +423,8 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         CHECK_RESULT("2.1alpha8<=2.0alpha11 : no", ps->matchVersion("2.1alpha8", "2.0alpha11", DEPEND_OP_LOEQ) == false)
         CHECK_RESULT("1debian2ubuntu1!=1ubuntu2debian1 : no", ps->matchVersion("1debian2ubuntu1", "1ubuntu2debian1", DEPEND_OP_NE) == false)
         CHECK_RESULT("1.1<1.2 : yes", ps->matchVersion("1.1", "1.2", DEPEND_OP_LO) == true);
-        CHECK_RESULT("7.9+git20100404~3>=7.9+git20100313", ps->matchVersion("7.9+git20100404~3", "7.9+git20100313", DEPEND_OP_GREQ) == true);
+        CHECK_RESULT("7.9+git20100404~3>=7.9+git20100313 : yes", ps->matchVersion("7.9+git20100404~3", "7.9+git20100313", DEPEND_OP_GREQ) == true);
+        CHECK_RESULT("2.8.3~2>=2.8.3 : yes", ps->matchVersion("2.8.3~2", "2.8.3", DEPEND_OP_GREQ) == true)
         
         // fileSizeFormat
         CHECK_RESULT("3 = 3 o", ps->fileSizeFormat(3) == "3 o");
@@ -471,6 +487,12 @@ void App::help()
             "\n"
             "Options (insensible à la casse) :\n"
             "    -S [off]           Active (on) ou pas (off) l'installation des suggestions.\n"
+            "    -nD                Ignorer les dépendances : installer les paquets demandés\n"
+            "                       et uniquement eux.\n"
+            "    -nI                Ignorer les paquets installés, générer tout l'arbre de\n"
+            "                       dépendances.\n"
+            "    -G                 Sortie dans stdout la représentation Graphviz de l'arbre\n"
+            "                       des dépendances.\n"
             "    -I <num>           Définit le nombre de téléchargements en parallèle.\n"
             "    -D <num>           Définit le nombre d'installations en parallèle.\n"
             "    -iR <install root> Chemin d'installation racine (\"/\" par défaut).\n"

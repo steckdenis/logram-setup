@@ -92,7 +92,7 @@ class App : public QCoreApplication
 
     private:
         Logram::PackageSystem *ps;
-        bool colored;
+        bool colored, useDeps, useInstalled, depsTree;
 
         void manageResults(Logram::Solver *solver);
         void updatePgs(Logram::Progress *p);

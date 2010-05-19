@@ -740,7 +740,7 @@ bool Worker::installBuildDeps(PackageSystem *ps)
         delete ps;
         return false;
     }
-    
+#if 0
     // Gérer les résultats
     PackageList *packages;
     int tot = solver->results();
@@ -835,6 +835,8 @@ bool Worker::installBuildDeps(PackageSystem *ps)
         delete ps;
         return false;
     }
+    
+#endif
     
     delete solver;
     delete ps;

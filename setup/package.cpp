@@ -36,6 +36,9 @@ void App::add(const QStringList &packages)
 {
     Solver *solver = ps->newSolver();
     
+    solver->setUseDeps(useDeps);
+    solver->setUseInstalled(useInstalled);
+    
     foreach(const QString &package, packages)
     {
         QString name = package;
@@ -61,6 +64,7 @@ void App::add(const QStringList &packages)
 
     if (!solver->solve())
     {
+        // TODO: Gérer les erreurs de solver->root()
         error();
         delete solver;
         return;
@@ -536,201 +540,79 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
     }
 }
 
+static void printTree(Solver::Node *node)
+{
+    // Ignorer un noeud déjà parcouru
+    if ((node->flags & Solver::Node::Proceed) != 0) return;
+    
+    // Description du noeud
+    cout << "    " << 'n' << node << " [";
+    
+    if (!node->package)
+    {
+        cout << "label=\"Root\"";
+    }
+    else
+    {
+        cout << "label=\"" << qPrintable(node->package->name() + "~" + node->package->version()) << '"';
+    }
+    
+    if ((node->flags & Solver::Node::Wanted) == 0)
+    {
+        cout << ", fontcolor=gray";
+    }
+    
+    cout << "];" << endl;
+    
+    // Marquer le noeud comme étant parcouru
+    node->flags |= Solver::Node::Proceed;
+    
+    // Enfants
+    Solver::Node::Child *children = node->children;
+    
+    for (int i=0; i<node->childcount; ++i)
+    {
+        Solver::Node::Child *child = &children[i];
+        
+        if (child->count == 1)
+        {
+            // Un seul enfant
+            cout << "    " << 'n' << node << " -> " << 'n' << child->node << ";" << endl;
+            
+            printTree(child->node);
+        }
+        else
+        {
+            // Plusieurs enfants, créer un noeud vide qui montrera qu'il y a un choix.
+            cout << "    " << 'c' << child << " [label=\" \", color=blue];" << endl;
+            cout << "    " << 'n' << node << " -> " << 'c' << child << " [color=blue];" << endl;
+            
+            Solver::Node **nodes = child->nodes;
+            
+            for (int j=0; j<child->count; ++j)
+            {
+                Solver::Node *nd = nodes[j];
+                
+                cout << "    " << 'c' << child << " -> " << 'n' << nd << " [color=blue];" << endl;
+                
+                printTree(nd);
+            }
+        }
+    }
+}
+
 void App::manageResults(Solver *solver)
 {
-    // Boucle pour demander son avis à l'utilisateur
-    PackageList *packages;
-    int index = 0;
-    int tot = solver->results();
-    int dlSize, instSize;
-    bool allempty = true;
-    bool oneok = false;
-    char in[2];
-
-    // Vérifier qu'au moins une solution est bonne
-    for (int i=0; i<tot; ++i)
+    if (depsTree)
     {
-        packages = solver->result(i);
+        // Créer l'arbre des dépendances
+        cout << "digraph G {" << endl;
         
-        if (!packages->wrong())
-        {
-            oneok = true;
-            break;
-        }
+        printTree(solver->root());
+        
+        cout << "}" << endl;
     }
-    
-    // Si aucune des solutions n'est bonne, présenter le problème à l'utilisateur
-    if (!oneok)
-    {
-        cout << COLOR(tr("Setup n'a pas trouvé comment appliquer les changements que vous souhaitez"), "31") << endl;
-        cout << qPrintable(tr("Voici la liste des tentatives et les raisons pour lesquelles elles ont échoué")) << endl;
-        cout << endl;
-        
-        for (int i=0; i<tot; ++i)
-        {
-            packages = solver->result(i);
-            
-            cout << COLOR(tr("Tentative numéro %1 :").arg(i+1), "33") << endl;;
-            
-            for (int j=0; j<packages->errors(); ++j)
-            {
-                PackageList::Error *err = packages->error(j);
-                
-                cout << "  * ";
-                
-                switch (err->type)
-                {
-                    case PackageList::Error::SameNameSameVersionDifferentAction:
-                        cout << qPrintable(tr("Le paquet %1 à la version %2 devait être %3,\n    mais un autre paquet lui a demandé d'être %4")
-                            .arg(err->package)
-                            .arg(err->version)
-                            .arg(actionString(err->action))
-                            .arg(actionString(err->otherAction)));
-                        break;
-                        
-                    case PackageList::Error::SameNameDifferentVersionSameAction:
-                        cout << qPrintable(tr("Le paquet %1 doit être %2\n    à la version %3 ET à la version %4")
-                            .arg(err->package)
-                            .arg(actionString(err->action))
-                            .arg(err->version)
-                            .arg(err->otherVersion));
-                        break;
-                        
-                    case PackageList::Error::NoPackagesMatchingPattern:
-                        cout << qPrintable(tr("Le paquet %1 à la version %2\n    dépend de «%3», qui est introuvable")
-                            .arg(err->package)
-                            .arg(err->version)
-                            .arg(err->pattern));
-                        break;
-                        
-                    case PackageList::Error::UninstallablePackageInstalled:
-                        cout << qPrintable(tr("Le paquet %1 à la version %2\n    devait être installé mais a été tagué comme étant non-installable")
-                            .arg(err->package)
-                            .arg(err->version));
-                        break;
-                        
-                    case PackageList::Error::UnremovablePackageRemoved:
-                        cout << qPrintable(tr("Le paquet %1 à la version %2\n    devait être supprimé mais a été tagué comme étant non-supprimable")
-                            .arg(err->package)
-                            .arg(err->version));
-                        break;
-                        
-                    case PackageList::Error::UnupdateablePackageUpdated:
-                        cout << qPrintable(tr("Le paquet %1 à la version %2\n    devait être mis à jour à la version %3,\n    mais a été tagué comme ne pouvant être mis à jour")
-                            .arg(err->package)
-                            .arg(err->version)
-                            .arg(err->otherVersion));
-                        break;
-                }
-                
-                cout << endl;
-            }
-        }
-        
-        cout << endl;
-        return;
-    }
-    
-    // Sinon, lui montrer le choix
-    cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "32") << endl;
-    cout << qPrintable(tr("    Légende : "))
-         << COLOR(tr("I: Installé "), "34")
-         << COLOR(tr("R: Supprimé "), "31")
-         << COLOR(tr("U: Mis à jour "), "33")
-         << COLOR(tr("P: Supprimé totalement "), "35")
-         << endl;
-    
-    while (true)
-    {
-        cout << endl;
-
-        packages = solver->result(index);
-        
-        // Si la liste est vide, c'est qu'on n'a rien à faire
-        if (packages->count() == 0)
-        {
-            index++;
-            
-            if (index >= tot)
-            {
-                // Reboucler
-                if (allempty == true)
-                {
-                    // Sauf que rien ne contient la solution, donc quitter
-                    cout << COLOR(tr("Les changements que vous souhaitez appliquer semblent déjà avoir été appliqués. Votre système ne sera pas modifié."), "34") << endl << endl;
-                    return;
-                }
-                
-                index = 0;
-                continue;
-            }
-            
-            // Passer à la solution suivante
-            continue;
-        }
-        
-        allempty = false;
-        instSize = dlSize = 0;
-
-        displayPackages(packages, instSize, dlSize, true);
-
-        cout << endl;
-
-        // Demander si c'est bon
-        cout << qPrintable(tr("Solution %1 sur %2, de poids %3, %4 licence(s) à accepter%5.")
-                                .arg(index + 1)
-                                .arg(tot)
-                                .arg(packages->weight())
-                                .arg(packages->numLicenses())
-                                .arg( (packages->needsReboot() ? tr(", nécessite un redémarrage") : QString())))
-            << endl;
-                                
-        if (instSize >= 0)
-        {
-            cout << qPrintable(tr("Téléchargement de %1, installation de %2")
-                                    .arg(COLORS(PackageSystem::fileSizeFormat(dlSize), "33"))
-                                    .arg(COLORS(PackageSystem::fileSizeFormat(instSize), "33")));
-        }
-        else
-        {
-            cout << qPrintable(tr("Téléchargement de %1, libération de %2")
-                                    .arg(COLORS(PackageSystem::fileSizeFormat(dlSize), "33"))
-                                    .arg(COLORS(PackageSystem::fileSizeFormat(-instSize), "33")));
-        }
-        
-        cout << endl
-             << COLOR(tr("Accepter (y), Suivante (n), Précédante (p) ou Annuler (c) ? "), "32")
-             << std::flush;
-        
-        getString(in, 2, "y", true);
-
-        if (in[0] == 'y')
-        {
-            if (packages->count() == 0)
-            {
-                return;
-            }
-            
-            break;
-        }
-        else if (in[0] == 'n')
-        {
-            index = qMin(index + 1, tot - 1);
-        }
-        else if (in[0] == 'p')
-        {
-            index = qMax(index - 1, 0);
-        }
-        else if (in[0] == 'c')
-        {
-            return;
-        }
-        else
-        {
-            break;
-        }
-    }
-    
+#if 0
     // La liste a été validée, vérifier que toutes les CLUF sont acceptées
     if (packages->numLicenses() != 0)
     {
@@ -807,4 +689,5 @@ void App::manageResults(Solver *solver)
     cout << endl;
     cout << COLOR(tr("Opérations sur les paquets appliquées !"), "32") << endl;
     cout << endl;
+#endif
 }

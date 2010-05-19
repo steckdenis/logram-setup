@@ -816,12 +816,12 @@ int Logram::PackageSystem::compareVersions(const char *a, const char *b)
         atilde = (olda == '~');
         btilde = (oldb == '~');
         
-        if (atilde && !btilde)
+        if (atilde && !btilde && *b)
         {
             // Version A plus courte, donc < B
             return -1;
         }
-        else if (btilde && !atilde)
+        else if (btilde && !atilde && *a)
         {
             // Version B plus courte, donc < A
             return 1;
@@ -846,11 +846,6 @@ int Logram::PackageSystem::compareVersions(const char *a, const char *b)
                 a++;
             }
         }
-        else
-        {
-            // Il manque un champ, l'ajouter
-            numa = 0;
-        }
         
         if (*b)
         {
@@ -860,10 +855,6 @@ int Logram::PackageSystem::compareVersions(const char *a, const char *b)
                 numb += (*b - '0');
                 b++;
             }
-        }
-        else
-        {
-            numb = 0;
         }
         
         // Comparer les nombres

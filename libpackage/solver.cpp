@@ -2,7 +2,7 @@
  * solver.cpp
  * This file is part of Logram
  *
- * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
+ * Copyright (C) 2009, 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
  *
  * Logram is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,60 +25,38 @@
 #include "databasereader.h"
 #include "databasepackage.h"
 #include "filepackage.h"
-#include "packagelist.h"
 
-#include <QVector>
 #include <QList>
 #include <QHash>
 #include <QCoreApplication>
 
 #include <QtDebug>
-#include <QtAlgorithms>
-
-// DEBUG
-#include <iostream>
-using namespace std;
 
 using namespace Logram;
-
-struct Pkg
-{
-    int index;
-    Solver::Action action;
-    bool reallyWanted;
-    
-    bool operator==(const Pkg &other);
-};
-
-// Utilisé par QList::contains
-bool Pkg::operator==(const Pkg &other)
-{
-    return (index == other.index) && (action == other.action);
-}
 
 struct Solver::Private
 {
     PackageSystem *ps;
     DatabaseReader *psd;
-    bool installSuggests;
+    bool installSuggests, useDeps, useInstalled;
     bool error;
 
-    // Liste pour la résolution des dépendances
-    QList<QVector<Pkg> > packages;
-    QHash<int, QList<PackageList::Error *> > listErrors;
-    QHash<QString, Solver::Action> wantedPackages;
-    QList<int> wrongLists;
+    struct WantedPackage
+    {
+        QString pattern;
+        Solver::Action action;
+    };
     
-    // Permet de gérer correctement les suggestions
-    QList<int> topLevelPackages;
-    QList<FilePackage *> filePackages;
-
-    // Liste publique
-    QList<PackageList *> lists;
+    QList<WantedPackage> wantedPackages;
+    
+    QList<Solver::Node *> nodes;
+    Node *rootNode;
 
     // Fonctions
-    void addPkg(Pkg &pkg, int listIndex, QList<int> &plists);
-    void addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists);
+    bool addNode(Package *package, Solver::Node *node);
+    Node *checkPackage(int index, Solver::Action action, bool &ok);
+    bool addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child);
+    
 };
 
 Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
@@ -88,6 +66,8 @@ Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
     d->error = false;
     d->psd = psd;
     d->ps = ps;
+    d->useDeps = true;
+    d->useInstalled = true;
 
     d->installSuggests = ps->installSuggests();
 }
@@ -97,658 +77,422 @@ Solver::~Solver()
     delete d;
 }
 
+bool Solver::setUseDeps(bool enable)
+{
+    d->useDeps = enable;
+}
+
+bool Solver::setUseInstalled(bool enable)
+{
+    d->useInstalled = enable;
+}
+
 void Solver::addPackage(const QString &nameStr, Action action)
 {
-    d->wantedPackages.insert(nameStr, action);
-}
-
-int Solver::results() const
-{
-    return d->lists.count();
-}
-
-PackageList *Solver::result(int index) const
-{
-    return d->lists.at(index);
-}
-
-static bool listWeightLessThan(PackageList *l1, PackageList *l2)
-{
-    return l1->weight() < l2->weight();
+    Private::WantedPackage pkg;
+    
+    pkg.pattern = nameStr;
+    pkg.action = action;
+    
+    d->wantedPackages.append(pkg);
 }
 
 bool Solver::solve()
 {
-    QList<int> lists;
-    QVector<Pkg> pkgsToAdd;
-    QList<int> pkgsIndexes;
-    Pkg p;
-
-    // Créer la première liste
-    d->packages.append(QVector<Pkg>());
-    lists.append(0);
-
-    // Explorer les paquets voulus
-    QHash<QString, Solver::Action>::const_iterator i;
+    // Créer le noeud principal
+    d->rootNode = new Node;
     
-    for (i = d->wantedPackages.constBegin(); i != d->wantedPackages.constEnd(); ++i)
-    {
-        const QString &pkg = i.key();
-        
-        if (pkg.endsWith(".lpk"))
-        {
-            // Paquet local
-            FilePackage *fpkg = new FilePackage(pkg, d->ps, d->psd, Solver::None);
-        
-            if (!fpkg->isValid())
-            {
-                PackageError *err = new PackageError;
-                err->type = PackageError::PackageNotFound;
-                err->info = pkg;
-                
-                d->ps->setLastError(err);
-                
-                return false;
-            }
-            
-            // Explorer les dépendances du paquet
-            foreach (Depend *dep, fpkg->depends())
-            {   
-                // Mapper les DEPEND_TYPE en Action
-                Solver::Action act = Solver::None;
-
-                if (dep->type() == DEPEND_TYPE_DEPEND
-                || (dep->type() == DEPEND_TYPE_SUGGEST && d->installSuggests))
-                {
-                    act = Solver::Install;
-                }
-                else if (dep->type() == DEPEND_TYPE_CONFLICT || dep->type() == DEPEND_TYPE_REPLACE)
-                {
-                    act = Solver::Remove;
-                }
-                else
-                {
-                    continue;
-                }
-                
-                pkgsIndexes = d->psd->packagesByVString(dep->name(), dep->version(), dep->op());
-
-                if (pkgsIndexes.count() == 0)
-                {
-                    // Aucun paquet ne correspond
-                    PackageError *err = new PackageError;
-                    err->type = PackageError::PackageNotFound;
-                    err->info = pkg;
-                    
-                    d->ps->setLastError(err);
-                    
-                    return false;
-                }
-                
-                // Créer le pkgsToAdd
-                Pkg p;
-                
-                foreach(int i, pkgsIndexes)
-                {
-                    p.index = i;
-                    p.action = act;
-                    p.reallyWanted = true;
-                    
-                    pkgsToAdd.append(p);
-                }
-                
-                d->addPkgs(pkgsToAdd, lists);
-                
-                pkgsToAdd.clear();
-            }
-            
-            // Ajouter le paquet aux paquets à ajouter dans toutes les listes
-            fpkg->setAction(Solver::Install);
-            fpkg->setWanted(true);              // Installé manuellement
-            d->filePackages.append(fpkg);
-        }
-        else
-        {
-            Action act = d->wantedPackages.value(pkg);
-            pkgsIndexes = d->psd->packagesByVString(pkg);
-            
-            if (pkgsIndexes.count() == 0)
-            {
-                // Aucun paquet ne correspond
-                PackageError *err = new PackageError;
-                err->type = PackageError::PackageNotFound;
-                err->info = pkg;
-                
-                d->ps->setLastError(err);
-                
-                return false;
-            }
-            
-            foreach(int i, pkgsIndexes)
-            {
-                p.index = i;
-                p.action = act;
-                p.reallyWanted = true;
-                
-                pkgsToAdd.append(p);
-            }
-
-            d->addPkgs(pkgsToAdd, lists);
-            
-            pkgsToAdd.clear();
-            
-            d->topLevelPackages << pkgsIndexes;
-        }
-    }
-
-#if 0
-    qDebug() << d->wrongLists;
-    for (int i=0; i<d->packages.count(); ++i)
-    {
-        const QVector<Pkg> &pkgs = d->packages.at(i);
-        qDebug() << "{" << d->wrongLists.contains(i);
-        foreach(const Pkg &pkg, pkgs)
-        {
-            qDebug() << "    " << d->psd->packageName(pkg.index) << d->psd->packageVersion(pkg.index) << pkg.action;
-        }
-        qDebug() << "}";
-    }
-#endif
-
-    // Créer les véritables listes de Package pour les listes trouvées, et étant correctes
-    for (int i=0; i<d->packages.count(); ++i)
-    {
-        PackageList *plist = new PackageList(d->ps);
-        
-        if (plist->error())
-        {
-            return false;
-        }
-        
-        plist->setWrong(d->wrongLists.contains(i));
-        
-        // Ajouter les éventuels paquets fichiers enregistrés comme tel
-        foreach(FilePackage *fpkg, d->filePackages)
-        {
-            plist->addPackage(new FilePackage(*fpkg));
-        }
-
-        // La liste est bonne, créer les paquets
-        const QVector<Pkg> &pkgs = d->packages.at(i);
-        QList<int> updatedPackages; // Liste des paquets à ignorer car faisant partie d'une mise à jour
-
-        foreach(const Pkg &pkg, pkgs)
-        {
-            // Un paquet peut ne pas être voulu (paquet non-installé sélectionné pour suppression histoire de faire échouer la liste si un paquet nécessitant de l'installer est installé, mais ça l'utilisateur n'a pas à savoir)
-                     
-            if (pkg.reallyWanted && !updatedPackages.contains(pkg.index))
-            {
-                Package *package = 0;
-                
-                // Explorer à nouveau les paquets pour voir si ce n'est pas une mise à jour
-                foreach(const Pkg &opkg, pkgs)
-                {
-                    if (!opkg.reallyWanted) continue;
-                    
-                    _Package *my = d->psd->package(pkg.index);
-                    _Package *other = d->psd->package(opkg.index);
-                    
-                    if (my->name == other->name && my->version != other->version)
-                    {
-                        updatedPackages.append(opkg.index);
-                        
-                        // Savoir quel paquet est l'ancien, et quel paquet est le nouveau
-                        if (opkg.action == Solver::Install)
-                        {
-                            // Nous sommes l'ancien, l'autre le nouveau    
-                            package = new DatabasePackage(pkg.index, d->ps, d->psd, Solver::Update);
-                            package->setUpgradePackage(opkg.index);
-                        }
-                        else
-                        {
-                            // Nous sommes le nouveau, l'autre l'ancien
-                            package = new DatabasePackage(opkg.index, d->ps, d->psd, Solver::Update);
-                            package->setUpgradePackage(pkg.index);
-                        }
-                        
-                        break;
-                    }
-                }
-                
-                if (package == 0)
-                {
-                    // Pas de mise à jour
-                    package = new DatabasePackage(pkg.index, d->ps, d->psd, pkg.action);
-                }
-                else if (package->flags() & PACKAGE_FLAG_DONTUPDATE)
-                {
-                    // On a un paquet pour mise à jour, mais ce paquet ne veut pas
-                    plist->setWrong(true);
-                    
-                    PackageList::Error *err = new PackageList::Error;
-                    err->type = PackageList::Error::UnupdateablePackageUpdated;
-                    
-                    err->package = package->name();
-                    err->version = package->version();
-                    
-                    err->otherVersion = package->upgradePackage()->version();
-                    
-                    d->listErrors[i].append(err);
-                }
-                
-                // Savoir si le paquet a été installé manuellement
-                if (d->topLevelPackages.contains(pkg.index) && pkg.action == Solver::Install)
-                {
-                    package->setWanted(true);
-                }
-
-                plist->addPackage(package);
-            }
-        }
-        
-        // Ajouter les éventuelles erreurs
-        if (plist->wrong())
-        {
-            foreach(PackageList::Error *err, d->listErrors.value(i))
-            {
-                plist->addError(err);
-            }
-        }
-
-        // Ajouter la liste
-        d->lists.append(plist);
-    }
-    
-    // Trier la liste par poids
-    qSort(d->lists.begin(), d->lists.end(), listWeightLessThan);
-
-    // On peut supprimer les tables temporaires (pas d->lists !)
-    d->wrongLists.clear();
-    d->wantedPackages.clear();
-    d->packages.clear();
-    qDeleteAll(d->filePackages);
-    
-    return true;
+    return d->addNode(0, d->rootNode);
 }
 
-void Solver::Private::addPkg(Pkg &pkg, int listIndex, QList<int> &plists)
+Solver::Node *Solver::root()
 {
-    QList<int> lists;
+    return d->rootNode;
+}
 
-    // Première liste
-    lists.append(listIndex);
-
-    QVector<Pkg> &list = packages[listIndex];
-    _Package *mpkg = psd->package(pkg.index);
+bool Solver::Private::addNode(Package *package, Solver::Node *node)
+{
+    Solver::Action action = Solver::None;
     
-    // Vérifier que l'action demandée est compatible avec ce que le paquet veut
-    if (pkg.action == Solver::Install && (mpkg->flags & PACKAGE_FLAG_DONTINSTALL))
+    if (package) action = package->action();
+    
+    // Initialiser le noeud
+    node->package = package;
+    node->flags = Solver::Node::Wanted;
+    node->error = 0;
+    node->children = 0;
+    node->childcount = 0;
+    
+    node->minWeight = 0;
+    node->maxWeight = 0;
+    node->minDlSize = 0;
+    node->maxDlSize = 0;
+    node->minInstSize = 0;
+    node->maxInstSize = 0;
+    
+    nodes.append(node);
+    
+    // Vérifier la validité du paquet
+    if (package && !package->isValid())
     {
-        PackageList::Error *err = new PackageList::Error;
-        err->type = PackageList::Error::UninstallablePackageInstalled;
+        Solver::Error *err = new Solver::Error;
+        err->type = Solver::Error::InternalError;
+        err->other = 0;
         
-        err->package = psd->string(false, mpkg->name);
-        err->version = psd->string(false, mpkg->version);
+        node->error = err;
         
-        listErrors[listIndex].append(err);
-        
-        wrongLists.append(listIndex);
-        return;
-    }
-    else if (pkg.action == Solver::Remove && (mpkg->flags & PACKAGE_FLAG_DONTREMOVE))
-    {
-        PackageList::Error *err = new PackageList::Error;
-        err->type = PackageList::Error::UnremovablePackageRemoved;
-        
-        err->package = psd->string(false, mpkg->name);
-        err->version = psd->string(false, mpkg->version);
-        
-        listErrors[listIndex].append(err);
-        
-        wrongLists.append(listIndex);
-        return;
+        return false;
     }
     
-    // Explorer la liste actuelle pour voir si le paquet demandé n'est pas déjà dedans
-    for(int i=0; i<list.count(); ++i)
+    // Vérifier que ce qu'on demande est bon
+    if (package && ((package->flags() & PACKAGE_FLAG_DONTINSTALL) != 0) && action == Solver::Install)
     {
-        const Pkg &pk = list.at(i);
-        _Package *lpkg = psd->package(pk.index);
-
-        // Voir si on a déjà dans la liste un paquet du même nom que nous
-        if (lpkg->name == mpkg->name)
+        Solver::Error *err = new Solver::Error;
+        err->type = Solver::Error::UninstallablePackageInstalled;
+        err->other = 0;
+        
+        node->error = err;
+        
+        return false;
+    }
+    else if (package && ((package->flags() & PACKAGE_FLAG_DONTREMOVE) != 0) && (action == Solver::Remove || action == Solver::Purge))
+    {
+        Solver::Error *err = new Solver::Error;
+        err->type = Solver::Error::UnremovablePackageRemoved;
+        err->other = 0;
+        
+        node->error = err;
+        
+        return false;
+    }
+    
+    // Vérifier que ce paquet est voulu, sauf si l'utilisateur veut qu'on ignore
+    if (useInstalled && package && package->origin() == Package::Database)
+    {
+        if (
+            (((package->flags() & PACKAGE_FLAG_INSTALLED) != 0) && action == Solver::Install) ||
+            (((package->flags() & PACKAGE_FLAG_INSTALLED) == 0) && action != Solver::Install)
+            )
         {
-            // Si les versions sont les mêmes
-            if (lpkg->version == mpkg->version)
-            {
-                // Si on veut faire la même action, on retourne true (dépendance en boucle ok)
-                if (pk.action == pkg.action)
-                {
-                    return;
-                }
-                else
-                {
-                    // L'action n'est pas la même, c'est une contradiction, on quitte
-                    PackageList::Error *err = new PackageList::Error;
-                    err->type = PackageList::Error::SameNameSameVersionDifferentAction;
-                    
-                    err->package = psd->string(false, mpkg->name);
-                    err->version = psd->string(false, mpkg->version);
-                    err->action = pkg.action;
-                    
-                    err->otherPackage = psd->string(false, lpkg->name);
-                    err->otherVersion = psd->string(false, lpkg->version);
-                    err->otherAction = pk.action;
-                    
-                    listErrors[listIndex].append(err);
-                    
-                    wrongLists.append(listIndex);
-                    return;
-                }
-            }
-            else
-            {
-                // Les versions ne sont pas les mêmes
-                if (pk.action == pkg.action)
-                {
-                    // Contradiction, on ne peut pas par exemple installer deux versions les mêmes
-                    PackageList::Error *err = new PackageList::Error;
-                    err->type = PackageList::Error::SameNameDifferentVersionSameAction;
-                    
-                    err->package = psd->string(false, mpkg->name);
-                    err->version = psd->string(false, mpkg->version);
-                    err->action = pkg.action;
-                    
-                    err->otherPackage = psd->string(false, lpkg->name);
-                    err->otherVersion = psd->string(false, lpkg->version);
-                    err->action = pk.action;
-                    
-                    listErrors[listIndex].append(err);
-                    
-                    wrongLists.append(listIndex);
-                    return;
-                }
-            }
+            node->flags &= ~Solver::Node::Wanted;
+            return true;
         }
     }
-
-    // Si on veut supprimer le paquet et que le paquet n'est pas installé, quitter
-    bool ok = false;
     
-    if (pkg.action == Solver::Remove && !(mpkg->flags & PACKAGE_FLAG_INSTALLED))
-    {
-        pkg.reallyWanted = false;
-        ok = true;
-    }
-
-    // Si on veut installer un paquet déjà installé, quitter
-    if (pkg.action == Solver::Install && mpkg->flags & PACKAGE_FLAG_INSTALLED)
-    {
-        pkg.reallyWanted = false;
-        ok = true;
-    }
+    // Node supplémentaire en cas de mise à jour
+    Node *suppl = 0;
     
-    // Ajouter le paquet dans la liste
-    packages[listIndex].append(pkg);
-    
-    if (ok)
+    // Si on veut installer ce paquet, voir si on fini par une mise à jour
+    if (action == Solver::Install && package && package->origin() == Package::Database)
     {
-        return;
-    }
-
-    // Si on installe le paquet, vérifier que d'autres versions ne sont pas installées
-    if (pkg.action == Solver::Install)
-    {
+        // Paquet dans la base de donnée
+        DatabasePackage *dpkg = (DatabasePackage *)package;
+        int pindex = dpkg->index();
+        _Package *mpkg = psd->package(pindex);
+        
+        // Explorer les autres versions
         QList<int> otherVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
         
         foreach(int otherVersion, otherVersions)
         {
+            if (otherVersion == pindex)
+            {
+                // Ignorer ce paquet
+                continue;
+            }
+            
             _Package *opkg = psd->package(otherVersion);
             
             // NOTE: le "&& opkg->name == mpkg->name" permet d'avoir deux paquets fournissant le même provide ensemble
             if ((opkg->flags & PACKAGE_FLAG_INSTALLED) && opkg->version != mpkg->version && opkg->name == mpkg->name)
             {
-                // Supprimer le paquet
-                Pkg pkgToAdd;
+                // Il va falloir supprimer ce paquet
+                bool ok = true;
+                suppl = checkPackage(otherVersion, Solver::Remove, ok);
                 
-                pkgToAdd.index = otherVersion;
-                pkgToAdd.action = Solver::Remove;
-                pkgToAdd.reallyWanted = true;
-                
-                QVector<Pkg> pkgsToAdd;
-                pkgsToAdd.append(pkgToAdd);
-
-                addPkgs(pkgsToAdd, lists);
-
-                break;  // On n'a qu'une seule autre version d'installée, normalement
-            }
-        }
-    }
-
-    // Explorer les dépendances du paquet
-    QList<_Depend *> deps = psd->depends(pkg.index);
-
-    foreach (_Depend *dep, deps)
-    {   
-        // Mapper les DEPEND_TYPE en Action
-        Solver::Action act = Solver::None;
-
-        if ((dep->type == DEPEND_TYPE_DEPEND && pkg.action == Solver::Install)
-         || (dep->type == DEPEND_TYPE_SUGGEST && pkg.action == Solver::Install && installSuggests && topLevelPackages.contains(pkg.index)))
-        {
-            act = Solver::Install;
-        }
-        else if ((dep->type == DEPEND_TYPE_CONFLICT || dep->type == DEPEND_TYPE_REPLACE) && pkg.action == Solver::Install)
-        {
-            act = Solver::Remove;
-        }
-        else if (dep->type == DEPEND_TYPE_REVDEP && pkg.action == Solver::Remove)
-        {
-            // Gestion des dépendances inverses plus tard
-            continue;
-        }
-
-        if (act == Solver::None)
-        {
-            continue;
-        }
-        
-        QList<int> mpkgsToAdd = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
-
-        if (mpkgsToAdd.count() == 0 && act == Solver::Install)
-        {
-            // Aucun des paquets demandés ne convient, distribution cassée. On quitte la branche
-            PackageList::Error *err = new PackageList::Error;
-            err->type = PackageList::Error::NoPackagesMatchingPattern;
-            
-            err->pattern = PackageSystem::dependString(
-                psd->string(false, dep->pkgname),
-                psd->string(false, dep->pkgver),
-                dep->op);
-                
-            err->package = psd->string(false, mpkg->name);
-            err->version = psd->string(false, mpkg->version);
-            
-            listErrors[listIndex].append(err);
-            
-            wrongLists << lists;
-            return;
-        }
-        
-        // Créer le pkgsToAdd
-        QVector<Pkg> pkgsToAdd;
-        Pkg p;
-        
-        foreach(int i, mpkgsToAdd)
-        {
-            if (i != pkg.index)
-            {
-                p.index = i;
-                p.action = act;
-                p.reallyWanted = true;
-                
-                pkgsToAdd.append(p);
-            }
-        }
-        
-        addPkgs(pkgsToAdd, lists);
-    }
-    
-    // Gérer les dépendances inverses
-    QList<int> myVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
-    bool otherChoicesMade = false;
-    QList<int> revdepLists = lists;
-    
-    /*
-        Deux possibilités : soit on retire toutes les dépendances inverses, soit
-        on installe les provides de ce paquet.
-        
-        Pour cela, on explore les dépendances inverses. La première revdep entraîne
-        la création de deux branches : celle où on installera les provides, et celle
-        où on supprimera les revdeps.
-        
-        Les revdeps suivantes ne seront ajoutées que dans la branche où on retire les
-        revdeps. revdepLists contient ces branches-là.
-    */
-    
-    foreach (_Depend *dep, deps)
-    {
-        if (dep->type != DEPEND_TYPE_REVDEP || pkg.action != Solver::Remove)
-        {
-            continue;
-        }
-        
-        QList<int> revdepPackage = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
-        QVector<Pkg> pkgsToAdd;
-        
-        // Ajout de la dépendance inverse à supprimer
-        Pkg p;
-        
-        if (revdepPackage.count() != 0)
-        {
-            p.index = revdepPackage.at(0);  // N'en contient qu'un
-            p.action = Solver::Remove;
-            p.reallyWanted = true;
-            
-            pkgsToAdd.append(p);
-        }
-    
-        if (!otherChoicesMade)
-        {
-            // Ajouter les versions ne notre paquet
-            foreach(int i, myVersions)
-            {
-                if (i != pkg.index)
+                // Tout doit s'être bien passé
+                if (!ok)
                 {
-                    p.index = i;
-                    p.action = Solver::Install;
-                    p.reallyWanted = true;
+                    Solver::Error *err = new Solver::Error;
+                    err->type = Solver::Error::ChildError;
+                    err->other = suppl;
                     
-                    pkgsToAdd.append(p);
+                    node->error = err;
+                    
+                    return false;
+                }
+                
+                // Vérifier que nd est updatable
+                if (suppl->package && ((suppl->package->flags() && PACKAGE_FLAG_DONTUPDATE) != 0))
+                {
+                    Solver::Error *err = new Solver::Error;
+                    err->type = Solver::Error::UnupdatablePackageUpdated;
+                    err->other = suppl;
+                    
+                    node->error = err;
+                    
+                    return false;
                 }
             }
         }
+    }
+    
+    // Créer la liste des enfants
+    QList<_Depend *> deps;
+    
+    if (package == 0)
+    {
+        node->childcount = wantedPackages.count();
+    }
+    else if (!useDeps)
+    {
+        // On ne gère pas les dépendances
+        return true;
+    }
+    else if (package->origin() == Package::Database)
+    {
+        deps = psd->depends(((DatabasePackage *)package)->index());
         
-        // Ajouter les paquets
-        if (pkgsToAdd.count() != 0)
+        // Explorer ces dépendances pour savoir combien d'enfants il faut
+        foreach (_Depend *dep, deps)
         {
-            if (!otherChoicesMade)
+            if ((dep->type == DEPEND_TYPE_DEPEND && action == Solver::Install) ||
+                (dep->type == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
             {
-                addPkgs(pkgsToAdd, lists);
+                node->childcount++;
+            }
+            else if ((dep->type == DEPEND_TYPE_CONFLICT || dep->type == DEPEND_TYPE_REPLACE) && action == Solver::Install)
+            {
+                node->childcount++;
+            }
+            else if (dep->type == DEPEND_TYPE_REVDEP && action == Solver::Remove)
+            {
+                node->childcount++;
+            }
+        }
+    }
+    else
+    {
+        // TODO: Dépendances des paquets locaux
+    }
+    
+    // Si on n'a pas d'enfants, c'est déjà fini
+    if (node->childcount == 0)
+    {
+        return true;
+    }
+    
+    // Allouer la liste des enfants
+    Node::Child *children = new Node::Child[node->childcount];
+    node->children = children;
+    
+    // Ajouter les enfants
+    for (int i=0, di=0; i<node->childcount; ++i, ++di)
+    {
+        if (package == 0)
+        {
+            const WantedPackage &wp = wantedPackages.at(i);
+            
+            if (wp.pattern.endsWith(".lpk"))
+            {
+                // On veut installer un paquet depuis un fichier
+                FilePackage *fpkg = new FilePackage(wp.pattern, ps, psd, wp.action);
+                
+                // Nouveau Node pour ce paquet
+                Node *nd = new Node;
+                
+                // Enregistrer ce noeud
+                children[i].count = 1;
+                children[i].node = nd;
+                
+                if (!addNode(fpkg, nd))
+                {
+                    Solver::Error *err = new Solver::Error;
+                    err->type = Solver::Error::ChildError;
+                    err->other = nd;
+                    
+                    node->error = err;
+                    
+                    return false;
+                }
             }
             else
             {
-                addPkgs(pkgsToAdd, revdepLists);
+                // Nom depuis la base de donnée
+                QList<int> pkgIndexes = psd->packagesByVString(wp.pattern);
+                
+                if (pkgIndexes.count() == 0)
+                {
+                    Solver::Error *err = new Solver::Error;
+                    err->type = Solver::Error::NoDeps;
+                    err->pattern = wp.pattern;
+                    
+                    node->error = err;
+                    
+                    return false;
+                }
+                
+                // Ajouter les paquets
+                if (!addPkgs(pkgIndexes, node, wp.action, &children[i]))
+                {
+                    // addPkgs s'occupe de l'erreur
+                    return false;
+                }
             }
         }
-        
-        otherChoicesMade = true;
+        else if (package->origin() == Package::Database)
+        {
+            _Depend *dep = deps.at(di);
+            Solver::Action act = Solver::None;
+            
+            // Trouver l'action
+            if ((dep->type == DEPEND_TYPE_DEPEND && action == Solver::Install) ||
+                (dep->type == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
+            {
+                act = Solver::Install;
+            }
+            else if ((dep->type == DEPEND_TYPE_CONFLICT || dep->type == DEPEND_TYPE_REPLACE) && action == Solver::Install)
+            {
+                act = Solver::Remove;
+            }
+            else if (dep->type == DEPEND_TYPE_REVDEP && action == Solver::Remove)
+            {
+                // TODO: Gérer les revdeps : soit installer un autre provide de ce paquet,
+                //       soit supprimer la revdep.
+                //
+                //       Attention ! Bug dans l'ancienne version du à ceci : on installe
+                //       **une seule fois** les autres provides de ce paquet, sinon on arrive dans des trucs énormes !
+            }
+            
+            if (act == Solver::None)
+            {
+                // Rien à faire. Décrémenter i pour ne pas sortir du tableau children, laisser
+                // di comme il est car il sert à récupérer la dépendance suivante.
+                i--;
+                continue;
+            }
+            
+            // Trouver les paquets à installer
+            QList<int> pkgIndexes = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+            
+            if (pkgIndexes.count() == 0 && act == Solver::Install)
+            {
+                Solver::Error *err = new Solver::Error;
+                err->type = Solver::Error::NoDeps;
+                err->other = 0;
+                err->pattern = PackageSystem::dependString(
+                                    psd->string(false, dep->pkgname),
+                                    psd->string(false, dep->pkgver),
+                                    dep->op);
+                                    
+                node->error = err;
+                
+                return false;
+            }
+            
+            // Ajouter les paquets
+            if (!addPkgs(pkgIndexes, node, act, &children[i]))
+            {
+                // addPkgs s'occupe de l'erreur
+                return false;
+            }
+        }
+        else
+        {
+            // TODO: Gérer les dépendances des paquets en provenance de fichiers
+        }
     }
-
-    // Rajouter les listes nouvellement créées dans plists
-    lists.removeFirst();
     
-    plists << lists;
+    // TODO: Vérifier les enfants de ce noeud pour éviter tout conflit
+    
+    return true;
 }
 
-void Solver::Private::addPkgs(const QVector<Pkg> &pkgsToAdd, QList<int> &lists)
+bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child)
 {
-    bool first = true;
-    QHash<int, int> lcounts;
-    int count = lists.count();
-    
-#if 0
-    if (pkgsToAdd.count() > 1)
+    // Si on n'a qu'un enfant, c'est simple
+    if (pkgIndexes.count() == 1)
     {
-        bool f = true;
-        foreach(const Pkg &pkg, pkgsToAdd)
-        {
-            if (f)
-            {
-                qDebug() << "Un choix :";
-                f = false;
-            }
-            
-            qDebug() << "    " << psd->packageName(pkg.index) << psd->packageVersion(pkg.index);
-        }
-    }
-#endif
-
-    // Si on a plusieurs choix, créer les sous-listes nécessaires
-    for (int j=0; j<pkgsToAdd.count(); ++j)
-    {
-        /* NOTE: La variable suivante permet de stocker le nombre d'éléments dans lists.
-                 Ainsi, quand on ajoute des éléments dedans, ils ne sont plus re-traités
-                 (puisqu'ils l'ont déjà été). Au prochain tour de foreach(), ils seront
-                 traités comme il faut
-        */
-        Pkg pkg = pkgsToAdd.at(j);
+        bool ok = true;
+        Node *nd = checkPackage(pkgIndexes.at(0), action, ok);
         
-        for (int i=0; i<count; ++i)
+        // Enregistrer le noeud
+        child->count = 1;
+        child->node = nd;
+        
+        if (!ok)
         {
-            int lindex = lists.at(i);
-
-            if (first)
+            Solver::Error *err = new Solver::Error;
+            err->type = Solver::Error::ChildError;
+            err->other = nd;
+            
+            node->error = err;
+            
+            return false;
+        }
+    }
+    else
+    {
+        // Sinon, il nous faut une liste des enfants
+        int count = pkgIndexes.count();
+        
+        Node **nodes = new Node *[count];
+        
+        child->count = count;
+        child->nodes = nodes;
+        
+        for (int j=0; j<pkgIndexes.count(); ++j)
+        {
+            int pkgIndex = pkgIndexes.at(j);
+            
+            bool ok = true;
+            Node *nd = checkPackage(pkgIndex, action, ok);
+            
+            // Enregistrer le noeud
+            nodes[j] = nd;
+            
+            // Si pas ok, on décrémente count, c'est tout.
+            // Une fois en dehors du for, on vérifie count. S'il est arrivé à zéro, alors
+            // aucun des variantes n'est bonne, et on envoie une erreur.
+            if (!ok)
             {
-                const QVector<Pkg> &pkgs = packages.at(lindex);
-                
-                lcounts[lindex] = pkgs.count();
-                
-                // Ne rien ajouter si la liste contient déjà ce paquet, exactement le même,
-                // avec la même action
-                if (!pkgs.contains(pkg))
-                {   
-                    addPkg(pkg, lindex, lists);
-                }
-            }
-            else
-            {
-                // On a une variante, créer une nouvelle liste, et y copier <lcount> éléments dedans
-                // (pour en faire une copie de la liste originelle)
-                const QVector<Pkg> &pkgs = packages.at(lindex);
-                
-                int lcount = lcounts[lindex];
-                    
-                packages.append(QVector<Pkg>());
-                lindex = packages.count()-1;
-                lists.append(lindex);
-
-                QVector<Pkg> &mpkgs = packages[lindex];
-                
-                for (int k=0; k<lcount; ++k)
-                {
-                    mpkgs.append(pkgs.at(k));
-                }
-                
-                // Ne rien ajouter si la liste contient déjà ce paquet, exactement le même,
-                // avec la même action
-                if (!mpkgs.contains(pkg))
-                {
-                    addPkg(pkg, lindex, lists);
-                }
+                count--;
             }
         }
-
-        first = false;
+        
+        if (count == 0)
+        {
+            Solver::Error *err = new Solver::Error;
+            err->type = Solver::Error::ChildError;
+            err->other = 0;
+            
+            node->error = err;
+            
+            return false;
+        }
     }
+    
+    return true;
+}
+
+Solver::Node *Solver::Private::checkPackage(int index, Solver::Action action, bool &ok)
+{
+    // Explorer tous les noeuds à la recherche d'un éventuel qui correspondrait à l'index et à l'action
+    for (int i=0; i<nodes.count(); ++i)
+    {
+        Solver::Node *node = nodes.at(i);
+        
+        if (node->package && node->package->action() && action && node->package->origin() == Package::Database && ((DatabasePackage *)node->package)->index() == index)
+        {
+            // Le noeud existe déjà, le retourner
+            return node;
+        }
+    }
+    
+    // Pas de noeud correspondant trouvé
+    DatabasePackage *package = new DatabasePackage(index, ps, psd, action);
+    Solver::Node *node = new Solver::Node;
+    ok = addNode(package, node);
+    
+    return node;
 }
