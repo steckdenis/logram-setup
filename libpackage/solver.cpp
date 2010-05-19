@@ -482,7 +482,7 @@ Solver::Node *Solver::Private::checkPackage(int index, Solver::Action action, bo
     {
         Solver::Node *node = nodes.at(i);
         
-        if (node->package && node->package->action() && action && node->package->origin() == Package::Database && ((DatabasePackage *)node->package)->index() == index)
+        if (node->package && node->package->action() == action && node->package->origin() == Package::Database && ((DatabasePackage *)node->package)->index() == index)
         {
             // Le noeud existe déjà, le retourner
             return node;
