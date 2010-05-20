@@ -55,7 +55,7 @@ struct Solver::Private
     // Fonctions
     bool addNode(Package *package, Solver::Node *node);
     Node *checkPackage(int index, Solver::Action action, bool &ok);
-    bool addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child);
+    bool addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep = false);
     
 };
 
@@ -315,7 +315,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             if (wp.pattern.endsWith(".lpk"))
             {
                 // On veut installer un paquet depuis un fichier
-                FilePackage *fpkg = new FilePackage(wp.pattern, ps, psd, wp.action);
+                FilePackage *fpkg = new FilePackage(wp.pattern, ps, psd, Solver::Install); // On ne peut qu'installer des .lpk
                 
                 // Nouveau Node pour ce paquet
                 Node *nd = new Node;
@@ -390,11 +390,40 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             }
             else if (dtype == DEPEND_TYPE_REVDEP && action == Solver::Remove)
             {
-                // TODO: Gérer les revdeps : soit installer un autre provide de ce paquet,
-                //       soit supprimer la revdep.
-                //
-                //       Attention ! Bug dans l'ancienne version du à ceci : on installe
-                //       **une seule fois** les autres provides de ce paquet, sinon on arrive dans des trucs énormes !
+                // Créer plusieurs noeuds pour cet enfant : un pour supprimer cette revdep, un pour chaque provide
+                // qu'on peut installer à la place.
+                QList<int> pkgIndexes;
+                
+                // Premier enregistrement : supprimer la revdep
+                pkgIndexes = psd->packagesOfString(ddep->pkgver, ddep->pkgname, ddep->op);
+                
+                // pkgIndexes contient obligatoirement un paquet, c'est databasewriter qui s'en assure.
+                // C'est une dépendance de type paquet=version.
+                Q_ASSERT(pkgIndexes.count() == 1);
+                
+                // Paquet dans la base de donnée
+                DatabasePackage *dpkg = (DatabasePackage *)package;
+                int pindex = dpkg->index();
+                _Package *mpkg = psd->package(pindex);
+                
+                // Ajouter à pkgIndexes les index des provides de ce paquet
+                foreach(int pkgIndex, psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION))
+                {
+                    if (pkgIndex != pindex)
+                    {
+                        pkgIndexes.append(pkgIndex);
+                    }
+                }
+                
+                // Ajouter les paquets
+                if (!addPkgs(pkgIndexes, node, Solver::Install, &children[i], true))
+                {
+                    // addPkgs s'occupe de l'erreur
+                    return false;
+                }
+                
+                // On a géré les revdeps, on a fini
+                continue;
             }
             
             if (act == Solver::None)
@@ -452,13 +481,13 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     return true;
 }
 
-bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child)
+bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep)
 {
     // Si on n'a qu'un enfant, c'est simple
     if (pkgIndexes.count() == 1)
     {
         bool ok = true;
-        Node *nd = checkPackage(pkgIndexes.at(0), action, ok);
+        Node *nd = checkPackage(pkgIndexes.at(0), (revdep ? Solver::Remove : action), ok);
         
         // Enregistrer le noeud
         child->count = 1;
@@ -490,7 +519,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
             int pkgIndex = pkgIndexes.at(j);
             
             bool ok = true;
-            Node *nd = checkPackage(pkgIndex, action, ok);
+            Node *nd = checkPackage(pkgIndex, (revdep && j == 0 ? Solver::Remove : action), ok);
             
             // Enregistrer le noeud
             nodes[j] = nd;
