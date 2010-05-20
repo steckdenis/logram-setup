@@ -559,7 +559,12 @@ static void printTree(Solver::Node *node)
     
     if ((node->flags & Solver::Node::Wanted) == 0)
     {
-        cout << ", fontcolor=gray";
+        cout << ", fontcolor=\"#aaaaaa\"";
+    }
+    
+    if (node->package && (node->package->action() == Solver::Remove || node->package->action() == Solver::Purge))
+    {
+        cout << ", color=\"#ffaaaa\"";
     }
     
     cout << "];" << endl;
@@ -584,8 +589,8 @@ static void printTree(Solver::Node *node)
         else
         {
             // Plusieurs enfants, créer un noeud vide qui montrera qu'il y a un choix.
-            cout << "    " << 'c' << child << " [label=\" \", color=blue];" << endl;
-            cout << "    " << 'n' << node << " -> " << 'c' << child << " [color=blue];" << endl;
+            cout << "    " << 'c' << child << " [label=\" \", color=\"#444488\", shape=circle];" << endl;
+            cout << "    " << 'n' << node << " -> " << 'c' << child << " [color=\"#4444cc\"];" << endl;
             
             Solver::Node **nodes = child->nodes;
             
@@ -593,7 +598,7 @@ static void printTree(Solver::Node *node)
             {
                 Solver::Node *nd = nodes[j];
                 
-                cout << "    " << 'c' << child << " -> " << 'n' << nd << " [color=blue];" << endl;
+                cout << "    " << 'c' << child << " -> " << 'n' << nd << " [color=\"#4444cc\"];" << endl;
                 
                 printTree(nd);
             }
