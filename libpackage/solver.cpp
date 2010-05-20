@@ -239,6 +239,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     
     // Créer la liste des enfants
     QList<_Depend *> deps;
+    QList<Depend *> fdeps;
     
     if (package == 0)
     {
@@ -273,7 +274,25 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     }
     else
     {
-        // TODO: Dépendances des paquets locaux
+        // Paquet fichier
+        fdeps = package->depends();
+        
+        foreach(Depend *dep, fdeps)
+        {
+            if ((dep->type() == DEPEND_TYPE_DEPEND && action == Solver::Install) ||
+                (dep->type() == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
+            {
+                node->childcount++;
+            }
+            else if ((dep->type() == DEPEND_TYPE_CONFLICT || dep->type() == DEPEND_TYPE_REPLACE) && action == Solver::Install)
+            {
+                node->childcount++;
+            }
+            else if (dep->type() == DEPEND_TYPE_REVDEP && action == Solver::Remove)
+            {
+                node->childcount++;
+            }
+        }
     }
     
     // Si on n'a pas d'enfants, c'est déjà fini
@@ -340,22 +359,36 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                 }
             }
         }
-        else if (package->origin() == Package::Database)
+        else
         {
-            _Depend *dep = deps.at(di);
             Solver::Action act = Solver::None;
+            _Depend *ddep;
+            Depend *fdep;
+            int dtype;
+            
+            // Type de la dépendance en fonction de l'origine du paquet
+            if (package->origin() == Package::Database)
+            {
+                ddep = deps.at(di);
+                dtype = ddep->type;
+            }
+            else
+            {
+                fdep = fdeps.at(di);
+                dtype = fdep->type();
+            }
             
             // Trouver l'action
-            if ((dep->type == DEPEND_TYPE_DEPEND && action == Solver::Install) ||
-                (dep->type == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
+            if ((dtype == DEPEND_TYPE_DEPEND && action == Solver::Install) ||
+                (dtype == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
             {
                 act = Solver::Install;
             }
-            else if ((dep->type == DEPEND_TYPE_CONFLICT || dep->type == DEPEND_TYPE_REPLACE) && action == Solver::Install)
+            else if ((dtype == DEPEND_TYPE_CONFLICT || dtype == DEPEND_TYPE_REPLACE) && action == Solver::Install)
             {
                 act = Solver::Remove;
             }
-            else if (dep->type == DEPEND_TYPE_REVDEP && action == Solver::Remove)
+            else if (dtype == DEPEND_TYPE_REVDEP && action == Solver::Remove)
             {
                 // TODO: Gérer les revdeps : soit installer un autre provide de ce paquet,
                 //       soit supprimer la revdep.
@@ -372,18 +405,33 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                 continue;
             }
             
-            // Trouver les paquets à installer
-            QList<int> pkgIndexes = psd->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+            QList<int> pkgIndexes;
             
+            // Trouver les indexes des paquets à installer en fonction de l'origine du paquet
+            if (package->origin() == Package::Database)
+            {
+                pkgIndexes = psd->packagesOfString(ddep->pkgver, ddep->pkgname, ddep->op);
+            }
+            else
+            {
+                pkgIndexes = psd->packagesByVString(fdep->name(), fdep->version(), fdep->op());
+            }
+            
+            // Dépendre de paquets qui n'existent pas n'est pas bon
             if (pkgIndexes.count() == 0 && act == Solver::Install)
             {
                 Solver::Error *err = new Solver::Error;
                 err->type = Solver::Error::NoDeps;
                 err->other = 0;
-                err->pattern = PackageSystem::dependString(
-                                    psd->string(false, dep->pkgname),
-                                    psd->string(false, dep->pkgver),
-                                    dep->op);
+                err->pattern = (package->origin() == Package::Database ?
+                                    PackageSystem::dependString(
+                                    psd->string(false, ddep->pkgname),
+                                    psd->string(false, ddep->pkgver),
+                                    ddep->op)
+                                :   PackageSystem::dependString(
+                                    fdep->name(), 
+                                    fdep->version(), 
+                                    fdep->op()));
                                     
                 node->error = err;
                 
@@ -396,10 +444,6 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                 // addPkgs s'occupe de l'erreur
                 return false;
             }
-        }
-        else
-        {
-            // TODO: Gérer les dépendances des paquets en provenance de fichiers
         }
     }
     
