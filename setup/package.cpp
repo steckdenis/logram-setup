@@ -62,7 +62,7 @@ void App::add(const QStringList &packages)
         solver->addPackage(name, action);
     }
 
-    if (!solver->solve())
+    if (!solver->solve() || !solver->weight())
     {
         // TODO: Gérer les erreurs de solver->root()
         error();
@@ -554,7 +554,7 @@ static void printTree(Solver::Node *node)
     }
     else
     {
-        cout << "label=\"" << qPrintable(node->package->name() + "~" + node->package->version()) << '"';
+        cout << "label=\"" << qPrintable(node->package->name() + "~" + node->package->version() + " (" + QString::number(node->weight) + ")") << '"';
     }
     
     if ((node->flags & Solver::Node::Wanted) == 0)

@@ -20,17 +20,17 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include "solver.h"
+#include "solver_p.h"
 #include "packagesystem.h"
 #include "databasereader.h"
 #include "databasepackage.h"
 #include "filepackage.h"
 
 #include <QList>
-#include <QHash>
-#include <QCoreApplication>
+#include <QFile>
 
 #include <QtDebug>
+#include <QtScript>
 
 using namespace Logram;
 
@@ -39,7 +39,6 @@ struct Solver::Private
     PackageSystem *ps;
     DatabaseReader *psd;
     bool installSuggests, useDeps, useInstalled;
-    bool error;
 
     struct WantedPackage
     {
@@ -63,13 +62,14 @@ Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
 {
     d = new Private;
     
-    d->error = false;
     d->psd = psd;
     d->ps = ps;
     d->useDeps = true;
     d->useInstalled = true;
 
     d->installSuggests = ps->installSuggests();
+    
+    
 }
 
 Solver::~Solver()
@@ -110,6 +110,65 @@ Solver::Node *Solver::root()
     return d->rootNode;
 }
 
+bool Solver::weight()
+{
+    QScriptValue func, global;
+    QScriptValueList args;
+    
+    // Lire le programme QtScript
+    QFile fl(d->ps->confRoot() + "/etc/lgrpkg/scripts/weight.qs");
+    
+    if (!fl.open(QIODevice::ReadOnly))
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::OpenFileError;
+        err->info = fl.fileName();
+        
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    // Parser le script
+    QScriptEngine engine;
+    engine.evaluate(fl.readAll(), fl.fileName());
+    fl.close();
+    
+    if (engine.hasUncaughtException())
+    {
+        PackageError *err = new PackageError;
+        err->type = PackageError::ScriptException;
+        err->info = fl.fileName();
+        err->more = engine.uncaughtExceptionLineNumber() + ": " + engine.uncaughtException().toString();
+          
+        d->ps->setLastError(err);
+        
+        return false;
+    }
+    
+    global = engine.globalObject();
+    func = global.property("weight");
+    
+    global.setProperty("solver", engine.newQObject(this));
+    
+    // Créer la liste de ScriptNode
+    QObjectList olist;
+    ScriptNode *nd;
+    
+    foreach (Node *node, d->nodes)
+    {
+        nd = new ScriptNode(node, this);
+        olist.append(nd);
+    }
+    
+    // Appeler la fonction
+    args << qScriptValueFromSequence(&engine, olist);
+    
+    func.call(QScriptValue(), args);
+    
+    return true;
+}
+
 bool Solver::Private::addNode(Package *package, Solver::Node *node)
 {
     Solver::Action action = Solver::None;
@@ -123,6 +182,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     node->children = 0;
     node->childcount = 0;
     
+    node->weight = 0;
     node->minWeight = 0;
     node->maxWeight = 0;
     node->minDlSize = 0;
@@ -476,8 +536,6 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         }
     }
     
-    // TODO: Vérifier les enfants de ce noeud pour éviter tout conflit
-    
     return true;
 }
 
@@ -569,3 +627,191 @@ Solver::Node *Solver::Private::checkPackage(int index, Solver::Action action, bo
     
     return node;
 }
+
+/* Intégration QtScript */
+
+struct ScriptNode::Private
+{
+    Solver::Node *node;
+    ScriptError *error;
+};
+
+ScriptNode::ScriptNode(Logram::Solver::Node *node, QObject *parent) : QObject(parent)
+{
+    d = new Private;
+    d->node = node;
+    d->error = 0;
+}
+
+ScriptNode::~ScriptNode()
+{
+    delete d;
+}
+
+QObject *ScriptNode::package() const
+{
+    return d->node->package;
+}
+
+int ScriptNode::flags() const
+{
+    return (int)d->node->flags;
+}
+
+void ScriptNode::setFlags(int value)
+{
+    d->node->flags = Solver::Node::Flags((Solver::Node::Flag)value);
+}
+
+bool ScriptNode::hasError() const
+{
+    return (d->node->error != 0);
+}
+
+QObject *ScriptNode::error()
+{
+    if (d->error == 0)
+    {
+        if (d->node->error != 0)
+        {
+            d->error = new ScriptError(d->node->error, this);
+        }
+        else
+        {
+            d->error = (ScriptError *)(new QObject(this));
+        }
+    }
+    
+    return d->error;
+}
+
+int ScriptNode::weight() const
+{
+    return d->node->weight;
+}
+
+void ScriptNode::setWeight(int value)
+{
+    d->node->weight = value;
+}
+
+QObjectList ScriptNode::children()
+{
+    QObjectList rs;
+    ScriptChild *child;
+    
+    if (d->node->childcount == 0) return rs;
+    
+    // Explorer les enfants de ce noeud
+    Solver::Node::Child *children = d->node->children;
+    
+    for (int i=0; i<d->node->childcount; ++i)
+    {
+        child = new ScriptChild(&children[i], this);
+        rs.append(child);
+    }
+    
+    return rs;
+}
+
+struct ScriptChild::Private
+{
+    ScriptNode *node;
+    Solver::Node::Child *child;
+};
+
+ScriptChild::ScriptChild(Solver::Node::Child *child, ScriptNode *parent) : QObject(parent)
+{
+    d = new Private;
+    d->child = child;
+    d->node = parent;
+}
+
+ScriptChild::~ScriptChild()
+{
+    delete d;
+}
+
+QObjectList ScriptChild::nodes()
+{
+    QObjectList rs;
+    ScriptNode *node;
+    
+    if (d->child->count == 1)
+    {
+        // Utiliser le champs "node"
+        node = new ScriptNode(d->child->node, this);
+        rs.append(node);
+        return rs;
+    }
+    
+    // Sinon, explorer les enfants
+    Solver::Node **nodes = d->child->nodes;
+    
+    for (int i=0; i<d->child->count; ++i)
+    {
+        node = new ScriptNode(nodes[i], this);
+        rs.append(node);
+    }
+    
+    return rs;
+}
+
+QObject *ScriptChild::node() const
+{
+    return d->node;
+}
+
+struct ScriptError::Private
+{
+    Solver::Error *error;
+    ScriptNode *node, *parent;
+};
+
+ScriptError::ScriptError(Solver::Error *error, ScriptNode *parent) : QObject(parent)
+{
+    d = new Private;
+    d->error = error;
+    d->node = 0;
+    d->parent = parent;
+}
+
+ScriptError::~ScriptError()
+{
+    delete d;
+}
+
+int ScriptError::type() const
+{
+    return (int)d->error->type;
+}
+
+QObject *ScriptError::other()
+{
+    if (d->node == 0)
+    {
+        if (d->error->other)
+        {
+            d->node = new ScriptNode(d->error->other, this);
+        }
+        else
+        {
+            d->node = (ScriptNode *)(new QObject(this));
+        }
+    }
+    
+    return d->node;
+}
+
+QString ScriptError::pattern() const
+{
+    return d->error->pattern;
+}
+
+QObject *ScriptError::node() const
+{
+    return d->parent;
+}
+
+#include "solver_p.moc"
+#include "solver.moc"

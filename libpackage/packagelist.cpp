@@ -57,8 +57,6 @@ struct PackageList::Private
     QList<QString> triggers;
 };
 
-Q_DECLARE_METATYPE(Package *)
-
 PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
 {
     d = new Private;

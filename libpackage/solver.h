@@ -36,6 +36,9 @@ class PackageError;
 
 class Solver : public QObject
 {
+    Q_OBJECT
+    Q_ENUMS(Action)
+    
     public:
         Solver(PackageSystem *ps, DatabaseReader *psd);
         ~Solver();
@@ -94,7 +97,7 @@ class Solver : public QObject
             Flags flags;
             Error *error;
             
-            int minWeight, maxWeight;
+            int minWeight, maxWeight, weight;
             int minDlSize, maxDlSize;
             int minInstSize, maxInstSize;
             
@@ -118,7 +121,7 @@ class Solver : public QObject
 
         void addPackage(const QString &nameStr, Action action);
         bool solve();
-        bool process(int index);
+        bool weight();
         
         Node *root();
         
