@@ -190,7 +190,7 @@ void App::autoremove()
     
     cout << COLOR(tr("Paquets installés automatiquement et qui ne sont plus nécessaires :"), "32") << endl << endl;
     
-    displayPackages(&pkgs, instSize, dlSize, false);
+    displayPackages((QList<Package *> *)(&pkgs), instSize, dlSize, false);
     
     // Demander si ça convient
     cout << endl;
@@ -294,7 +294,7 @@ void App::upgrade()
     // Afficher la liste des paquets
     cout << COLOR(tr("Paquets pour lesquels une mise à jour est disponible :"), "32") << endl << endl;
     
-    displayPackages(&pkgs, instSize, dlSize, false);
+    displayPackages((QList<Package *> *)(&pkgs), instSize, dlSize, false);
     
     // Demander si ça convient
     cout << endl;
@@ -385,40 +385,7 @@ void App::upgrade()
     qDeleteAll(pkgs);
 }
 
-static QString actionString(Solver::Action act)
-{
-    switch (act)
-    {
-        case Solver::Install:
-            return App::tr("installé");
-            
-        case Solver::Remove:
-            return App::tr("supprimé");
-            
-        case Solver::Purge:
-            return App::tr("supprimé complètement");
-            
-        case Solver::Update:
-            return App::tr("mis à jour");
-            
-        default:
-            return QString();
-    }
-}
-
-void App::displayPackages(QList<Logram::DatabasePackage *> *packages, int &instSize, int &dlSize, bool showType)
-{
-    QList<Package *> pkgs;
-    
-    for (int i=0; i<packages->count(); ++i)
-    {
-        pkgs.append(packages->at(i));
-    }
-    
-    displayPackages(&pkgs, instSize, dlSize, showType);
-}
-
-void App::displayPackage(Package *pkg, int i, int &instSize, int &dlSize, bool showType)
+void App::displayPackage(Package* pkg, int i, int &instSize, int &dlSize, bool showType)
 {
     QString name = pkg->name().leftJustified(20, ' ', false);
 
@@ -438,6 +405,7 @@ void App::displayPackage(Package *pkg, int i, int &instSize, int &dlSize, bool s
             dlSize += pkg->downloadSize();
         }
         instSize += pkg->installSize();
+        
         cout << COLOR(name, "34");
     }
     else if (pkg->action() == Solver::Remove)
@@ -452,6 +420,7 @@ void App::displayPackage(Package *pkg, int i, int &instSize, int &dlSize, bool s
         }
         
         instSize -= pkg->installSize();
+        
         cout << COLOR(name, "31");
     }
     else if (pkg->action() == Solver::Update)
@@ -492,6 +461,7 @@ void App::displayPackage(Package *pkg, int i, int &instSize, int &dlSize, bool s
         }
         
         instSize -= pkg->installSize();
+        
         cout << COLOR(name, "35");
     }
 
@@ -527,7 +497,7 @@ void App::displayPackage(Package *pkg, int i, int &instSize, int &dlSize, bool s
             << endl;
 }
 
-void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize, bool showType)
+void App::displayPackages(QList< Package* >* packages, int &instSize, int &dlSize, bool showType)
 {
     instSize = 0;
     dlSize = 0;
@@ -621,6 +591,23 @@ static void printTree(Solver::Node *node)
     }
 }
 
+static QString actionStringInf(Solver::Action action)
+{
+    switch (action)
+    {
+        case Solver::Install:
+            return App::tr("Installer");
+        case Solver::Remove:
+            return App::tr("Supprimer");
+        case Solver::Update:
+            return App::tr("Mettre à jour");
+        case Solver::Purge:
+            return App::tr("Supprimer totalement");
+        default:
+            return QString();
+    }
+}
+
 void App::manageResults(Solver *solver)
 {
     if (depsTree)
@@ -632,8 +619,192 @@ void App::manageResults(Solver *solver)
         printTree(solver->root());
         
         cout << "}" << endl;
+        return;
     }
-#if 0
+    
+    // Parcourir l'arbre du solveur
+    bool ended = true;
+    
+    if (!solver->beginList(ended))
+    {
+        // TODO: solverError();
+    }
+    
+    while (!ended)
+    {
+        // PackageList temporaire pour afficher à l'utilisateur ce qu'on a déjà
+        PackageList *ps = solver->list();
+        int instSize, dlSize;
+        
+        if (ps->count())
+        {
+            cout << COLOR(tr("Liste des paquets pouvant être installés :"), "32") << endl;
+            cout << qPrintable(tr("    Légende : "))
+                << COLOR(tr("I: Installé "), "34")
+                << COLOR(tr("R: Supprimé "), "31")
+                << COLOR(tr("U: Mis à jour "), "33")
+                << COLOR(tr("P: Supprimé totalement "), "35")
+                << endl;
+            cout << endl;
+            
+            displayPackages(ps, instSize, dlSize, true);
+            
+            Package *pkg = ps->last();
+            
+            // Dire qu'un paquet propose un choix
+            cout << endl;
+            cout << qPrintable(tr("Le paquet %1~%2 possède une dépendance permettant un choix :").arg(pkg->name(), pkg->version())) << endl;
+            cout << endl;
+            
+            // Plus besoin de la liste
+            delete ps;
+        }
+        else
+        {
+            // Choix de premier niveau : on installe par exemple machin>=truc, et machin existe en deux versions.
+            cout << qPrintable(tr("Un des paquets que vous avez demandé peut être obtenu de plusieurs manières :")) << endl;
+            cout << endl;
+        }
+        
+        // Afficher la liste des choix
+        int minWeightIndex = -1;
+        QList<Solver::Node *> choices = solver->choices();
+        
+        for (int i=0; i<choices.count(); ++i)
+        {
+            Solver::Node *node = choices.at(i);
+            Package *choice = node->package;
+            
+            cout << ' ' << (i + 1) << ". ";                                         // 1.
+            cout << qPrintable(actionStringInf(choice->action()));                  // Installer
+            cout << ' ';
+            cout << COLOR(choice->name(), "31") << '~' << COLOR(choice->version(), "32"); // machin~truc
+            cout << endl;
+            cout << "    ";
+            cout << qPrintable(tr("Poids entre %1 et %2 (téléchargement de %3 à %4, installation de %5 à %6)")
+                        .arg(node->minWeight)
+                        .arg(node->maxWeight)
+                        .arg(PackageSystem::fileSizeFormat(node->minDlSize))
+                        .arg(PackageSystem::fileSizeFormat(node->maxDlSize))
+                        .arg(PackageSystem::fileSizeFormat(node->minInstSize))
+                        .arg(PackageSystem::fileSizeFormat(node->maxInstSize))) << endl;
+            
+            // Voir si ce choix est intéressant du côté du poids
+            if (minWeightIndex == -1)
+            {
+                minWeightIndex = i;
+            }
+            else
+            {
+                Solver::Node *nd = choices.at(minWeightIndex);
+                
+                if (node->minWeight < nd->minWeight)
+                {
+                    // On a trouvé mieux
+                    minWeightIndex = i;
+                }
+            }
+        }
+        
+        // Poser la question
+        cout << endl;
+        
+        while (true)
+        {
+            cout << qPrintable(tr("Solution à choisir (c : Annuler, u : Revenir au choix précédant) : "));
+            cout.flush();
+            
+            char buffer[5]; // jusqu'à "1000\0"
+            
+            getString(buffer, 5, QByteArray::number(minWeightIndex + 1).constData(), true);
+            
+            if (buffer[0] == 'c')
+            {
+                // Annulation
+                return;
+            }
+            else if (buffer[0] == 'u')
+            {
+                if (!solver->upList())
+                {
+                    // On était déjà au début
+                    cout << COLOR(tr("Pas de choix précédant"), "31") << endl;
+                    continue; // Reposer la question
+                }
+                
+                // Revenir au while (!ended)
+                break;
+            }
+            else
+            {
+                bool ok = true;
+                int index = QByteArray(buffer).toInt(&ok);
+                index--; // L'utilisateur commence à 1, nous on commence à 0
+                
+                if (!ok || index < 0 || index >= choices.count())
+                {
+                    // Entrée pas bonne, redemander
+                    continue;
+                }
+                
+                // Informer qu'on a fait un choix
+                if (!solver->continueList(index, ended))
+                {
+                    // TODO: solverError();
+                    return;
+                }
+                
+                // Continuer l'installation
+                break;
+            }
+        }
+        
+        cout << endl;
+    }
+    
+    // On a exploré tous les paquets, les afficher pour confirmation
+    PackageList *packages = solver->list();
+    int instSize = 0, dlSize = 0;
+    char in[2];
+    
+    cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "32") << endl;
+    cout << qPrintable(tr("    Légende : "))
+         << COLOR(tr("I: Installé "), "34")
+         << COLOR(tr("R: Supprimé "), "31")
+         << COLOR(tr("U: Mis à jour "), "33")
+         << COLOR(tr("P: Supprimé totalement "), "35")
+         << endl;
+         
+    displayPackages(packages, instSize, dlSize, true);
+    
+    cout << endl;
+    
+    if (instSize >= 0)
+    {
+        cout << qPrintable(tr("%1 licence(s) à accepter, installation de %2, téléchargement de %3%4, accepter (y/n) ? ")
+                    .arg(packages->numLicenses())
+                    .arg(PackageSystem::fileSizeFormat(instSize))
+                    .arg(PackageSystem::fileSizeFormat(dlSize))
+                    .arg(packages->needsReboot() ? tr(", nécessite un redémarrage") : QString()));
+    }
+    else
+    {
+        cout << qPrintable(tr("%1 licence(s) à accepter, suppression de %2, téléchargement de %3%4, accepter (y/n) ? ")
+                    .arg(packages->numLicenses())
+                    .arg(PackageSystem::fileSizeFormat(-instSize))
+                    .arg(PackageSystem::fileSizeFormat(dlSize))
+                    .arg(packages->needsReboot() ? tr(", nécessite un redémarrage") : QString()));
+    }
+    
+    cout.flush();
+    
+    getString(in, 2, "y", true);
+    
+    if (in[0] != 'y')
+    {
+        return;
+    }
+
     // La liste a été validée, vérifier que toutes les CLUF sont acceptées
     if (packages->numLicenses() != 0)
     {
@@ -684,7 +855,7 @@ void App::manageResults(Solver *solver)
         cout << COLOR(tr("Les paquets suivants ont été installés automatiquement et ne sont plus nécessaires :"), "31") << endl;
         cout << endl;
         
-        instSize = dlSize = 0;
+        instSize = 0, dlSize = 0;
         int i = 0;
         
         foreach (int p, packages->orphans())
@@ -710,5 +881,4 @@ void App::manageResults(Solver *solver)
     cout << endl;
     cout << COLOR(tr("Opérations sur les paquets appliquées !"), "32") << endl;
     cout << endl;
-#endif
 }

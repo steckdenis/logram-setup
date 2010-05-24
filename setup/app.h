@@ -81,7 +81,6 @@ class App : public QCoreApplication
         void getString(char *buffer, int max_length, const char *def, bool append_return);
         
         void displayPackages(QList<Logram::Package *> *packages, int &instSize, int &dlSize, bool showType);
-        void displayPackages(QList<Logram::DatabasePackage *> *packages, int &instSize, int &dlSize, bool showType);
         void displayPackage(Logram::Package *pkg, int i, int &instSize, int &dlSize, bool showType);
         
         void clean();

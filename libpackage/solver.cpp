@@ -25,6 +25,7 @@
 #include "databasereader.h"
 #include "databasepackage.h"
 #include "filepackage.h"
+#include "packagelist.h"
 
 #include <QList>
 #include <QFile>
@@ -46,16 +47,27 @@ struct Solver::Private
         Solver::Action action;
     };
     
+    struct Level
+    {
+        int nodeIndex;  // Index dans nodeList
+        int childIndex; // Index du premier enfant de ce noeud à explorer
+    };
+    
     QList<WantedPackage> wantedPackages;
     
     QList<Solver::Node *> nodes;
-    Node *rootNode;
+    Solver::Node *rootNode, *errorNode;
+    
+    QList<Solver::Node *> nodeList; // Liste des index dans nodes des noeuds qu'on va traiter (futur packageList)
+    QList<Level> levels;
+    Solver::Node::Child *choiceChild;
 
     // Fonctions
     bool addNode(Package *package, Solver::Node *node);
     Node *checkPackage(int index, Solver::Action action, bool &ok);
     bool addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep = false);
     
+    bool exploreNode(Solver::Node* node, int firstChild, int choice, bool& ended);
 };
 
 Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
@@ -66,10 +78,9 @@ Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
     d->ps = ps;
     d->useDeps = true;
     d->useInstalled = true;
+    d->errorNode = 0;
 
     d->installSuggests = ps->installSuggests();
-    
-    
 }
 
 Solver::~Solver()
@@ -248,9 +259,6 @@ static void minMaxWeight(Solver::Node *node)
                 }
             }
             
-            qDebug() << "minNode" << child->minNode << nodes[child->minNode]->package->version();
-            qDebug() << "maxNode" << child->maxNode << nodes[child->maxNode]->package->version();
-            
             // On a obligatoirement un enfant plus grand et plus petit
             Q_ASSERT(child->minNode != -1 && child->maxNode != -1);
         }
@@ -321,6 +329,232 @@ bool Solver::weight()
     
     // Maintenant qu'on a le poids des paquets, calculer les min/max
     minMaxWeight(d->rootNode);
+    
+    return true;
+}
+
+bool Solver::beginList(bool &ended)
+{
+    ended = true; // Mis à false si on a un choix
+    
+    d->errorNode = 0;
+    d->choiceChild = 0;
+    
+    return d->exploreNode(d->rootNode, -1, -1, ended);
+}
+
+bool Solver::continueList(int choice, bool &ended)
+{
+    // Vérifier qu'on a bien quelque-chose à continuer
+    if (d->levels.count() == 0)
+    {
+        return false;
+    }
+    
+    // Prendre le dernier niveau
+    Private::Level level = d->levels.takeLast();
+    
+    // Continuer l'exploration
+    ended = true;
+    d->errorNode = 0;
+    d->choiceChild = 0;
+    
+    return d->exploreNode((d->nodeList.count() ? d->nodeList.last() : d->rootNode), level.childIndex, choice, ended);
+}
+
+QList<Solver::Node *> Solver::choices()
+{
+    QList<Node *> rs;
+    
+    if (d->choiceChild == 0)
+    {
+        // Pas de choix
+        return rs;
+    }
+    
+    // Explorer les enfants de choiceChild
+    Q_ASSERT(d->choiceChild->count > 1);
+    
+    Node **nodes = d->choiceChild->nodes;
+    Node *node;
+    
+    for (int i=0; i<d->choiceChild->count; ++i)
+    {
+        node = nodes[i];
+        rs.append(node);
+    }
+    
+    return rs;
+}
+
+bool Solver::upList()
+{
+    // Vérifier que la liste des niveaux contient au moins deux éléments,
+    // puisqu'on va en supprimer un et utiliser l'autre. Sinon, ne rien faire
+    if (d->levels.count() < 2)
+    {
+        return false; // Rien à faire
+    }
+    
+    // Supprimer le dernier élément
+    d->levels.removeLast();
+    
+    // Se servier du dernier (de maintenant) pour supprimer les noeuds qui
+    // viennent après dans d->nodeList
+    const Private::Level &level = d->levels.last();
+    
+    while (d->nodeList.count() > (level.nodeIndex + 1))
+    {
+        d->nodeList.removeLast();
+    }
+    
+    // Liste ok. Il faut maintenant re-peupler d->choiceChild, puisqu'on retourne à un choix
+    Node *node = d->nodeList.last();
+    d->choiceChild = &node->children[level.childIndex];
+    
+    return true; // Il y a du nouveau
+}
+
+PackageList *Solver::list()
+{
+    // Créer la PackageList pour les noeuds
+    PackageList *rs = new PackageList(d->ps);
+    
+    // Explorer les noeuds
+    foreach (Node *node, d->nodeList)
+    {
+        rs->addPackage(node->package);
+    }
+    
+    return rs;
+}
+
+Solver::Node *Solver::errorNode()
+{
+    return d->errorNode;
+}
+
+bool Solver::Private::exploreNode(Solver::Node* node, int firstChild, int choice, bool& ended)
+{
+    // Vérifier que le noeud est correct
+    if (node->error != 0)
+    {
+        errorNode = node;
+        return false;
+    }
+    
+    // Explorer les noeuds déjà présents dans la liste
+    if (node->package && firstChild == -1)
+    {
+        Solver::Action myAction;
+        QString myName = node->package->name();
+        QString myVersion = node->package->version();
+        
+        foreach (Solver::Node *nd, nodeList)
+        {
+            Solver::Action otherAction = nd->package->action();
+            
+            if (nd == node)
+            {
+                // Ce noeud est déjà dans la liste, retourner
+                return true;
+            }
+            
+            if (nd->package->name() == myName)
+            {
+                if (nd->package->version() == myVersion)
+                {
+                    if (otherAction == myAction)
+                    {
+                        // Hack : on peut installer un paquet depuis un fichier
+                        // qui a le même nom et la même version qu'un paquet de
+                        // la BDD.
+                        return true;
+                    }
+                    else
+                    {
+                        Solver::Error *err = new Solver::Error;
+                        err->type = Solver::Error::SameNameSameVersionDifferentAction;
+                        err->other = nd;
+                        
+                        node->error = err;
+                        errorNode = node;
+                        
+                        return false;
+                    }
+                }
+                else if (otherAction == myAction)
+                {
+                    Solver::Error *err = new Solver::Error;
+                    err->type = Solver::Error::SameNameSameActionDifferentVersion;
+                    err->other = nd;
+                    
+                    node->error = err;
+                    errorNode = node;
+                    
+                    return false;
+                }
+            }
+        }
+        
+        nodeList.append(node);
+    }
+    
+    // Explorer les enfants
+    Solver::Node::Child *children = node->children, *child;
+    firstChild = (firstChild == -1 ? 0 : firstChild);
+    
+    for (int i=firstChild; i<node->childcount; ++i)
+    {
+        child = &children[i];
+        
+        if (child->count == 1)
+        {
+            // Explorer cet enfant, simplement
+            if (!exploreNode(child->node, -1, -1, ended))
+            {
+                return false;
+            }
+            
+            if (!ended) return true;
+        }
+        else
+        {
+            // Ah, on a un choix à faire. Vérifier qu'on n'a pas déjà les instructions
+            if (choice != -1)
+            {
+                // On a un choix, simplement le prendre
+                if (choice >= child->count)
+                {
+                    return false;
+                }
+                
+                if (!exploreNode(child->nodes[choice], -1, -1, ended))
+                {
+                    return false;
+                }
+                
+                if (!ended) return true;
+            }
+            else
+            {
+                // Demander à l'utilisateur
+                choiceChild = child;
+                ended = false;
+                
+                // Ajouter un niveau de choix
+                Level level;
+                
+                level.nodeIndex = nodeList.count() - 1;
+                level.childIndex = i;
+                
+                levels.append(level);
+                
+                // Retourner
+                return true;
+            }
+        }
+    }
     
     return true;
 }

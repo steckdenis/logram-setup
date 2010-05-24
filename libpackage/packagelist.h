@@ -43,7 +43,6 @@ class PackageList : public QObject, public QList<Package *>
     public:
         PackageList(PackageSystem *ps);
         ~PackageList();
-        bool error() const;
         
         void addPackage(Package *pkg);
         

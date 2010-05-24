@@ -130,6 +130,13 @@ class Solver : public QObject
         
         Node *root();
         
+        bool beginList(bool &ended);
+        bool continueList(int choice, bool &ended);
+        QList<Node *> choices();
+        bool upList();
+        PackageList *list();
+        Node *errorNode();
+        
         /**
             Définit si les dépendances des paquets doivent être prises en compte (@b true par défaut) 
         */
