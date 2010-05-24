@@ -32,7 +32,7 @@ class Package;
 class PackageSystem;
 class DatabaseReader;
 class PackageList;
-class PackageError;
+struct PackageError;
 
 class Solver : public QObject
 {
@@ -88,7 +88,9 @@ class Solver : public QObject
                 None = 0,
                 Wanted = 1,
                 Weighted = 2,
-                Proceed = 4
+                Proceed = 4,
+                MinMaxWeighted = 8,
+                WeightMin = 16,     // Utilisé par weightChildren
             };
             
             Q_DECLARE_FLAGS(Flags, Flag)
@@ -101,9 +103,12 @@ class Solver : public QObject
             int minDlSize, maxDlSize;
             int minInstSize, maxInstSize;
             
+            Node *weightedBy;   // Permet de savoir si ce noeud a été pesé par un autre
+            
             struct Child
             {
                 int count;
+                int minNode, maxNode;
                 
                 // Si count = 1, on stocke simplement un pointeur sur l'enfant. Sinon, on stocke un pointeur
                 // sur la liste des enfants.
@@ -128,12 +133,12 @@ class Solver : public QObject
         /**
             Définit si les dépendances des paquets doivent être prises en compte (@b true par défaut) 
         */
-        bool setUseDeps(bool enable);
+        void setUseDeps(bool enable);
         
         /**
             Définit si les paquets déjà installés/supprimés doivent être utilisés pour simplifier l'arbre (@b true par défaut) 
         */
-        bool setUseInstalled(bool enable);
+        void setUseInstalled(bool enable);
 
     private:
         struct Private;

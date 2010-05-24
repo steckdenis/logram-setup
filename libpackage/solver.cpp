@@ -77,12 +77,12 @@ Solver::~Solver()
     delete d;
 }
 
-bool Solver::setUseDeps(bool enable)
+void Solver::setUseDeps(bool enable)
 {
     d->useDeps = enable;
 }
 
-bool Solver::setUseInstalled(bool enable)
+void Solver::setUseInstalled(bool enable)
 {
     d->useInstalled = enable;
 }
@@ -108,6 +108,159 @@ bool Solver::solve()
 Solver::Node *Solver::root()
 {
     return d->rootNode;
+}
+
+static void weightChildren(Solver::Node *node, Solver::Node *mainNode, bool weightMin)
+{
+    // node = le noeud qu'on va peser, explorer ses enfants, les peser, etc
+    // mainNode = le noeud principal auquel on va ajouter le poids des noeuds qu'on pèse
+    // weightMin = true si on s'intéresse au minimum, false si on s'intéresse au maximum
+    
+    // Si on a déjà pesé ce noeud, on a fini
+    if (node->weightedBy == mainNode && ((node->flags & Solver::Node::WeightMin) != 0) == weightMin)
+    {
+        return;
+    }
+    
+    // Dire qu'on l'a pesé
+    node->weightedBy = mainNode;
+    
+    if (weightMin)
+    {
+        node->flags |= Solver::Node::WeightMin;
+    }
+    else
+    {
+        node->flags &= ~Solver::Node::WeightMin;
+    }
+    
+    // Explorer ses enfants pour le pesage
+    Solver::Node::Child *children = node->children, *child;
+    
+    for (int i=0; i<node->childcount; ++i)
+    {
+        child = &children[i];
+        
+        if (child->count == 1)
+        {
+            weightChildren(child->node, mainNode, weightMin);
+        }
+        else
+        {
+            // Prendre soit maxNode ou minNode;
+            Solver::Node **nodes = child->nodes;
+            Solver::Node *nd = nodes[(weightMin ? child->minNode : child->maxNode)];
+            
+            // Peser ce noeud
+            weightChildren(nd, mainNode, weightMin);
+        }
+    }
+    
+    // Ajouter le poids de ce noeud au noeud principal
+    if (weightMin)
+    {
+        mainNode->minWeight += node->weight;
+        mainNode->minDlSize += (node->package ? node->package->downloadSize() : 0);
+        mainNode->minInstSize += (node->package ? node->package->installSize() : 0);
+    }
+    else
+    {
+        mainNode->maxWeight += node->weight;
+        mainNode->maxDlSize += (node->package ? node->package->downloadSize() : 0);
+        mainNode->maxInstSize += (node->package ? node->package->installSize() : 0);
+    }
+}
+
+static void minMaxWeight(Solver::Node *node)
+{
+    // Si le noeud est déjà pesé, c'est bon
+    if ((node->flags & Solver::Node::MinMaxWeighted) != 0)
+    {
+        return;
+    }
+    
+    // Directement dire qu'on a pesé ce node pour éviter les problèmes de dépendance en boucle
+    node->flags |= Solver::Node::MinMaxWeighted;
+    
+    // Explorer les enfantes de ce noeud, et les peser
+    Solver::Node::Child *children = node->children, *child;
+    
+    for (int i=0; i<node->childcount; ++i)
+    {
+        child = &children[i];
+        
+        if (child->count == 1)
+        {
+            minMaxWeight(child->node);
+        }
+        else
+        {
+            // Plus compliqué : on ne retient que les plus petits min et les plus gars max
+            // Attention, car les tuples (weight, dlSize, instSize) douvent appartenir au
+            // même noeud
+            //
+            // Il faut donc une priorité. Si on a un noeud de poids plus faible que le précédant,
+            // on le garde. Si c'est le même, alors on départage avec dlSize. Si c'est le même, 
+            // on départage avec installSize. Si c'est le même, on laisse l'autre (c'est juste
+            // informatif).
+            
+            Solver::Node **nodes = child->nodes;
+            Solver::Node *nd;
+            
+            for (int j=0; j<child->count; ++j)
+            {
+                nd = nodes[j];
+                
+                minMaxWeight(nd);
+                
+                // Voir si ce noeud est plus petit que les autres
+                if (child->minNode == -1)
+                {
+                    child->minNode = j;
+                }
+                else
+                {
+                    Solver::Node *minNode = nodes[child->minNode];
+                    
+                    if (nd->minWeight < minNode->minWeight ||
+                       (nd->minWeight == minNode->minWeight && nd->minDlSize < minNode->minDlSize) ||
+                       (nd->minWeight == minNode->minWeight && nd->minDlSize == minNode->minDlSize && nd->minInstSize < minNode->minInstSize))
+                    {
+                        child->minNode = j;
+                    }
+                }
+                
+                // Voir si c'est le plus grand des autres
+                if (child->maxNode == -1)
+                {
+                    child->maxNode = j;
+                }
+                else
+                {
+                    Solver::Node *maxNode = nodes[child->maxNode];
+                    
+                    if (nd->maxWeight > maxNode->maxWeight ||
+                       (nd->maxWeight == maxNode->maxWeight && nd->maxDlSize > maxNode->maxDlSize) ||
+                       (nd->maxWeight == maxNode->maxWeight && nd->maxDlSize == maxNode->maxDlSize && nd->maxInstSize > maxNode->maxInstSize))
+                    {
+                        child->maxNode = j;
+                    }
+                }
+            }
+            
+            qDebug() << "minNode" << child->minNode << nodes[child->minNode]->package->version();
+            qDebug() << "maxNode" << child->maxNode << nodes[child->maxNode]->package->version();
+            
+            // On a obligatoirement un enfant plus grand et plus petit
+            Q_ASSERT(child->minNode != -1 && child->maxNode != -1);
+        }
+    }
+    
+    // On a exploré tous les enfants de ce paquets, ils sont pesés. On peut
+    // maintenant les explorer à nouveau pour trouver le poids minimum et maximum de ce paquet.
+    
+    weightChildren(node, node, false);
+    weightChildren(node, node, true);
 }
 
 bool Solver::weight()
@@ -166,6 +319,9 @@ bool Solver::weight()
     
     func.call(QScriptValue(), args);
     
+    // Maintenant qu'on a le poids des paquets, calculer les min/max
+    minMaxWeight(d->rootNode);
+    
     return true;
 }
 
@@ -189,6 +345,8 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     node->maxDlSize = 0;
     node->minInstSize = 0;
     node->maxInstSize = 0;
+    
+    node->weightedBy = 0;
     
     nodes.append(node);
     
@@ -571,6 +729,8 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
         
         child->count = count;
         child->nodes = nodes;
+        child->maxNode = -1;
+        child->minNode = -1;
         
         for (int j=0; j<pkgIndexes.count(); ++j)
         {

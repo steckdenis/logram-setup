@@ -540,6 +540,21 @@ void App::displayPackages(QList<Package *> *packages, int &instSize, int &dlSize
     }
 }
 
+static QString treeLinkWeight(Solver::Node *node)
+{
+    QString rs("%1 -> %2 (%3 -> %4, %5 -> %6)");
+    
+    // Label avec le poids
+    rs = rs.arg(node->minWeight)
+           .arg(node->maxWeight)
+           .arg(PackageSystem::fileSizeFormat(node->minDlSize))
+           .arg(PackageSystem::fileSizeFormat(node->maxDlSize))
+           .arg(PackageSystem::fileSizeFormat(node->minInstSize))
+           .arg(PackageSystem::fileSizeFormat(node->maxInstSize));
+           
+    return rs;
+}
+
 static void printTree(Solver::Node *node)
 {
     // Ignorer un noeud déjà parcouru
@@ -550,11 +565,11 @@ static void printTree(Solver::Node *node)
     
     if (!node->package)
     {
-        cout << "label=\"Root\"";
+        cout << "label=\"Root\\n" << qPrintable(treeLinkWeight(node)) << "\"";
     }
     else
     {
-        cout << "label=\"" << qPrintable(node->package->name() + "~" + node->package->version() + " (" + QString::number(node->weight) + ")") << '"';
+        cout << "label=\"" << qPrintable(node->package->name() + "~" + node->package->version() + " (" + QString::number(node->weight) + ")\\n" + treeLinkWeight(node)) << '"';
     }
     
     if ((node->flags & Solver::Node::Wanted) == 0)
@@ -582,7 +597,7 @@ static void printTree(Solver::Node *node)
         if (child->count == 1)
         {
             // Un seul enfant
-            cout << "    " << 'n' << node << " -> " << 'n' << child->node << ";" << endl;
+            cout << "    " << 'n' << node << " -> " << 'n' << child->node << " [color=\"#000000\"];" << endl;
             
             printTree(child->node);
         }
@@ -612,6 +627,7 @@ void App::manageResults(Solver *solver)
     {
         // Créer l'arbre des dépendances
         cout << "digraph G {" << endl;
+        cout << "    node [shape=rectangle];" << endl;
         
         printTree(solver->root());
         
