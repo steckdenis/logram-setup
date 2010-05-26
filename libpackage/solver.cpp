@@ -79,12 +79,34 @@ Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
     d->useDeps = true;
     d->useInstalled = true;
     d->errorNode = 0;
+    d->rootNode = 0;
 
     d->installSuggests = ps->installSuggests();
 }
 
 Solver::~Solver()
 {
+    // Supprimer les noeuds
+    foreach (Node *node, d->nodes)
+    {
+        if (node->package)
+        {
+            delete node->package;
+        }
+        
+        if (node->error)
+        {
+            delete node->error;
+        }
+        
+        if (node->childcount)
+        {
+            delete[] node->children;
+        }
+        
+        delete node;
+    }
+    
     delete d;
 }
 
@@ -128,7 +150,11 @@ static void weightChildren(Solver::Node *node, Solver::Node *mainNode, bool weig
     // weightMin = true si on s'intéresse au minimum, false si on s'intéresse au maximum
     
     // Si on a déjà pesé ce noeud, on a fini
-    if (node->weightedBy == mainNode && ((node->flags & Solver::Node::WeightMin) != 0) == weightMin)
+    if (
+        (node->flags & Solver::Node::MinMaxDone) == 0 || 
+        (node->weightedBy == mainNode && 
+        ((node->flags & Solver::Node::WeightMin) != 0) == weightMin
+        ))
     {
         return;
     }
@@ -144,6 +170,8 @@ static void weightChildren(Solver::Node *node, Solver::Node *mainNode, bool weig
     {
         node->flags &= ~Solver::Node::WeightMin;
     }
+    
+    if (node->error != 0) return;
     
     // Explorer ses enfants pour le pesage
     Solver::Node::Child *children = node->children, *child;
@@ -171,14 +199,40 @@ static void weightChildren(Solver::Node *node, Solver::Node *mainNode, bool weig
     if (weightMin)
     {
         mainNode->minWeight += node->weight;
-        mainNode->minDlSize += (node->package ? node->package->downloadSize() : 0);
-        mainNode->minInstSize += (node->package ? node->package->installSize() : 0);
+        
+        if (node->package)
+        {
+            switch (node->package->action())
+            {
+                case Solver::Install:
+                    mainNode->minInstSize += node->package->installSize();
+                    mainNode->minDlSize += node->package->downloadSize();
+                    break;
+                case Solver::Remove:
+                case Solver::Purge:
+                    mainNode->minInstSize -= node->package->installSize();
+                    break;
+            }
+        }
     }
     else
     {
         mainNode->maxWeight += node->weight;
-        mainNode->maxDlSize += (node->package ? node->package->downloadSize() : 0);
-        mainNode->maxInstSize += (node->package ? node->package->installSize() : 0);
+        
+        if (node->package)
+        {
+            switch (node->package->action())
+            {
+                case Solver::Install:
+                    mainNode->maxInstSize += node->package->installSize();
+                    mainNode->maxDlSize += node->package->downloadSize();
+                    break;
+                case Solver::Remove:
+                case Solver::Purge:
+                    mainNode->maxInstSize -= node->package->installSize();
+                    break;
+            }
+        }
     }
 }
 
@@ -193,6 +247,8 @@ static void minMaxWeight(Solver::Node *node)
     // Directement dire qu'on a pesé ce node pour éviter les problèmes de dépendance en boucle
     node->flags |= Solver::Node::MinMaxWeighted;
     
+    if (node->error != 0) return;
+    
     // Explorer les enfantes de ce noeud, et les peser
     Solver::Node::Child *children = node->children, *child;
     
@@ -202,6 +258,7 @@ static void minMaxWeight(Solver::Node *node)
         
         if (child->count == 1)
         {
+            
             minMaxWeight(child->node);
         }
         else
@@ -223,6 +280,13 @@ static void minMaxWeight(Solver::Node *node)
                 nd = nodes[j];
                 
                 minMaxWeight(nd);
+                
+                // Si le noeud est en erreur, le sauter (s'ils sont tous en erreur, alors on
+                // est en erreur, donc on n'arrive pas ici)
+                if (nd->error != 0)
+                {
+                    continue;
+                }
                 
                 // Voir si ce noeud est plus petit que les autres
                 if (child->minNode == -1)
@@ -266,6 +330,7 @@ static void minMaxWeight(Solver::Node *node)
     
     // On a exploré tous les enfants de ce paquets, ils sont pesés. On peut
     // maintenant les explorer à nouveau pour trouver le poids minimum et maximum de ce paquet.
+    node->flags |= Solver::Node::MinMaxDone;
     
     weightChildren(node, node, false);
     weightChildren(node, node, true);
@@ -500,7 +565,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, int firstChild, int choice
         nodeList.append(node);
     }
     
-    // Explorer les enfants
+    // Explorer les enfants (TODO: Gérer les erreurs. Si on a une erreur quelque-part, continuer mène à un crash)
     Solver::Node::Child *children = node->children, *child;
     firstChild = (firstChild == -1 ? 0 : firstChild);
     
@@ -635,7 +700,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     Node *suppl = 0;
     
     // Si on veut installer ce paquet, voir si on fini par une mise à jour
-    if (action == Solver::Install && package && package->origin() == Package::Database)
+    if (action == Solver::Install && package && package->origin() == Package::Database && useDeps)
     {
         // Paquet dans la base de donnée
         DatabasePackage *dpkg = (DatabasePackage *)package;
@@ -675,7 +740,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                 }
                 
                 // Vérifier que nd est updatable
-                if (suppl->package && ((suppl->package->flags() && PACKAGE_FLAG_DONTUPDATE) != 0))
+                if (suppl->package && ((suppl->package->flags() & PACKAGE_FLAG_DONTUPDATE) != 0))
                 {
                     Solver::Error *err = new Solver::Error;
                     err->type = Solver::Error::UnupdatablePackageUpdated;
@@ -685,6 +750,12 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                     
                     return false;
                 }
+                
+                // Paquet en plus à gérer
+                node->childcount++;
+                
+                // Une seule autre version
+                break;
             }
         }
     }
@@ -817,6 +888,18 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             _Depend *ddep;
             Depend *fdep;
             int dtype;
+            
+            if (i == (node->childcount - 1) && suppl)
+            {
+                // Il est temps d'ajouter suppl
+                children[i].count = 1;
+                children[i].maxNode = -1;
+                children[i].minNode = -1;
+                children[i].node = suppl;
+                
+                // Boucle de toute façon finie
+                break;
+            }
             
             // Type de la dépendance en fonction de l'origine du paquet
             if (package->origin() == Package::Database)
@@ -981,6 +1064,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
             // aucun des variantes n'est bonne, et on envoie une erreur.
             if (!ok)
             {
+                qDebug() << "Noeud pas bon";
                 count--;
             }
         }
@@ -1010,6 +1094,7 @@ Solver::Node *Solver::Private::checkPackage(int index, Solver::Action action, bo
         if (node->package && node->package->action() == action && node->package->origin() == Package::Database && ((DatabasePackage *)node->package)->index() == index)
         {
             // Le noeud existe déjà, le retourner
+            ok = (node->error == 0);
             return node;
         }
     }

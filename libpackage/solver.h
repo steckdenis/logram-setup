@@ -91,6 +91,7 @@ class Solver : public QObject
                 Proceed = 4,
                 MinMaxWeighted = 8,
                 WeightMin = 16,     // Utilisé par weightChildren
+                MinMaxDone = 32
             };
             
             Q_DECLARE_FLAGS(Flags, Flag)

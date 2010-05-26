@@ -539,7 +539,7 @@ static void printTree(Solver::Node *node)
     }
     else
     {
-        cout << "label=\"" << qPrintable(node->package->name() + "~" + node->package->version() + " (" + QString::number(node->weight) + ")\\n" + treeLinkWeight(node)) << '"';
+        cout << "label=\"" << qPrintable(node->package->name() + "~" + node->package->version() + " (" + QString::number(node->weight) + ") " + (node->error != 0 ? "(E)" : "") + "\\n" + treeLinkWeight(node)) << '"';
     }
     
     if ((node->flags & Solver::Node::Wanted) == 0)
@@ -681,12 +681,14 @@ void App::manageResults(Solver *solver)
             cout << COLOR(choice->name(), "31") << '~' << COLOR(choice->version(), "32"); // machin~truc
             cout << endl;
             cout << "    ";
-            cout << qPrintable(tr("Poids entre %1 et %2 (téléchargement de %3 à %4, installation de %5 à %6)")
+            cout << qPrintable(tr("Poids entre %1 et %2 (téléchargement de %3 à %4, %5%6%7%6)")
                         .arg(node->minWeight)
                         .arg(node->maxWeight)
                         .arg(PackageSystem::fileSizeFormat(node->minDlSize))
                         .arg(PackageSystem::fileSizeFormat(node->maxDlSize))
-                        .arg(PackageSystem::fileSizeFormat(node->minInstSize))
+                        .arg(node->minInstSize < 0 ? tr("suppression de ") : tr("installation de "))
+                        .arg(PackageSystem::fileSizeFormat(qAbs(node->minInstSize)))
+                        .arg(node->maxInstSize < 0 ? (node->minInstSize < 0 ? tr(" à ") : tr(" à suppression de ")) : (node->minInstSize < 0 ? tr(" à installation de ") : tr(" à ")))
                         .arg(PackageSystem::fileSizeFormat(node->maxInstSize))) << endl;
             
             // Voir si ce choix est intéressant du côté du poids
