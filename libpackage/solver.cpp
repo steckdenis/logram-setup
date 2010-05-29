@@ -47,19 +47,20 @@ struct Solver::Private
         Solver::Action action;
     };
     
-    struct Level
-    {
-        int nodeIndex;  // Index dans nodeList
-        int childIndex; // Index du premier enfant de ce noeud à explorer
-    };
-    
     QList<WantedPackage> wantedPackages;
     
     QList<Solver::Node *> nodes;
     Solver::Node *rootNode, *errorNode;
     
-    QList<Solver::Node *> nodeList; // Liste des index dans nodes des noeuds qu'on va traiter (futur packageList)
-    QList<Level> levels;
+    struct Level
+    {
+        int choiceNodeIndex;    // Index du noeud pour lequel on a un choix
+        int lastNodeIndex;      // Index du dernier noeud dans la liste qui doit rester
+        int choiceChildIndex;   // Index de l'enfant dans choiceNodeIndex qui présente un choix
+    };
+    
+    QList<Solver::Node *> nodeList;
+    QList<Level> levels;          // Liste des niveaux (int --> index dans nodeList)
     Solver::Node::Child *choiceChild;
 
     // Fonctions
@@ -67,7 +68,8 @@ struct Solver::Private
     Node *checkPackage(int index, Solver::Action action, bool &ok);
     bool addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep = false);
     
-    bool exploreNode(Solver::Node* node, int firstChild, int choice, bool& ended);
+    bool exploreNode(Solver::Node *node, bool &ended);
+    bool verifyNode(Solver::Node *node, Solver::Error* &error);
 };
 
 Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
@@ -151,6 +153,7 @@ static void weightChildren(Solver::Node *node, Solver::Node *mainNode, bool weig
     
     // Si on a déjà pesé ce noeud, on a fini
     if (
+        (node->flags & Solver::Node::Wanted) == 0 ||
         (node->flags & Solver::Node::MinMaxDone) == 0 || 
         (node->weightedBy == mainNode && 
         ((node->flags & Solver::Node::WeightMin) != 0) == weightMin
@@ -258,7 +261,6 @@ static void minMaxWeight(Solver::Node *node)
         
         if (child->count == 1)
         {
-            
             minMaxWeight(child->node);
         }
         else
@@ -405,26 +407,55 @@ bool Solver::beginList(bool &ended)
     d->errorNode = 0;
     d->choiceChild = 0;
     
-    return d->exploreNode(d->rootNode, -1, -1, ended);
+    return d->exploreNode(d->rootNode, ended);
 }
 
 bool Solver::continueList(int choice, bool &ended)
 {
-    // Vérifier qu'on a bien quelque-chose à continuer
-    if (d->levels.count() == 0)
+    // On doit avoir un enfant à choix
+    if (d->choiceChild == 0)
     {
         return false;
     }
     
-    // Prendre le dernier niveau
-    Private::Level level = d->levels.takeLast();
+    // Vérifier que le choix est bien dans les limites
+    if (choice < 0 || choice >= d->choiceChild->count)
+    {
+        return false;
+    }
+    
+    // Définir son choix. Pour cela, explorer les noeuds de cet enfant et trouver le bon
+    Solver::Error *error = 0;
+    
+    for (int i=0, index=0; i<d->choiceChild->count; ++i)
+    {
+        Solver::Node *nd = d->choiceChild->nodes[i];
+        
+        if (!d->verifyNode(nd, error))
+        {
+            if (error != 0)
+            {
+                // On n'a pas besoin de l'erreur
+                delete error;
+            }
+            
+            continue;
+        }
+        
+        // Le noeud est bon, voir s'il correspond au choix
+        if (index == choice)
+        {
+            // Choix fait sur i
+            d->choiceChild->chosenNode = i;
+            break;
+        }
+        
+        // Compter le noeud
+        index++;
+    }
     
     // Continuer l'exploration
-    ended = true;
-    d->errorNode = 0;
-    d->choiceChild = 0;
-    
-    return d->exploreNode((d->nodeList.count() ? d->nodeList.last() : d->rootNode), level.childIndex, choice, ended);
+    return beginList(ended);
 }
 
 QList<Solver::Node *> Solver::choices()
@@ -443,9 +474,23 @@ QList<Solver::Node *> Solver::choices()
     Node **nodes = d->choiceChild->nodes;
     Node *node;
     
+    Solver::Error *error = 0;
+    
     for (int i=0; i<d->choiceChild->count; ++i)
     {
         node = nodes[i];
+        
+        if (!d->verifyNode(node, error))
+        {
+            if (error != 0)
+            {
+                // On n'a pas besoin de l'erreur
+                delete error;
+            }
+            
+            continue;
+        }
+        
         rs.append(node);
     }
     
@@ -464,18 +509,26 @@ bool Solver::upList()
     // Supprimer le dernier élément
     d->levels.removeLast();
     
-    // Se servier du dernier (de maintenant) pour supprimer les noeuds qui
+    // Se servir du dernier (de maintenant) pour supprimer les noeuds qui
     // viennent après dans d->nodeList
     const Private::Level &level = d->levels.last();
     
-    while (d->nodeList.count() > (level.nodeIndex + 1))
+    while (d->nodeList.count() >= level.lastNodeIndex)
     {
+        Node *nd = d->nodeList.last();
+        
+        nd->nodeListIndex = -1;
+        nd->currentChild = 0;
+        
         d->nodeList.removeLast();
     }
     
     // Liste ok. Il faut maintenant re-peupler d->choiceChild, puisqu'on retourne à un choix
-    Node *node = d->nodeList.last();
-    d->choiceChild = &node->children[level.childIndex];
+    Node *node = d->nodeList.at(level.choiceNodeIndex);
+    d->choiceChild = &node->children[level.choiceChildIndex];
+    
+    // choiceChild a pour le moment un choix déjà fait, le lui retirer
+    d->choiceChild->chosenNode = -1;
     
     return true; // Il y a du nouveau
 }
@@ -484,11 +537,15 @@ PackageList *Solver::list()
 {
     // Créer la PackageList pour les noeuds
     PackageList *rs = new PackageList(d->ps);
+    rs->setDeletePackagesOnDelete(false);
     
     // Explorer les noeuds
     foreach (Node *node, d->nodeList)
     {
-        rs->addPackage(node->package);
+        if (node->flags & Solver::Node::Wanted)
+        {
+            rs->addPackage(node->package);
+        }
     }
     
     return rs;
@@ -499,17 +556,38 @@ Solver::Node *Solver::errorNode()
     return d->errorNode;
 }
 
-bool Solver::Private::exploreNode(Solver::Node* node, int firstChild, int choice, bool& ended)
+bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
 {
+    error = 0;
+    
     // Vérifier que le noeud est correct
     if (node->error != 0)
     {
-        errorNode = node;
+        error = node->error;
+        
+        if (error->type == Solver::Error::SameNameSameVersionDifferentAction ||
+            error->type == Solver::Error::SameNameSameActionDifferentVersion)
+        {
+            // Erreur créée dans une précédante tentative (choix malheureux de l'utilisateur).
+            // On n'en a plus besoin
+            delete error;
+            error = 0;
+        }
+        else
+        {
+            // Vraie erreur
+            return false;
+        }
+    }
+    
+    // Si le noeud est dans la liste, on n'en a pas besoin
+    if (nodeList.contains(node))
+    {
         return false;
     }
     
     // Explorer les noeuds déjà présents dans la liste
-    if (node->package && firstChild == -1)
+    if (node->package)
     {
         Solver::Action myAction;
         QString myName = node->package->name();
@@ -521,8 +599,8 @@ bool Solver::Private::exploreNode(Solver::Node* node, int firstChild, int choice
             
             if (nd == node)
             {
-                // Ce noeud est déjà dans la liste, retourner
-                return true;
+                // Ce noeud est déjà dans la liste, on ne le prend pas
+                return false;
             }
             
             if (nd->package->name() == myName)
@@ -534,89 +612,160 @@ bool Solver::Private::exploreNode(Solver::Node* node, int firstChild, int choice
                         // Hack : on peut installer un paquet depuis un fichier
                         // qui a le même nom et la même version qu'un paquet de
                         // la BDD.
-                        return true;
+                        return false;
                     }
                     else
                     {
-                        Solver::Error *err = new Solver::Error;
-                        err->type = Solver::Error::SameNameSameVersionDifferentAction;
-                        err->other = nd;
-                        
-                        node->error = err;
-                        errorNode = node;
+                        error = new Solver::Error;
+                        error->type = Solver::Error::SameNameSameVersionDifferentAction;
+                        error->other = nd;
                         
                         return false;
                     }
                 }
                 else if (otherAction == myAction)
                 {
-                    Solver::Error *err = new Solver::Error;
-                    err->type = Solver::Error::SameNameSameActionDifferentVersion;
-                    err->other = nd;
-                    
-                    node->error = err;
-                    errorNode = node;
+                    error = new Solver::Error;
+                    error->type = Solver::Error::SameNameSameActionDifferentVersion;
+                    error->other = nd;
                     
                     return false;
                 }
             }
         }
-        
+    }
+    
+    return true;    // Bon noeud, on en a besoin
+}
+
+bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
+{
+    // Ajouter le noeud, s'il le faut, à nodeList
+    if (node != rootNode && node->nodeListIndex == -1)
+    {
+        node->nodeListIndex = nodeList.count();
         nodeList.append(node);
     }
     
-    // Explorer les enfants (TODO: Gérer les erreurs. Si on a une erreur quelque-part, continuer mène à un crash)
-    Solver::Node::Child *children = node->children, *child;
-    firstChild = (firstChild == -1 ? 0 : firstChild);
-    
-    for (int i=firstChild; i<node->childcount; ++i)
+    // Si le noeud n'est pas voulu, alors on a fini (ils doit quand-même se retrouver
+    // dans nodeList
+    if ((node->flags & Solver::Node::Wanted) == 0)
     {
-        child = &children[i];
+        return true;
+    }
+    
+    // Explorer les enfants
+    Solver::Node::Child *children = node->children, *child;
+    Solver::Error *error = 0;
+    
+    for (; node->currentChild < node->childcount; node->currentChild++)
+    {
+        child = &children[node->currentChild];
         
         if (child->count == 1)
         {
+            // Si pour une raison ou pour une autre, on n'a pas besoin de l'enfant, le sauter
+            if (!verifyNode(child->node, error))
+            {
+                if (error != 0)
+                {
+                    // VerifyNode a détecté une erreur dans le noeud
+                    child->node->error = error;
+                    errorNode = child->node;
+                    return false;
+                }
+                
+                // Passer au suivant
+                continue;
+            }
+            
             // Explorer cet enfant, simplement
-            if (!exploreNode(child->node, -1, -1, ended))
+            if (!exploreNode(child->node, ended))
             {
                 return false;
             }
             
+            // Si un choix s'est présenté, retourner pour permettre à l'utilisateur de choisir.
             if (!ended) return true;
         }
         else
         {
-            // Ah, on a un choix à faire. Vérifier qu'on n'a pas déjà les instructions
-            if (choice != -1)
+            // On a un choix. Vérifier si l'utilisateur n'a pas déjà choisi
+            int goodCount = 0, autoCount = 0;
+            
+            if (child->chosenNode != -1)
             {
-                // On a un choix, simplement le prendre
-                if (choice >= child->count)
+                Solver::Node *nd = child->nodes[child->chosenNode];
+                
+                if (!exploreNode(nd, ended))
                 {
                     return false;
                 }
                 
-                if (!exploreNode(child->nodes[choice], -1, -1, ended))
-                {
-                    return false;
-                }
-                
+                // Si un choix s'est présenté, retourner pour permettre à l'utilisateur de choisir.
                 if (!ended) return true;
             }
             else
             {
-                // Demander à l'utilisateur
-                choiceChild = child;
-                ended = false;
+                // Explorer les noeuds de l'enfant.
+                // Il est possible qu'il n'y en ai que 0 ou 1 de possible, ce qui serait facile
+                Solver::Node *nd;
                 
-                // Ajouter un niveau de choix
-                Level level;
-                
-                level.nodeIndex = nodeList.count() - 1;
-                level.childIndex = i;
-                
-                levels.append(level);
-                
-                // Retourner
-                return true;
+                for (int i=0; i<child->count; ++i)
+                {
+                    nd = child->nodes[i];
+                    
+                    // Voir si le noeud convient
+                    if (!verifyNode(nd, error))
+                    {
+                        if (error != 0)
+                        {
+                            nd->error = error;
+                        }
+                        else
+                        {
+                            // Noeud déjà dans la liste, sans erreur.
+                            // Bon candidat pour un choix automatique
+                            autoCount++;
+                        }
+                    }
+                    else
+                    {
+                        goodCount++;
+                    }
+                }
+            
+                if (autoCount != 0)
+                {
+                    // Il y a moyen de ne pas installer de noeuds en plus
+                    continue;
+                }
+                else if (goodCount == 0)
+                {
+                    // Tous les noeuds sont en erreur
+                    Solver::Error *err = new Solver::Error;
+                    err->type = Solver::Error::ChildError;
+                    err->other = 0;
+                    
+                    node->error = err;
+                    return false;
+                }
+                else
+                {
+                    // Pas de choix auto possible
+                    choiceChild = child;
+                    ended = false;
+                    
+                    Level level;
+                    
+                    level.choiceNodeIndex = node->nodeListIndex;
+                    level.choiceChildIndex = node->currentChild;
+                    level.lastNodeIndex = nodeList.count() - 1;
+                    
+                    levels.append(level);
+                    
+                    return true;
+                }
             }
         }
     }
@@ -636,6 +785,8 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     node->error = 0;
     node->children = 0;
     node->childcount = 0;
+    node->currentChild = 0;
+    node->nodeListIndex = -1;
     
     node->weight = 0;
     node->minWeight = 0;
@@ -1048,6 +1199,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
         child->nodes = nodes;
         child->maxNode = -1;
         child->minNode = -1;
+        child->chosenNode = -1;
         
         for (int j=0; j<pkgIndexes.count(); ++j)
         {

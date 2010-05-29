@@ -638,7 +638,7 @@ void App::manageResults(Solver *solver)
         
         if (ps->count())
         {
-            cout << COLOR(tr("Liste des paquets pouvant être installés :"), "32") << endl;
+            cout << COLOR(tr("Liste des paquets pouvant être installés :"), "36") << endl;
             cout << qPrintable(tr("    Légende : "))
                 << COLOR(tr("I: Installé "), "34")
                 << COLOR(tr("R: Supprimé "), "31")
@@ -653,7 +653,7 @@ void App::manageResults(Solver *solver)
             
             // Dire qu'un paquet propose un choix
             cout << endl;
-            cout << qPrintable(tr("Le paquet %1~%2 possède une dépendance permettant un choix :").arg(pkg->name(), pkg->version())) << endl;
+            cout << COLOR(tr("Le paquet %1~%2 possède une dépendance permettant un choix :").arg(pkg->name(), pkg->version()), "32") << endl;
             cout << endl;
             
             // Plus besoin de la liste
@@ -662,7 +662,7 @@ void App::manageResults(Solver *solver)
         else
         {
             // Choix de premier niveau : on installe par exemple machin>=truc, et machin existe en deux versions.
-            cout << qPrintable(tr("Un des paquets que vous avez demandé peut être obtenu de plusieurs manières :")) << endl;
+            cout << COLOR(tr("Un des paquets que vous avez demandé peut être obtenu de plusieurs manières :"), "32") << endl;
             cout << endl;
         }
         
@@ -675,21 +675,29 @@ void App::manageResults(Solver *solver)
             Solver::Node *node = choices.at(i);
             Package *choice = node->package;
             
-            cout << ' ' << (i + 1) << ". ";                                         // 1.
+            cout << ' ' << COLOR(QString::number(i + 1) + ". ", "34");              // 1.
             cout << qPrintable(actionStringInf(choice->action()));                  // Installer
             cout << ' ';
             cout << COLOR(choice->name(), "31") << '~' << COLOR(choice->version(), "32"); // machin~truc
             cout << endl;
             cout << "    ";
-            cout << qPrintable(tr("Poids entre %1 et %2 (téléchargement de %3 à %4, %5%6%7%6)")
-                        .arg(node->minWeight)
-                        .arg(node->maxWeight)
-                        .arg(PackageSystem::fileSizeFormat(node->minDlSize))
-                        .arg(PackageSystem::fileSizeFormat(node->maxDlSize))
-                        .arg(node->minInstSize < 0 ? tr("suppression de ") : tr("installation de "))
-                        .arg(PackageSystem::fileSizeFormat(qAbs(node->minInstSize)))
-                        .arg(node->maxInstSize < 0 ? (node->minInstSize < 0 ? tr(" à ") : tr(" à suppression de ")) : (node->minInstSize < 0 ? tr(" à installation de ") : tr(" à ")))
-                        .arg(PackageSystem::fileSizeFormat(node->maxInstSize))) << endl;
+            
+            if ((node->flags & Solver::Node::Wanted) == 0)
+            {
+                cout << qPrintable(tr("(ce choix n'aura aucune influence sur le système)")) << endl;
+            }
+            else
+            {
+                cout << qPrintable(tr("Poids entre %1 et %2 (téléchargement de %3 à %4, %5%6%7%8)")
+                            .arg(node->minWeight)
+                            .arg(node->maxWeight)
+                            .arg(PackageSystem::fileSizeFormat(node->minDlSize))
+                            .arg(PackageSystem::fileSizeFormat(node->maxDlSize))
+                            .arg(node->minInstSize < 0 ? tr("suppression de ") : tr("installation de "))
+                            .arg(PackageSystem::fileSizeFormat(qAbs(node->minInstSize)))
+                            .arg(node->maxInstSize < 0 ? (node->minInstSize < 0 ? tr(" à ") : tr(" à suppression de ")) : (node->minInstSize < 0 ? tr(" à installation de ") : tr(" à ")))
+                            .arg(PackageSystem::fileSizeFormat(node->maxInstSize))) << endl;
+            }
             
             // Voir si ce choix est intéressant du côté du poids
             if (minWeightIndex == -1)
@@ -769,7 +777,7 @@ void App::manageResults(Solver *solver)
     int instSize = 0, dlSize = 0;
     char in[2];
     
-    cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "32") << endl;
+    cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "36") << endl;
     cout << qPrintable(tr("    Légende : "))
          << COLOR(tr("I: Installé "), "34")
          << COLOR(tr("R: Supprimé "), "31")

@@ -39,7 +39,7 @@ using namespace Logram;
 struct PackageList::Private
 {
     PackageSystem *ps;
-    bool needsReboot;
+    bool needsReboot, deletePackagesOnDelete;
     int numLicenses;
     
     int downloadProgress, processProgress;
@@ -62,6 +62,7 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
     d = new Private;
     
     d->needsReboot = false;
+    d->deletePackagesOnDelete = true;
     d->numLicenses = 0;
     d->ps = ps;
     
@@ -71,15 +72,23 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
 
 PackageList::~PackageList()
 {   
-    for (int i=0; i<count(); ++i)
+    if (d->deletePackagesOnDelete)
     {
-        if (at(i)->origin() != Package::File)
+        for (int i=0; i<count(); ++i)
         {
-            delete at(i);
+            if (at(i)->origin() != Package::File)
+            {
+                delete at(i);
+            }
         }
     }
     
     delete d;
+}
+
+void PackageList::setDeletePackagesOnDelete(bool enable)
+{
+    d->deletePackagesOnDelete = enable;
 }
 
 bool PackageList::needsReboot() const

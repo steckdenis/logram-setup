@@ -45,6 +45,7 @@ class PackageList : public QObject, public QList<Package *>
         ~PackageList();
         
         void addPackage(Package *pkg);
+        void setDeletePackagesOnDelete(bool enable);
         
         Package *installingPackage() const;
         bool needsReboot() const;

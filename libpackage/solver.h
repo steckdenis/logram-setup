@@ -2,7 +2,7 @@
  * solver.h
  * This file is part of Logram
  *
- * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
+ * Copyright (C) 2009, 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
  *
  * Logram is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@ class Solver : public QObject
             struct Child
             {
                 int count;
-                int minNode, maxNode;
+                int minNode, maxNode, chosenNode; // choosenNode : Noeud que l'utilisateur a choisi
                 
                 // Si count = 1, on stocke simplement un pointeur sur l'enfant. Sinon, on stocke un pointeur
                 // sur la liste des enfants.
@@ -120,8 +120,10 @@ class Solver : public QObject
                 };
             };
             
+            int nodeListIndex;      // Index dans nodeList quand on explore le graphe.
+            
             // Liens
-            int childcount;
+            int childcount, currentChild;   // currentChild : enfant courant dans l'exploration du graphe.
             Child *children;
         };
 
