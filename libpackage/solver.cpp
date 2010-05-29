@@ -519,6 +519,7 @@ bool Solver::upList()
         
         nd->nodeListIndex = -1;
         nd->currentChild = 0;
+        nd->flags &= ~Node::Explored;
         
         d->nodeList.removeLast();
     }
@@ -540,11 +541,57 @@ PackageList *Solver::list()
     rs->setDeletePackagesOnDelete(false);
     
     // Explorer les noeuds
-    foreach (Node *node, d->nodeList)
+    for (int i=0; i<d->nodeList.count(); ++i)
     {
+        Node *node = d->nodeList.at(i);
+        
         if (node->flags & Solver::Node::Wanted)
         {
-            rs->addPackage(node->package);
+            // Explorer à nouveau nodeList pour voir s'il contient un paquet
+            // pouvant être une mise à jour de ce paquet.
+            bool upgrade = false;
+            
+            if (node->package->origin() == Package::Database)
+            {
+                for (int j=0; j<d->nodeList.count(); ++j)
+                {
+                    Node *other = d->nodeList.at(j);
+                    
+                    if (other != node &&
+                        other->package->origin() == Package::Database &&
+                        other->package->name() == node->package->name() &&
+                        other->package->action() != node->package->action()
+                    )
+                    {
+                        // Deux paquet du même nom, mise à jour si les actions sont différentes
+                        DatabasePackage *delpkg, *instpkg;
+                        
+                        delpkg  = (DatabasePackage *)(other->package->action() == Solver::Install ? node->package : other->package);
+                        instpkg = (DatabasePackage *)(other->package->action() == Solver::Install ? other->package : node->package);
+                        
+                        // l'ancien est delpkg, le nouveau instpkg
+                        delpkg->setUpgradePackage(instpkg);
+                        delpkg->setAction(Solver::Update);
+                        
+                        upgrade = true;
+                        
+                        // L'autre est forcément plus loin dans la liste. Retirer son wanted pour
+                        // ne pas mettre à jour deux fois
+                        other->flags &= ~Node::Wanted;
+                        
+                        // Ajouter le paquet à la liste
+                        rs->addPackage(delpkg);
+                        
+                        // Pas besoin de continuer l'exploration
+                        break;
+                    }
+                }
+            }
+            
+            if (!upgrade)
+            {
+                rs->addPackage(node->package);
+            }
         }
     }
     
@@ -566,12 +613,14 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
         error = node->error;
         
         if (error->type == Solver::Error::SameNameSameVersionDifferentAction ||
-            error->type == Solver::Error::SameNameSameActionDifferentVersion)
+            error->type == Solver::Error::InstallSamePackageDifferentVersion)
         {
             // Erreur créée dans une précédante tentative (choix malheureux de l'utilisateur).
-            // On n'en a plus besoin
+            // On n'en a plus besoin.
+            // (note: et si on en a besoin, elle sera recrée plus tard dans cette fonction).
             delete error;
             error = 0;
+            node->error = 0;
         }
         else
         {
@@ -580,16 +629,23 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
         }
     }
     
-    // Si le noeud est dans la liste, on n'en a pas besoin
-    if (nodeList.contains(node))
+    // Si le noeud est déjà complètement exploré, on n'en a plus besoin
+    if ((node->flags & Solver::Node::Explored) != 0)
     {
+        return false;
+    }
+    else if (node->nodeListIndex != -1)
+    {
+        // Éviter les récursions en boucle : ce noeud est déjà dans un
+        // exploreNode si son nodeListIndex != -1 mais que ses flags
+        // ne contiennent pas Node::Explored
         return false;
     }
     
     // Explorer les noeuds déjà présents dans la liste
     if (node->package)
     {
-        Solver::Action myAction;
+        Solver::Action myAction = node->package->action();
         QString myName = node->package->name();
         QString myVersion = node->package->version();
         
@@ -597,11 +653,7 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
         {
             Solver::Action otherAction = nd->package->action();
             
-            if (nd == node)
-            {
-                // Ce noeud est déjà dans la liste, on ne le prend pas
-                return false;
-            }
+            if (nd == node) continue;
             
             if (nd->package->name() == myName)
             {
@@ -609,9 +661,6 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
                 {
                     if (otherAction == myAction)
                     {
-                        // Hack : on peut installer un paquet depuis un fichier
-                        // qui a le même nom et la même version qu'un paquet de
-                        // la BDD.
                         return false;
                     }
                     else
@@ -623,10 +672,12 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
                         return false;
                     }
                 }
-                else if (otherAction == myAction)
+                else if (otherAction == myAction && myAction == Solver::Install)
                 {
+                    // Uniquement l'installation qui plante, on peut supprimer plusieurs
+                    // versions d'un même paquet (avec les reallyWanted).
                     error = new Solver::Error;
-                    error->type = Solver::Error::SameNameSameActionDifferentVersion;
+                    error->type = Solver::Error::InstallSamePackageDifferentVersion;
                     error->other = nd;
                     
                     return false;
@@ -647,7 +698,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
         nodeList.append(node);
     }
     
-    // Si le noeud n'est pas voulu, alors on a fini (ils doit quand-même se retrouver
+    // Si le noeud n'est pas voulu, alors on a fini (ils doivent quand-même se retrouver
     // dans nodeList
     if ((node->flags & Solver::Node::Wanted) == 0)
     {
@@ -709,11 +760,11 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
             {
                 // Explorer les noeuds de l'enfant.
                 // Il est possible qu'il n'y en ai que 0 ou 1 de possible, ce qui serait facile
-                Solver::Node *nd;
+                Solver::Node *nd, *goodNode;
                 
-                for (int i=0; i<child->count; ++i)
+                for (int j=0; j<child->count; ++j)
                 {
-                    nd = child->nodes[i];
+                    nd = child->nodes[j];
                     
                     // Voir si le noeud convient
                     if (!verifyNode(nd, error))
@@ -732,6 +783,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     else
                     {
                         goodCount++;
+                        goodNode = nd;
                     }
                 }
             
@@ -749,6 +801,17 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     
                     node->error = err;
                     return false;
+                }
+                else if (goodCount == 1)
+                {
+                    // Un choix où on n'a qu'une possibilité n'est plus un choix
+                    if (!exploreNode(goodNode, ended))
+                    {
+                        return false;
+                    }
+                    
+                    // Si un choix s'est présenté, retourner pour permettre à l'utilisateur de choisir.
+                    if (!ended) return true;
                 }
                 else
                 {
@@ -769,6 +832,9 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
             }
         }
     }
+    
+    // On a exploré ce noeud en entier
+    node->flags |= Solver::Node::Explored;
     
     return true;
 }
@@ -1216,7 +1282,6 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
             // aucun des variantes n'est bonne, et on envoie une erreur.
             if (!ok)
             {
-                qDebug() << "Noeud pas bon";
                 count--;
             }
         }

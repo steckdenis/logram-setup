@@ -628,6 +628,7 @@ void App::manageResults(Solver *solver)
     if (!solver->beginList(ended))
     {
         // TODO: solverError();
+        return;
     }
     
     while (!ended)
@@ -791,19 +792,17 @@ void App::manageResults(Solver *solver)
     
     if (instSize >= 0)
     {
-        cout << qPrintable(tr("%1 licence(s) à accepter, installation de %2, téléchargement de %3%4, accepter (y/n) ? ")
+        cout << qPrintable(tr("%1 licence(s) à accepter, installation de %2, téléchargement de %3, accepter (y/n) ? ")
                     .arg(packages->numLicenses())
                     .arg(PackageSystem::fileSizeFormat(instSize))
-                    .arg(PackageSystem::fileSizeFormat(dlSize))
-                    .arg(packages->needsReboot() ? tr(", nécessite un redémarrage") : QString()));
+                    .arg(PackageSystem::fileSizeFormat(dlSize)));
     }
     else
     {
-        cout << qPrintable(tr("%1 licence(s) à accepter, suppression de %2, téléchargement de %3%4, accepter (y/n) ? ")
+        cout << qPrintable(tr("%1 licence(s) à accepter, suppression de %2, téléchargement de %3, accepter (y/n) ? ")
                     .arg(packages->numLicenses())
                     .arg(PackageSystem::fileSizeFormat(-instSize))
-                    .arg(PackageSystem::fileSizeFormat(dlSize))
-                    .arg(packages->needsReboot() ? tr(", nécessite un redémarrage") : QString()));
+                    .arg(PackageSystem::fileSizeFormat(dlSize)));
     }
     
     cout.flush();

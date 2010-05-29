@@ -70,7 +70,7 @@ class Solver : public QObject
                 InternalError,                      /*!< Erreur dans PackageSystem. Utilisez PackageSystem::lastError pour voir */
                 ChildError,                         /*!< Un enfant du noeud a une erreur, ce qui le rend invalide. @b other est cet enfant */
                 SameNameSameVersionDifferentAction, /*!< Deux actions différentes pour un même paquet */
-                SameNameSameActionDifferentVersion, /*!< Même action pour deux versions différents d'un paquet */
+                InstallSamePackageDifferentVersion, /*!< Même action pour deux versions différents d'un paquet */
                 UninstallablePackageInstalled,      /*!< Paquet non-installable installé */
                 UnremovablePackageRemoved,          /*!< Paquet non-supprimable supprimé */
                 UnupdatablePackageUpdated           /*!< Paquet impossible à mettre à jour mis à jour. @b other est le noeud qui ne veut pas être mis à jour, l'ancienne versions (nous sommes la nouvelle version) */
@@ -91,7 +91,8 @@ class Solver : public QObject
                 Proceed = 4,
                 MinMaxWeighted = 8,
                 WeightMin = 16,     // Utilisé par weightChildren
-                MinMaxDone = 32
+                MinMaxDone = 32,
+                Explored = 64,      // Utilisé par exploreNode
             };
             
             Q_DECLARE_FLAGS(Flags, Flag)

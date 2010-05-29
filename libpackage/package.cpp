@@ -367,15 +367,20 @@ void Package::setUpgradePackage(int i)
     d->upgradeIndex = i;
 }
 
+void Package::setUpgradePackage(DatabasePackage *pkg)
+{
+    d->upd = pkg;
+}
+
 DatabasePackage *Package::upgradePackage()
 {
-    if (d->upgradeIndex == -1)
-    {
-        return 0;
-    }
-    
     if (d->upd == 0)
     {
+        if (d->upgradeIndex == -1)
+        {
+            return 0;
+        }
+        
         d->upd = new DatabasePackage(d->upgradeIndex, d->ps, d->psd, Solver::Install);
     }
     

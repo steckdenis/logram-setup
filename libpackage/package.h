@@ -126,6 +126,7 @@ class Package : public QObject
         // Mise à jour
         DatabasePackage *upgradePackage();
         void setUpgradePackage(int i);
+        void setUpgradePackage(DatabasePackage *pkg);
 
     signals:
         void proceeded(bool success);
