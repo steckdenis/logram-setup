@@ -51,7 +51,8 @@ class App : public QCoreApplication
     
     public:
         App(int &argc, char **argv);
-
+        void clean();
+        
         // Actions
         void help();
         void version();
@@ -76,15 +77,16 @@ class App : public QCoreApplication
         void include(const QStringList &lpkFileNames);
         void exp(const QStringList &distros);
         
+        // Erreurs
+        QString psError(Logram::PackageError *err);
         void error();
         
+        // Utilitaires
         void getString(char *buffer, int max_length, const char *def, bool append_return);
-        
         void displayPackages(QList<Logram::Package *> *packages, int &instSize, int &dlSize, bool showType);
         void displayPackage(Logram::Package *pkg, int i, int &instSize, int &dlSize, bool showType);
+        QString solverError(Logram::Solver *solver, const QString &defaultString);
         
-        void clean();
-
     public slots:
         void progress(Logram::Progress *progress);
         void communication(Logram::Package *sender, Logram::Communication *comm);

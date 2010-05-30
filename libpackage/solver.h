@@ -140,6 +140,7 @@ class Solver : public QObject
         bool upList();
         PackageList *list();
         Node *errorNode();
+        Node *choiceNode();
         
         /**
             Définit si les dépendances des paquets doivent être prises en compte (@b true par défaut) 

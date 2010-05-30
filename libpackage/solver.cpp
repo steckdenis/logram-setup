@@ -62,6 +62,7 @@ struct Solver::Private
     QList<Solver::Node *> nodeList;
     QList<Level> levels;          // Liste des niveaux (int --> index dans nodeList)
     Solver::Node::Child *choiceChild;
+    Solver::Node *choiceNode;
 
     // Fonctions
     bool addNode(Package *package, Solver::Node *node);
@@ -135,6 +136,7 @@ void Solver::addPackage(const QString &nameStr, Action action)
 bool Solver::solve()
 {
     // Créer le noeud principal
+    d->ps->setLastError(0); // Effacer l'erreur
     d->rootNode = new Node;
     
     return d->addNode(0, d->rootNode);
@@ -402,16 +404,20 @@ bool Solver::weight()
 
 bool Solver::beginList(bool &ended)
 {
+    d->ps->setLastError(0); // Effacer l'erreur
     ended = true; // Mis à false si on a un choix
     
     d->errorNode = 0;
     d->choiceChild = 0;
+    d->choiceNode = 0;
     
     return d->exploreNode(d->rootNode, ended);
 }
 
 bool Solver::continueList(int choice, bool &ended)
 {
+    d->ps->setLastError(0); // Effacer l'erreur
+    
     // On doit avoir un enfant à choix
     if (d->choiceChild == 0)
     {
@@ -499,6 +505,8 @@ QList<Solver::Node *> Solver::choices()
 
 bool Solver::upList()
 {
+    d->ps->setLastError(0); // Effacer l'erreur
+    
     // Vérifier que la liste des niveaux contient au moins deux éléments,
     // puisqu'on va en supprimer un et utiliser l'autre. Sinon, ne rien faire
     if (d->levels.count() < 2)
@@ -527,6 +535,7 @@ bool Solver::upList()
     // Liste ok. Il faut maintenant re-peupler d->choiceChild, puisqu'on retourne à un choix
     Node *node = d->nodeList.at(level.choiceNodeIndex);
     d->choiceChild = &node->children[level.choiceChildIndex];
+    d->choiceNode = node;
     
     // choiceChild a pour le moment un choix déjà fait, le lui retirer
     d->choiceChild->chosenNode = -1;
@@ -601,6 +610,11 @@ PackageList *Solver::list()
 Solver::Node *Solver::errorNode()
 {
     return d->errorNode;
+}
+
+Solver::Node *Solver::choiceNode()
+{
+    return d->choiceNode;
 }
 
 bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
@@ -817,6 +831,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                 {
                     // Pas de choix auto possible
                     choiceChild = child;
+                    choiceNode = node;
                     ended = false;
                     
                     Level level;

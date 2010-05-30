@@ -64,8 +64,9 @@ void App::add(const QStringList &packages)
 
     if (!solver->solve() || !solver->weight())
     {
-        // TODO: Gérer les erreurs de solver->root()
-        error();
+        cout << COLOR(tr("ERREUR : "), "31");
+        cout << qPrintable(solverError(solver, tr("Bug dans Setup !"))) << endl;
+        
         delete solver;
         return;
     }
@@ -608,6 +609,105 @@ static QString actionStringInf(Solver::Action action)
     }
 }
 
+QString App::solverError(Logram::Solver *solver, const QString &defaultString)
+{
+    // Trouver le noeud du solveur qui a une erreur
+    Solver::Node *errorNode = solver->errorNode();
+    
+    if (errorNode == 0)
+    {
+        // Ce n'est pas un noeud qui a provoqué l'erreur, voir si ce n'est pas PackageSystem
+        PackageError *err = ps->lastError();
+        
+        if (err != 0)
+        {
+            return psError(err);
+        }
+        else
+        {
+            // Erreur par défaut
+            return defaultString;
+        }
+    }
+    
+    // On a un noeud qui a fait des erreurs. Descendre dans son arborescence s'il est en childError
+    Solver::Error *err = errorNode->error;
+    
+    while (err->type == Solver::Error::ChildError && err->other != 0)
+    {
+        if (err->other->error == 0)
+        {
+            return tr("Erreur inconnue. Ajoutez le paramètre -G à Setup et postez sa sortie dans votre rapport de bug");
+        }
+        
+        errorNode = err->other;
+        err = errorNode->error;
+    }
+    
+    // err est l'erreur la plus profonde, trouver son nom
+    QString pkgname, othername;
+    
+    if (errorNode->package)
+    {
+        pkgname = errorNode->package->name() + "~" + errorNode->package->version();
+    }
+    
+    if (err->other && err->other->package)
+    {
+        othername = err->other->package->name() + "~" + err->other->package->version();
+    }
+    
+    // En fonction du type
+    PackageError *perr;
+    
+    switch (err->type)
+    {
+        case Solver::Error::NoDeps:
+            return tr("Impossible de trouver la dépendance correspondant à %1").arg(err->pattern);
+       
+        case Solver::Error::InternalError:
+            perr = ps->lastError();
+        
+            if (perr != 0)
+            {
+                return psError(perr);
+            }
+            else
+            {
+                // Erreur par défaut
+                return defaultString;
+            }
+            
+        case Solver::Error::ChildError:
+            if (!pkgname.isNull())
+            {
+                return tr("Aucun des choix nécessaires à l'installation de %1 n'est possible").arg(pkgname);
+                // TODO: Explorer les enfants d'errorNode pour lister les erreurs.
+            }
+            else
+            {
+                return tr("Aucun des choix permettant d'effectuer l'opération que vous demandez n'est possible");
+            }
+            
+        case Solver::Error::SameNameSameVersionDifferentAction:
+            return tr("Le paquet %1 devrait être installé et supprimé en même temps").arg(pkgname);
+            
+        case Solver::Error::InstallSamePackageDifferentVersion:
+            return tr("Les paquets %1 et %2 devraient être installés en même temps").arg(pkgname, othername);
+            
+        case Solver::Error::UninstallablePackageInstalled:
+            return tr("Le paquet %1 ne peut être installé mais devrait être installé").arg(pkgname);
+            
+        case Solver::Error::UnremovablePackageRemoved:
+            return tr("Le paquet %1 ne peut être supprimé mais devrait être supprimé").arg(pkgname);
+            
+        case Solver::Error::UnupdatablePackageUpdated:
+            return tr("Le paquet %1 ne peut être mis à jour mais devrait être mis à jour").arg(pkgname);
+    }
+    
+    return defaultString;
+}
+
 void App::manageResults(Solver *solver)
 {
     if (depsTree)
@@ -627,7 +727,7 @@ void App::manageResults(Solver *solver)
     
     if (!solver->beginList(ended))
     {
-        // TODO: solverError();
+        cout << COLOR(tr("Erreur : "), "31") << qPrintable(solverError(solver, tr("Erreur inconnue, sans doutes un bug"))) << endl;
         return;
     }
     
@@ -637,7 +737,7 @@ void App::manageResults(Solver *solver)
         PackageList *ps = solver->list();
         int instSize, dlSize;
         
-        if (ps->count())
+        if (ps->count() && solver->choiceNode() != 0 && solver->choiceNode()->package != 0)
         {
             cout << COLOR(tr("Liste des paquets pouvant être installés :"), "36") << endl;
             cout << qPrintable(tr("    Légende : "))
@@ -650,7 +750,7 @@ void App::manageResults(Solver *solver)
             
             displayPackages(ps, instSize, dlSize, true);
             
-            Package *pkg = ps->last();
+            Package *pkg = solver->choiceNode()->package;
             
             // Dire qu'un paquet propose un choix
             cout << endl;
@@ -761,8 +861,11 @@ void App::manageResults(Solver *solver)
                 // Informer qu'on a fait un choix
                 if (!solver->continueList(index, ended))
                 {
-                    // TODO: solverError();
-                    return;
+                    cout << COLOR(tr("Impossible de choisir cette entrée : "), "31") << qPrintable(solverError(solver, tr("Bug dans Setup !"))) << endl;
+                    cout << qPrintable(tr("Si vous avez essayé tous les choix, essayez de remonter (u).")) << endl;
+                    
+                    // Permettre à l'utilisateur d'essayer une autre proposition
+                    continue;
                 }
                 
                 // Continuer l'installation
@@ -784,7 +887,7 @@ void App::manageResults(Solver *solver)
          << COLOR(tr("R: Supprimé "), "31")
          << COLOR(tr("U: Mis à jour "), "33")
          << COLOR(tr("P: Supprimé totalement "), "35")
-         << endl;
+         << endl << endl;
          
     displayPackages(packages, instSize, dlSize, true);
     

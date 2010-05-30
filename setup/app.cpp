@@ -524,87 +524,90 @@ void App::version()
     cout << qPrintable(rs);
 }
 
-void App::error()
+QString App::psError(PackageError *err)
 {
-    cout << COLOR(tr("ERREUR : "), "31");
-    
-    PackageError *err = ps->lastError();
-    
-    if (err == 0)
-    {
-        // Interruption sans erreur, ou erreur inconnue
-        cout << qPrintable(tr("Erreur inconnue ou pas d'erreur")) << endl;
-        return;
-    }
+    QString rs;
 
     switch (err->type)
     {
         case PackageError::OpenFileError:
-            cout << qPrintable(tr("Impossible d'ouvrir le fichier "));
+            rs = tr("Impossible d'ouvrir le fichier ");
             break;
             
         case PackageError::MapFileError:
-            cout << qPrintable(tr("Impossible de mapper le fichier "));
+            rs = tr("Impossible de mapper le fichier ");
             break;
             
         case PackageError::ProcessError:
-            cout << qPrintable(tr("Erreur dans la commande "));
+            rs = tr("Erreur dans la commande ");
             break;
             
         case PackageError::DownloadError:
-            cout << qPrintable(tr("Impossible de télécharger "));
+            rs = tr("Impossible de télécharger ");
             break;
             
         case PackageError::ScriptException:
-            cout << qPrintable(tr("Erreur dans le QtScript "));
+            rs = tr("Erreur dans le QtScript ");
             break;
             
         case PackageError::SignatureError:
-            cout << qPrintable(tr("Mauvaise signature GPG du fichier "));
+            rs = tr("Mauvaise signature GPG du fichier ");
             break;
             
         case PackageError::SHAError:
-            cout << qPrintable(tr("Mauvaise somme SHA1, fichier corrompu : "));
+            rs = tr("Mauvaise somme SHA1, fichier corrompu : ");
             break;
             
         case PackageError::PackageNotFound:
-            cout << qPrintable(tr("Paquet inexistant : "));
+            rs = tr("Paquet inexistant : ");
             break;
             
         case PackageError::BadDownloadType:
-            cout << qPrintable(tr("Mauvais type de téléchargement, vérifier sources.list : "));
+            rs = tr("Mauvais type de téléchargement, vérifier sources.list : ");
             break;
             
         case PackageError::OpenDatabaseError:
-            cout << qPrintable(tr("Impossible d'ouvrir la base de donnée : "));
+            rs = tr("Impossible d'ouvrir la base de donnée : ");
             break;
             
         case PackageError::QueryError:
-            cout << qPrintable(tr("Erreur dans la requête : "));
+            rs = tr("Erreur dans la requête : ");
             break;
             
         case PackageError::SignError:
-            cout << qPrintable(tr("Impossible de vérifier la signature : "));
+            rs = tr("Impossible de vérifier la signature : ");
             break;
             
         case PackageError::InstallError:
-            cout << qPrintable(tr("Impossible d'installer le paquet "));
+            rs = tr("Impossible d'installer le paquet ");
             break;
             
         case PackageError::ProgressCanceled:
-            cout << qPrintable(tr("Opération annulée : "));
+            rs = tr("Opération annulée : ");
             break;
     }
     
-    cout << COLOR(err->info, "35") << endl;
+    return rs;
+}
+
+void App::error()
+{
+    PackageError *err = ps->lastError();
+    
+    cout << COLOR(tr("ERREUR : "), "31");
+    
+    if (err == 0)
+    {
+        cout << COLOR(tr("Pas d'erreur ou erreur inconnue"), "35") << endl;
+        return;
+    }
+    
+    cout << COLOR(psError(err), "35") << endl;
     
     if (!err->more.isEmpty())
     {
         cout << qPrintable(err->more) << endl;
     }
-    
-    // Plus besoin de l'erreur
-    delete err;
 }
 
 void App::clean()
