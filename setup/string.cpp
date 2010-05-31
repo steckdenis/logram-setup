@@ -56,13 +56,14 @@ void App::printIndented(const QByteArray &chars, int indent)
             IDENT
             
             // On ne commence pas une ligne par un espace, c'est moche
-            c = chars.at(i+1);
-            
-            while ((c == ' ' || c == '\t') && i<chars.size())
+            do
             {
-                i++;
-                c = chars.at(i+1);
-            }
+                ++i;
+            } 
+            while (i<chars.size() && (chars.at(i) == ' ' || chars.at(i) == '\t'));
+            
+            // Le for() incrémente encore i, ce qui nous fait sauter un caractère
+            --i;
         }
         else
         {
