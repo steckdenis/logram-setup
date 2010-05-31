@@ -514,7 +514,7 @@ void App::tagPackage(const QString &packageName, const QString &tag)
     (void) tag;
 }
 
-static QStringList pkgFlags(Package *pkg)
+QStringList App::pkgFlags(Package *pkg)
 {
     QStringList rs;
     QString tmp;
@@ -548,7 +548,7 @@ static QStringList pkgFlags(Package *pkg)
             App::tr(string) \
             + ((flags & flag) != 0 ? syes : sno));
     
-    QString syes = App::tr("Oui");
+    QString syes = COLORS(App::tr("Oui"), "34");
     QString sno = App::tr("Non");
     
     // Graphique

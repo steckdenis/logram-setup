@@ -86,6 +86,7 @@ class App : public QCoreApplication
         void displayPackages(QList<Logram::Package *> *packages, int &instSize, int &dlSize, bool showType);
         void displayPackage(Logram::Package *pkg, int i, int &instSize, int &dlSize, bool showType);
         QString solverError(Logram::Solver *solver, const QString &defaultString);
+        QStringList pkgFlags(Logram::Package *pkg);
         
     public slots:
         void progress(Logram::Progress *progress);

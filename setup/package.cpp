@@ -388,7 +388,14 @@ void App::upgrade()
 
 void App::displayPackage(Package* pkg, int i, int &instSize, int &dlSize, bool showType)
 {
-    QString name = pkg->name().leftJustified(20, ' ', false);
+    QString name = pkg->name();
+    
+    if (pkg->wanted())
+    {
+        name += '*';
+    }
+    
+    name = name.leftJustified(20, ' ', false);
 
     if (pkg->action() == Solver::Install)
     {

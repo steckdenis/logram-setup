@@ -66,7 +66,7 @@ struct Solver::Private
 
     // Fonctions
     bool addNode(Package *package, Solver::Node *node);
-    Node *checkPackage(int index, Solver::Action action, bool &ok);
+    Node *checkPackage(int index, Solver::Action action, bool &ok, bool userWanted);
     bool addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep = false);
     
     bool exploreNode(Solver::Node *node, bool &ended);
@@ -814,6 +814,8 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     err->other = 0;
                     
                     node->error = err;
+                    errorNode = node;
+                    
                     return false;
                 }
                 else if (goodCount == 1)
@@ -889,6 +891,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         err->other = 0;
         
         node->error = err;
+        errorNode = node;
         
         return false;
     }
@@ -901,6 +904,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         err->other = 0;
         
         node->error = err;
+        errorNode = node;
         
         return false;
     }
@@ -911,6 +915,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         err->other = 0;
         
         node->error = err;
+        errorNode = node;
         
         return false;
     }
@@ -957,7 +962,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             {
                 // Il va falloir supprimer ce paquet
                 bool ok = true;
-                suppl = checkPackage(otherVersion, Solver::Remove, ok);
+                suppl = checkPackage(otherVersion, Solver::Remove, ok, false);
                 
                 // Tout doit s'être bien passé
                 if (!ok)
@@ -967,6 +972,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                     err->other = suppl;
                     
                     node->error = err;
+                    errorNode = node;
                     
                     return false;
                 }
@@ -979,6 +985,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                     err->other = suppl;
                     
                     node->error = err;
+                    errorNode = node;
                     
                     return false;
                 }
@@ -1071,6 +1078,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             {
                 // On veut installer un paquet depuis un fichier
                 FilePackage *fpkg = new FilePackage(wp.pattern, ps, psd, Solver::Install); // On ne peut qu'installer des .lpk
+                fpkg->setWanted(true); // Demandé par l'utilisateur
                 
                 // Nouveau Node pour ce paquet
                 Node *nd = new Node;
@@ -1086,6 +1094,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                     err->other = nd;
                     
                     node->error = err;
+                    errorNode = node;
                     
                     return false;
                 }
@@ -1100,8 +1109,10 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                     Solver::Error *err = new Solver::Error;
                     err->type = Solver::Error::NoDeps;
                     err->pattern = wp.pattern;
+                    err->other = 0;
                     
                     node->error = err;
+                    errorNode = node;
                     
                     return false;
                 }
@@ -1230,6 +1241,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                                     fdep->op()));
                                     
                 node->error = err;
+                errorNode = node;
                 
                 return false;
             }
@@ -1252,7 +1264,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
     if (pkgIndexes.count() == 1)
     {
         bool ok = true;
-        Node *nd = checkPackage(pkgIndexes.at(0), (revdep ? Solver::Remove : action), ok);
+        Node *nd = checkPackage(pkgIndexes.at(0), (revdep ? Solver::Remove : action), ok, (node->package == 0));
         
         // Enregistrer le noeud
         child->count = 1;
@@ -1265,6 +1277,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
             err->other = nd;
             
             node->error = err;
+            errorNode = node;
             
             return false;
         }
@@ -1287,7 +1300,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
             int pkgIndex = pkgIndexes.at(j);
             
             bool ok = true;
-            Node *nd = checkPackage(pkgIndex, (revdep && j == 0 ? Solver::Remove : action), ok);
+            Node *nd = checkPackage(pkgIndex, (revdep && j == 0 ? Solver::Remove : action), ok, (node->package == 0));
             
             // Enregistrer le noeud
             nodes[j] = nd;
@@ -1308,6 +1321,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
             err->other = 0;
             
             node->error = err;
+            errorNode = node;
             
             return false;
         }
@@ -1316,7 +1330,7 @@ bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, 
     return true;
 }
 
-Solver::Node *Solver::Private::checkPackage(int index, Solver::Action action, bool &ok)
+Solver::Node *Solver::Private::checkPackage(int index, Solver::Action action, bool &ok, bool userWanted)
 {
     // Explorer tous les noeuds à la recherche d'un éventuel qui correspondrait à l'index et à l'action
     for (int i=0; i<nodes.count(); ++i)
@@ -1327,12 +1341,16 @@ Solver::Node *Solver::Private::checkPackage(int index, Solver::Action action, bo
         {
             // Le noeud existe déjà, le retourner
             ok = (node->error == 0);
+            if (userWanted) node->package->setWanted(true);
+            
             return node;
         }
     }
     
     // Pas de noeud correspondant trouvé
     DatabasePackage *package = new DatabasePackage(index, ps, psd, action);
+    package->setWanted(userWanted);     // Savoir si c'est un paquet explicitement demandé par l'utilisateur
+    
     Solver::Node *node = new Solver::Node;
     ok = addNode(package, node);
     
