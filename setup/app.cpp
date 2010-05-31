@@ -602,7 +602,7 @@ void App::error()
         return;
     }
     
-    cout << COLOR(psError(err), "35") << endl;
+    cout << COLOR(psError(err), "35") << qPrintable(err->info) << endl;
     
     if (!err->more.isEmpty())
     {
