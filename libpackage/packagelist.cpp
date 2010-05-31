@@ -203,7 +203,7 @@ bool PackageList::process()
             
             foreach (_Depend *dep, deps)
             {
-                if (dep->type != DEPEND_TYPE_DEPEND)
+                if (dep->type != DEPEND_TYPE_DEPEND && dep->type != DEPEND_TYPE_SUGGEST)
                 {
                     // On n'incrémente que les dépendances
                     continue;
