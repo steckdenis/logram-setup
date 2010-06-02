@@ -1,0 +1,21 @@
+/** @mainpage Gestion des paquets de Logram
+
+Bienvenue dans la documentation de la bibliothèque @b liblpackages, la gestion des pages de Logram.
+
+Cette documentation est générée depuis les sources, et contient également des pages générales orientées vers les développeurs voulant découvrir le fonctionnement de la gestion des paquets de Logram (que ce soit pour la développer ou pour développer des applications l'utilisant).
+
+La documentation essaie d'être la plus riche possible, illustrée d'exemples. Ces exemples sont généralement des bouts de code en provenance directe de LPM, le @em front-end en ligne de commande de la gestion des paquets Logram.
+
+@section philosophy Philosophie de LPM
+
+@b LPM (Logram Package Management) suit une ligne directive simple et directe : le confort de l'utilisateur. Pour cela, un certain nombre de critères doivent être remplis :
+
+ - La @b rapidité, très importante. L'utilisateur n'aime pas attendre, surtout son gestionnaire de paquets. De plus, un gestionnaire de paquets rapide, qui télécharge peu, encourage à tenir son système à jour et à tester des applications. C'est excellent pour le libre en général.
+ - La @b sécurité. Il faut absolument éviter tout risque de casser le système de l'utilisateur. Pour le moment, cette partie n'est pas très développée dans LPM, mais un ajout futur est l'utilisation de snapshots Btrfs pour la sauvegarde de l'état de la machine.
+ - La @b simplicité d'utilisation, et @b l'ergonomie. L'utilisateur doit voir ce qu'il fait et pourquoi.
+ 
+@section related Pages détaillées
+
+Une description détaillée du fonctionnement interne de Setup est disponible à l'adresse http://logram-project.org/wiki-setup-technical.html .
+
+ **/

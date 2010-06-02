@@ -41,6 +41,14 @@
 class QNetworkReply;
 class QSettings;
 
+/**
+ * @namespace Logram
+ * @brief Espace des noms conteneur des fonctions de LPM
+ * 
+ * Cet espace des noms contient toutes les classes et toutes les fonctions utilisées par le gestionnaire de paquets Logram.
+ * 
+ * Il est également utilisé par d'autres bibliothèques de Logram.
+ */
 namespace Logram
 {
 
@@ -51,14 +59,56 @@ class Solver;
 class Communication;
 class PackageFile;
 
+/**
+ * @brief Structure de gestion des téléchargements
+ * 
+ * Cette structure permet de gérer les téléchargements asynchrones effectués grâce à
+ * PackageSystem::download.
+ */
 struct ManagedDownload
 {
+    /**
+     * @brief Réponse
+     * 
+     * Structure QNetworkReply en provenance de Qt, permettant de gérer les erreurs de transfert, des informations
+     * comme la progression dans le téléchargement, etc.
+     */
     QNetworkReply *reply;
+    
+    /**
+     * @brief Url source
+     * 
+     * Url du fichier à télécharger. Peut également être le nom d'un fichier local si le téléchargement est de type @b local.
+     */
     QString url;
+    
+    /**
+     * @brief Fichier de destination
+     * 
+     * Le fichier téléchargé est placé là ou le programme appelant l'a décidé. Ce champs contient cette information. C'est
+     * toujours un fichier local
+     */
     QString destination;
+    
+    /**
+     * @brief Erreur
+     * 
+     * Est placé à @b true en cas d'erreur. Ce champs est indéterminé tant que le téléchargement n'est pas fini (une erreur le termine).
+     */
     bool error;
 };
 
+/**
+ * @brief Erreur globale
+ * @dontinclude app.cpp
+ * 
+ * Cette classe permet de gérer les erreurs pouvant se produire lors des différents traitements. Les fonctions de l'API
+ * de libpackage ne renvoient pas de code d'erreur, mais bien un booléen permettant juste de savoir si tout s'est bien passé.
+ * 
+ * Un appel à PackageSystem::lastError permet de savoir si une erreur s'est produite, et le cas échant, de la récupérer.
+ * 
+ * Cette manière de faire permet de stocker des informations supplémentaires dans une erreur, comme un message d'erreur, etc.
+ */
 struct PackageError
 {
     enum Error
