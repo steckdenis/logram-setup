@@ -85,51 +85,10 @@ class DatabasePackage : public Package
         */
         ~DatabasePackage();
 
-        /**
-            @brief Télécharge le paquet
-            
-            Télécharge le fichier .tlz du paquet binaire, et le place dans le cache Setup. 
-            
-            Cette fonction n'est pas bloquante, elle retourne sitôt le téléchargement commencé.
-            
-            Une fois le paquet téléchargé (downloadEnded() est émis), vous pouvez récupérer
-            le nom complet du fichier .tlz local en appelant tlzFileName().
-            
-            @sa tlzFileName
-            @return true si le téléchargement est bien lancé, false sinon
-        */
+        
         bool download();
-        
-        /**
-            @brief Nom du fichier .tlz récupéré
-            
-            Une fois le fichier .tlz du paquet téléchargé par download(), appelez cette fonction
-            pour récupérer son nom.
-            
-            @sa download
-            @return Nom du fichier .tlz téléchargé
-        */
         QString tlzFileName();
-        
-        /**
-            @brief Permet de savoir si le paquet est valide
-            
-            Il se peut que des erreurs se soient produites dans le constructeur, qui ne peut
-            pas retourner une valeur (false ici). Cette fonction renvoie false si le paquet
-            n'a pu être construit. PackageSystem::lastError() est placé de manière appropriée.
-            
-            @return true si le paquet est prêt à être utilisé, false sinon
-        */
         bool isValid();
-        
-        /**
-            @brief Renvoie l'origine du paquet, Package::Database ici
-            
-            Permet de savoir si un Package vient de la base de donnée ou d'un fichier.
-            L'implémentation dans cette classe renvoie toujours Package::Database.
-            
-            @return Package::Database
-        */
         Package::Origin origin();
 
         /**
@@ -148,18 +107,18 @@ class DatabasePackage : public Package
             Source          /*!< Url de la source .src.tlz */
         };
         
-        QString name();             /*!< Nom du paquet */
-        QString version();          /*!< Version du paquet */
+        QString name();
+        QString version();
         QString newerVersion();     /*!< Version d'une éventuelle mise à jour, QString() si paquet à jour */
-        QString maintainer();       /*!< Mainteneur du paquet */
-        QString shortDesc();        /*!< Description courte */
-        QString source();           /*!< Nom du paquet source (libinitng vient d'initng) */
-        QString upstreamUrl();      /*!< Url du site web du projet à la base de l'application empaquetée */
-        QString repo();             /*!< Dépôt duquel vient le paquet */
-        QString section();          /*!< Section du paquet (base, devel, games, etc) */
-        QString distribution();     /*!< Distribution du paquet (experimental, stable, old, testing) */
-        QString license();          /*!< License du paquel (GPLv2, GPLv3, BSD, Apache, etc) */
-        QString arch();             /*!< Architecture du paquet (i686, x86_64, all, src) */
+        QString maintainer();
+        QString shortDesc();        
+        QString source();           
+        QString upstreamUrl();      
+        QString repo();
+        QString section();
+        QString distribution();
+        QString license();
+        QString arch();
         
         /** 
             @brief Récupère l'url d'un paquet
@@ -176,9 +135,9 @@ class DatabasePackage : public Package
             @return Url du paquet, calculée correctement.
         */
         QString url(UrlType type = DatabasePackage::Binary);
-        QByteArray packageHash();   /*!< Hash SHA1 du fichier .tlz, pour vérifier son authenticité */
-        QByteArray metadataHash();  /*!< Hash SHA1 des métadonnées du paquet */
-        int flags();                /*!< Flags du paquet */
+        QByteArray packageHash();
+        QByteArray metadataHash();
+        int flags();
         
         /**
             @brief Définis les flags d'un paquet
@@ -202,56 +161,28 @@ class DatabasePackage : public Package
         */
         void setFlags(int flags);
         
-        QDateTime installedDate();  /*!< Date d'installation du paquet, indéfini si non-installé */
-        int installedBy();          /*!< UID de l'utilisateur ayant installé le paquet */
-        int used();                 /*!< Nombre de paquets installés qui dépendent de ce paquet */
+        QDateTime installedDate();
+        int installedBy();
+        int used();
         int index() const;          /*!< @internal */
         
-        int downloadSize();         /*!< Taille du fichier .tlz à télécharger, en octets */
-        int installSize();          /*!< Taille du paquet une fois installée. PackageSystem::fileSizeFormat pour formatter tout ça) */
+        int downloadSize();
+        int installSize();
 
         QList<Package *> versions();    /*!< Liste de Package donc chacun est une version différente de ce paquet */
-        QList<Depend *> depends();      /*!< Liste de Depend représentant les dépendances de ce paquet */
-        QList<PackageFile *> files();   /*!< Liste des fichiers du paquet */
+        QList<Depend *> depends();
+        QList<PackageFile *> files();
         
         bool fastNameCompare(Package *other);
         bool fastVersionCompare(Package *other);
         bool fastNameVersionCompare(Package *other);
         
-        /**
-            @brief Enregistrer l'état du paquet
-            @internal
-            
-            Quand un paquet est installé, il doit être enregistré dans la base de donnée binaire comme l'étant.
-            Cette fonction le fait
-            
-            @param idate : TimeStamp UNIX de la date d'installation
-            @param iby : UID de l'utilisateur ayant installé le paquet
-            @param flags : Flags du paquet à enregistrer
-        */
         void registerState(int idate, int iby, int flags);
 
     signals:
-        /**
-            @brief Le paquet est téléchargé
-            
-            Émis lorsque le paquet a fini d'être télécharge. tlzFileName contient alors le nom d'un fichier
-            .tlz dans le système de fichier local.
-            
-            @sa tlzFileName
-            @param success true si le téléchargement a réussi en entier, false sinon
-        */
         void downloaded(bool success);
 
     private slots:
-        /**
-            @brief Téléchargement du fichier terminé
-            @internal
-            
-            Le fichier .tlz est téléchargé. Ce slot émet downloaded
-            
-            @param md Logram::ManagedDownload représentant le téléchargement
-        */
         void downloadEnded(Logram::ManagedDownload *md);
 
     private:

@@ -20,6 +20,11 @@
  * Boston, MA  02110-1301  USA
  */
 
+/**
+ * @file package.h
+ * @brief Déclaration de la classe Package
+ */
+
 #ifndef __PACKAGE_H__
 #define __PACKAGE_H__
 
@@ -43,6 +48,17 @@ class Depend;
 class PackageFile;
 class DatabasePackage;
 
+/**
+ * @brief Classe de base de la gestion des paquets
+ * 
+ * Dans LPM, les paquets peuvent provenir de la base de donnée ou de fichiers.
+ * Cette classe abstraite permet de gérer un paquet d'où qu'il vienne. Elle
+ * contient des propriétés permettant aux scripts QtScript d'utiliser les 
+ * paquets.
+ * 
+ * Cette classe a avant tout un but informatif, et ne permet que peu de choses
+ * modifiant le paquet ou son état (téléchargement, installation).
+ */
 class Package : public QObject
 {
     Q_OBJECT
@@ -67,76 +83,298 @@ class Package : public QObject
     Q_PROPERTY(int installSize READ installSize)
     
     public:
+        /**
+         * @brief Constructeur par défaut
+         * 
+         * Constructeur par défaut de Package. Ne peut être appelé que par une
+         * classe dérivée.
+         * 
+         * @param ps PackageSystem en cours d'utilisation
+         * @param psd DatabaseReader de ce PackageSystem
+         * @param _action Action sur le paquet (installation, etc)
+         */
         Package(PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
+        
+        /**
+         * @overload
+         */
         Package(QObject *parent, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
+        
+        /**
+         * @brief Constructeur de copie
+         */
         Package(const Package &other);
+        
+        /**
+         * @brief Destructeur
+         */
         virtual ~Package();
         
+        /**
+         * @brief Origine du paquet
+         */
         enum Origin
         {
-            Database,
-            File
+            Database,   /*!< Le paquet provient de la base de donnée */
+            File        /*!< Le paquet provient d'un fichier */
         };
 
         // Interface
+        /**
+         * @brief Télécharge le paquet
+         *  
+         * Télécharge le fichier .tlz du paquet binaire, et le place dans le
+         * cache Setup. 
+         *  
+         * Cette fonction n'est pas bloquante, elle retourne sitôt le
+         * téléchargement commencé.
+         *  
+         * Une fois le paquet téléchargé (downloadEnded() est émis), vous
+         * pouvez récupérer le nom complet du fichier .tlz local en appelant
+         * tlzFileName().
+         *  
+         * @sa tlzFileName
+         * @return true si le téléchargement est bien lancé, false sinon
+         */
         virtual bool download() = 0;
+        
+        /**
+         * @brief Nom du fichier .tlz récupéré
+         *  
+         * Une fois le fichier .tlz du paquet téléchargé par download(),
+         * appelez cette fonction pour récupérer son nom.
+         *  
+         * @sa download
+         * @return Nom du fichier .tlz téléchargé
+         */
         virtual QString tlzFileName() = 0;
+        
+        /**
+         * @brief Permet de savoir si le paquet est valide
+         *  
+         * Il se peut que des erreurs se soient produites dans le
+         * constructeur, qui ne peut pas retourner une valeur (false ici).
+         * Cette fonction renvoie false si le paquet n'a pu être construit.
+         * PackageSystem::lastError() est placé de manière appropriée.
+         *  
+         * @return true si le paquet est prêt à être utilisé, false sinon
+         */
         virtual bool isValid() = 0;
+        
+        /**
+         * @brief Renvoie l'origine du paquet, Package::Database ici
+         *  
+         * Permet de savoir si un Package vient de la base de donnée ou d'un
+         * fichier.
+         *  
+         * @return Origine du paquet
+         */
         virtual Origin origin() = 0;
         
-        virtual QString name() = 0;
-        virtual QString version() = 0;
-        virtual QString maintainer() = 0;
-        virtual QString shortDesc() = 0;
-        virtual QString source() = 0;
-        virtual QString upstreamUrl() = 0;
-        virtual QString repo() = 0;
-        virtual QString section() = 0;
-        virtual QString distribution() = 0;
-        virtual QString license() = 0;
-        virtual QString arch() = 0;
-        virtual QByteArray metadataHash() = 0;
-        virtual QByteArray packageHash() = 0;
-        virtual int flags() = 0;
-        virtual int used() = 0;
+        virtual QString name() = 0;         /*!< Nom du paquet */
+        virtual QString version() = 0;      /*!< Version du paquet */
+        virtual QString maintainer() = 0;   /*!< Mainteneur du paquet */
+        virtual QString shortDesc() = 0;    /*!< Description courte */
+        virtual QString source() = 0;       /*!< Nom du paquet source */
+        virtual QString upstreamUrl() = 0;  /*!< Url du site web du projet à la base de l'application empaquetée */
+        virtual QString repo() = 0;         /*!< Dépôt duquel vient le paquet */
+        virtual QString section() = 0;      /*!< Section du paquet (base, devel, games, etc) */
+        virtual QString distribution() = 0; /*!< Distribution du paquet (experimental, stable, old, testing) */
+        virtual QString license() = 0;      /*!< License du paquel (GPLv2, GPLv3, BSD, Apache, etc) */
+        virtual QString arch() = 0;         /*!< Architecture du paquet (i686, x86_64, all, src) */
+        virtual QByteArray metadataHash() = 0; /*!< Hash SHA1 des métadonnées du paquet */
+        virtual QByteArray packageHash() = 0; /*!< Hash SHA1 du fichier .tlz, pour vérifier son authenticité */
+        virtual int flags() = 0;            /*!< Flags du paquet */
+        virtual int used() = 0;             /*!< Compteur d'utilisation (nombre de paquets en dépendant installés) */
         
-        virtual int downloadSize() = 0;
-        virtual int installSize() = 0;
+        virtual int downloadSize() = 0;     /*!< Taille à télécharger */
+        virtual int installSize() = 0;      /*!< Taille installée */
         
-        virtual QList<Depend *> depends() = 0;
-        virtual QList<PackageFile *> files() = 0;
-        virtual QDateTime installedDate() = 0;
-        virtual int installedBy() = 0;
+        virtual QList<Depend *> depends() = 0; /*!< Liste des dépendances */
+        virtual QList<PackageFile *> files() = 0; /*!< Liste des fichiers */
+        virtual QDateTime installedDate() = 0; /*!< Date d'installation du paquet, indéfini si non-installé */
+        virtual int installedBy() = 0;      /*!< UID de l'utilisateur ayant installé le paquet */
         
-        // Fonctions permettant à databasePackage d'utiliser les index de chaîne
+        /**
+         * @brief Comparaison rapide du nom
+         * 
+         * Pour les paquets en base de donnée, il existe une manière très
+         * rapide de comparer leur nom ou version : comparer les index de
+         * leurs chaînes. Cela évite des appels répétitifs à
+         * QString::operator==().
+         * 
+         * @param other Package à comparer. Comparaison rapide effectuée si other->origin() == Package::Database.
+         * @return true si les noms sont les mêmes, false sinon
+         */
         virtual bool fastNameCompare(Package *other) = 0;
-        virtual bool fastVersionCompare(Package *other) = 0;
-        virtual bool fastNameVersionCompare(Package *other) = 0;
+        virtual bool fastVersionCompare(Package *other) = 0; /*!< Comparaison rapide de la version */
+        virtual bool fastNameVersionCompare(Package *other) = 0; /*!< Comparaison rapide du nom et de la version */
         
+        /**
+         * @brief Enregistrer l'état du paquet
+         * @internal
+         *  
+         * Quand un paquet est installé, il doit être enregistré dans la base
+         * de donnée binaire comme l'étant. Cette fonction le fait.
+         *  
+         * @param idate : TimeStamp UNIX de la date d'installation
+         * @param iby : UID de l'utilisateur ayant installé le paquet
+         * @param flags : Flags du paquet à enregistrer
+         */
         virtual void registerState(int idate, int iby, int flags) = 0;
         
         // Commun à tous les types de paquets
+        /**
+         * @brief Procède à l'installation/suppression du paquet
+         * 
+         * Lance un QThread chargé d'installer le paquet. Ce paquet doit
+         * avoir été téléchargé à l'aide de download() pour que ça fonctionne.
+         */
         void process();
-        Solver::Action action();
-        void setAction(Solver::Action act);
+        Solver::Action action();        /*!< Action demandée au paquet */
+        void setAction(Solver::Action act); /*!< Définit l'action du paquet */
+        
+        /**
+         * @brief Métadonnées du paquet
+         * 
+         * Fonction utilitaire permettant d'obtenir les métadonnées. Cette
+         * fonction est équivalente à
+         * 
+         * @code
+         * PackageMetaData *md = new PackageMetaData(packageSystem);
+         * md->bindPackage(package);
+         * 
+         * Q_ASSERT(md->error() == false);
+         * @endcode
+         * @return Métadonnées du paquet
+         */
         PackageMetaData *metadata();
         
         // Attributs communs
+        /**
+         * @brief Renseigne si l'utilisateur veut ce paquet
+         * 
+         * LPM supporte la suppression automatique des paquets installés
+         * comme dépendance et non pas explicitement par l'utilisateur.
+         * 
+         * La propriété wanted de Package permet de renseigner ou de savoir
+         * si un paquet est installé comme dépendance automatique (@b false)
+         * ou manuellement par l'utilisateur (@b true).
+         * 
+         * @param wanted true si l'utilisateur installe ce paquet, false si
+         *               installé comme dépendance
+         */
         void setWanted(bool wanted);
+        
+        /**
+         * Permet de savoir si l'utilisateur veut ce paquet
+         * @sa setWanted
+         * @return true si le paquet est voulu.
+         */
         bool wanted() const;
 
         // Utilitaire
+        /**
+         * @brief Affichage lisible par un humain des dépendances
+         * 
+         * Transforme une liste de Depend en une chaîne de caractère. Chaque
+         * dépendance, dont le type correspond à @p type, est ajoutée à cette
+         * chaîne, séparée de la précédante par un ; .
+         * 
+         * Chaque dépendance est au format «[pattern]([op][version])».
+         * 
+         * Exemples :
+         * 
+         *  - libncurses5\>=5.7
+         *  - mesa=git; qt\>=4.7.2; foobar
+         * 
+         * @code
+         * Package *pkg = package();
+         * 
+         * QString rs = Package::dependsToString(pkg->depends(), DEPEND_TYPE_CONFLICT);
+         * 
+         * qDebug() << rs; // Affiche les conflits de pkg
+         * @endcode
+         * 
+         * @note Ce format est celui utilisé par les fichiers texte récupérés
+         *       des serveurs de Logram, ainsi que par
+         *       installed_packages.list.
+         * 
+         * @param deps liste des dépendances
+         * @param type type que doivent avoir les dépendances pour être
+         *             retenues dans la liste
+         * @return liste des dépendances formattée.
+         */
         static QString dependsToString(const QList<Depend *> &deps, int type);
         
         // Mise à jour
+        /**
+         * @brief Paquet en version plus récente
+         * 
+         * Lorsque action() vaut Solver::Update, ce champs permet d'obtenir
+         * le paquet vers lequel ce paquet va être mis à jour.
+         * 
+         * @return Paquet en version plus récente
+         */
         DatabasePackage *upgradePackage();
+        
+        /**
+         * @brief Définit le paquet en version plus récente
+         * 
+         * Cette fonction est utilisée par DatabaseReader quand on lui
+         * demande de trouver les paquets pouvant être mis à jour.
+         * 
+         * @param i index du paquet dans la base de donnée
+         * @internal
+         */
         void setUpgradePackage(int i);
+        
+        /**
+         * @brief Définir le paquet en version plus récente
+         * 
+         * Cette fonction est utilisée par Solver pour informer un paquet
+         * qu'il sera mis à jour vers une autre version.
+         * 
+         * @param pkg Paquet en version plus récente
+         * @internal
+         */
         void setUpgradePackage(DatabasePackage *pkg);
 
     signals:
+        /**
+         * @brief Le paquet est installé
+         * 
+         * Ce signal est émis lorsque le paquet est installé ou supprimé.
+         * Le thread qui a été lancé par process() est alors supprimé.
+         * 
+         * @param success true si tout s'est bien passé, false sinon.
+         */
         void proceeded(bool success);
+        
+        /**
+         * @brief Le paquet est téléchargé
+         *  
+         * Émis lorsque le paquet a fini d'être télécharge. tlzFileName
+         * contient alors le nom d'un fichier .tlz dans le système de fichier
+         * local.
+         *  
+         * @sa tlzFileName
+         * @param success true si le téléchargement a réussi en entier, 
+         *                false sinon
+         */
         void downloaded(bool success);
         
+        /**
+         * @brief Communication
+         * @internal
+         * 
+         * Ce signal permet de savoir si un paquet émmet une communication. Il
+         * est préférable d'utiliser PackageSystem::communication qui est
+         * global à tous les paquets.
+         * 
+         * @param sender ce paquet
+         * @param comm communication
+         */
         void communication(Logram::Package *sender, Logram::Communication *comm);
 
     private slots:
