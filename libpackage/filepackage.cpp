@@ -624,6 +624,21 @@ int FilePackage::used()
     return 0;
 }
 
+bool FilePackage::fastNameCompare(Package *other)
+{
+    return (name() == other->name());
+}
+
+bool FilePackage::fastVersionCompare(Package *other)
+{
+    return (version() == other->version());
+}
+
+bool FilePackage::fastNameVersionCompare(Package *other)
+{
+    return (name() == other->name() && version() == other->version());
+}
+
 int FilePackage::downloadSize()
 {
     return d->size;

@@ -46,6 +46,7 @@ struct DatabasePackage::Private
     int index;
     PackageSystem *ps;
     DatabaseReader *psd;
+    _Package *dbpkg;
 
     bool depok;
     QList<Depend *> deps;
@@ -162,6 +163,7 @@ DatabasePackage::DatabasePackage(int index, PackageSystem *ps, DatabaseReader *p
     d->psd = psd;
     d->depok = false;
     d->waitingMd = 0;
+    d->dbpkg = psd->package(index);
     
     connect(ps, SIGNAL(downloadEnded(Logram::ManagedDownload *)), this, SLOT(downloadEnded(Logram::ManagedDownload *)));
 }
@@ -175,6 +177,7 @@ DatabasePackage::DatabasePackage(QObject *parent, int index, PackageSystem *ps, 
     d->psd = psd;
     d->depok = false;
     d->waitingMd = 0;
+    d->dbpkg = psd->package(index);
     
     connect(ps, SIGNAL(downloadEnded(Logram::ManagedDownload *)), this, SLOT(downloadEnded(Logram::ManagedDownload *)));
 }
@@ -198,18 +201,15 @@ QString DatabasePackage::tlzFileName()
 
 void DatabasePackage::registerState(int idate, int iby, int flags)
 {
-    _Package *pkg = d->psd->package(d->index);
-    pkg->idate = idate;
-    pkg->iby = iby;
-    pkg->flags = flags;
+    d->dbpkg->idate = idate;
+    d->dbpkg->iby = iby;
+    d->dbpkg->flags = flags;
 }
 
 bool DatabasePackage::download()
 {
     QString fname, u;
     Repository::Type type;
-    
-    // TODO: Utiliser le meilleur mirroir (garder une liste des mirroirs qu'on utilise déjà et prendre le moins utilisé, pour optimiser les téléchargements en parallèle)
     
     if (action() == Solver::Remove || action() == Solver::Purge)
     {
@@ -319,7 +319,7 @@ void DatabasePackage::downloadEnded(ManagedDownload *md)
 
 bool DatabasePackage::isValid()
 {
-    return d->index != -1;
+    return (d->index != -1 && d->dbpkg != 0);
 }
 
 int DatabasePackage::index() const
@@ -329,7 +329,7 @@ int DatabasePackage::index() const
 
 QList<Package *> DatabasePackage::versions()
 {
-    QList<int> pkgs = d->psd->packagesOfString(0, d->psd->package(d->index)->name, DEPEND_OP_NOVERSION);
+    QList<int> pkgs = d->psd->packagesOfString(0, d->dbpkg->name, DEPEND_OP_NOVERSION);
     QList<Package *> rs;
 
     foreach(int pkg, pkgs)
@@ -370,18 +370,10 @@ QList<Depend *> DatabasePackage::depends()
 }
 
 #define PKG_STR_ATTR(translate, attr) \
-    _Package *pkg = d->psd->package(d->index); \
-    \
-    if (pkg == 0) return QString(); \
-    \
-    return QString(d->psd->string(translate, pkg->attr));
+    return QString(d->psd->string(translate, d->dbpkg->attr));
 
 #define PKG_QBA_ATTR(translate, attr) \
-    _Package *pkg = d->psd->package(d->index); \
-    \
-    if (pkg == 0) return QByteArray(); \
-    \
-    return QByteArray(d->psd->string(translate, pkg->attr));
+    return QByteArray(d->psd->string(translate, d->dbpkg->attr));
 
 QString DatabasePackage::name()
 {
@@ -446,6 +438,48 @@ QByteArray DatabasePackage::packageHash()
 QByteArray DatabasePackage::metadataHash()
 {
     PKG_QBA_ATTR(false, mtd_hash)
+}
+
+bool DatabasePackage::fastNameCompare(Package *other)
+{
+    if (other->origin() == Package::Database)
+    {
+        DatabasePackage *dpkg = (DatabasePackage *)other;
+        
+        return (d->dbpkg->name == dpkg->d->dbpkg->name);
+    }
+    else
+    {
+        return (name() == other->name());
+    }
+}
+
+bool DatabasePackage::fastVersionCompare(Package *other)
+{
+    if (other->origin() == Package::Database)
+    {
+        DatabasePackage *dpkg = (DatabasePackage *)other;
+        
+        return (d->dbpkg->version == dpkg->d->dbpkg->version);
+    }
+    else
+    {
+        return (version() == other->version());
+    }
+}
+
+bool DatabasePackage::fastNameVersionCompare(Package *other)
+{
+    if (other->origin() == Package::Database)
+    {
+        DatabasePackage *dpkg = (DatabasePackage *)other;
+        
+        return (d->dbpkg->name == dpkg->d->dbpkg->name && d->dbpkg->version && dpkg->d->dbpkg->version);
+    }
+    else
+    {
+        return (name() == other->name() && version() == other->version());
+    }
 }
 
 QList<PackageFile *> DatabasePackage::files()

@@ -568,7 +568,7 @@ PackageList *Solver::list()
                     
                     if (other != node &&
                         other->package->origin() == Package::Database &&
-                        other->package->name() == node->package->name() &&
+                        node->package->fastNameCompare(other->package) &&
                         other->package->action() != node->package->action()
                     )
                     {
@@ -660,8 +660,6 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
     if (node->package)
     {
         Solver::Action myAction = node->package->action();
-        QString myName = node->package->name();
-        QString myVersion = node->package->version();
         
         foreach (Solver::Node *nd, nodeList)
         {
@@ -669,9 +667,9 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
             
             if (nd == node) continue;
             
-            if (nd->package->name() == myName)
+            if (node->package->fastNameCompare(nd->package))
             {
-                if (nd->package->version() == myVersion)
+                if (node->package->fastVersionCompare(nd->package))
                 {
                     if (otherAction == myAction)
                     {

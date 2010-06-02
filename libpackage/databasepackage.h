@@ -214,6 +214,10 @@ class DatabasePackage : public Package
         QList<Depend *> depends();      /*!< Liste de Depend représentant les dépendances de ce paquet */
         QList<PackageFile *> files();   /*!< Liste des fichiers du paquet */
         
+        bool fastNameCompare(Package *other);
+        bool fastVersionCompare(Package *other);
+        bool fastNameVersionCompare(Package *other);
+        
         /**
             @brief Enregistrer l'état du paquet
             @internal

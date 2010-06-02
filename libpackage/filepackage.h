@@ -94,6 +94,10 @@ class FilePackage : public Package
         int installedBy();
         int used();
         
+        bool fastNameCompare(Package *other);
+        bool fastVersionCompare(Package *other);
+        bool fastNameVersionCompare(Package *other);
+        
         int downloadSize();
         int installSize();
 

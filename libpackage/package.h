@@ -108,6 +108,11 @@ class Package : public QObject
         virtual QDateTime installedDate() = 0;
         virtual int installedBy() = 0;
         
+        // Fonctions permettant à databasePackage d'utiliser les index de chaîne
+        virtual bool fastNameCompare(Package *other) = 0;
+        virtual bool fastVersionCompare(Package *other) = 0;
+        virtual bool fastNameVersionCompare(Package *other) = 0;
+        
         virtual void registerState(int idate, int iby, int flags) = 0;
         
         // Commun à tous les types de paquets
