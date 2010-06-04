@@ -888,6 +888,13 @@ void App::manageResults(Solver *solver)
     int instSize = 0, dlSize = 0;
     char in[2];
     
+    // Si la liste est vide, on n'a rien à faire
+    if (packages->count() == 0)
+    {
+        cout << COLOR(tr("Les changements que vous demandez sont déjà appliqués. Essayez -nI -nD pour les forcer"), "34") << endl;
+        return;
+    }
+    
     cout << COLOR(tr("Paquets qui seront installés ou supprimés :"), "36") << endl;
     cout << qPrintable(tr("    Légende : "))
          << COLOR(tr("I: Installé "), "34")
