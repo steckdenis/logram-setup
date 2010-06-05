@@ -698,6 +698,119 @@ bool Worker::updateDatabase(PackageSystem* &ps)
     return true;
 }
 
+void Worker::solverError(PackageSystem *ps, Solver *solver, const QString &defaultString)
+{
+    // Trouver le noeud du solveur qui a une erreur
+    Solver::Node *errorNode = solver->errorNode();
+    
+    if (errorNode == 0)
+    {
+        // Ce n'est pas un noeud qui a provoqué l'erreur, voir si ce n'est pas PackageSystem
+        PackageError *err = ps->lastError();
+        
+        if (err != 0)
+        {
+            log(Error, App::psErrorString(ps));
+            return;
+        }
+        else
+        {
+            // Erreur par défaut
+            log(Error, defaultString);
+            return;
+        }
+    }
+    
+    // On a un noeud qui a fait des erreurs. Descendre dans son arborescence s'il est en childError
+    Solver::Error *err = errorNode->error;
+    
+    while (err->type == Solver::Error::ChildError && err->other != 0)
+    {
+        if (err->other->error == 0)
+        {
+            log(Error, "Unknown error : err->other->error = 0");
+            return;
+        }
+        
+        errorNode = err->other;
+        err = errorNode->error;
+    }
+    
+    // err est l'erreur la plus profonde, trouver son nom
+    QString pkgname, othername;
+    
+    if (errorNode->package)
+    {
+        pkgname = errorNode->package->name() + "~" + errorNode->package->version();
+    }
+    
+    if (err->other && err->other->package)
+    {
+        othername = err->other->package->name() + "~" + err->other->package->version();
+    }
+    
+    // En fonction du type
+    PackageError *perr;
+    
+    switch (err->type)
+    {
+        case Solver::Error::NoDeps:
+            log(Error, "Unable to find the dependency matching " + err->pattern);
+            return;
+       
+        case Solver::Error::InternalError:
+            perr = ps->lastError();
+        
+            if (perr != 0)
+            {
+                log(Error, App::psErrorString(ps));
+                return;
+            }
+            else
+            {
+                // Erreur par défaut
+                log(Error, defaultString);
+                return;
+            }
+            
+        case Solver::Error::ChildError:
+            if (!pkgname.isNull())
+            {
+                log(Error, "Every choice necessary to the installation of " + pkgname + " cannot be installed");
+                return;
+                
+                // TODO: Explorer les enfants d'errorNode pour lister les erreurs.
+            }
+            else
+            {
+                log(Error, "Every choice necessary to install the build dependencies cannot be installed");
+                return;
+            }
+            
+        case Solver::Error::SameNameSameVersionDifferentAction:
+            log(Error, "The package " + pkgname + " should be installed and removed at the same time");
+            return;
+            
+        case Solver::Error::InstallSamePackageDifferentVersion:
+            log(Error, "The packages " + pkgname + " and " + othername + " should be installed at the same time");
+            return;
+            
+        case Solver::Error::UninstallablePackageInstalled:
+            log(Error, "The package " + pkgname + " must be installed but is uninstallable");
+            return;
+            
+        case Solver::Error::UnremovablePackageRemoved:
+            log(Error, "The package " + pkgname + " must be removed but is unremoveable");
+            return;
+            
+        case Solver::Error::UnupdatablePackageUpdated:
+            log(Error, "The package " + pkgname + " must be updated but is unupdatable");
+            return;
+    }
+    
+    log(Error, defaultString);
+}
+
 bool Worker::installBuildDeps(PackageSystem *ps)
 {
     if (!ps->init())     // On peut maintenant qu'on a les fichiers de la BDD
@@ -740,91 +853,109 @@ bool Worker::installBuildDeps(PackageSystem *ps)
         delete ps;
         return false;
     }
-#if 0
-    // Gérer les résultats
-    PackageList *packages;
-    int tot = solver->results();
-    int index = -1;
     
-    for (int i=0; i<tot; ++i)
+    if (!solver->weight())
     {
-        packages = solver->result(i);
-        
-        if (!packages->wrong())
-        {
-            index = i;
-            break;
-        }
-    }
-    
-    if (index == -1)
-    {
-        log(Error, "Unable to handle the dependencies of the package : " + depends + " | conflicts : " + conflicts);
-        
-        for (int j=0; j<tot; ++j)
-        {
-            packages = solver->result(j);
-            
-            log(Error, QString("Tried solution %1 :").arg(j+1));
-            
-            for (int i=0; i<packages->errors(); ++i)
-            {
-                PackageList::Error *err = packages->error(i);
-                QString s;
-                
-                switch (err->type)
-                {
-                    case PackageList::Error::SameNameSameVersionDifferentAction:
-                        s = QString("%1~%2 wants to be installed and removed")
-                                    .arg(err->package)
-                                    .arg(err->version);
-                        break;
-                        
-                    case PackageList::Error::SameNameDifferentVersionSameAction:
-                        s = QString("%1 wants to be installed or removed at the versions %2 and %3")
-                                    .arg(err->package)
-                                    .arg(err->version)
-                                    .arg(err->otherVersion);
-                        break;
-                        
-                    case PackageList::Error::NoPackagesMatchingPattern:
-                        s = QString("Unable to find a package matching %1 to satisfy %2~%3")
-                                    .arg(err->pattern)
-                                    .arg(err->package)
-                                    .arg(err->version);
-                        break;
-                        
-                    case PackageList::Error::UninstallablePackageInstalled:
-                        s = QString("%1~%2 wants to be installed but is tagged non-installable")
-                                    .arg(err->package)
-                                    .arg(err->version);
-                        break;
-                        
-                    case PackageList::Error::UnremovablePackageRemoved:
-                        s = QString("%1~%2 wants to be removed but is tagged non-removable")
-                                    .arg(err->package)
-                                    .arg(err->version);
-                        break;
-                        
-                    case PackageList::Error::UnupdateablePackageUpdated:
-                        s = QString("%1~%2 wants to be updated to %3 but is tagged non-updateable")
-                                    .arg(err->package)
-                                    .arg(err->version)
-                                    .arg(err->otherVersion);
-                        break;
-                }
-                
-                log(Error, " >> " + s);
-            }
-        }
+        log(Error, "Weighting of the tree failed");
+        psError(ps);
         
         delete solver;
         delete ps;
         return false;
     }
     
+    // Gérer les résultats
+    bool ended = true;
+    
+    if (!solver->beginList(ended))
+    {
+        solverError(ps, solver, "Unknown error in beginList()");
+        
+        delete solver;
+        delete ps;
+        return false;
+    }
+    
+    PackageList *packages;
+ 
+    while (!ended)
+    {
+        // On a un choix à faire : prendre la version
+        // la plus élevée à chaque fois.
+        int maxVerIndex = -1;
+        QList<Solver::Node *> choices = solver->choices();
+        
+        for (int i=0; i<choices.count(); ++i)
+        {
+            if (maxVerIndex == -1)
+            {
+                maxVerIndex = i;
+            }
+            else
+            {
+                Solver::Node *maxNode = choices.at(maxVerIndex);
+                Solver::Node *node = choices.at(i);
+                
+                if (!maxNode || !maxNode->package || !node || !node->package)
+                {
+                    continue;
+                }
+                
+                if (PackageSystem::compareVersions(node->package->version().toUtf8(), maxNode->package->version().toUtf8()) == 1)
+                {
+                    // Le noeud a une version supérieure à l'autre
+                    maxVerIndex = i;
+                }
+            }
+        }
+        
+        // Vérifier qu'on a un choix
+        if (maxVerIndex == -1)
+        {
+            log(Error, "Cannot find a reasonable package to install");
+            
+            for (int i=0; i<choices.count(); ++i)
+            {
+                Solver::Node *node = choices.at(i);
+                
+                if (node && node->package)
+                {
+                    log(Message, "Tried " + node->package->name() + "~" + node->package->version());
+                }
+                else
+                {
+                    log(Message, "Tried a null node (bug)");
+                }
+            }
+            
+            delete solver;
+            delete ps;
+            return false;
+        }
+        
+        // Continuer
+        if (!solver->continueList(maxVerIndex, ended))
+        {
+            solverError(ps, solver, "continueList impossible");
+            
+            delete solver;
+            delete ps;
+            return false;
+        }
+    }
+    
     // Installer les paquets
-    packages = solver->result(index);
+    packages = solver->list();
+    
+    if (packages->count() == 0)
+    {
+        log(Error, "No packages to install");
+        
+        delete packages;
+        delete solver;
+        delete ps;
+        return false;
+    }
     
     if (!packages->process())
     {
@@ -835,8 +966,6 @@ bool Worker::installBuildDeps(PackageSystem *ps)
         delete ps;
         return false;
     }
-    
-#endif
     
     delete solver;
     delete ps;
@@ -1068,6 +1197,12 @@ bool Worker::buildDepends()
                 logIds.append(query.value(0).toInt());
             }
         }
+    }
+    
+    // Si rien à mettre à jour, quitter
+    if (logIds.count() == 0)
+    {
+        return true;
     }
     
     // Mettre le flag REBUILD à ces résultats

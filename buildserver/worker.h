@@ -38,6 +38,7 @@ class App;
 
 namespace Logram {
     class RepositoryManager;
+    class Solver;
 }
 
 class Worker : public QObject
@@ -80,6 +81,8 @@ class Worker : public QObject
         bool cleanupTemp();
         bool recurseCopy(const QString &from, const QString &to);
         void error(bool cleanup = true);
+        
+        void solverError(Logram::PackageSystem *ps, Logram::Solver *solver, const QString &defaultString);
         
     private slots:
         void progress(Logram::Progress *progress);

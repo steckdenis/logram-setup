@@ -1,39 +1,11 @@
 function weight(list)
 {
-    var w;
-    w = 0;
+    var node;
     
-    regex = /\D+/g
-    regex.compile(regex)
-    
-    for (var i=0; i<list.length; i++)
+    for (var i=1; i<list.length; i++)
     {
-        pkg = list[i];
+        node = list[i];
         
-        // Ajouter le poids de la version (plus c'est récent, mieux c'est
-        str = pkg.version
-        parts = str.split(regex)
-        var summ = 0;
-
-        for (var i=0; i<parts.length; i++)
-        {
-            part = parts[i];
-
-            part *= 100;
-
-            for (var j=0; j<i; j++)
-            {
-                part /= 100;
-            }
-
-            summ += part;
-        }
-
-        w += summ;
+        node.weight = 0; /* On n'utilise que les versions */
     }
-    
-    // Moyenne
-    w = w / list.length;
-    
-    return -w;
 }
