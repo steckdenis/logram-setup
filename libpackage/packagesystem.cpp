@@ -98,6 +98,7 @@ Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
     d->set = 0;
     d->ipackages = 0;
     d->firstFile = 0;
+    d->triggers = true;
     
     d->processOutProgress = startProgress(Progress::ProcessOut, 1);
     
