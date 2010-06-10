@@ -636,12 +636,29 @@ DatabaseDepend::~DatabaseDepend()
 
 QString DatabaseDepend::name()
 {
-    return d->psd->string(false, d->dep->pkgname);
+    if (d->dep->type != DEPEND_TYPE_REVDEP)
+    {
+        return d->psd->string(false, d->dep->pkgname);
+    }
+    else
+    {
+        // dep->pkgname = index du paquet de la revdep
+        _Package *pkg = d->psd->package(d->dep->pkgname);
+        return d->psd->string(false, pkg->name);
+    }
 }
 
 QString DatabaseDepend::version()
 {
-    return d->psd->string(false, d->dep->pkgver);
+    if (d->dep->type != DEPEND_TYPE_REVDEP)
+    {
+        return d->psd->string(false, d->dep->pkgver);
+    }
+    else
+    {
+        _Package *pkg = d->psd->package(d->dep->pkgname);
+        return d->psd->string(false, pkg->version);
+    }
 }
 
 int8_t DatabaseDepend::type()

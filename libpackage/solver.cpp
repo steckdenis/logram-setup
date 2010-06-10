@@ -1170,12 +1170,8 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                 // qu'on peut installer à la place.
                 QList<int> pkgIndexes;
                 
-                // Premier enregistrement : supprimer la revdep
-                pkgIndexes = psd->packagesOfString(ddep->pkgver, ddep->pkgname, ddep->op);
-                
-                // pkgIndexes contient obligatoirement un paquet, c'est databasewriter qui s'en assure.
-                // C'est une dépendance de type paquet=version.
-                Q_ASSERT(pkgIndexes.count() == 1);
+                // ddep->pkgname = index du paquet
+                pkgIndexes.append(ddep->pkgname);
                 
                 // Paquet dans la base de donnée
                 DatabasePackage *dpkg = (DatabasePackage *)package;

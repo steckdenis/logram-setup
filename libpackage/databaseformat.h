@@ -81,6 +81,7 @@ struct _Package
 
     int32_t idate;      /*!< Timestamp de l'installation */
     int32_t iby;        /*!< UID de l'utilisateur ayant installé le paquet */
+    int32_t index;      /*!< Index du paquet (utilisé par databasewriter) */
 };
 
 struct _File
@@ -123,8 +124,8 @@ struct _Depend
 {
     int8_t type;        /*!< Type de dépendace, voir DEPEND_TYPE_* */
     int8_t op;          /*!< Opération (=, >=, etc), voir DEPEND_OP_* */
-    int32_t pkgname;    /*!< Index de la chaîne du nom du paquet de la dépendance */
-    int32_t pkgver;     /*!< Index de la chaîne de la version du paquet de la dépendance */
+    int32_t pkgname;    /*!< Index de la chaîne du nom du paquet de la dépendance, ou index du paquet si REVDEP */
+    int32_t pkgver;     /*!< Index de la chaîne de la version du paquet de la dépendance, ou 0 si REVDEP */
 };
 
 /**

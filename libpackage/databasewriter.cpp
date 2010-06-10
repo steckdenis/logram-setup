@@ -371,8 +371,17 @@ void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteAr
             depend = new _Depend;
             depend->type = type;
             depend->op = DEPEND_OP_EQ;
-            depend->pkgname = pkg->name;
-            depend->pkgver = pkg->version;
+            
+            if (type == DEPEND_TYPE_REVDEP)
+            {
+                depend->pkgname = pkg->index;
+                depend->pkgver = 0;
+            }
+            else
+            {
+                depend->pkgname = pkg->name;
+                depend->pkgver = pkg->version;
+            }
 
             // Ajouter la revdep au paquet cible
             depends[entry->pkg->deps].append(depend);
@@ -681,6 +690,7 @@ bool DatabaseWriter::rebuild()
                                 // Ajouter le paquet
                                 packages.append(pkg);
                                 index = packages.count()-1;
+                                pkg->index = index;
 
                                 // Clef utiles
                                 if (!isInstalledPackages)
