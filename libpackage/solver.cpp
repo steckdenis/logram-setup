@@ -754,7 +754,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
         else
         {
             // On a un choix. Vérifier si l'utilisateur n'a pas déjà choisi
-            int goodCount = 0, autoCount = 0;
+            int goodCount = 0, autoCount = 0, wantedCount = 0;
             
             if (child->chosenNode != -1)
             {
@@ -772,7 +772,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
             {
                 // Explorer les noeuds de l'enfant.
                 // Il est possible qu'il n'y en ai que 0 ou 1 de possible, ce qui serait facile
-                Solver::Node *nd, *goodNode;
+                Solver::Node *nd, *goodNode, *wanted;
                 
                 for (int j=0; j<child->count; ++j)
                 {
@@ -796,6 +796,12 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     {
                         goodCount++;
                         goodNode = nd;
+                        
+                        if ((nd->flags & Solver::Node::Wanted) != 0)
+                        {
+                            wantedCount++;
+                            wanted = nd;
+                        }
                     }
                 }
             
@@ -819,6 +825,17 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                 else if (goodCount == 1)
                 {
                     // Un choix où on n'a qu'une possibilité n'est plus un choix
+                    if (!exploreNode(goodNode, ended))
+                    {
+                        return false;
+                    }
+                    
+                    // Si un choix s'est présenté, retourner pour permettre à l'utilisateur de choisir.
+                    if (!ended) return true;
+                }
+                else if (node == rootNode && wantedCount == 1)
+                {
+                    // Mise à jour auto sans demander à l'utilisateur s'il veut un wanted et un pas wanted
                     if (!exploreNode(goodNode, ended))
                     {
                         return false;

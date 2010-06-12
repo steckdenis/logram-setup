@@ -804,7 +804,7 @@ void App::manageResults(Solver *solver)
                             .arg(node->minInstSize < 0 ? tr("suppression de ") : tr("installation de "))
                             .arg(PackageSystem::fileSizeFormat(qAbs(node->minInstSize)))
                             .arg(node->maxInstSize < 0 ? (node->minInstSize < 0 ? tr(" à ") : tr(" à suppression de ")) : (node->minInstSize < 0 ? tr(" à installation de ") : tr(" à ")))
-                            .arg(PackageSystem::fileSizeFormat(qAbs(node->maxInstSize))) << endl;
+                            .arg(PackageSystem::fileSizeFormat(qAbs(node->maxInstSize)))) << endl;
             }
             
             // Voir si ce choix est intéressant du côté du poids
