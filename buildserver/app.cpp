@@ -783,10 +783,16 @@ QString App::progressString(Progress *progress)
     return s;
 }
 
-void App::recurseRemove(const QString &path)
+void App::recurseRemove(const QString &path, const QString &tmpRoot)
 {
     QDir dir(path);
     QFileInfoList list = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+    
+    if (!path.startsWith(tmpRoot))
+    {
+        // Bug dangereux, le buildserver lancé en root risque de supprimer des choses qu'il ne devrait pas
+        return;
+    }
     
     for (int i=0; i<list.count(); ++i)
     {
@@ -795,7 +801,7 @@ void App::recurseRemove(const QString &path)
         // Supprimer
         if (info.isDir())
         {
-            recurseRemove(info.absoluteFilePath());
+            recurseRemove(path + "/" + info.fileName(), tmpRoot);
             
             dir.rmdir(info.fileName());
         }

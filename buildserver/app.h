@@ -84,7 +84,7 @@ class App : public QCoreApplication
         QString mailPassword() const;
         QString mailLogRoot() const;
         
-        static void recurseRemove(const QString &path);
+        static void recurseRemove(const QString &path, const QString &tmpRoot);
         static QString psErrorString(Logram::PackageSystem *ps);
         static QString progressString(Logram::Progress *progress);
         

@@ -1256,7 +1256,10 @@ bool Worker::cleanupTemp()
     }
     
     // Supprimer récursivement le contenu de tmpRoot
-    App::recurseRemove(tmpRoot);
+    if (QFile::exists(tmpRoot))
+    {
+        App::recurseRemove(tmpRoot, tmpRoot);
+    }
     
     return true;
 }
