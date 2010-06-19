@@ -104,7 +104,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             cout << "    --config <configfile>" << endl;
             cout << "        Use <configfile> as config file instead of " << qPrintable(confFileName) << endl;
             cout << "    --worker <dir>" << endl;
-            cout << "        Internal command. Chroot in <dir> and launche the equivalent of setup download && setup build && setup binaries on the file <dir>/src/metadata.xml" << endl;
+            cout << "        Internal command. Chroot in <dir> and launch the equivalent of setup download && setup build && setup binaries on the file <dir>/src/metadata.xml" << endl;
             
             quitApp = true;
             return;
@@ -420,7 +420,28 @@ void App::threadFinished()
 
 bool App::workerProcess(const QString &root)
 {
-    // Renvoyer true si erreur
+    // Avant de chrooter, il faut charger les plugins
+    PackageSystem *tps = new PackageSystem(this);
+    tps->loadConfig();
+    QList<PackageSourceInterface *> plugins;
+    
+    foreach (const QString &pluginPath, tps->pluginPaths())
+    {
+        QDir pluginDir(pluginPath);
+        
+        foreach (const QString &fileName, pluginDir.entryList(QDir::Files))
+        {
+            QPluginLoader loader(pluginDir.absoluteFilePath(fileName));
+            PackageSourceInterface *plugin = qobject_cast<PackageSourceInterface *>(loader.instance());
+            
+            if (plugin)
+            {
+                plugins.append(plugin);
+            }
+        }
+    }
+    
+    delete tps;
     
     // Chroot
     int rs = chroot(root.toUtf8().constData());
@@ -453,6 +474,7 @@ bool App::workerProcess(const QString &root)
     log(Operation, "Launching the download script");
     
     PackageSource *src = new PackageSource(ps);
+    src->addPlugins(plugins);
     
     if (!src->setMetaData(QString("metadata.xml")))
     {
@@ -785,6 +807,7 @@ QString App::progressString(Progress *progress)
 
 void App::recurseRemove(const QString &path, const QString &tmpRoot)
 {
+#if 1
     QDir dir(path);
     QFileInfoList list = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
     
@@ -810,6 +833,7 @@ void App::recurseRemove(const QString &path, const QString &tmpRoot)
             dir.remove(info.fileName());
         }
     }
+#endif
 }
 
 #include "app.moc"

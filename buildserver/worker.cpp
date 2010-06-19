@@ -847,7 +847,7 @@ bool Worker::installBuildDeps(PackageSystem *ps)
     if (!solver->solve())
     {
         log(Error, "Solving of the dependencies failed");
-        psError(ps);
+        solverError(ps, solver, "No reason given");
         
         delete solver;
         delete ps;
@@ -857,7 +857,7 @@ bool Worker::installBuildDeps(PackageSystem *ps)
     if (!solver->weight())
     {
         log(Error, "Weighting of the tree failed");
-        psError(ps);
+        solverError(ps, solver, "No reason given");
         
         delete solver;
         delete ps;

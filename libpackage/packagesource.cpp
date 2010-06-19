@@ -124,6 +124,14 @@ PackageSource::~PackageSource()
     delete d;
 }
 
+void PackageSource::addPlugins(const QList<PackageSourceInterface *> plugins)
+{
+    foreach (PackageSourceInterface *plugin, plugins)
+    {
+        d->plugins.insert(plugin->name(), plugin);
+    }
+}
+
 PackageSystem *PackageSource::packageSystem()
 {
     return d->ps;

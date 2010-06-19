@@ -35,6 +35,7 @@ namespace Logram
 class PackageSystem;
 class FilePackage;
 class PackageMetaData;
+class PackageSourceInterface;
 
 struct PackageRemark
 {
@@ -60,6 +61,7 @@ class PackageSource : public Templatable
         
         PackageSystem *packageSystem();
         static void listFiles(const QString &dir, const QString &prefix, QStringList &list);
+        void addPlugins(const QList<PackageSourceInterface *> plugins);
         
         enum Option
         {
