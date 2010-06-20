@@ -1706,7 +1706,14 @@ bool RepositoryManager::exp(const QStringList &distros)
                     if (i == parts.count()-1)
                     {
                         // Fichier
-                        filestream += pkgname + '|' + QByteArray::number(flags) + "||" + parts.at(i) + '\n';
+                        filestream += pkgname + '|';
+                        
+                        if (flags != 0)
+                        {
+                            filestream += QByteArray::number(flags);
+                        }
+                        
+                        filestream += "||" + parts.at(i) + '\n';
                     }
                     else
                     {
