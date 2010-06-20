@@ -1523,6 +1523,9 @@ void Worker::processOut()
                 case '3':
                     flags |= SOURCEPACKAGE_FLAG_WARNINGS;
                     break;
+                case 'M':
+                    log(Message, line);
+                    break;
                 case 'E':
                     log(Error, line);
                     break;

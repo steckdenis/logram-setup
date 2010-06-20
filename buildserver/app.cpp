@@ -612,6 +612,9 @@ void App::log(LogType type, const QString &message)
             case Error:
                 cout << 'E';
                 break;
+            case Message:
+                cout << 'M';
+                break;
             default:
                 break;
         }
