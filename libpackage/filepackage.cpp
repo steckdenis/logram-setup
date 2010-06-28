@@ -220,10 +220,6 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
             {
                 file->setFlagsNoSave(PACKAGE_FILE_CHECKBACKUP);
             }
-            else if (path.startsWith("usr/lib") || path.startsWith("lib"))
-            {
-                file->setFlagsNoSave(PACKAGE_FILE_SAFEREMOVE);
-            }
             
             d->files.append(file);
         }
@@ -394,10 +390,6 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                         else if (name == "overwrite")
                         {
                             APPLY_FLAG(PACKAGE_FILE_OVERWRITE)
-                        }
-                        else if (name == "saferemove")
-                        {
-                            APPLY_FLAG(PACKAGE_FILE_SAFEREMOVE)
                         }
                         
                         flag = flag.nextSiblingElement("flag");

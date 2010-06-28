@@ -46,6 +46,7 @@ class PackageList : public QObject, public QList<Package *>
         
         void addPackage(Package *pkg);
         void setDeletePackagesOnDelete(bool enable);
+        void appendSafeRemoveLine(const QByteArray &line);
         
         Package *installingPackage() const;
         bool needsReboot() const;

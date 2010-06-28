@@ -120,7 +120,6 @@ static void outFlags(int flags)
     OUT_FLAG(PACKAGE_FILE_CHECKBACKUP, 'c')
     OUT_FLAG(PACKAGE_FILE_OVERWRITE, 'o')
     OUT_FLAG(PACKAGE_FILE_VIRTUAL, 'v')
-    OUT_FLAG(PACKAGE_FILE_SAFEREMOVE, 's')
     
     cout << "\033[0m";
         
@@ -228,7 +227,6 @@ void App::showFiles(const QString &packageName)
         "  * c: sauvegarder seulement si modifié localement depuis l'installation\n"
         "  * o: toujours écraser, même si un autre paquet le remplace\n"
         "  * v: n'est pas installé par le paquet, mais créé à l'utilisation\n"
-        "  * s: supprimer ou remplacer au redémarrage\n"
         )) << endl << endl;
     }
     
@@ -395,10 +393,6 @@ void App::tagFile(const QString &fileName, const QString &tag)
         {
             flag = PACKAGE_FILE_CHECKBACKUP;
         }
-        else if (t == "saferemove")
-        {
-            flag = PACKAGE_FILE_SAFEREMOVE;
-        }
         else
         {
             cout << COLOR(tr("Tags disponibles :"), "37") << endl << endl;
@@ -407,8 +401,7 @@ void App::tagFile(const QString &fileName, const QString &tag)
                                   "  * dontpurge   : Ne pas supprimer même si son paquet est purgé\n"
                                   "  * backup      : Toujours sauvegarder (.bak) avant remplacement\n"
                                   "  * checkbackup : Sauvegarder avant remplacement si modifié\n"
-                                  "  * overwrite   : Ne jamais sauvegarder avant remplacement\n"
-                                  "  * saferemove  : Supprimer ou remplacer ce fichier au redémarrage\n"));
+                                  "  * overwrite   : Ne jamais sauvegarder avant remplacement\n"));
                                   
             cout << endl;
             return;

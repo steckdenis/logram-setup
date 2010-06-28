@@ -55,6 +55,9 @@ struct PackageList::Private
     QList<Package *> downloadedPackages;
     QList<int> orphans;
     QList<QString> triggers;
+    
+    QFile safeRemoveList;
+    QMutex safeRemoveMutex;
 };
 
 PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
@@ -68,6 +71,10 @@ PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
     
     d->parallelInstalls = ps->parallelInstalls();
     d->parallelDownloads = ps->parallelDownloads();
+    
+    // Ouvrir le fichier /var/cache/lgrpkg/saferemovefiles
+    d->safeRemoveList.setFileName(ps->installRoot() + "/var/cache/lgrpkg/saferemovefiles");
+    d->safeRemoveList.open(QIODevice::ReadWrite | QIODevice::Append); // Pas de vérif de la condition, c'est fait dans appendSafeRemoveLine
 }
 
 PackageList::~PackageList()
@@ -89,6 +96,14 @@ PackageList::~PackageList()
 void PackageList::setDeletePackagesOnDelete(bool enable)
 {
     d->deletePackagesOnDelete = enable;
+}
+
+void PackageList::appendSafeRemoveLine(const QByteArray &line)
+{
+    d->safeRemoveMutex.lock();
+    d->safeRemoveList.write(line);
+    d->safeRemoveList.write("\n");
+    d->safeRemoveMutex.unlock();
 }
 
 bool PackageList::needsReboot() const
