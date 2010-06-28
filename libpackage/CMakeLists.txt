@@ -86,7 +86,7 @@ install(TARGETS lgrpkg LIBRARY DESTINATION /usr/lib)
 install(FILES ${lgrpkg_HEADERS} DESTINATION /usr/include/logram)
 install(FILES weight.qs DESTINATION /etc/lgrpkg/scripts)
 install(FILES sources.list.sample DESTINATION /etc/lgrpkg)
-install(FILES scriptapi DESTINATION /usr/libexec)
+install(FILES scriptapi DESTINATION /usr/bin/lgrpkg)
 
 add_subdirectory(plugins)
 

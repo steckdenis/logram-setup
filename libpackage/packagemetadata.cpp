@@ -494,7 +494,7 @@ bool PackageMetaData::runScript(const QByteArray &script, const QStringList &arg
     }
     
     // Charger le script
-    QFile scriptapi("/usr/libexec/scriptapi");
+    QFile scriptapi("/usr/bin/lgrpkg/scriptapi");
     
     if (!scriptapi.open(QIODevice::ReadOnly))
     {

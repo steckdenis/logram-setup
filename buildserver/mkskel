@@ -6,7 +6,7 @@ mkdir -p skel
 mkdir -p skel/var/cache/lgrpkg/db/pkgs
 mkdir -p skel/var/cache/lgrpkg/download
 mkdir -p skel/etc/lgrpkg/scripts
-mkdir -p skel/usr/libexec
+mkdir -p skel/usr/bin/lgrpkg/{triggers.postinst,triggers.reboot}
 mkdir -p skel/bin
 mkdir -p skel/{dev,proc,sys,tmp,src}
 

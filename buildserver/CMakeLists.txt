@@ -40,5 +40,6 @@ target_link_libraries(buildserver
 
 install(TARGETS buildserver DESTINATION /usr/bin)
 install(FILES buildserver.conf.sample DESTINATION /etc)
+install(FILES cleanup mkskel DESTINATION /usr/bin/lgrpkg PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install(CODE "message(\"The files cleanup and mkskel are not installed, but they are useful for managing the server. They are in buildserver/ . Also remember to copy /etc/buildserver.conf.sample to buildserver.conf, and edit it.\")")

@@ -372,10 +372,10 @@ bool Worker::prepareTemp()
     out.write(in.readAll());
     out.close();
     
-    // /usr/libexec/scriptapi
-    if (!QFile::copy("/usr/libexec/scriptapi", tmpRoot + "/usr/libexec/scriptapi"))
+    // /usr/bin/lgrpkg/scriptapi
+    if (!QFile::copy("/usr/bin/lgrpkg/scriptapi", tmpRoot + "/usr/bin/lgrpkg/scriptapi"))
     {
-        log(Error, "Unable to copy /usr/libexec/scriptapi to " + tmpRoot + "/usr/libexec/scriptapi");
+        log(Error, "Unable to copy /usr/bin/lgrpkg/scriptapi to " + tmpRoot + "/usr/bin/lgrpkg/scriptapi");
         return false;
     }
     
