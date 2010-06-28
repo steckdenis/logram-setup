@@ -1640,7 +1640,7 @@ bool RepositoryManager::exp(const QStringList &distros)
             // paquet|flags|fichier_dans_usr_pas_dans_bin
             // ::
             sql = " SELECT \
-                    CONCAT(dir.path, '/', dir.name, '/', file.name), \
+                    IFNULL(CONCAT(dir.path, '/', dir.name, '/', file.name), file.name), \
                     pkg.name, \
                     file.flags \
                     FROM packages_file file \
@@ -1699,7 +1699,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                     filestream += "::\n";
                 }
                 
-                // Sortir toutes les autres parties, avec indentation
+                // Sortir toutes les autres parties
                 int level2 = level;
                 for (int i=level; i<parts.count(); ++i)
                 {
