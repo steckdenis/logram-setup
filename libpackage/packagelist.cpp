@@ -295,7 +295,7 @@ bool PackageList::process()
             
             // Exécuter le processus
             proc->setProperty("lgr_trigger", tpl->templateString(trigger));  // Qt <3
-            QString exec = d->ps->installRoot() + "/usr/share/triggers/" + tpl->templateString(trigger);
+            QString exec = d->ps->installRoot() + "/usr/bin/lgrpkg/triggers.postinst/" + tpl->templateString(trigger);
             proc->start(exec, QIODevice::ReadOnly);
             
             rs = d->loop.exec();
