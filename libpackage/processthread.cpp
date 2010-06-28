@@ -115,6 +115,7 @@ static int copy_data(struct archive *ar, struct archive *aw)
     }
 }
 
+/** Permet de renommer un fichier qui existe déjà en un fichier de sauvegarde **/
 static void backup_file(const QByteArray &_path)
 {
     QString path(_path), newpath;
@@ -137,6 +138,27 @@ static void backup_file(const QByteArray &_path)
             
         QFile::rename(path, newpath);
     }
+}
+
+/** Permet de trouver un nom de fichier pour _path pour qu'il n'existe pas encore **/
+static QByteArray new_file_name(const QByteArray &_path)
+{
+    QByteArray path(_path);
+    int num = 0;
+    
+    while (QFile::exists(path))
+    {
+        path = _path + ".lgrnew";
+        
+        if (num != 0)
+        {
+            path += QByteArray::number(num);
+        }
+        
+        num++;
+    }
+    
+    return path;
 }
 
 bool ProcessThread::Private::install_files()
@@ -182,8 +204,8 @@ bool ProcessThread::Private::install_files()
         {
             PackageError *err = new PackageError;
             err->type = PackageError::InstallError;
-            err->info = tr("Erreur lors de la lecture de l'archive");
-            err->more = pkg->name() + '~' + pkg->version();
+            err->more = tr("Erreur lors de la lecture de l'archive");
+            err->info = pkg->name() + '~' + pkg->version();
             
             ps->setLastError(err);
             
@@ -217,14 +239,16 @@ bool ProcessThread::Private::install_files()
             {
                 PackageError *err = new PackageError;
                 err->type = PackageError::InstallError;
-                err->info = tr("Aucun fichier dans la base de donnée Setup ne correspond à %1").arg(QString(path));
-                err->more = pkg->name() + '~' + pkg->version();
+                err->more = tr("Aucun fichier dans la base de donnée Setup ne correspond à %1").arg(QString(path));
+                err->info = pkg->name() + '~' + pkg->version();
                 
                 ps->setLastError(err);
                 
                 archive_write_finish(ext);
                 return false;
             }
+            
+            bool conflict_handled = false; // TODO: Dans le for, si mis à true, une communication Status serait bien.
             
             // Explorer ces fichiers
             for (int i=0; i<files.count(); ++i)
@@ -238,7 +262,9 @@ bool ProcessThread::Private::install_files()
                         if (file->flags() & PACKAGE_FILE_BACKUP)
                         {
                             // Fichier au paquet, normalement on ne sauvegarde pas, mais ici on le fait
-                            backup_file(filePath);
+                            // Par exemple, fichier de configuration. On garde celui de l'utilisateur, on installe un .new
+                            filePath = new_file_name(filePath);
+                            conflict_handled = true;
                         }
                         else if (file->flags() & PACKAGE_FILE_CHECKBACKUP)
                         {
@@ -247,8 +273,10 @@ bool ProcessThread::Private::install_files()
                             
                             if (fi.lastModified().toTime_t() > file->installTime())
                             {
-                                backup_file(filePath);
+                                filePath = new_file_name(filePath);
                             }
+                            
+                            conflict_handled = true;
                         }
                     }
                     else
@@ -256,13 +284,22 @@ bool ProcessThread::Private::install_files()
                         if (!(file->flags() & PACKAGE_FILE_OVERWRITE))
                         {
                             // Fichier d'un autre paquet, on sauvegarde sauf si OVERWRITE est utilisé
+                            // Comme ce paquet ne peut pas être cassé, il faut installer son fichier et bouger celui de l'autre
                             backup_file(filePath);
+                            conflict_handled = true;
                         }
                     }
                 }
                 
                 // Supprimer le fichier, plus besoin
                 delete file;
+            }
+            
+            if (!conflict_handled)
+            {
+                // On n'a pas vérifié si ce fichier est déjà présent, bien que ne provenant pas d'un paquet dans la BDD.
+                // Il faut le sauvegarder.
+                backup_file(filePath);
             }
         }
         
@@ -275,8 +312,8 @@ bool ProcessThread::Private::install_files()
         {
             PackageError *err = new PackageError;
             err->type = PackageError::InstallError;
-            err->info = tr("Impossible d'installer le fichier %1").arg(QString(filePath));
-            err->more = pkg->name() + '~' + pkg->version();
+            err->more = tr("Impossible d'installer le fichier %1").arg(QString(filePath));
+            err->info = pkg->name() + '~' + pkg->version();
             
             ps->setLastError(err);
             

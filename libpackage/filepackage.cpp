@@ -220,6 +220,10 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
             {
                 file->setFlagsNoSave(PACKAGE_FILE_CHECKBACKUP);
             }
+            else if (path.startsWith("usr/lib") || path.startsWith("lib"))
+            {
+                file->setFlagsNoSave(PACKAGE_FILE_SAFEREMOVE);
+            }
             
             d->files.append(file);
         }
@@ -359,13 +363,6 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                         // pour leur permettre de désactiver le flag virtual, au cas où.
                     }
                     
-                    if (path.startsWith("etc"))
-                    {
-                        // Fichier normalement de configuration, lui ajouter checkbackup.
-                        // On fait ça ici pour que l'empaqueteur puisse supprimer ce flag
-                        flags |= PACKAGE_FILE_CHECKBACKUP;
-                    }
-                    
                     // Explorer ses enfants pour voir si ce fichier a des flags
                     QDomElement flag = el.firstChildElement("flag");
                     
@@ -397,6 +394,10 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                         else if (name == "overwrite")
                         {
                             APPLY_FLAG(PACKAGE_FILE_OVERWRITE)
+                        }
+                        else if (name == "saferemove")
+                        {
+                            APPLY_FLAG(PACKAGE_FILE_SAFEREMOVE)
                         }
                         
                         flag = flag.nextSiblingElement("flag");

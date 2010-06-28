@@ -107,13 +107,6 @@ void App::find(const QString &pattern)
 static void outFlags(int flags)
 {
     // Sortir les flags
-    #define PACKAGE_FILE_INSTALLED              0b00000001
-    #define PACKAGE_FILE_DIR                    0b00000010
-    #define PACKAGE_FILE_DONTREMOVE             0b00000100
-    #define PACKAGE_FILE_DONTPURGE              0b00001000
-    #define PACKAGE_FILE_BACKUP                 0b00010000
-    #define PACKAGE_FILE_OVERWRITE              0b00100000
-    
     #define OUT_FLAG(flag_name, letter) \
         cout << (flags & flag_name ? letter : '-');
         
@@ -127,6 +120,7 @@ static void outFlags(int flags)
     OUT_FLAG(PACKAGE_FILE_CHECKBACKUP, 'c')
     OUT_FLAG(PACKAGE_FILE_OVERWRITE, 'o')
     OUT_FLAG(PACKAGE_FILE_VIRTUAL, 'v')
+    OUT_FLAG(PACKAGE_FILE_SAFEREMOVE, 's')
     
     cout << "\033[0m";
         
@@ -233,7 +227,9 @@ void App::showFiles(const QString &packageName)
         "  * b: toujours sauvegarder avant remplacement\n"
         "  * c: sauvegarder seulement si modifié localement depuis l'installation\n"
         "  * o: toujours écraser, même si un autre paquet le remplace\n"
-        "  * v: n'est pas installé par le paquet, mais créé à l'utilisation")) << endl << endl;
+        "  * v: n'est pas installé par le paquet, mais créé à l'utilisation\n"
+        "  * s: supprimer ou remplacer au redémarrage\n"
+        )) << endl << endl;
     }
     
     QString path;
@@ -399,6 +395,10 @@ void App::tagFile(const QString &fileName, const QString &tag)
         {
             flag = PACKAGE_FILE_CHECKBACKUP;
         }
+        else if (t == "saferemove")
+        {
+            flag = PACKAGE_FILE_SAFEREMOVE;
+        }
         else
         {
             cout << COLOR(tr("Tags disponibles :"), "37") << endl << endl;
@@ -407,7 +407,8 @@ void App::tagFile(const QString &fileName, const QString &tag)
                                   "  * dontpurge   : Ne pas supprimer même si son paquet est purgé\n"
                                   "  * backup      : Toujours sauvegarder (.bak) avant remplacement\n"
                                   "  * checkbackup : Sauvegarder avant remplacement si modifié\n"
-                                  "  * overwrite   : Ne jamais sauvegarder avant remplacement\n"));
+                                  "  * overwrite   : Ne jamais sauvegarder avant remplacement\n"
+                                  "  * saferemove  : Supprimer ou remplacer ce fichier au redémarrage\n"));
                                   
             cout << endl;
             return;
