@@ -264,7 +264,6 @@ bool ProcessThread::Private::install_files()
                             // Fichier au paquet, normalement on ne sauvegarde pas, mais ici on le fait
                             // Par exemple, fichier de configuration. On garde celui de l'utilisateur, on installe un .new
                             filePath = new_file_name(filePath);
-                            conflict_handled = true;
                         }
                         else if (file->flags() & PACKAGE_FILE_CHECKBACKUP)
                         {
@@ -275,8 +274,6 @@ bool ProcessThread::Private::install_files()
                             {
                                 filePath = new_file_name(filePath);
                             }
-                            
-                            conflict_handled = true;
                         }
                     }
                     else
@@ -286,9 +283,10 @@ bool ProcessThread::Private::install_files()
                             // Fichier d'un autre paquet, on sauvegarde sauf si OVERWRITE est utilisé
                             // Comme ce paquet ne peut pas être cassé, il faut installer son fichier et bouger celui de l'autre
                             backup_file(filePath);
-                            conflict_handled = true;
                         }
                     }
+                    
+                    conflict_handled = true;
                 }
                 
                 // Supprimer le fichier, plus besoin
