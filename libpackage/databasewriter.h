@@ -97,11 +97,15 @@ class DatabaseWriter : public QObject
         */
         DatabaseWriter(PackageSystem *_parent);
         
+        /**
+         * @brief Type de fichier téléchargé
+         * @sa download
+         */
         enum FileDataType
         {
-            PackagesList,
-            Translations,
-            FilesList
+            PackagesList,   /*!< Liste des paquets (packages.xz) */
+            Translations,   /*!< Traductions (transtale.lang.xz) */
+            FilesList       /*!< Liste des fichiers (files.xz) */
         };
 
         /**
@@ -109,7 +113,7 @@ class DatabaseWriter : public QObject
             @param source Nom du dépôt
             @param url Url du fichier
             @param type Type de dépôt (local, en ligne)
-            @param isTranslations true si c'est un fichier translate qui est téléchargé
+            @param datatype Type de données qu'on télécharge (liste des paquets, traductions, fichiers)
             @param gpgCheck true s'il faut vérifier avec GPG la signature des fichiers téléchargés
         */
         bool download(const QString &source, const QString &url, Repository::Type type, FileDataType datatype, bool gpgCheck);

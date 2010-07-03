@@ -20,6 +20,11 @@
  * Boston, MA  02110-1301  USA
  */
 
+/**
+ * @file packagelist.h
+ * @brief Gestion des listes de paquets et des opérations dessus
+ */
+
 #ifndef __PACKAGELIST_H__
 #define __PACKAGELIST_H__
 
@@ -36,23 +41,123 @@ class PackageSystem;
 class Package;
 class Communication;
 
+/**
+ * @brief Gestion des listes de paquets et des opérations dessus
+ * 
+ * Cette classe est utilisée par Solver pour vous fournir la liste des paquets
+ * qui pourraient être installés, supprimés ou mis à jour.
+ * 
+ * Elle s'utilise comme une simple liste de Package . De plus, une fois les
+ * paquets voulus insérés dans la liste, il est possible de lancer leur
+ * installation.
+ */
 class PackageList : public QObject, public QList<Package *>
 {
     Q_OBJECT
     
     public:
+        /**
+         * @brief Constructeur
+         * @param ps PackageSystem utilisé
+         */
         PackageList(PackageSystem *ps);
+        
+        /**
+         * @brief Destructeur
+         */
         ~PackageList();
         
+        /**
+         * @brief Ajoute un paquet à la liste
+         * 
+         * Équivalent à QList::add, mais effectue des opérations en plus sur
+         * le paquet. Par exemple, cette fonction enregistre si ce paquet
+         * nécessitera un redémarrage.
+         * 
+         * @param pkg Package à installer
+         */
         void addPackage(Package *pkg);
+        
+        /**
+         * @brief Spécifie si les paquets de cette liste seront supprimés à la suppression de la liste
+         * 
+         * Cette fonction permet de choisir si PackageList doit supprimer
+         * (en utilisant @b delete) les paquets qu'elle contient. Par 
+         * défaut, elle les supprime.
+         * 
+         * @param enable true si PackageList doit supprimer ses paquets à sa destruction.
+         */
         void setDeletePackagesOnDelete(bool enable);
+        
+        /**
+         * @brief Ajoute une ligne au fichier safeRemoves
+         * 
+         * Ce fichier contient des informations sur les fichiers qui devront
+         * être installés ou supprimés après un redémarrage, une fois les
+         * systèmes de fichiers montés, avant le démarrage des services.
+         * 
+         * Cette fonction permet d'y écrire des lignes depuis ProcessThread, 
+         * de manière <em>thread-safe</em>.
+         * 
+         * @param line Ligne à ajouter au fichier, sans compter le retour à la ligne.
+         */
         void appendSafeRemoveLine(const QByteArray &line);
         
+        /**
+         * @brief Paquet en cours d'installation
+         * 
+         * Cette fonction utilitaire permet de récupérer le dernier paquet
+         * dont l'installation à commencé, pour par exemple afficher son
+         * nom, sa description ou son icône.
+         * 
+         * @return Dernier Package dont l'installation a commencé.
+         */
         Package *installingPackage() const;
+        
+        /**
+         * @brief Détermine si un redémarrage est nécessaire
+         * 
+         * Certains paquets peuvent nécessiter un redémarrage. Si l'un d'entre
+         * eux est passé à addPackage, alors cette fonction renverra @b true.
+         * 
+         * Sinon, elle renvoie @b false
+         * 
+         * @return True si un redémarrage est demandé par au moins un paquet.
+         */
         bool needsReboot() const;
+        
+        /**
+         * @brief Nombre de licences à accepter
+         * 
+         * Certains paquets peuvent nécessiter l'approbation d'une licence par
+         * l'utilisateur final. Cette fonction retourne le nombre de paquets
+         * qui possèdent ce type de licence (généralement non-libre).
+         * 
+         * @return Nombre de paquets ayant une licence spéciale à accepter.
+         */
         int numLicenses() const;
+        
+        /**
+         * @brief Paquets rendus orphelins par cette liste
+         * 
+         * Si cette liste contient des suppressions ou des mises à jour, alors
+         * elle peut rendre inutile d'anciennes dépendances.
+         * 
+         * Cette fonction renvoie la liste des ID des paquets rendus orphelins
+         * par l'exécution de cette liste.
+         * 
+         * @return Liste des ID des paquets rendus orphelins par la liste.
+         */
         QList<int> orphans() const;
         
+        /**
+         * @brief Exécute la liste
+         * 
+         * Cette fonction non-bloquante lance le téléchargement et
+         * l'installation des paquets.
+         * 
+         * @return True si tout s'est bien passé, false sinon.
+         */
         bool process();
         
     private slots:
