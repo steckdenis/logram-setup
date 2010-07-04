@@ -55,14 +55,14 @@ struct PackageRemark
      */
     enum Severity
     {
-        Information,    /*!< Information, peut être ignorée sans le moindre problème */
-        Warning,        /*!< Attention, ne devrait pas être ignoré, mais n'interromp pas la construction (le serveur de construction positionne un flag) */
-        Error           /*!< Erreur, interromp la construction et positionne un flag. Le paquet binaire est inutilisable */
+        Information,    /*!< @brief Information, peut être ignorée sans le moindre problème */
+        Warning,        /*!< @brief Attention, ne devrait pas être ignoré, mais n'interromp pas la construction (le serveur de construction positionne un flag) */
+        Error           /*!< @brief Erreur, interromp la construction et positionne un flag. Le paquet binaire est inutilisable */
     };
     
-    Severity severity;      /*!< Séverité de la remarque */
-    QString packageName;    /*!< Nom du paquet binaire ayant provoqué la remarque */
-    QString message;        /*!< Message de la remarque */
+    Severity severity;      /*!< @brief Séverité de la remarque */
+    QString packageName;    /*!< @brief Nom du paquet binaire ayant provoqué la remarque */
+    QString message;        /*!< @brief Message de la remarque */
 };
 
 /**
@@ -167,9 +167,9 @@ class PackageSource : public Templatable
          */
         enum Option
         {
-            SourceDir,      /*!< Chemin du dossier source ( @b src/ ) */
-            BuildDir,       /*!< Chemin du dossier de construction ( @b build/ ) */
-            ControlDir      /*!< Chemin du dossier control ( @b control/ ) */
+            SourceDir,      /*!< @brief Chemin du dossier source ( @b src/ ) */
+            BuildDir,       /*!< @brief Chemin du dossier de construction ( @b build/ ) */
+            ControlDir      /*!< @brief Chemin du dossier control ( @b control/ ) */
         };
         
         /**
@@ -223,13 +223,13 @@ class PackageSource : public Templatable
          */
         void loadKeys();
         
-        bool getSource();                                   /*!< Télécharge la source (appelle le script @b download) */
-        bool checkSource(const QString &dir, bool fail);    /*!< Vérifie que le dossier @p dir existe, et renvoie false sinon et si @p fail est à @b true */
-        bool build();                                       /*!< Construit la source (appelle le script @b build) */
-        bool binaries();                                    /*!< Construit les paquets binaires, exécute les plugins */
+        bool getSource();                                   /*!< @brief Télécharge la source (appelle le script @b download) */
+        bool checkSource(const QString &dir, bool fail);    /*!< @brief Vérifie que le dossier @p dir existe, et renvoie false sinon et si @p fail est à @b true */
+        bool build();                                       /*!< @brief Construit la source (appelle le script @b build) */
+        bool binaries();                                    /*!< @brief Construit les paquets binaires, exécute les plugins */
         
-        QList<PackageRemark *> remarks();                   /*!< Remarques lancées par binaries() */
-        void addRemark(PackageRemark *remark);              /*!< Permet aux plugins d'ajouter une remarque */
+        QList<PackageRemark *> remarks();                   /*!< @brief Remarques lancées par binaries() */
+        void addRemark(PackageRemark *remark);              /*!< @brief Permet aux plugins d'ajouter une remarque */
         
     private:
         struct Private;

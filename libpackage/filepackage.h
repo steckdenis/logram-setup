@@ -67,13 +67,13 @@ class FilePackage : public Package
             @param _action Action, passé à Package::Package
         */
         FilePackage(const QString &fileName, PackageSystem *ps, DatabaseReader *psd, Solver::Action _action = Solver::None);
-        FilePackage(const FilePackage &other);  /*!< Constructeur de copie nécessaire pour la gestion du solveur */
+        FilePackage(const FilePackage &other);  /*!< @brief Constructeur de copie nécessaire pour la gestion du solveur */
         ~FilePackage();
 
-        bool download();            /*!< Renvoie immédiatement true et émmet immédiatement downloaded() */
+        bool download();            /*!< @brief Renvoie immédiatement true et émmet immédiatement downloaded() */
         QString tlzFileName();
         bool isValid();
-        Package::Origin origin();   /*!< Renvoie Package::File */
+        Package::Origin origin();   /*!< @brief Renvoie Package::File */
         
         QString name();
         QString version();
@@ -105,8 +105,8 @@ class FilePackage : public Package
         
         void registerState(int idate, int iby, int flags);
         
-        QByteArray metadataContents();  /*!< Contenu du fichier de métadonnées */
-        QList<PackageFile *> files();            /*!< Liste des fichiers du paquet */
+        QByteArray metadataContents();  /*!< @brief Contenu du fichier de métadonnées */
+        QList<PackageFile *> files();            /*!< @brief Liste des fichiers du paquet */
 
     signals:
         void downloaded(bool success);

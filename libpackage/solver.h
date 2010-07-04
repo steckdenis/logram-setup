@@ -85,11 +85,11 @@ class Solver : public QObject
          */
         enum Action
         {
-            None = 0,       /*!< Pas d'action */
-            Install = 1,    /*!< Installation */
-            Remove = 2,     /*!< Suppression */
-            Purge = 3,      /*!< Purge */
-            Update = 4      /*!< Mise à jour */
+            None = 0,       /*!< @brief Pas d'action */
+            Install = 1,    /*!< @brief Installation */
+            Remove = 2,     /*!< @brief Suppression */
+            Purge = 3,      /*!< @brief Purge */
+            Update = 4      /*!< @brief Mise à jour */
         };
         
         struct Node;
@@ -108,20 +108,20 @@ class Solver : public QObject
              */
             enum Type
             {
-                NoDeps,                             /*!< Dépendance manquante */
-                Conflict,                           /*!< Conflit présent */
-                InternalError,                      /*!< Erreur dans PackageSystem. Utilisez PackageSystem::lastError pour voir */
-                ChildError,                         /*!< Un enfant du noeud a une erreur, ce qui le rend invalide. @b other est cet enfant */
-                SameNameSameVersionDifferentAction, /*!< Deux actions différentes pour un même paquet */
-                InstallSamePackageDifferentVersion, /*!< Même action pour deux versions différents d'un paquet */
-                UninstallablePackageInstalled,      /*!< Paquet non-installable installé */
-                UnremovablePackageRemoved,          /*!< Paquet non-supprimable supprimé */
-                UnupdatablePackageUpdated           /*!< Paquet impossible à mettre à jour mis à jour. @b other est le noeud qui ne veut pas être mis à jour, l'ancienne versions (nous sommes la nouvelle version) */
+                NoDeps,                             /*!< @brief Dépendance manquante */
+                Conflict,                           /*!< @brief Conflit présent */
+                InternalError,                      /*!< @brief Erreur dans PackageSystem. Utilisez PackageSystem::lastError pour voir */
+                ChildError,                         /*!< @brief Un enfant du noeud a une erreur, ce qui le rend invalide. @b other est cet enfant */
+                SameNameSameVersionDifferentAction, /*!< @brief Deux actions différentes pour un même paquet */
+                InstallSamePackageDifferentVersion, /*!< @brief Même action pour deux versions différents d'un paquet */
+                UninstallablePackageInstalled,      /*!< @brief Paquet non-installable installé */
+                UnremovablePackageRemoved,          /*!< @brief Paquet non-supprimable supprimé */
+                UnupdatablePackageUpdated           /*!< @brief Paquet impossible à mettre à jour mis à jour. @b other est le noeud qui ne veut pas être mis à jour, l'ancienne versions (nous sommes la nouvelle version) */
             };
             
-            Type type;              /*!< Type d'erreur */
-            Node *other;            /*!< Noeud sujet à l'erreur. Peut être zéro si un ChildError porte sur le fait que toutes les variantes d'une dépendance ont échouées. */
-            QString pattern;        /*!< Si NoDeps, motif de dépendance introuvable */
+            Type type;              /*!< @brief Type d'erreur */
+            Node *other;            /*!< @brief Noeud sujet à l'erreur. Peut être zéro si un ChildError porte sur le fait que toutes les variantes d'une dépendance ont échouées. */
+            QString pattern;        /*!< @brief Si NoDeps, motif de dépendance introuvable */
         };
         
         /**
@@ -141,31 +141,31 @@ class Solver : public QObject
              */
             enum Flag
             {
-                None = 0,               /*!< Pas de flag */
-                Wanted = 1,             /*!< Paquet voulu, par exemple pas encore installé mais qu'on veut installer. Pas interne */
-                Weighted = 2,           /*!< Paquet pesé par le script QtScript */
-                Proceed = 4,            /*!< Inutilisé */
-                MinMaxWeighted = 8,     /*!< Protection de minMaxWeight */
-                WeightMin = 16,         /*!< Utilisé par weightChildren */
-                MinMaxDone = 32,        /*!< Protection de weightChildren */
-                Explored = 64,          /*!< Utilisé par exploreNode */
+                None = 0,               /*!< @brief Pas de flag */
+                Wanted = 1,             /*!< @brief Paquet voulu, par exemple pas encore installé mais qu'on veut installer. Pas interne */
+                Weighted = 2,           /*!< @brief Paquet pesé par le script QtScript */
+                Proceed = 4,            /*!< @brief Inutilisé */
+                MinMaxWeighted = 8,     /*!< @brief Protection de minMaxWeight */
+                WeightMin = 16,         /*!< @brief Utilisé par weightChildren */
+                MinMaxDone = 32,        /*!< @brief Protection de weightChildren */
+                Explored = 64,          /*!< @brief Utilisé par exploreNode */
             };
             
             Q_DECLARE_FLAGS(Flags, Flag)
             
-            Package *package;                   /*!< Paquet, 0 si noeud principal (racine) */
-            Flags flags;                        /*!< Flags */
-            Error *error;                       /*!< Erreur, 0 si pas d'erreur */
+            Package *package;                   /*!< @brief Paquet, 0 si noeud principal (racine) */
+            Flags flags;                        /*!< @brief Flags */
+            Error *error;                       /*!< @brief Erreur, 0 si pas d'erreur */
             
-            int minWeight;                      /*!< Poids minimum */
-            int maxWeight;                      /*!< Poids maximum */
-            int weight;                         /*!< Poids brut renvoyé par QtScript */
-            int minDlSize;                      /*!< Taille de téléchargement minimale */
-            int maxDlSize;                      /*!< Taille de téléchargement maximale */
-            int minInstSize;                    /*!< Taille installée minimale */
-            int maxInstSize;                    /*!< Taille installée maximale */
+            int minWeight;                      /*!< @brief Poids minimum */
+            int maxWeight;                      /*!< @brief Poids maximum */
+            int weight;                         /*!< @brief Poids brut renvoyé par QtScript */
+            int minDlSize;                      /*!< @brief Taille de téléchargement minimale */
+            int maxDlSize;                      /*!< @brief Taille de téléchargement maximale */
+            int minInstSize;                    /*!< @brief Taille installée minimale */
+            int maxInstSize;                    /*!< @brief Taille installée maximale */
             
-            Node *weightedBy;                   /*!< Permet de savoir si ce noeud a été pesé par un autre */
+            Node *weightedBy;                   /*!< @brief Permet de savoir si ce noeud a été pesé par un autre */
             
             /**
              * @brief Enfant d'un noeud
@@ -176,10 +176,10 @@ class Solver : public QObject
              */
             struct Child
             {
-                int count;      /*!< Nombre de noeuds enfants */
-                int minNode;    /*!< Noeud ayant le poids minimal */
-                int maxNode;    /*!< Noeud de poids maximal */
-                int chosenNode; /*!< Noeud que l'utilisateur a choisi, -1 si pas encore choix */
+                int count;      /*!< @brief Nombre de noeuds enfants */
+                int minNode;    /*!< @brief Noeud ayant le poids minimal */
+                int maxNode;    /*!< @brief Noeud de poids maximal */
+                int chosenNode; /*!< @brief Noeud que l'utilisateur a choisi, -1 si pas encore choix */
                 
                 /**
                  * Si count = 1, on stocke simplement un pointeur sur l'enfant. Sinon, on stocke un pointeur
@@ -192,12 +192,12 @@ class Solver : public QObject
                 };
             };
             
-            int nodeListIndex;                  /*!< Index dans nodeList quand on explore le graphe. */
+            int nodeListIndex;                  /*!< @brief Index dans nodeList quand on explore le graphe. */
             
             // Liens
-            int childcount;                     /*!< Nombre d'enfants */
-            int currentChild;                   /*!< currentChild : enfant courant dans l'exploration du graphe. Permet de reprendre une exploration interrompue par un choix */
-            Child *children;                    /*!< Enfants */
+            int childcount;                     /*!< @brief Nombre d'enfants */
+            int currentChild;                   /*!< @brief currentChild : enfant courant dans l'exploration du graphe. Permet de reprendre une exploration interrompue par un choix */
+            Child *children;                    /*!< @brief Enfants */
         };
 
         /**

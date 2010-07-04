@@ -57,19 +57,19 @@ struct ChangeLogEntry
      */
     enum Type
     {
-        LowPriority = 1,    /*!< Faible priorité, typiquement un changement facilitant le travail des empaqueteurs mais ne changeant pas les binaires */
-        Feature = 2,        /*!< Nouvelle version du paquet, avec de nouvelles fonctionnalités */
-        BugFix = 3,         /*!< Correction d'un bug (upstream ou par Logram) */
-        Security = 4        /*!< Correction d'un problème de sécurité. Mise à jour urgente */
+        LowPriority = 1,    /*!< @brief Faible priorité, typiquement un changement facilitant le travail des empaqueteurs mais ne changeant pas les binaires */
+        Feature = 2,        /*!< @brief Nouvelle version du paquet, avec de nouvelles fonctionnalités */
+        BugFix = 3,         /*!< @brief Correction d'un bug (upstream ou par Logram) */
+        Security = 4        /*!< @brief Correction d'un problème de sécurité. Mise à jour urgente */
     };
     
-    Type type;              /*!< Type de l'entrée */
-    QString version;        /*!< Version de l'entrée */
-    QString author;         /*!< Auteur de cette révision */
-    QString email;          /*!< Email de l'auteur */
-    QString distribution;   /*!< Dépôt dans lequel la modification est allée */
-    QDateTime date;         /*!< Date de l'entrée */
-    QString text;           /*!< Description du changement, dans la langue de l'utilisateur (cf PackageMetaData::stringOfKey() ) */
+    Type type;              /*!< @brief Type de l'entrée */
+    QString version;        /*!< @brief Version de l'entrée */
+    QString author;         /*!< @brief Auteur de cette révision */
+    QString email;          /*!< @brief Email de l'auteur */
+    QString distribution;   /*!< @brief Dépôt dans lequel la modification est allée */
+    QDateTime date;         /*!< @brief Date de l'entrée */
+    QString text;           /*!< @brief Description du changement, dans la langue de l'utilisateur (cf PackageMetaData::stringOfKey() ) */
 };
 
 /**
@@ -77,8 +77,8 @@ struct ChangeLogEntry
  */
 struct SourceDepend
 {
-    int type;       /*!< Type, cf PACKAGE_DEPEND* */
-    QString string; /*!< Texte de la dépendance (paquet>=version) */
+    int type;       /*!< @brief Type, cf PACKAGE_DEPEND* */
+    QString string; /*!< @brief Texte de la dépendance (paquet>=version) */
 };
 
 /**
@@ -224,16 +224,16 @@ class PackageMetaData : public QObject, public QDomDocument
         void setTemplatable(Templatable *tpl);
         
         
-        QString primaryLang() const;            /*!< Langue primaire du paquet (langue maternelle de l'empaqueteur) */
-        QString packageDescription() const;     /*!< Description du paquet courant, dans la langue de l'utilisateur ou primaryLang si non disponible */
-        QString packageTitle() const;           /*!< Titre du paquet courant */
-        QString packageEula() const;            /*!< License utilisateur finale du paquet courant */
-        QString currentPackage() const;         /*!< Nom du paquet courant, un paquet binaire construit par ce paquet source */
-        QString upstreamUrl() const;            /*!< Url du site web de l'auteur du paquet source (gcc.gnu.org, etc) */
-        QStringList triggers() const;           /*!< Liste des triggers lancés par le paquet courant */
+        QString primaryLang() const;            /*!< @brief Langue primaire du paquet (langue maternelle de l'empaqueteur) */
+        QString packageDescription() const;     /*!< @brief Description du paquet courant, dans la langue de l'utilisateur ou primaryLang si non disponible */
+        QString packageTitle() const;           /*!< @brief Titre du paquet courant */
+        QString packageEula() const;            /*!< @brief License utilisateur finale du paquet courant */
+        QString currentPackage() const;         /*!< @brief Nom du paquet courant, un paquet binaire construit par ce paquet source */
+        QString upstreamUrl() const;            /*!< @brief Url du site web de l'auteur du paquet source (gcc.gnu.org, etc) */
+        QStringList triggers() const;           /*!< @brief Liste des triggers lancés par le paquet courant */
         
-        QList<ChangeLogEntry *> changelog() const;   /*!< Historique du paquet source */
-        QList<SourceDepend *> sourceDepends() const; /*!< Dépendances à la construction du paquet source */
+        QList<ChangeLogEntry *> changelog() const;   /*!< @brief Historique du paquet source */
+        QList<SourceDepend *> sourceDepends() const; /*!< @brief Dépendances à la construction du paquet source */
         
         /**
          * @brief Définit le paquet courant
@@ -251,7 +251,7 @@ class PackageMetaData : public QObject, public QDomDocument
          * @param name Nom du nouveau paquet courant
          */
         void setCurrentPackage(const QString &name);
-        QDomElement currentPackageElement() const;  /*!< QDomElement du paquet courant (\<package name="..." /\>) */
+        QDomElement currentPackageElement() const;  /*!< @brief QDomElement du paquet courant (\<package name="..." /\>) */
         
         /**
          * @brief Obtient une chaîne traduite

@@ -115,8 +115,8 @@ class Package : public QObject
          */
         enum Origin
         {
-            Database,   /*!< Le paquet provient de la base de donnée */
-            File        /*!< Le paquet provient d'un fichier */
+            Database,   /*!< @brief Le paquet provient de la base de donnée */
+            File        /*!< @brief Le paquet provient d'un fichier */
         };
 
         // Interface
@@ -171,29 +171,29 @@ class Package : public QObject
          */
         virtual Origin origin() = 0;
         
-        virtual QString name() = 0;         /*!< Nom du paquet */
-        virtual QString version() = 0;      /*!< Version du paquet */
-        virtual QString maintainer() = 0;   /*!< Mainteneur du paquet */
-        virtual QString shortDesc() = 0;    /*!< Description courte */
-        virtual QString source() = 0;       /*!< Nom du paquet source */
-        virtual QString upstreamUrl() = 0;  /*!< Url du site web du projet à la base de l'application empaquetée */
-        virtual QString repo() = 0;         /*!< Dépôt duquel vient le paquet */
-        virtual QString section() = 0;      /*!< Section du paquet (base, devel, games, etc) */
-        virtual QString distribution() = 0; /*!< Distribution du paquet (experimental, stable, old, testing) */
-        virtual QString license() = 0;      /*!< License du paquel (GPLv2, GPLv3, BSD, Apache, etc) */
-        virtual QString arch() = 0;         /*!< Architecture du paquet (i686, x86_64, all, src) */
-        virtual QByteArray metadataHash() = 0; /*!< Hash SHA1 des métadonnées du paquet */
-        virtual QByteArray packageHash() = 0; /*!< Hash SHA1 du fichier .tlz, pour vérifier son authenticité */
-        virtual int flags() = 0;            /*!< Flags du paquet */
-        virtual int used() = 0;             /*!< Compteur d'utilisation (nombre de paquets en dépendant installés) */
+        virtual QString name() = 0;         /*!< @brief Nom du paquet */
+        virtual QString version() = 0;      /*!< @brief Version du paquet */
+        virtual QString maintainer() = 0;   /*!< @brief Mainteneur du paquet */
+        virtual QString shortDesc() = 0;    /*!< @brief Description courte */
+        virtual QString source() = 0;       /*!< @brief Nom du paquet source */
+        virtual QString upstreamUrl() = 0;  /*!< @brief Url du site web du projet à la base de l'application empaquetée */
+        virtual QString repo() = 0;         /*!< @brief Dépôt duquel vient le paquet */
+        virtual QString section() = 0;      /*!< @brief Section du paquet (base, devel, games, etc) */
+        virtual QString distribution() = 0; /*!< @brief Distribution du paquet (experimental, stable, old, testing) */
+        virtual QString license() = 0;      /*!< @brief License du paquel (GPLv2, GPLv3, BSD, Apache, etc) */
+        virtual QString arch() = 0;         /*!< @brief Architecture du paquet (i686, x86_64, all, src) */
+        virtual QByteArray metadataHash() = 0; /*!< @brief Hash SHA1 des métadonnées du paquet */
+        virtual QByteArray packageHash() = 0; /*!< @brief Hash SHA1 du fichier .tlz, pour vérifier son authenticité */
+        virtual int flags() = 0;            /*!< @brief Flags du paquet */
+        virtual int used() = 0;             /*!< @brief Compteur d'utilisation (nombre de paquets en dépendant installés) */
         
-        virtual int downloadSize() = 0;     /*!< Taille à télécharger */
-        virtual int installSize() = 0;      /*!< Taille installée */
+        virtual int downloadSize() = 0;     /*!< @brief Taille à télécharger */
+        virtual int installSize() = 0;      /*!< @brief Taille installée */
         
-        virtual QList<Depend *> depends() = 0; /*!< Liste des dépendances */
-        virtual QList<PackageFile *> files() = 0; /*!< Liste des fichiers */
-        virtual QDateTime installedDate() = 0; /*!< Date d'installation du paquet, indéfini si non-installé */
-        virtual int installedBy() = 0;      /*!< UID de l'utilisateur ayant installé le paquet */
+        virtual QList<Depend *> depends() = 0; /*!< @brief Liste des dépendances */
+        virtual QList<PackageFile *> files() = 0; /*!< @brief Liste des fichiers */
+        virtual QDateTime installedDate() = 0; /*!< @brief Date d'installation du paquet, indéfini si non-installé */
+        virtual int installedBy() = 0;      /*!< @brief UID de l'utilisateur ayant installé le paquet */
         
         /**
          * @brief Comparaison rapide du nom
@@ -207,8 +207,8 @@ class Package : public QObject
          * @return true si les noms sont les mêmes, false sinon
          */
         virtual bool fastNameCompare(Package *other) = 0;
-        virtual bool fastVersionCompare(Package *other) = 0; /*!< Comparaison rapide de la version */
-        virtual bool fastNameVersionCompare(Package *other) = 0; /*!< Comparaison rapide du nom et de la version */
+        virtual bool fastVersionCompare(Package *other) = 0; /*!< @brief Comparaison rapide de la version */
+        virtual bool fastNameVersionCompare(Package *other) = 0; /*!< @brief Comparaison rapide du nom et de la version */
         
         /**
          * @brief Enregistrer l'état du paquet
@@ -231,8 +231,8 @@ class Package : public QObject
          * avoir été téléchargé à l'aide de download() pour que ça fonctionne.
          */
         void process();
-        Solver::Action action();        /*!< Action demandée au paquet */
-        void setAction(Solver::Action act); /*!< Définit l'action du paquet */
+        Solver::Action action();        /*!< @brief Action demandée au paquet */
+        void setAction(Solver::Action act); /*!< @brief Définit l'action du paquet */
         
         /**
          * @brief Métadonnées du paquet
@@ -442,13 +442,13 @@ class PackageFile
 #define DEPEND_TYPE_REPLACE  5
 #define DEPEND_TYPE_REVDEP   6   // Dans ce cas, name = index du paquet dans packages, version = 0
 
-#define DEPEND_OP_NOVERSION  0   /*!< Pas de version spécifiée */
-#define DEPEND_OP_EQ         1   /*!< = */
-#define DEPEND_OP_GREQ       2   /*!< >= */
-#define DEPEND_OP_GR         3   /*!< > */
-#define DEPEND_OP_LOEQ       4   /*!< <= */
-#define DEPEND_OP_LO         5   /*!< < */
-#define DEPEND_OP_NE         6   /*!< != */
+#define DEPEND_OP_NOVERSION  0   /*!< @brief Pas de version spécifiée */
+#define DEPEND_OP_EQ         1   /*!< @brief = */
+#define DEPEND_OP_GREQ       2   /*!< @brief >= */
+#define DEPEND_OP_GR         3   /*!< @brief > */
+#define DEPEND_OP_LOEQ       4   /*!< @brief <= */
+#define DEPEND_OP_LO         5   /*!< @brief < */
+#define DEPEND_OP_NE         6   /*!< @brief != */
 
 #define PACKAGE_FLAG_KDEINTEGRATION         0b00000000000011
 #define PACKAGE_FLAG_GUI                    0b00000000000100

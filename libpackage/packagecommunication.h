@@ -63,7 +63,7 @@ class PackageCommunication : public Communication
             @internal
         */
         PackageCommunication(PackageSystem *ps, PackageMetaData *md, const QString &name);
-        ~PackageCommunication();       /*!< Destructeur */
+        ~PackageCommunication();       /*!< @brief Destructeur */
         
         /**
             @brief Permet de savoir si une erreur s'est produite

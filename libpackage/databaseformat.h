@@ -59,29 +59,29 @@ namespace Logram
 */
 struct _Package
 {
-    int32_t name;       /*!< Index de la chaîne du nom */
-    int32_t version;    /*!< Index de la chaîne de version */
-    int32_t maintainer; /*!< Index de la chaîne du nom du mainteneur */
-    int32_t short_desc; /*!< Index de la chaîne de description courte */
-    int32_t source;     /*!< Nom du paquet source */
-    int32_t uurl;       /*!< Url upstream (site web, etc) */
-    int32_t repo;       /*!< Nom du mirroir qui fourni le paquet (sources.list) */
-    int32_t arch;       /*!< Url de téléchargement */
-    int32_t section;    /*!< Section */
-    int32_t distribution; /*!< Distribution */
-    int32_t license;    /*!< Licence */
-    int32_t pkg_hash;   /*!< Index de la chaîne représentant le hash sha1 du paquet .tlz */
-    int32_t mtd_hash;   /*!< Index de la chaîne représentant le hash sha1 du fichier de métadonnées */
-    int32_t flags;      /*!< Flags */
-    int32_t deps;       /*!< Index du tableau de dépendances */
-    int32_t isize;      /*!< Taille de l'installation */
-    int32_t dsize;      /*!< Taille du téléchargement */
-    int32_t used;       /*!< Nombre de paquets installés qui dépendent de ce paquet */
-    int32_t first_file; /*!< Premier des fichiers installés par ce paquet */
+    int32_t name;       /*!< @brief Index de la chaîne du nom */
+    int32_t version;    /*!< @brief Index de la chaîne de version */
+    int32_t maintainer; /*!< @brief Index de la chaîne du nom du mainteneur */
+    int32_t short_desc; /*!< @brief Index de la chaîne de description courte */
+    int32_t source;     /*!< @brief Nom du paquet source */
+    int32_t uurl;       /*!< @brief Url upstream (site web, etc) */
+    int32_t repo;       /*!< @brief Nom du mirroir qui fourni le paquet (sources.list) */
+    int32_t arch;       /*!< @brief Url de téléchargement */
+    int32_t section;    /*!< @brief Section */
+    int32_t distribution; /*!< @brief Distribution */
+    int32_t license;    /*!< @brief Licence */
+    int32_t pkg_hash;   /*!< @brief Index de la chaîne représentant le hash sha1 du paquet .tlz */
+    int32_t mtd_hash;   /*!< @brief Index de la chaîne représentant le hash sha1 du fichier de métadonnées */
+    int32_t flags;      /*!< @brief Flags */
+    int32_t deps;       /*!< @brief Index du tableau de dépendances */
+    int32_t isize;      /*!< @brief Taille de l'installation */
+    int32_t dsize;      /*!< @brief Taille du téléchargement */
+    int32_t used;       /*!< @brief Nombre de paquets installés qui dépendent de ce paquet */
+    int32_t first_file; /*!< @brief Premier des fichiers installés par ce paquet */
 
-    int32_t idate;      /*!< Timestamp de l'installation */
-    int32_t iby;        /*!< UID de l'utilisateur ayant installé le paquet */
-    int32_t index;      /*!< Index du paquet (utilisé par databasewriter) */
+    int32_t idate;      /*!< @brief Timestamp de l'installation */
+    int32_t iby;        /*!< @brief UID de l'utilisateur ayant installé le paquet */
+    int32_t index;      /*!< @brief Index du paquet (utilisé par databasewriter) */
 };
 
 /**
@@ -89,14 +89,14 @@ struct _Package
  */
 struct _File
 {
-    int32_t parent_dir; /*!< Index du _File représentant le dossier parent, -1 si racine */
-    int32_t package;    /*!< Index du paquet contenant le fichier, ignoré si dossier */
-    int32_t flags;      /*!< Flags du fichier (voir PACKAGE_FILE_* dans package.h) */
-    int32_t name_ptr;   /*!< Pointeur du nom de ce fichier dans la zone de donnée de @b files */
-    int32_t next_file_dir;  /*!< Index du fichier suivant appartenant au même dossier, ou -1 */
-    int32_t next_file_pkg;  /*!< Index du fichier suivant appartenant au même paquet, ou -1 */
-    int32_t first_child;    /*!< Premier enfant d'un dossier */
-    uint32_t itime;     /*!< Timestamp UNIX de la date d'installation */
+    int32_t parent_dir; /*!< @brief Index du _File représentant le dossier parent, -1 si racine */
+    int32_t package;    /*!< @brief Index du paquet contenant le fichier, ignoré si dossier */
+    int32_t flags;      /*!< @brief Flags du fichier (voir PACKAGE_FILE_* dans package.h) */
+    int32_t name_ptr;   /*!< @brief Pointeur du nom de ce fichier dans la zone de donnée de @b files */
+    int32_t next_file_dir;  /*!< @brief Index du fichier suivant appartenant au même dossier, ou -1 */
+    int32_t next_file_pkg;  /*!< @brief Index du fichier suivant appartenant au même paquet, ou -1 */
+    int32_t first_child;    /*!< @brief Premier enfant d'un dossier */
+    uint32_t itime;     /*!< @brief Timestamp UNIX de la date d'installation */
 };
 
 /**
@@ -104,8 +104,8 @@ struct _File
 */
 struct _String
 {
-    int32_t ptr;        /*!< Pointeur à partir du début de la table des données */
-    int32_t strpkg;     /*!< Index d'un StrPackagePtr dans strpackages */
+    int32_t ptr;        /*!< @brief Pointeur à partir du début de la table des données */
+    int32_t strpkg;     /*!< @brief Index d'un StrPackagePtr dans strpackages */
 };
 
 /**
@@ -116,8 +116,8 @@ struct _String
 */
 struct _DependPtr
 {
-    int32_t ptr;        /*!< Pointeur sur le premier Depend à partir du début des données */
-    int32_t count;      /*!< Nombre de Depend dans le tableau */
+    int32_t ptr;        /*!< @brief Pointeur sur le premier Depend à partir du début des données */
+    int32_t count;      /*!< @brief Nombre de Depend dans le tableau */
 };
 
 /**
@@ -125,10 +125,10 @@ struct _DependPtr
 */
 struct _Depend
 {
-    int8_t type;        /*!< Type de dépendace, voir DEPEND_TYPE_* */
-    int8_t op;          /*!< Opération (=, >=, etc), voir DEPEND_OP_* */
-    int32_t pkgname;    /*!< Index de la chaîne du nom du paquet de la dépendance, ou index du paquet si REVDEP */
-    int32_t pkgver;     /*!< Index de la chaîne de la version du paquet de la dépendance, ou 0 si REVDEP */
+    int8_t type;        /*!< @brief Type de dépendace, voir DEPEND_TYPE_* */
+    int8_t op;          /*!< @brief Opération (=, >=, etc), voir DEPEND_OP_* */
+    int32_t pkgname;    /*!< @brief Index de la chaîne du nom du paquet de la dépendance, ou index du paquet si REVDEP */
+    int32_t pkgver;     /*!< @brief Index de la chaîne de la version du paquet de la dépendance, ou 0 si REVDEP */
 };
 
 /**
@@ -136,8 +136,8 @@ struct _Depend
 */
 struct _StrPackage
 {
-    int32_t version;    /*!< Index de la chaîne de version nécessaire pour qu'on ait le bon paquet */
-    int32_t package;    /*!< Index du paquet */
+    int32_t version;    /*!< @brief Index de la chaîne de version nécessaire pour qu'on ait le bon paquet */
+    int32_t package;    /*!< @brief Index du paquet */
 };
 
 /**
@@ -145,8 +145,8 @@ struct _StrPackage
 */
 struct _StrPackagePtr
 {
-    int32_t ptr;        /*!< Pointeur sur un _StrPackage dans la zone de données */
-    int32_t count;      /*!< Nombre de StrPackages dedans */
+    int32_t ptr;        /*!< @brief Pointeur sur un _StrPackage dans la zone de données */
+    int32_t count;      /*!< @brief Nombre de StrPackages dedans */
 };
 
 } /* Namespace */

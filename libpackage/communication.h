@@ -76,9 +76,9 @@ class Communication : public Templatable
         */
         enum Type
         {
-            None,       /*!< Pas de type, communication invalide */
-            Question,   /*!< Question, attend une entrée en retour (setValue à appeler) */
-            Message     /*!< Message, pas d'entrée nécessaire en retour */
+            None,       /*!< @brief Pas de type, communication invalide */
+            Question,   /*!< @brief Question, attend une entrée en retour (setValue à appeler) */
+            Message     /*!< @brief Message, pas d'entrée nécessaire en retour */
         };
         
         /**
@@ -89,8 +89,8 @@ class Communication : public Templatable
         */
         enum Origin
         {
-            Package,    /*!< Communication venant d'un paquet */
-            System      /*!< Communication venant du système */
+            Package,    /*!< @brief Communication venant d'un paquet */
+            System      /*!< @brief Communication venant du système */
         };
         
         /**
@@ -102,12 +102,12 @@ class Communication : public Templatable
         */
         enum ReturnType
         {
-            Invalid,        /*!< Invalide, communication invalide */
-            String,         /*!< Chaîne de caractère, n'oubliez pas d'appeler isEntryValid() */
-            Integer,        /*!< Entier */
-            Float,          /*!< Nombre flottant */
-            SingleChoice,   /*!< Choix d'un élément, utilisez enableChoice() et choicesCount() avec choice() */
-            MultiChoice     /*!< Choix de plusieurs éléments avec enableChoice() */
+            Invalid,        /*!< @brief Invalide, communication invalide */
+            String,         /*!< @brief Chaîne de caractère, n'oubliez pas d'appeler isEntryValid() */
+            Integer,        /*!< @brief Entier */
+            Float,          /*!< @brief Nombre flottant */
+            SingleChoice,   /*!< @brief Choix d'un élément, utilisez enableChoice() et choicesCount() avec choice() */
+            MultiChoice     /*!< @brief Choix de plusieurs éléments avec enableChoice() */
         };
         
         /**
@@ -119,9 +119,9 @@ class Communication : public Templatable
         */
         struct Choice
         {
-            QString title;  /*!< Titre du choix, comme par exemple «Le lapin bleu» */
-            QString value;  /*!< Valeur du choix, par exemple «bluebunny» */
-            bool selected;  /*!< True si le choix est actuellement sélectionné (c'est le cas du choix par défaut avant une modification de la part du client) */
+            QString title;  /*!< @brief Titre du choix, comme par exemple «Le lapin bleu» */
+            QString value;  /*!< @brief Valeur du choix, par exemple «bluebunny» */
+            bool selected;  /*!< @brief True si le choix est actuellement sélectionné (c'est le cas du choix par défaut avant une modification de la part du client) */
         };
         
         /**
@@ -160,8 +160,8 @@ class Communication : public Templatable
         */
         virtual Origin origin() const = 0;
         
-        virtual QString title() const = 0;          /*!< Titre de la communication */
-        virtual QString description() const = 0;    /*!< Description de la communication */
+        virtual QString title() const = 0;          /*!< @brief Titre de la communication */
+        virtual QString description() const = 0;    /*!< @brief Description de la communication */
         
         /**
             @brief Valeur par défaut pour une chaîne
@@ -259,8 +259,8 @@ class Communication : public Templatable
         
         /** Définis la valeur de retour d'une question chaîne, n'oubliez pas isEntryValid() */
         virtual void setValue(const QString &value) = 0;
-        virtual void setValue(int value) = 0;               /*!< Définis la valeur de retour pour un entier */
-        virtual void setValue(double value) = 0;            /*!< Définis la valeur de retour pour un flottant */
+        virtual void setValue(int value) = 0;               /*!< @brief Définis la valeur de retour pour un entier */
+        virtual void setValue(double value) = 0;            /*!< @brief Définis la valeur de retour pour un flottant */
         
         /**
             @brief Indique si l'entrée est valide

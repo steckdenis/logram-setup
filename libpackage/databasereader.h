@@ -52,8 +52,8 @@ class Package;
 */
 struct UpgradeInfo
 {
-    int installedPackage;   /*!< ID du paquet installé */
-    int newPackage;         /*!< ID du paquet plus récent */
+    int installedPackage;   /*!< @brief ID du paquet installé */
+    int newPackage;         /*!< @brief ID du paquet plus récent */
 };
 
 /**
@@ -150,7 +150,7 @@ class DatabaseReader
             @param _ps PackageSystem utilisé
         */
         DatabaseReader(PackageSystem *_ps);
-        ~DatabaseReader();  /*!< Destructeur */
+        ~DatabaseReader();  /*!< @brief Destructeur */
         
         /**
             @brief Initialise le lecteur
@@ -163,7 +163,7 @@ class DatabaseReader
         */
         bool init();
         
-        bool initialized() const; /*!< Permet de savoir si init() a déjà été appelé */
+        bool initialized() const; /*!< @brief Permet de savoir si init() a déjà été appelé */
 
         /**
             @brief Récupérer un paquet en fonction de son nom et de sa version
@@ -340,7 +340,7 @@ class DatabaseReader
         */
         QList<int> orphans();
         
-        int packages(); /*!< Nombre de paquets disponibles dans la base de donnée */
+        int packages(); /*!< @brief Nombre de paquets disponibles dans la base de donnée */
 
         /**
             @brief Chaîne ayant un certain index
@@ -409,7 +409,7 @@ class DatabaseReader
         */    
         _File *file(int index);
         
-        _Depend *depend(int32_t ptr);   /*!< Renvoie la dépendance pointée par @p ptr dans le fichier @b depends */
+        _Depend *depend(int32_t ptr);   /*!< @brief Renvoie la dépendance pointée par @p ptr dans le fichier @b depends */
         
     private:
         bool mapFile(const QString &file, QFile **ptr, uchar **map);

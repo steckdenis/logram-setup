@@ -157,13 +157,13 @@ class RepositoryManager : public QObject
 
 } /* Namespace */
 
-#define SOURCEPACKAGE_FLAG_LATEST               0b00000001  /*!< Dernière version du paquet dans sa distribution */
-#define SOURCEPACKAGE_FLAG_MANUAL               0b00000010  /*!< Importation manuelle */
-#define SOURCEPACKAGE_FLAG_FAILED               0b00000100  /*!< Construction ratée */
-#define SOURCEPACKAGE_FLAG_OVERWRITECHANGELOG   0b00001000  /*!< Demande au serveur de construction d'ajouter une entrée automatique au changelog */
-#define SOURCEPACKAGE_FLAG_REBUILD              0b00010000  /*!< Reconstruction demandée */
-#define SOURCEPACKAGE_FLAG_CONTINUOUS           0b00100000  /*!< Reconstruction continue : laisser SOURCEPACKAGE_FLAG_REBUILD après la reconstruction */
-#define SOURCEPACKAGE_FLAG_WARNINGS             0b01000000  /*!< Des alertes ont été générées */
-#define SOURCEPACKAGE_FLAG_BUILDING             0b10000000  /*!< Paquet en cours de construction */
+#define SOURCEPACKAGE_FLAG_LATEST               0b00000001  /*!< @brief Dernière version du paquet dans sa distribution */
+#define SOURCEPACKAGE_FLAG_MANUAL               0b00000010  /*!< @brief Importation manuelle */
+#define SOURCEPACKAGE_FLAG_FAILED               0b00000100  /*!< @brief Construction ratée */
+#define SOURCEPACKAGE_FLAG_OVERWRITECHANGELOG   0b00001000  /*!< @brief Demande au serveur de construction d'ajouter une entrée automatique au changelog */
+#define SOURCEPACKAGE_FLAG_REBUILD              0b00010000  /*!< @brief Reconstruction demandée */
+#define SOURCEPACKAGE_FLAG_CONTINUOUS           0b00100000  /*!< @brief Reconstruction continue : laisser SOURCEPACKAGE_FLAG_REBUILD après la reconstruction */
+#define SOURCEPACKAGE_FLAG_WARNINGS             0b01000000  /*!< @brief Des alertes ont été générées */
+#define SOURCEPACKAGE_FLAG_BUILDING             0b10000000  /*!< @brief Paquet en cours de construction */
 
 #endif

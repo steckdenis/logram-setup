@@ -102,14 +102,14 @@ class DatabasePackage : public Package
         */
         enum UrlType
         {
-            Binary,         /*!< Url du paquet binaire .tlz */
-            Metadata,       /*!< Url des métadonnées .xml.xz */
-            Source          /*!< Url de la source .src.tlz */
+            Binary,         /*!< @brief Url du paquet binaire .tlz */
+            Metadata,       /*!< @brief Url des métadonnées .xml.xz */
+            Source          /*!< @brief Url de la source .src.tlz */
         };
         
         QString name();
         QString version();
-        QString newerVersion();     /*!< Version d'une éventuelle mise à jour, QString() si paquet à jour */
+        QString newerVersion();     /*!< @brief Version d'une éventuelle mise à jour, QString() si paquet à jour */
         QString maintainer();
         QString shortDesc();        
         QString source();           
@@ -169,7 +169,7 @@ class DatabasePackage : public Package
         int downloadSize();
         int installSize();
 
-        QList<Package *> versions();    /*!< Liste de Package donc chacun est une version différente de ce paquet */
+        QList<Package *> versions();    /*!< @brief Liste de Package donc chacun est une version différente de ce paquet */
         QList<Depend *> depends();
         QList<PackageFile *> files();
         

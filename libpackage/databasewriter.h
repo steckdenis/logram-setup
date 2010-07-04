@@ -63,10 +63,10 @@ struct _Depend;
 */
 struct knownEntry
 {
-    QByteArray version; /*!< Version du paquet */
-    _Package *pkg;      /*!< Paquet binaire */
-    int index;          /*!< Index de ce paquet binaire */
-    bool ignore;        /*!< True si c'est un paquet présent dans les dépôts et installé à la même version */
+    QByteArray version; /*!< @brief Version du paquet */
+    _Package *pkg;      /*!< @brief Paquet binaire */
+    int index;          /*!< @brief Index de ce paquet binaire */
+    bool ignore;        /*!< @brief True si c'est un paquet présent dans les dépôts et installé à la même version */
 };
 
 /**
@@ -103,9 +103,9 @@ class DatabaseWriter : public QObject
          */
         enum FileDataType
         {
-            PackagesList,   /*!< Liste des paquets (packages.xz) */
-            Translations,   /*!< Traductions (transtale.lang.xz) */
-            FilesList       /*!< Liste des fichiers (files.xz) */
+            PackagesList,   /*!< @brief Liste des paquets (packages.xz) */
+            Translations,   /*!< @brief Traductions (transtale.lang.xz) */
+            FilesList       /*!< @brief Liste des fichiers (files.xz) */
         };
 
         /**

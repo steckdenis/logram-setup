@@ -71,7 +71,7 @@ class ProcessThread : public QThread
          */
         void run();
         
-        bool error() const;     /*!< Retourne true en cas d'erreur, run() ne pouvant retourner de valeur */
+        bool error() const;     /*!< @brief Retourne true en cas d'erreur, run() ne pouvant retourner de valeur */
         
     private:
         struct Private;
