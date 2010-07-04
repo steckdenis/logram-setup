@@ -20,6 +20,11 @@
  * Boston, MA  02110-1301  USA
  */
 
+/**
+ * @file processthread.h
+ * @brief Gestion des opérations sur les paquets
+ */
+
 #ifndef __PROCESSTHREAD_H__
 #define __PROCESSTHREAD_H__
 
@@ -34,14 +39,37 @@ class Package;
 class PackageSystem;
 class PackageMetaData;
 
+/**
+ * @brief Gestion des opérations sur les paquets
+ * 
+ * Cette classe est un thread installant, supprimant ou mettant à jour
+ * un paquet.
+ */
 class ProcessThread : public QThread
 {
     public:
+        /**
+         * @brief Constructeur
+         * @param ps PackageSystem utilisé
+         * @param pkg Package à installer, supprimer ou mettre à jour
+         */
         ProcessThread(PackageSystem *ps, Package *pkg);
+        
+        /**
+         * @brief Destructeur
+         */
         ~ProcessThread();
         
+        /**
+         * @brief Lance l'opération
+         * 
+         * Lance l'opération, en se basant sur Package::action() pour savoir
+         * que faire. Si installation ou mise à jour, le paquet doit déjà
+         * avoir été téléchargé.
+         */
         void run();
-        bool error() const;
+        
+        bool error() const;     /*!< Retourne true en cas d'erreur, run() ne pouvant retourner de valeur */
         
     private:
         struct Private;
