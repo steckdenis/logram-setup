@@ -386,34 +386,44 @@ class Package : public QObject
         Private *d;
 };
 
+/**
+ * @brief Dépendance d'un paquet
+ */
 class Depend
 {
     public:
-        Depend();
-        virtual ~Depend() {}
+        Depend();               /*!< @brief Constructeur */
+        virtual ~Depend() {}    /*!< @brief Destructeur */
 
-        virtual QString name() = 0;
-        virtual QString version() = 0;
-        virtual int8_t type() = 0;
-        virtual int8_t op() = 0;
+        virtual QString name() = 0;     /*!< @brief Nom du paquet */
+        virtual QString version() = 0;  /*!< @brief Version */
+        virtual int8_t type() = 0;      /*!< @brief Type de dépendance (DEPEND_TYPE*) */
+        virtual int8_t op() = 0;        /*!< @brief Opération (DEPEND_OP*) */
 };
 
+/**
+ * @brief Fichier d'un paquet
+ */
 class PackageFile
 {
     public:
+        /**
+         * @brief Constructeur 
+         * @param ps PackageSystem utilisé
+         */
         PackageFile(PackageSystem *ps);
-        virtual ~PackageFile();
+        virtual ~PackageFile();             /** @brief Destructeur */
         
-        virtual QString path() = 0;
-        virtual int flags() = 0;
-        virtual uint installTime() = 0;
-        virtual Package *package() = 0;
+        virtual QString path() = 0;         /** @brief Chemin */
+        virtual int flags() = 0;            /** @brief Flags (PACKAGE_FILE*) */
+        virtual uint installTime() = 0;     /** @brief Timestamp UNIX de la date d'installation */
+        virtual Package *package() = 0;     /** @brief Paquet auquel le fichier appartient */
         
-        virtual void setFlags(int flags) = 0;
-        virtual void setInstallTime(uint timestamp) = 0;
+        virtual void setFlags(int flags) = 0;   /** @brief Modifie les flags du fichier */
+        virtual void setInstallTime(uint timestamp) = 0;    /** @brief Définit la date d'installation */
         
     protected:
-        void saveFile();
+        void saveFile();                    /** @brief Enregistre ce fichier comme devant être écrit dans installed_files.list */
         
     private:
         struct Private;
@@ -432,13 +442,13 @@ class PackageFile
 #define DEPEND_TYPE_REPLACE  5
 #define DEPEND_TYPE_REVDEP   6   // Dans ce cas, name = index du paquet dans packages, version = 0
 
-#define DEPEND_OP_NOVERSION  0   // Pas de version spécifiée
-#define DEPEND_OP_EQ         1   // =
-#define DEPEND_OP_GREQ       2   // >=
-#define DEPEND_OP_GR         3   // >
-#define DEPEND_OP_LOEQ       4   // <=
-#define DEPEND_OP_LO         5   // <
-#define DEPEND_OP_NE         6   // !=
+#define DEPEND_OP_NOVERSION  0   /*!< Pas de version spécifiée */
+#define DEPEND_OP_EQ         1   /*!< = */
+#define DEPEND_OP_GREQ       2   /*!< >= */
+#define DEPEND_OP_GR         3   /*!< > */
+#define DEPEND_OP_LOEQ       4   /*!< <= */
+#define DEPEND_OP_LO         5   /*!< < */
+#define DEPEND_OP_NE         6   /*!< != */
 
 #define PACKAGE_FLAG_KDEINTEGRATION         0b00000000000011
 #define PACKAGE_FLAG_GUI                    0b00000000000100

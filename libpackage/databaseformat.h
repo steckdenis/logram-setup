@@ -84,6 +84,9 @@ struct _Package
     int32_t index;      /*!< Index du paquet (utilisé par databasewriter) */
 };
 
+/**
+ * @brief Fichier ou dossier d'un paquet
+ */
 struct _File
 {
     int32_t parent_dir; /*!< Index du _File représentant le dossier parent, -1 si racine */

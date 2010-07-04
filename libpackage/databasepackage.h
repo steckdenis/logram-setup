@@ -211,20 +211,31 @@ class DatabaseDepend : public Depend
         Private *d;
 };
 
+/**
+ * @brief Fichier d'un paquet en provenance de la base de donnée
+ */
 class DatabaseFile : public PackageFile
 {
     public:
+        /**
+         * @brief Constructeur
+         * @param ps PackageSystem utilisé
+         * @param dr DatabaseReader permettant de lire le fichier
+         * @param file Fichier dans la base de donnée
+         * @param pkg Paquet auquel ce fichier appartient
+         * @param packagebinded True si ~DatabasePackage() doit supprimer @p pkg
+         */
         DatabaseFile(PackageSystem *ps, DatabaseReader *dr, _File *file, DatabasePackage *pkg, bool packagebinded);
-        ~DatabaseFile();
+        ~DatabaseFile();    /*!< @brief Destructeur */
         
-        QString path();
-        int flags();
-        uint installTime();
-        Package *package();
+        QString path();     /*!< @brief Chemin d'accès */
+        int flags();        /*!< @brief Flags */
+        uint installTime(); /*!< @brief Timestamp d'installation */
+        Package *package(); /*!< @brief Paquet auquel appartient ce fichier */
         
-        void setFlags(int flags);
-        void setInstallTime(uint timestamp);
-        void setPackageBinded(bool binded);
+        void setFlags(int flags);               /*!< @brief Définit les flags du paquet et les enregistre dans installed_files.list */
+        void setInstallTime(uint timestamp);    /*!< @brief Définit la date d'installation */
+        void setPackageBinded(bool binded);     /*!< @brief Définit si le destructeur doit supprimer le paquet de ce fichier */
         
     private:
         struct Private;

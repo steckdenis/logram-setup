@@ -139,21 +139,30 @@ class FileDepend : public Depend
         Private *d;
 };
 
+/**
+ * @brief Fichier d'un paquet en provenance d'un fichier
+ */
 class FileFile : public PackageFile
 {
     public:
+        /**
+         * @brief Constructeur
+         * @param ps PackageSystem utilisé
+         * @param path Chemin d'accès
+         * @param flags Flags du fichier
+         */
         FileFile(PackageSystem *ps, const QString &path, int flags);
-        ~FileFile();
+        ~FileFile();                    /*!< @brief Destructeur */
         
-        QString path();
-        int flags();
-        uint installTime();
-        Package *package();
+        QString path();                 /*!< @brief Chemin d'accès */
+        int flags();                    /*!< @brief Flags */
+        uint installTime();             /*!< @brief Timestamp d'installation */
+        Package *package();             /*!< @brief Paquet auquel appartient ce fichier */
         
-        void setFlags(int flags);
-        void setFlagsNoSave(int flags);
-        void setPath(const QString &path);
-        void setInstallTime(uint timestamp);
+        void setFlags(int flags);       /*!< @brief Définit les flags de ce fichier et les sauvegarde dans installed_files.list */
+        void setFlagsNoSave(int flags); /*!< @brief Définit les flags de ce fichier sans les sauvegarder dans installed_files.list */
+        void setPath(const QString &path); /*!< @brief Définit le chemin d'accès du fichier */
+        void setInstallTime(uint timestamp); /*!< @brief Définit le timestamp d'installation */
         
     private:
         struct Private;
