@@ -20,6 +20,11 @@
  * Boston, MA  02110-1301  USA
  */
 
+/**
+ * @file templatable.h
+ * @brief Petit moteur de templates
+ */
+
 #ifndef __TEMPLATABLE_H__
 #define __TEMPLATABLE_H__
 
@@ -29,18 +34,82 @@
 namespace Logram
 {
 
+/**
+ * @brief Petit moteur de templates
+ * 
+ * Les templates permettent de remplacer des clefs par des valeurs dans des
+ * chaînes de caractère. Ceci permet par exemple de ne pas coder en dur des
+ * valeurs dans les fichiers metadata.xml
+ * 
+ * Les clefs sont de la forme {{clef}} :
+ * 
+ * @code
+ * QString s = "Bonjour {{prenom}} !";
+ * 
+ * Templatable tpl(this);
+ * 
+ * tpl.addKey("prenom", "Logram");
+ * qDebug() << tpl.templateString(s);
+ * 
+ * // Affiche "Bonjour Logram !"
+ * @endcode
+ */
 class Templatable : public QObject
 {
     public:
+        /**
+         * @brief Constructeur
+         * @param parent QObject parent
+         */
         Templatable(QObject *parent);
+        
+        /**
+         * @brief Destructeur
+         */
         virtual ~Templatable();
         
+        /**
+         * @brief Associe une valeur à une clef
+         * 
+         * Associe une valeur à une clef. Si cette fonction est appelée
+         * plusieurs fois pour une même clef, la dernière valeur est utilisée.
+         * 
+         * @param key Clef
+         * @param value Valeur
+         */
         void addKey(const QString &key, const QString &value);
+        
+        /**
+         * @brief Obtient la valeur d'une clef
+         * @param key Clef
+         * @return Valeur de la clef, ou QString() si non renseignée
+         * @sa addKey
+         */
         QString getKey(const QString &key) const;
+        
+        /**
+         * @brief Permet de savoir si une clef existe
+         * @param key Clef
+         * @return True si la clef existe, false sinon
+         */
         bool contains(const QString &key) const;
+        
+        /**
+         * @brief Supprime une clef
+         * @param key Nom de la clef
+         */
         void removeKey(const QString &key);
         
+        /**
+         * @brief Formatte une chaîne de caratère
+         * @param tpl Chaîne contenant le motif
+         * @return @p tpl avec les clefs remplacées par les valeurs
+         */
         QString templateString(const QString &tpl) const;
+        
+        /**
+         * @overload
+         */
         QByteArray templateString(const QByteArray &tpl) const;
         
     private:

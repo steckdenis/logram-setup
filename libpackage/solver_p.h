@@ -20,6 +20,15 @@
  * Boston, MA  02110-1301  USA
  */
 
+/**
+ * @file solver_p.h
+ * @brief Bindings QtScript pour le Solveur
+ * 
+ * Le Solveur de LPM utilise un script QtScript pour peser les différent
+ * choix. Ce fichier contient des classes <em>wrapper</em> exposant
+ * les structures internets de Solver au script.
+ */
+
 #ifndef __SOLVERP_H__
 #define __SOLVERP_H__
 
