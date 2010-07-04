@@ -2,7 +2,7 @@
  * cache.cpp
  * This file is part of Logram
  *
- * Copyright (C) 2009 - Denis Steckelmacher <steckdenis@logram-project.org>
+ * Copyright (C) 2009, 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
  *
  * Logram is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
