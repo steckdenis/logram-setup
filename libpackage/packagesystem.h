@@ -29,7 +29,7 @@
 #include <QStringList>
 #include <QRegExp>
 
-// Architecture de Setup
+// Architecture de LPM
 #ifndef SETUP_ARCH
     #if __SIZEOF_POINTER__ == 4
         #define SETUP_ARCH "i686"

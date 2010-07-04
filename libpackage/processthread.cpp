@@ -239,7 +239,7 @@ bool ProcessThread::Private::install_files()
             {
                 PackageError *err = new PackageError;
                 err->type = PackageError::InstallError;
-                err->more = ProcessThread::tr("Aucun fichier dans la base de donnée Setup ne correspond à %1").arg(QString(path));
+                err->more = ProcessThread::tr("Aucun fichier dans la base de donnée LPM ne correspond à %1").arg(QString(path));
                 err->info = pkg->name() + '~' + pkg->version();
                 
                 ps->setLastError(err);

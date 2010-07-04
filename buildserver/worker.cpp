@@ -184,10 +184,10 @@ void Worker::run()
         return;
     }
     
-    // Mettre à jour la base de donnée Setup du chroot
+    // Mettre à jour la base de donnée LPM du chroot
     PackageSystem *ps = 0;
     
-    log(Operation, "Updating the Setup database");
+    log(Operation, "Updating the LPM database");
     
     if (!updateDatabase(ps))
     {
@@ -336,7 +336,7 @@ bool Worker::prepareTemp()
         return false;
     }
     
-    // Générer les fichiers nécessaires au Setup chrooté
+    // Générer les fichiers nécessaires au LPM chrooté
     // Sources.list
     QSettings sourcesList(tmpRoot + "/etc/lgrpkg/sources.list", QSettings::IniFormat, 0);
     

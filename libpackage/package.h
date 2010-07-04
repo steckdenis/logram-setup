@@ -124,7 +124,7 @@ class Package : public QObject
          * @brief Télécharge le paquet
          *  
          * Télécharge le fichier .tlz du paquet binaire, et le place dans le
-         * cache Setup. 
+         * cache LPM. 
          *  
          * Cette fonction n'est pas bloquante, elle retourne sitôt le
          * téléchargement commencé.

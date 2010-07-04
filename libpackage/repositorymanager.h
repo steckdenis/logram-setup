@@ -101,7 +101,7 @@ class RepositoryManager : public QObject
          *  - @b wiki_page : si @b websiteIntegration, mise à jour ou ajout
          *    d'une page pour ce paquet.
          *  - @b wiki_logentry : Ajout d'un enregistrement, author_ip =
-         *    "Setup import" (hack, author_ip est un VARCHAR). Seulement si
+         *    "LPM import" (hack, author_ip est un VARCHAR). Seulement si
          *    @b websiteIntegration.
          *  - @b packages_changelog : Ajout si nécessaire des enregistrement
          *    trouvés dans metadata.xml mais pas dans la BDD

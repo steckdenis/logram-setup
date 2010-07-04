@@ -14,12 +14,12 @@ set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 find_package(Qt4 REQUIRED)
 
 # Translations
-qt4_create_translation(QM_FILES libpackage setup buildserver i18n/libpackage_en.ts OPTIONS -locations relative -codecfortr UTF-8)
+qt4_create_translation(QM_FILES libpackage lpm buildserver i18n/libpackage_en.ts OPTIONS -locations relative -codecfortr UTF-8)
 
 add_custom_target(translations DEPENDS ${QM_FILES})
 install(FILES ${QM_FILES} DESTINATION /usr/share/qt4/translations/)
 
 # Build everything
 add_subdirectory(libpackage)
-add_subdirectory(setup)
+add_subdirectory(lpm)
 add_subdirectory(buildserver)

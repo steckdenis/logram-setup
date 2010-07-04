@@ -104,7 +104,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
             cout << "    --config <configfile>" << endl;
             cout << "        Use <configfile> as config file instead of " << qPrintable(confFileName) << endl;
             cout << "    --worker <dir>" << endl;
-            cout << "        Internal command. Chroot in <dir> and launch the equivalent of setup download && setup build && setup binaries on the file <dir>/src/metadata.xml" << endl;
+            cout << "        Internal command. Chroot in <dir> and launch the equivalent of lpm download && lpm build && lpm binaries on the file <dir>/src/metadata.xml" << endl;
             
             quitApp = true;
             return;
@@ -460,7 +460,7 @@ bool App::workerProcess(const QString &root)
     }
     
     // On a normalement ici un fichier metadata.xml. Simplement lancer
-    // la suite setup download && setup build && setup binaries
+    // la suite lpm download && lpm build && lpm binaries
     
     // Il nous faut un PackageSystem (pour les progressions et la sortie processus)
     PackageSystem *ps = new PackageSystem(this);

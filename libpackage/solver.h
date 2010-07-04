@@ -96,6 +96,7 @@ class Solver : public QObject
         
         /**
          * @brief Erreur dans un noeud
+         * 
          * Un paquet peut ne pas pouvoir être retenu dans l'arbre des dépendances pour plusieurs raisons.
          * 
          * Les Node trouvés par le solveur contiennent un champs @b error. S'il est à zéro, tout s'est

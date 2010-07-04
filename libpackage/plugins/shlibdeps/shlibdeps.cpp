@@ -344,7 +344,7 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
                 if (my) break;
             }
             
-            // Utiliser la BDD Setup pour trouver quel paquet contient ce fichier, s'il existe
+            // Utiliser la BDD LPM pour trouver quel paquet contient ce fichier, s'il existe
             pfiles.clear();
             pth.remove(0, 1);
             

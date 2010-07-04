@@ -205,7 +205,7 @@ void Package::processEnd()
         return;
     }
     
-    // Enregistrer le paquet dans la liste des paquets installés pour le prochain setup update
+    // Enregistrer le paquet dans la liste des paquets installés pour le prochain lpm update
     QSettings *set = d->ps->installedPackagesList();
     
     if (action() == Solver::Install)

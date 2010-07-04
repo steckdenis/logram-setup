@@ -90,4 +90,4 @@ install(FILES scriptapi DESTINATION /usr/bin/lgrpkg)
 
 add_subdirectory(plugins)
 
-install(CODE "message(\"/etc/lgrpkg/sources.list.sample has been installed. Rename it to sources.list before using Setup. Its configuration is normally correct.\")")
+install(CODE "message(\"/etc/lgrpkg/sources.list.sample has been installed. Rename it to sources.list before using LPM. Its configuration is normally correct.\")")

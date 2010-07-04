@@ -24,9 +24,9 @@
     @file databaseformat.h
     @brief Description du format binaire de la base de donnée
     
-    La base de donnée binaire de Setup est composée de plusieurs fichiers :
+    La base de donnée binaire de LPM est composée de plusieurs fichiers :
     
-     - @b packages    : Contient la liste des paquets connus par Setup. Il contient
+     - @b packages    : Contient la liste des paquets connus par LPM. Il contient
                         une liste de _Package
      - @b strings     : Contient une liste de _String. Ainsi, dans @b packages, toute
                         référence à une chaîne se fait grâce à son index. La comparaison

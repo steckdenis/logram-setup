@@ -65,7 +65,7 @@ void App::add(const QStringList &packages)
     if (!solver->solve() || !solver->weight())
     {
         cout << COLOR(tr("ERREUR : "), "31");
-        cout << qPrintable(solverError(solver, tr("Bug dans Setup !"))) << endl;
+        cout << qPrintable(solverError(solver, tr("Bug dans LPM !"))) << endl;
         
         delete solver;
         return;
@@ -644,7 +644,7 @@ QString App::solverError(Logram::Solver *solver, const QString &defaultString)
     {
         if (err->other->error == 0)
         {
-            return tr("Erreur inconnue. Ajoutez le paramètre -G à Setup et postez sa sortie dans votre rapport de bug");
+            return tr("Erreur inconnue. Ajoutez le paramètre -G à LPM et postez sa sortie dans votre rapport de bug");
         }
         
         errorNode = err->other;
@@ -868,7 +868,7 @@ void App::manageResults(Solver *solver)
                 // Informer qu'on a fait un choix
                 if (!solver->continueList(index, ended))
                 {
-                    cout << COLOR(tr("Impossible de choisir cette entrée : "), "31") << qPrintable(solverError(solver, tr("Bug dans Setup !"))) << endl;
+                    cout << COLOR(tr("Impossible de choisir cette entrée : "), "31") << qPrintable(solverError(solver, tr("Bug dans LPM !"))) << endl;
                     cout << qPrintable(tr("Si vous avez essayé tous les choix, essayez de remonter (u).")) << endl;
                     
                     // Permettre à l'utilisateur d'essayer une autre proposition
@@ -994,7 +994,7 @@ void App::manageResults(Solver *solver)
         }
         
         cout << endl;
-        cout << qPrintable(tr("Pour une suppression totale de %1. Utilisez setup autoremove pour supprimer ces paquets.").arg(PackageSystem::fileSizeFormat(-instSize))) << endl;
+        cout << qPrintable(tr("Pour une suppression totale de %1. Utilisez lpm autoremove pour supprimer ces paquets.").arg(PackageSystem::fileSizeFormat(-instSize))) << endl;
     }
     
     // Savoir si on doit dire à l'utilisateur de redémarrer

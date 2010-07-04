@@ -1,4 +1,4 @@
-project(setup)
+project(lpm)
 
 configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
@@ -19,7 +19,7 @@ include_directories(
         ${QT_QT_INCLUDE_DIR}
 )
 
-set(setup_SRCS
+set(lpm_SRCS
         cache.cpp
         main.cpp
         app.cpp
@@ -30,13 +30,13 @@ set(setup_SRCS
         repoma.cpp
 )
 
-qt4_automoc(${setup_SRCS})
+qt4_automoc(${lpm_SRCS})
 
-add_executable(setup ${setup_SRCS})
+add_executable(lpm ${lpm_SRCS})
 
-target_link_libraries(setup
+target_link_libraries(lpm
         ${QT_QTCORE_LIBRARY}
         lgrpkg
 )
 
-install(TARGETS setup DESTINATION /usr/bin)
+install(TARGETS lpm DESTINATION /usr/bin)

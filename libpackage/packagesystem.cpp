@@ -237,7 +237,7 @@ QSettings *Logram::PackageSystem::installedPackagesList() const
 
 bool Logram::PackageSystem::update()
 {
-    // Explorer la liste des mirroirs dans /etc/setup/sources.list, format QSettings
+    // Explorer la liste des mirroirs dans /etc/lgrpkg/sources.list, format QSettings
     QString lang = d->set->value("Language", tr("fr", "Langue par défaut pour les paquets")).toString();
     
     DatabaseWriter *db = new DatabaseWriter(this);

@@ -60,15 +60,15 @@ struct UpgradeInfo
     @brief Lis les informations de la base de donnée binaire
     
     Cette classe est le coeur de la partie "Gestion de la base de donnée"
-    de Setup.
+    de LPM.
     
     Elle contient un ensemble de fonctions permettant de lire la base de
-    donnée binaire utilisée par Setup.
+    donnée binaire utilisée par LPM.
     
     @section technical Aspect technique
     
     Comme expliqué dans databaseformat.h, la base de donnée binaire de
-    Setup est découpée en 5 fichiers.
+    LPM est découpée en 5 fichiers.
     
     Pour une plus grande performance et facilité de lecture, ces fichiers
     sont mappés en mémoire en utilise QFile::map(). Ainsi, les différents

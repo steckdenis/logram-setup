@@ -22,7 +22,7 @@
 
 /**
     @file packagecommunication.h
-    @brief Gère les communications entre un paquet et Setup
+    @brief Gère les communications entre un paquet et LPM
 */
 
 #ifndef __PACKAGECOMMUNICATION_H__
@@ -37,7 +37,7 @@ class PackageSystem;
 class PackageMetaData;
 
 /**
-    @brief Gère les communications entre un paquet et Setup
+    @brief Gère les communications entre un paquet et LPM
     
     Lorsqu'un paquet est installé, mis à jour ou supprimé, il peut avoir besoin
     d'informations. Pour les obtenir, la meilleure manière est de lancer une

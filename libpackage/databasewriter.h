@@ -73,7 +73,7 @@ struct knownEntry
     @brief Enregistre les paquets des dépôts dans la base de donnée binaire
     
     Cette classe est responsable du lourd traitement d'enregistrement des paquets dans
-    la base de donnée binaire. Grâce à son travail, Setup est rapide même s'il doit gérer
+    la base de donnée binaire. Grâce à son travail, LPM est rapide même s'il doit gérer
     plusieurs millions de paquets.
     
     Les tâches accomplies sont titanesques :

@@ -456,7 +456,7 @@ void App::help()
     
     QString rs;
 
-    rs = tr("Utilisation : setup [options] <action> [arguments]\n"
+    rs = tr("Utilisation : lpm [options] <action> [arguments]\n"
             "    help               Afficher l'aide\n"
             "    version            Afficher la version\n"
             "    search <pattern>   Afficher tous les paquets dont le nom\n"
@@ -507,12 +507,12 @@ void App::help()
             "    -cR <conf root>    Chemin racine de la configuration (\"/\" par défaut).\n"
             "    -vR <var root>     Chemin racine des fichiers temporaires (\"/\" par défaut).\n"
             "    -P path            Ajoute un chemin à inspecter pour trouver les plugins\n"
-            "                       de vérification des paquets (setup binaries).\n"
+            "                       de vérification des paquets (lpm binaries).\n"
             "    -C                 Affiche l'historique des modifications d'un paquet\n"
             "                       quand utilisé avec showpkg.\n"
             "    -L                 Affiche la licence d'un paquet quand utilisé avec showpkg.\n"
             "    -T                 Désactive l'exécution des triggers.\n"
-            "    -W                 Désactive les couleurs dans la sortie de Setup.\n");
+            "    -W                 Désactive les couleurs dans la sortie de LPM.\n");
    
     cout << qPrintable(rs);
 }
@@ -521,7 +521,7 @@ void App::version()
 {
     QString rs;
     
-    rs = tr("Logram Setup " VERSION "\n"
+    rs = tr("Logram Package Manager " VERSION "\n"
             "\n"
             "Logram is free software; you can redistribute it and/or modify\n"
             "it under the terms of the GNU General Public License as published by\n"

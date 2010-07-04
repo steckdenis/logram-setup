@@ -1235,7 +1235,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
                     // Ajouter un enregistrement anonyme dans l'historique
                     sql = " INSERT INTO wiki_logentry \
                                 (page_id, comment, body, date, author_ip) \
-                            VALUES (%1, 'New package importation', '%2', NOW(), 'Setup import');";
+                            VALUES (%1, 'New package importation', '%2', NOW(), 'LPM import');";
                     
                     if (!query.exec(sql
                             .arg(id)

@@ -5,8 +5,8 @@
 <context>
     <name>App</name>
     <message>
-        <location filename="../setup/app.cpp" line="+459"/>
-        <source>Utilisation : setup [options] &lt;action&gt; [arguments]
+        <location filename="../lpm/app.cpp" line="+459"/>
+        <source>Utilisation : lpm [options] &lt;action&gt; [arguments]
     help               Afficher l&apos;aide
     version            Afficher la version
     search &lt;pattern&gt;   Afficher tous les paquets dont le nom
@@ -57,14 +57,14 @@ Options (insensible à la casse) :
     -cR &lt;conf root&gt;    Chemin racine de la configuration (&quot;/&quot; par défaut).
     -vR &lt;var root&gt;     Chemin racine des fichiers temporaires (&quot;/&quot; par défaut).
     -P path            Ajoute un chemin à inspecter pour trouver les plugins
-                       de vérification des paquets (setup binaries).
+                       de vérification des paquets (lpm binaries).
     -C                 Affiche l&apos;historique des modifications d&apos;un paquet
                        quand utilisé avec showpkg.
     -L                 Affiche la licence d&apos;un paquet quand utilisé avec showpkg.
     -T                 Désactive l&apos;exécution des triggers.
-    -W                 Désactive les couleurs dans la sortie de Setup.
+    -W                 Désactive les couleurs dans la sortie de LPM.
 </source>
-        <translation>Usage: setup [options] &lt;action&gt; [arguments]
+        <translation>Usage: lpm [options] &lt;action&gt; [arguments]
     help               Show help
     version            Afficher the version
     search &lt;pattern&gt;   Show all packages with a name
@@ -116,13 +116,13 @@ Options (case insensitive):
     -C                 Show the package history when used with &quot;showpkg&quot;.
     -L                 Show the package license when used with &quot;showpkg&quot;.
     -T                 Disable the execution of the triggers.
-    -W                 Disable the colored output of Setup.
+    -W                 Disable the colored output of LPM.
 </translation>
     </message>
     <message>
         <location line="+65"/>
-        <source>Logram Setup </source>
-        <translation>Logram Setup </translation>
+        <source>Logram LPM </source>
+        <translation>Logram LPM </translation>
     </message>
     <message>
         <location line="+17"/>
@@ -196,7 +196,7 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+11"/>
-        <location filename="../setup/package.cpp" line="+67"/>
+        <location filename="../lpm/package.cpp" line="+67"/>
         <location line="+34"/>
         <source>ERREUR : </source>
         <translation>ERROR: </translation>
@@ -283,7 +283,7 @@ Options (case insensitive):
         <translation>to</translation>
     </message>
     <message>
-        <location filename="../setup/cache.cpp" line="+151"/>
+        <location filename="../lpm/cache.cpp" line="+151"/>
         <source> appartient à </source>
         <translation> belongs to </translation>
     </message>
@@ -559,43 +559,43 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../setup/package.cpp" line="+30"/>
+        <location filename="../lpm/package.cpp" line="+30"/>
         <source>Légende : </source>
         <translation>Legend: </translation>
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../setup/package.cpp" line="+1"/>
+        <location filename="../lpm/package.cpp" line="+1"/>
         <source>D: Dépend </source>
         <translation>D: Depend </translation>
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../setup/package.cpp" line="+1"/>
+        <location filename="../lpm/package.cpp" line="+1"/>
         <source>S: Suggère </source>
         <translation>S: Suggest </translation>
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../setup/package.cpp" line="+1"/>
+        <location filename="../lpm/package.cpp" line="+1"/>
         <source>C: Conflit </source>
         <translation>C: Conflict </translation>
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../setup/package.cpp" line="+1"/>
+        <location filename="../lpm/package.cpp" line="+1"/>
         <source>P: Fourni </source>
         <translation>P: Provide </translation>
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../setup/package.cpp" line="+1"/>
+        <location filename="../lpm/package.cpp" line="+1"/>
         <source>R: Remplace </source>
         <translation>R: Replace </translation>
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../setup/package.cpp" line="+1"/>
+        <location filename="../lpm/package.cpp" line="+1"/>
         <source>N: Est requis par</source>
         <translation>N: Needed by</translation>
     </message>
@@ -645,7 +645,7 @@ Options (case insensitive):
         <translation>License text: </translation>
     </message>
     <message>
-        <location filename="../setup/communication.cpp" line="+45"/>
+        <location filename="../lpm/communication.cpp" line="+45"/>
         <source>Question de </source>
         <translation>Question of </translation>
     </message>
@@ -710,10 +710,10 @@ Options (case insensitive):
         <translation>No informations given</translation>
     </message>
     <message>
-        <location filename="../setup/package.cpp" line="-69"/>
+        <location filename="../lpm/package.cpp" line="-69"/>
         <location line="+803"/>
-        <source>Bug dans Setup !</source>
-        <translation>Bug in Setup !</translation>
+        <source>Bug dans LPM !</source>
+        <translation>Bug in LPM !</translation>
     </message>
     <message>
         <location line="-769"/>
@@ -783,8 +783,8 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+34"/>
-        <source>Erreur inconnue. Ajoutez le paramètre -G à Setup et postez sa sortie dans votre rapport de bug</source>
-        <translation>Unknown error. Add the -G parameter to Setup and post its output in your bug report please</translation>
+        <source>Erreur inconnue. Ajoutez le paramètre -G à LPM et postez sa sortie dans votre rapport de bug</source>
+        <translation>Unknown error. Add the -G parameter to LPM and post its output in your bug report please</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -978,8 +978,8 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+16"/>
-        <source>Pour une suppression totale de %1. Utilisez setup autoremove pour supprimer ces paquets.</source>
-        <translation>For a total removal of %1. Use setup autoremove to remove these packages.</translation>
+        <source>Pour une suppression totale de %1. Utilisez lpm autoremove pour supprimer ces paquets.</source>
+        <translation>For a total removal of %1. Use lpm autoremove to remove these packages.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -992,7 +992,7 @@ Options (case insensitive):
         <translation>Operations on the packages applied !</translation>
     </message>
     <message>
-        <location filename="../setup/source.cpp" line="+87"/>
+        <location filename="../lpm/source.cpp" line="+87"/>
         <source>Remarques sur le paquet :</source>
         <translation>Remarks on the package:</translation>
     </message>
@@ -1107,8 +1107,8 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+35"/>
-        <source>Aucun fichier dans la base de donnée Setup ne correspond à %1</source>
-        <translation>No file in the Setup database matches %1</translation>
+        <source>Aucun fichier dans la base de donnée LPM ne correspond à %1</source>
+        <translation>No file in the LPM database matches %1</translation>
     </message>
     <message>
         <location line="+71"/>

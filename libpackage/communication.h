@@ -72,7 +72,7 @@ class Communication : public Templatable
             @brief Type de communication
             
             Une communication peut avoir plusieurs types, qui doivent être
-            gérés différamment par Setup.
+            gérés différamment par LPM.
         */
         enum Type
         {
@@ -96,7 +96,7 @@ class Communication : public Templatable
         /**
             @brief Retour attendu
             
-            Setup supporte différent types de retours pour les communications.
+            LPM supporte différent types de retours pour les communications.
             Ainsi, l'utilisateur peut bénéficier du widget graphique le plus
             approprié, des vérifications peuvent être faites, etc
         */
@@ -138,7 +138,7 @@ class Communication : public Templatable
         /**
             @brief Type de retour d'une question
             
-            Setup supporte différent types de retours pour les communications.
+            LPM supporte différent types de retours pour les communications.
             Ainsi, l'utilisateur peut bénéficier du widget graphique le plus
             approprié, des vérifications peuvent être faites, etc
             

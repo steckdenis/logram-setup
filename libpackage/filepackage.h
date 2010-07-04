@@ -42,7 +42,7 @@ class FileDepend;
 /**
     @brief Paquet venant d'un fichier .tlz local
     
-    Cette classe permet d'installer un paquet local directement depuis Setup.
+    Cette classe permet d'installer un paquet local directement depuis LPM.
     
     Elle permet également de gérer le paquet en tant qu'archive .tlz, et
     contient les fonctions nécessaires pour lire ses métadonnées, comprendre
