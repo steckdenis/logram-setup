@@ -539,32 +539,32 @@ QStringList App::pkgFlags(Package *pkg)
     
     #define YESNO(flag, string) \
         rs.append( \
-            App::tr(string) \
+            string \
             + ((flags & flag) != 0 ? syes : sno));
     
     QString syes = COLORS(App::tr("Oui"), "34");
     QString sno = App::tr("Non");
     
     // Graphique
-    YESNO(PACKAGE_FLAG_GUI,         "Paquet graphique         : ")
+    YESNO(PACKAGE_FLAG_GUI,         App::tr("Paquet graphique         : "))
     
     // Ne pas mettre à jour
-    YESNO(PACKAGE_FLAG_DONTUPDATE,  "Ne pas mettre à jour     : ")
+    YESNO(PACKAGE_FLAG_DONTUPDATE,  App::tr("Ne pas mettre à jour     : "))
     
     // Ne pas installer
-    YESNO(PACKAGE_FLAG_DONTINSTALL, "Ne pas installer         : ")
+    YESNO(PACKAGE_FLAG_DONTINSTALL, App::tr("Ne pas installer         : "))
     
     // Ne pas supprimer
-    YESNO(PACKAGE_FLAG_DONTREMOVE,  "Ne pas supprimer         : ")
+    YESNO(PACKAGE_FLAG_DONTREMOVE,  App::tr("Ne pas supprimer         : "))
     
     // Nécessite une CLUF
-    YESNO(PACKAGE_FLAG_EULA,        "Licence à approuver      : ")
+    YESNO(PACKAGE_FLAG_EULA,        App::tr("Licence à approuver      : "))
     
     // Nécessite un redémarrage
-    YESNO(PACKAGE_FLAG_NEEDSREBOOT, "Nécessite un redémarrage : ")
+    YESNO(PACKAGE_FLAG_NEEDSREBOOT, App::tr("Nécessite un redémarrage : "))
     
     // Ne pas être supprimé par dépendances auto
-    YESNO(PACKAGE_FLAG_WANTED,      "Installé manuellement    : ")
+    YESNO(PACKAGE_FLAG_WANTED,      App::tr("Installé manuellement    : "))
     
     
     return rs;

@@ -1989,3 +1989,5 @@ bool RepositoryManager::exp(const QStringList &distros)
     
     return true;
 }
+
+#include "repositorymanager.moc"

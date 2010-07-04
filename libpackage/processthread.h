@@ -47,6 +47,8 @@ class PackageMetaData;
  */
 class ProcessThread : public QThread
 {
+    Q_OBJECT
+    
     public:
         /**
          * @brief Constructeur

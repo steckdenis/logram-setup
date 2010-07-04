@@ -43,6 +43,8 @@ class PackageSystem;
  */
 class RepositoryManager : public QObject
 {
+    Q_OBJECT
+    
     public:
         
         /**

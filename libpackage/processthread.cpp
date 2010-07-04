@@ -204,7 +204,7 @@ bool ProcessThread::Private::install_files()
         {
             PackageError *err = new PackageError;
             err->type = PackageError::InstallError;
-            err->more = tr("Erreur lors de la lecture de l'archive");
+            err->more = ProcessThread::tr("Erreur lors de la lecture de l'archive");
             err->info = pkg->name() + '~' + pkg->version();
             
             ps->setLastError(err);
@@ -239,7 +239,7 @@ bool ProcessThread::Private::install_files()
             {
                 PackageError *err = new PackageError;
                 err->type = PackageError::InstallError;
-                err->more = tr("Aucun fichier dans la base de donnée Setup ne correspond à %1").arg(QString(path));
+                err->more = ProcessThread::tr("Aucun fichier dans la base de donnée Setup ne correspond à %1").arg(QString(path));
                 err->info = pkg->name() + '~' + pkg->version();
                 
                 ps->setLastError(err);
@@ -310,7 +310,7 @@ bool ProcessThread::Private::install_files()
         {
             PackageError *err = new PackageError;
             err->type = PackageError::InstallError;
-            err->more = tr("Impossible d'installer le fichier %1").arg(QString(filePath));
+            err->more = ProcessThread::tr("Impossible d'installer le fichier %1").arg(QString(filePath));
             err->info = pkg->name() + '~' + pkg->version();
             
             ps->setLastError(err);
@@ -636,3 +636,5 @@ void ProcessThread::run()
     delete tpl;
     delete md;
 }
+
+#include "processthread.moc"

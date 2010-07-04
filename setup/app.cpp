@@ -26,6 +26,8 @@
 
 #include <QStringList>
 #include <QTextCodec>
+#include <QTranslator>
+#include <QLocale>
 
 #include <QThread>
 
@@ -49,6 +51,11 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     // Initialiser
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
+    
+    QTranslator translator;
+    
+    translator.load("libpackage_" + QLocale::system().name(), "/usr/share/qt4/translations");
+    installTranslator(&translator);
     
     // Ouvrir le système de paquets
     ps = new PackageSystem(this);
