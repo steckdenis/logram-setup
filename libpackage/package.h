@@ -190,8 +190,8 @@ class Package : public QObject
         virtual int downloadSize() = 0;     /*!< @brief Taille à télécharger */
         virtual int installSize() = 0;      /*!< @brief Taille installée */
         
-        virtual QList<Depend *> depends() = 0; /*!< @brief Liste des dépendances */
-        virtual QList<PackageFile *> files() = 0; /*!< @brief Liste des fichiers */
+        virtual QVector<Depend *> depends() = 0; /*!< @brief Liste des dépendances */
+        virtual QVector<PackageFile *> files() = 0; /*!< @brief Liste des fichiers */
         virtual QDateTime installedDate() = 0; /*!< @brief Date d'installation du paquet, indéfini si non-installé */
         virtual int installedBy() = 0;      /*!< @brief UID de l'utilisateur ayant installé le paquet */
         
@@ -305,7 +305,7 @@ class Package : public QObject
          *             retenues dans la liste
          * @return liste des dépendances formattée.
          */
-        static QString dependsToString(const QList<Depend *> &deps, int type);
+        static QString dependsToString(const QVector<Depend *> &deps, int type);
         
         // Mise à jour
         /**

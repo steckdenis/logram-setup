@@ -49,7 +49,7 @@ struct Solver::Private
     
     QList<WantedPackage> wantedPackages;
     
-    QList<Solver::Node *> nodes;
+    QVector<Solver::Node *> nodes;
     Solver::Node *rootNode, *errorNode;
     
     struct Level
@@ -59,7 +59,7 @@ struct Solver::Private
         int choiceChildIndex;   // Index de l'enfant dans choiceNodeIndex qui présente un choix
     };
     
-    QList<Solver::Node *> nodeList;
+    QVector<Solver::Node *> nodeList;
     QList<Level> levels;          // Liste des niveaux (int --> index dans nodeList)
     Solver::Node::Child *choiceChild;
     Solver::Node *choiceNode;
@@ -464,9 +464,9 @@ bool Solver::continueList(int choice, bool &ended)
     return beginList(ended);
 }
 
-QList<Solver::Node *> Solver::choices()
+QVector<Solver::Node *> Solver::choices()
 {
-    QList<Node *> rs;
+    QVector<Node *> rs;
     
     if (d->choiceChild == 0)
     {
@@ -529,7 +529,7 @@ bool Solver::upList()
         nd->currentChild = 0;
         nd->flags &= ~Node::Explored;
         
-        d->nodeList.removeLast();
+        d->nodeList.resize(d->nodeList.count()-1);
     }
     
     // Liste ok. Il faut maintenant re-peupler d->choiceChild, puisqu'on retourne à un choix
@@ -1015,8 +1015,8 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     }
     
     // Créer la liste des enfants
-    QList<_Depend *> deps;
-    QList<Depend *> fdeps;
+    QVector<_Depend *> deps;
+    QVector<Depend *> fdeps;
     
     if (package == 0)
     {

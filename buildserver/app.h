@@ -26,6 +26,7 @@
 #include <QCoreApplication>
 #include <QStringList>
 #include <QHash>
+#include <QVector>
 
 #include <QSqlDatabase>
 
@@ -109,7 +110,7 @@ class App : public QCoreApplication
         QHash<QString, int> distroIds;
         QHash<QString, int> archIds;
         
-        QList<Thread *> threads;
+        QVector<Thread *> threads;
         
         // Options
         bool debug, quitApp, worker, websiteIntegration;

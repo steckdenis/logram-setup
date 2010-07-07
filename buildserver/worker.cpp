@@ -883,7 +883,7 @@ bool Worker::installBuildDeps(PackageSystem *ps)
         // On a un choix à faire : prendre la version
         // la plus élevée à chaque fois.
         int maxVerIndex = -1;
-        QList<Solver::Node *> choices = solver->choices();
+        QVector<Solver::Node *> choices = solver->choices();
         
         for (int i=0; i<choices.count(); ++i)
         {

@@ -62,12 +62,12 @@ struct FilePackage::Private
     QString arch;
     QString primaryLang;
     
-    QList<PackageFile *> files;
+    QVector<PackageFile *> files;
     QByteArray metadataContents;
     
     QByteArray packageHash, metadataHash;
     
-    QList<Depend *> depends;
+    QVector<Depend *> depends;
     
     void addDeps(const QByteArray &str, int8_t type);
 };
@@ -527,7 +527,7 @@ Package::Origin FilePackage::origin()
     return Package::File;
 }
 
-QList<PackageFile *> FilePackage::files()
+QVector<PackageFile *> FilePackage::files()
 {
     return d->files;
 }
@@ -642,7 +642,7 @@ int FilePackage::installSize()
     return d->isize;
 }
 
-QList<Depend *> FilePackage::depends()
+QVector<Depend *> FilePackage::depends()
 {
     return d->depends;
 }

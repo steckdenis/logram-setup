@@ -83,7 +83,7 @@ class App : public QCoreApplication
         
         // Utilitaires
         void getString(char *buffer, int max_length, const char *def, bool append_return);
-        void displayPackages(QList<Logram::Package *> *packages, int &instSize, int &dlSize, bool showType);
+        void displayPackages(QVector<Logram::Package *> *packages, int &instSize, int &dlSize, bool showType);
         void displayPackage(Logram::Package *pkg, int i, int &instSize, int &dlSize, bool showType);
         QString solverError(Logram::Solver *solver, const QString &defaultString);
         QStringList pkgFlags(Logram::Package *pkg);
@@ -101,7 +101,7 @@ class App : public QCoreApplication
         void printIndented(const QByteArray &chars, int indent);
         
         // Progressions
-        QList<Logram::Progress *> progresses;
+        QVector<Logram::Progress *> progresses;
         QList<QTime> tProgresses;
         int width;
 };

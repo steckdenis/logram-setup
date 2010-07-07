@@ -335,7 +335,7 @@ void Package::setAction(Solver::Action act)
     d->action = act;
 }
 
-QString Package::dependsToString(const QList<Depend *> &deps, int type)
+QString Package::dependsToString(const QVector<Depend *> &deps, int type)
 {
     QString rs;
     bool first = true;

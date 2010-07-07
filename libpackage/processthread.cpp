@@ -189,7 +189,7 @@ bool ProcessThread::Private::install_files()
     
     // Explorer les fichiers de a, sachant que control/metadata est déjà passé
     QByteArray path, filePath;
-    QList<PackageFile *> files;
+    QVector<PackageFile *> files;
     
     for (;;)
     {
@@ -346,7 +346,7 @@ bool ProcessThread::Private::install_files()
 bool ProcessThread::Private::remove_files()
 {
     // Explorer les fichiers du paquet
-    QList<PackageFile *> files = oldpkg->files();
+    QVector<PackageFile *> files = oldpkg->files();
     QString instroot = ps->installRoot();
     
     if (!instroot.endsWith('/'))

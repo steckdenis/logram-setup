@@ -289,7 +289,7 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
     
     // Explorer les needs dans runpaths pour trouver les paquets les contenant, et leurs versions
     // Si un fichier n'est pas trouvé, et ne se trouve dans dans buildDir
-    QList<PackageFile *> pfiles;
+    QVector<PackageFile *> pfiles;
     QList<Pkg> pkgs;
     Pkg pkg;
     

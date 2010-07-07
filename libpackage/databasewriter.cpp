@@ -267,7 +267,7 @@ int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool 
             stringsIndexes.insert(str, rs);
         }
 
-        strPackages.append(QList<_StrPackage *>());
+        strPackages.append(QVector<_StrPackage *>());
     }
 
     // Gérer les StrPackages
@@ -359,7 +359,7 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
 void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op, int type)
 {
     // Explorer tous les paquets connus
-    const QList<knownEntry *> &entries = knownPackages.value(name);
+    const QVector<knownEntry *> &entries = knownPackages.value(name);
     _Depend *depend;
     
     foreach (knownEntry *entry, entries)
@@ -394,7 +394,7 @@ bool DatabaseWriter::rebuild()
     // On utilise 2 passes (d'abord créer les paquets, puis les manipuler)
     FileFile *currentDir = 0, *firstFile = 0;
     int pass;
-    QList<char *> buffers;
+    QVector<char *> buffers;
     char *buffer;
 
     strPtr = 0;
@@ -660,7 +660,7 @@ bool DatabaseWriter::rebuild()
                             {
                                 if (knownPackages.contains(pkgname))
                                 {
-                                    const QList<knownEntry *> &entries = knownPackages.value(pkgname);
+                                    const QVector<knownEntry *> &entries = knownPackages.value(pkgname);
 
                                     foreach(knownEntry *entry, entries)
                                     {
@@ -685,7 +685,7 @@ bool DatabaseWriter::rebuild()
                                 // Ajouter le paquet aux listes, on peut maintenant
                                 pkg->deps = depends.count();
 
-                                depends.append(QList<_Depend *>());
+                                depends.append(QVector<_Depend *>());
 
                                 // Ajouter le paquet
                                 packages.append(pkg);
@@ -837,7 +837,7 @@ bool DatabaseWriter::rebuild()
                         QByteArray value = QByteArray::fromRawData(cline + indexofequal + 1, linelength - indexofequal - 1);
                         
                         // Trouver le bon paquet
-                        const QList<knownEntry *> &entries = knownPackages.value(name);
+                        const QVector<knownEntry *> &entries = knownPackages.value(name);
 
                         foreach(knownEntry *entry, entries)
                         {
@@ -996,7 +996,7 @@ bool DatabaseWriter::rebuild()
                             int name_index = fileStringIndex(name);
                             
                             // Trouver le paquet du bon nom dans le bon dépôt
-                            const QList<knownEntry *> &entries = knownPackages.value(pkgname);
+                            const QVector<knownEntry *> &entries = knownPackages.value(pkgname);
 
                             index = -1;
                             for (int i=0; i<entries.count(); ++i)
@@ -1119,7 +1119,7 @@ bool DatabaseWriter::rebuild()
                         if (key == "Version")
                         {
                             // Retrouver le paquet du bon nom et de la bonne version
-                            const QList<knownEntry *> &entries = knownPackages.value(name);
+                            const QVector<knownEntry *> &entries = knownPackages.value(name);
 
                             foreach(knownEntry *entry, entries)
                             {
@@ -1422,9 +1422,9 @@ bool DatabaseWriter::rebuild()
     _DependPtr dp;
     int dptr = 0;
 
-    QList<_Depend *> alldeps;
+    QVector<_Depend *> alldeps;
 
-    foreach (const QList<_Depend *> &l, depends)
+    foreach (const QVector<_Depend *> &l, depends)
     {
         // Ecrire le tableau des dépendances
         dp.count = l.count();
@@ -1471,9 +1471,9 @@ bool DatabaseWriter::rebuild()
     _StrPackagePtr spp;
     int spptr = 0;
 
-    QList<_StrPackage *> allsp;
+    QVector<_StrPackage *> allsp;
 
-    foreach (const QList<_StrPackage *> &l, strPackages)
+    foreach (const QVector<_StrPackage *> &l, strPackages)
     {
         // Ecrire le tableau des dépendances
         spp.count = l.count();

@@ -232,8 +232,8 @@ class PackageMetaData : public QObject, public QDomDocument
         QString upstreamUrl() const;            /*!< @brief Url du site web de l'auteur du paquet source (gcc.gnu.org, etc) */
         QStringList triggers() const;           /*!< @brief Liste des triggers lancés par le paquet courant */
         
-        QList<ChangeLogEntry *> changelog() const;   /*!< @brief Historique du paquet source */
-        QList<SourceDepend *> sourceDepends() const; /*!< @brief Dépendances à la construction du paquet source */
+        QVector<ChangeLogEntry *> changelog() const;   /*!< @brief Historique du paquet source */
+        QVector<SourceDepend *> sourceDepends() const; /*!< @brief Dépendances à la construction du paquet source */
         
         /**
          * @brief Définit le paquet courant

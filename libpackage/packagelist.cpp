@@ -51,7 +51,7 @@ struct PackageList::Private
     int ipackages, dpackages, pipackages;
     bool idone;
     Package *installingPackage;
-    QList<Package *> list;
+    QVector<Package *> list;
     QList<Package *> downloadedPackages;
     QVector<int> orphans;
     QList<QString> triggers;
@@ -60,7 +60,7 @@ struct PackageList::Private
     QMutex safeRemoveMutex;
 };
 
-PackageList::PackageList(PackageSystem *ps) : QObject(ps), QList<Package *>()
+PackageList::PackageList(PackageSystem *ps) : QObject(ps), QVector<Package *>()
 {
     d = new Private;
     
@@ -214,7 +214,7 @@ bool PackageList::process()
             // Paquet en base de donnée, explorer ses dépendances et incrémenter leur compteur
             DatabasePackage *dpkg = static_cast<DatabasePackage *>(pkg);
             
-            QList<_Depend *> deps = dr->depends(dpkg->index());
+            QVector<_Depend *> deps = dr->depends(dpkg->index());
             
             foreach (_Depend *dep, deps)
             {

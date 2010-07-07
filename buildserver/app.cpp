@@ -410,7 +410,14 @@ void App::threadFinished()
     
     if (thread)
     {
-        threads.removeOne(thread);
+        for (int i=0; i<threads.count(); ++i)
+        {
+            if (threads.at(i) == thread)
+            {
+                threads.remove(i);
+            }
+        }
+        
         delete thread;
     }
     
@@ -423,7 +430,7 @@ bool App::workerProcess(const QString &root)
     // Avant de chrooter, il faut charger les plugins
     PackageSystem *tps = new PackageSystem(this);
     tps->loadConfig();
-    QList<PackageSourceInterface *> plugins;
+    QVector<PackageSourceInterface *> plugins;
     
     foreach (const QString &pluginPath, tps->pluginPaths())
     {

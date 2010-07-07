@@ -334,7 +334,7 @@ class PackageSystem : public QObject
          * Renvoie la liste des fichiers dont le chemin d'accès est @p name. Name ne commence pas par un slash.
          * 
          * @code
-         * QList<PackageFile *> files = ps->files("/usr/bin/lpm");
+         * QVector<PackageFile *> files = ps->files("/usr/bin/lpm");
          * PackageFile *file = files.at(0);
          * @endcode
          * 
@@ -343,7 +343,7 @@ class PackageSystem : public QObject
          * @param name Nom complet du fichier, avec chemin d'accès
          * @return Liste des fichiers correspondant
          */
-        QList<PackageFile *> files(const QString &name);
+        QVector<PackageFile *> files(const QString &name);
         
         /**
          * @brief Fichiers dont le nom correspond au motif
@@ -353,7 +353,7 @@ class PackageSystem : public QObject
          * Cette fonction est un peu lente, de complexité O(n) où n est le nombre de fichiers en base de donnée.
          * 
          * @code
-         * QList<PackageFile *> files = ps->files(QRegExp("msg*", Qt::CaseSensitive, QRegExp::Wildcard));
+         * QVector<PackageFile *> files = ps->files(QRegExp("msg*", Qt::CaseSensitive, QRegExp::Wildcard));
          * 
          * // Renvoie ["/usr/bin/msgfmt", "/usr/bin/msgconv", ... , "/usr/share/man/man1/msgfmt.1", ... ]
          * @endcode
@@ -361,11 +361,11 @@ class PackageSystem : public QObject
          * @param regex Motif auquel doivent correspondre les noms des fichiers
          * @return Liste des fichiers correspondant
          */
-        QList<PackageFile *> files(const QRegExp &regex);
+        QVector<PackageFile *> files(const QRegExp &regex);
         int packages();                                 /*!< @brief Nombre de paquets dans la base de donnée */
         bool update();                                  /*!< @brief Met à jour la base de donnée, fonction bloquante */
-        QList<DatabasePackage *> upgradePackages();     /*!< @brief Liste des paquets pouvant être mis à jour */
-        QList<DatabasePackage *> orphans();             /*!< @brief Liste des paquets orphelins */
+        QVector<DatabasePackage *> upgradePackages();     /*!< @brief Liste des paquets pouvant être mis à jour */
+        QVector<DatabasePackage *> orphans();             /*!< @brief Liste des paquets orphelins */
         Solver *newSolver();                            /*!< @brief Crée un solveur (classe qui a besoin de structures internes de PackageSystem) */
 
         // Fonctions statiques

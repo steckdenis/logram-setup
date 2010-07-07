@@ -169,9 +169,9 @@ class DatabasePackage : public Package
         int downloadSize();
         int installSize();
 
-        QList<Package *> versions();    /*!< @brief Liste de Package donc chacun est une version différente de ce paquet */
-        QList<Depend *> depends();
-        QList<PackageFile *> files();
+        QVector<Package *> versions();    /*!< @brief Liste de Package donc chacun est une version différente de ce paquet */
+        QVector<Depend *> depends();
+        QVector<PackageFile *> files();
         
         bool fastNameCompare(Package *other);
         bool fastVersionCompare(Package *other);

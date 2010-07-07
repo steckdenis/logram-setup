@@ -259,7 +259,7 @@ class Solver : public QObject
          * 
          * while (!ended)
          * {
-         *     QList<Node *> choices = solver->choices();
+         *     QVector<Node *> choices = solver->choices();
          *     // Poser la question à l'utilisateur
          *     solver->continueList(index_choix_retenu, ended);
          * }
@@ -297,7 +297,7 @@ class Solver : public QObject
          * @return Liste des noeuds satisfaisant une dépendance
          * @sa choiceNode
          */
-        QList<Node *> choices();
+        QVector<Node *> choices();
         
         /**
          * @brief Remonte dans la liste

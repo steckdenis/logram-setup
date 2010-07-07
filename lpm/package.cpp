@@ -138,7 +138,7 @@ void App::getsource(const QString &name)
     << endl << endl;
     
     PackageMetaData *meta = dpkg->metadata();
-    QList<SourceDepend *> deps = meta->sourceDepends();
+    QVector<SourceDepend *> deps = meta->sourceDepends();
     
     foreach (SourceDepend *dep, deps)
     {
@@ -178,7 +178,7 @@ void App::getsource(const QString &name)
 
 void App::autoremove()
 {
-    QList<DatabasePackage *> pkgs = ps->orphans();
+    QVector<DatabasePackage *> pkgs = ps->orphans();
     int instSize = 0, dlSize = 0;
     
     if (pkgs.count() == 0)
@@ -191,7 +191,7 @@ void App::autoremove()
     
     cout << COLOR(tr("Paquets installés automatiquement et qui ne sont plus nécessaires :"), "32") << endl << endl;
     
-    displayPackages((QList<Package *> *)(&pkgs), instSize, dlSize, false);
+    displayPackages((QVector<Package *> *)(&pkgs), instSize, dlSize, false);
     
     // Demander si ça convient
     cout << endl;
@@ -280,7 +280,7 @@ void App::autoremove()
 
 void App::upgrade()
 {
-    QList<DatabasePackage *> pkgs = ps->upgradePackages();
+    QVector<DatabasePackage *> pkgs = ps->upgradePackages();
     int instSize, dlSize;
     
     // Vérifier qu'il y a bien quelque-chose à faire
@@ -295,7 +295,7 @@ void App::upgrade()
     // Afficher la liste des paquets
     cout << COLOR(tr("Paquets pour lesquels une mise à jour est disponible :"), "32") << endl << endl;
     
-    displayPackages((QList<Package *> *)(&pkgs), instSize, dlSize, false);
+    displayPackages((QVector<Package *> *)(&pkgs), instSize, dlSize, false);
     
     // Demander si ça convient
     cout << endl;
@@ -505,7 +505,7 @@ void App::displayPackage(Package* pkg, int i, int &instSize, int &dlSize, bool s
             << endl;
 }
 
-void App::displayPackages(QList< Package* >* packages, int &instSize, int &dlSize, bool showType)
+void App::displayPackages(QVector<Package *>* packages, int &instSize, int &dlSize, bool showType)
 {
     instSize = 0;
     dlSize = 0;
@@ -776,7 +776,7 @@ void App::manageResults(Solver *solver)
         
         // Afficher la liste des choix
         int minWeightIndex = -1;
-        QList<Solver::Node *> choices = solver->choices();
+        QVector<Solver::Node *> choices = solver->choices();
         
         for (int i=0; i<choices.count(); ++i)
         {

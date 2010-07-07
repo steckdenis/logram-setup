@@ -128,7 +128,7 @@ class PackageSource : public Templatable
          * 
          * @code
          * // Prendre les plugins hors du chroot
-         * QList<PackageSourceInterface *> plugins;
+         * QVector<PackageSourceInterface *> plugins;
          * 
          * foreach (const QString &pluginPath, tps->pluginPaths())
          * {
@@ -157,7 +157,7 @@ class PackageSource : public Templatable
          * 
          * @param plugins Liste des plugins à ajouter
          */
-        void addPlugins(const QList<PackageSourceInterface *> plugins);
+        void addPlugins(const QVector<PackageSourceInterface *> plugins);
         
         /**
          * @brief Options passables à setOption()
@@ -228,7 +228,7 @@ class PackageSource : public Templatable
         bool build();                                       /*!< @brief Construit la source (appelle le script @b build) */
         bool binaries();                                    /*!< @brief Construit les paquets binaires, exécute les plugins */
         
-        QList<PackageRemark *> remarks();                   /*!< @brief Remarques lancées par binaries() */
+        QVector<PackageRemark *> remarks();                   /*!< @brief Remarques lancées par binaries() */
         void addRemark(PackageRemark *remark);              /*!< @brief Permet aux plugins d'ajouter une remarque */
         
     private:

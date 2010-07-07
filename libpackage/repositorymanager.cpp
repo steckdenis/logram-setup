@@ -944,7 +944,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
         return false;
     }
     
-    QList<PackageFile *> pkgfiles = fpkg->files();
+    QVector<PackageFile *> pkgfiles = fpkg->files();
     QVector<DirectoryId> dirIds;
     
     for (int j=0; j<pkgfiles.count(); ++j)

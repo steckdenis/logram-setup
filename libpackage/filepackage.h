@@ -101,12 +101,12 @@ class FilePackage : public Package
         int downloadSize();
         int installSize();
 
-        QList<Depend *> depends();
+        QVector<Depend *> depends();
         
         void registerState(int idate, int iby, int flags);
         
         QByteArray metadataContents();  /*!< @brief Contenu du fichier de métadonnées */
-        QList<PackageFile *> files();            /*!< @brief Liste des fichiers du paquet */
+        QVector<PackageFile *> files();            /*!< @brief Liste des fichiers du paquet */
 
     signals:
         void downloaded(bool success);

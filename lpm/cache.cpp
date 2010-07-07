@@ -174,7 +174,7 @@ static void displayFile(PackageFile *file, bool colored)
 
 void App::infoFile(const QString &path)
 {
-    QList<PackageFile *> files;
+    QVector<PackageFile *> files;
     
     if (path.startsWith('/'))
     {
@@ -290,7 +290,7 @@ void App::showFiles(const QString &packageName)
 
 void App::tagFile(const QString &fileName, const QString &tag)
 {
-    QList<PackageFile *> files;
+    QVector<PackageFile *> files;
     QString fname, pname;
     Package *pkg = 0;
     DatabasePackage *dpkg = 0;
@@ -340,7 +340,7 @@ void App::tagFile(const QString &fileName, const QString &tag)
             
             if (((DatabasePackage *)file->package())->index() != dpkg->index())
             {
-                files.removeAt(i);
+                files.remove(i);
                 i--;
             }
         }
@@ -670,7 +670,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     cout << endl;
 
     // Afficher les dépendances
-    QList<Depend *> deps = pkg->depends();
+    QVector<Depend *> deps = pkg->depends();
 
     if (deps.count() != 0)
     {
@@ -756,7 +756,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
         cout << endl << COLOR(tr("Versions disponibles : "), "35") << endl;
         cout << qPrintable(tr("Légende : * = Disponible, I = installée, R = supprimée")) << endl << endl;
 
-        QList<Package *> vers = dpkg->versions();
+        QVector<Package *> vers = dpkg->versions();
 
         foreach(Package *ver, vers)
         {
@@ -788,7 +788,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
         cout << COLOR(tr("Historique des versions : "), "35") << endl << endl;
         
         // Afficher le changelog
-        QList<ChangeLogEntry *> entries = metadata->changelog();
+        QVector<ChangeLogEntry *> entries = metadata->changelog();
         
         foreach(ChangeLogEntry *entry, entries)
         {

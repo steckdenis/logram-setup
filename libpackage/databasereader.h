@@ -238,7 +238,7 @@ class DatabaseReader
             @return PackageFiles correspondant au nom (un fichier peut
                     appartenir à plusieurs paquets).
         */
-        QList<PackageFile *> files(const QString &name);
+        QVector<PackageFile *> files(const QString &name);
         
         /**
             @brief Retourne les fichiers correspondant à l'expression régulière
@@ -255,7 +255,7 @@ class DatabaseReader
             @param regex Expression régulière
             @return Liste des fichiers dont le nom correspond au motif
         */
-        QList<PackageFile *> files(const QRegExp &regex);
+        QVector<PackageFile *> files(const QRegExp &regex);
         
         /**
             @brief Liste des dépendances d'un paquet
@@ -268,7 +268,7 @@ class DatabaseReader
             @param pkgIndex index du paquet
             @return Liste des dépendances du paquet
         */
-        QList<_Depend *> depends(int pkgIndex);
+        QVector<_Depend *> depends(int pkgIndex);
         
         /**
             @brief Paquets ayant un certain nom et correspondant à une version
@@ -286,7 +286,7 @@ class DatabaseReader
                 DatabaseReader *dr = readerReadyToBeUsed();
                 
                 // Pour l'exemple, trouver les dépendances du premier paquet
-                QList<_Depend *> deps = dr->depends(0);
+                QVector<_Depend *> deps = dr->depends(0);
                 
                 // Explorer les dépendances et afficher les paquets qui correspondent
                 foreach (_Depend *dep, deps)

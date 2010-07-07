@@ -328,11 +328,11 @@ QDomElement PackageMetaData::currentPackageElement() const
     return d->currentPackage;
 }
 
-QList<ChangeLogEntry *> PackageMetaData::changelog() const
+QVector<ChangeLogEntry *> PackageMetaData::changelog() const
 {
     QDomElement entry = documentElement().firstChildElement("changelog").firstChildElement("entry");
     
-    QList<ChangeLogEntry *> rs;
+    QVector<ChangeLogEntry *> rs;
     
     while (!entry.isNull())
     {
@@ -377,9 +377,9 @@ QList<ChangeLogEntry *> PackageMetaData::changelog() const
     return rs;
 }
 
-QList<SourceDepend *> PackageMetaData::sourceDepends() const
+QVector<SourceDepend *> PackageMetaData::sourceDepends() const
 {
-    QList<SourceDepend *> rs;
+    QVector<SourceDepend *> rs;
     SourceDepend *dep;
     QString deptype;
     

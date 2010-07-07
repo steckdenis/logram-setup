@@ -83,7 +83,7 @@ struct Logram::PackageSystem::Private
     
     // Sauvegarde des fichiers
     _SaveFile *firstFile;
-    QList<_SaveFile *> saveFiles;
+    QVector<_SaveFile *> saveFiles;
 };
 
 Logram::PackageSystem::PackageSystem(QObject *parent) : QObject(parent)
@@ -242,7 +242,7 @@ bool Logram::PackageSystem::update()
     
     DatabaseWriter *db = new DatabaseWriter(this);
 
-    QList<Enrg *> enrgs;
+    QVector<Enrg *> enrgs;
 
     foreach (const Repository &repo, repositories())
     {
@@ -331,10 +331,10 @@ bool Logram::PackageSystem::update()
     return true;
 }
 
-QList<Logram::DatabasePackage *> Logram::PackageSystem::upgradePackages()
+QVector<Logram::DatabasePackage *> Logram::PackageSystem::upgradePackages()
 {
     QList<UpgradeInfo> upds = d->dr->upgradePackages();
-    QList<DatabasePackage *> rs;
+    QVector<DatabasePackage *> rs;
     
     // Créer les paquets à mettre à jour
     foreach(const UpgradeInfo &inf, upds)
@@ -349,10 +349,10 @@ QList<Logram::DatabasePackage *> Logram::PackageSystem::upgradePackages()
     return rs;
 }
 
-QList<Logram::DatabasePackage *> Logram::PackageSystem::orphans()
+QVector<Logram::DatabasePackage *> Logram::PackageSystem::orphans()
 {
     QVector<int> pkgs = d->dr->orphans();
-    QList<DatabasePackage *> rs;
+    QVector<DatabasePackage *> rs;
     
     foreach (int p, pkgs)
     {
@@ -421,12 +421,12 @@ DatabasePackage *Logram::PackageSystem::package(int id)
     return new DatabasePackage(id, this, d->dr);
 }
 
-QList<PackageFile *> Logram::PackageSystem::files(const QString &name)
+QVector<PackageFile *> Logram::PackageSystem::files(const QString &name)
 {
     return d->dr->files(name);
 }
 
-QList<PackageFile *> Logram::PackageSystem::files(const QRegExp &regex)
+QVector<PackageFile *> Logram::PackageSystem::files(const QRegExp &regex)
 {
     return d->dr->files(regex);
 }

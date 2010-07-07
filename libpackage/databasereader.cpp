@@ -221,9 +221,9 @@ bool DatabaseReader::package(const QString &name, const QString &version, int &r
     return false;
 }
 
-QList<PackageFile *> DatabaseReader::files(const QRegExp &regex)
+QVector<PackageFile *> DatabaseReader::files(const QRegExp &regex)
 {
-    QList<PackageFile *> rs;
+    QVector<PackageFile *> rs;
     
     int count = *(int32_t *)m_files;
     
@@ -241,9 +241,9 @@ QList<PackageFile *> DatabaseReader::files(const QRegExp &regex)
     return rs;
 }
 
-QList<PackageFile *> DatabaseReader::files(const QString &name)
+QVector<PackageFile *> DatabaseReader::files(const QString &name)
 {
-    QList<PackageFile *> rs;
+    QVector<PackageFile *> rs;
     QStringList parts = name.split('/', QString::SkipEmptyParts);
     uchar *ptr = m_files;
     int index = 0, curPart = 0;
@@ -283,10 +283,10 @@ QList<PackageFile *> DatabaseReader::files(const QString &name)
     return rs;
 }
 
-QList<_Depend *> DatabaseReader::depends(int pkgIndex)
+QVector<_Depend *> DatabaseReader::depends(int pkgIndex)
 {
     _Package *pkg = package(pkgIndex);
-    QList<_Depend *> rs;
+    QVector<_Depend *> rs;
 
     if (pkg == 0)
     {

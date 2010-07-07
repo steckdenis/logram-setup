@@ -54,7 +54,7 @@ struct PackageSource::Private
     QHash<Option, QVariant> options;
     QHash<QString, PackageSourceInterface *> plugins;
     
-    QList<PackageRemark *> remarks;
+    QVector<PackageRemark *> remarks;
 };
 
 void PackageSource::listFiles(const QString &dir, const QString &prefix, QStringList &list)
@@ -116,15 +116,15 @@ PackageSource::~PackageSource()
 {
     delete d->md;
     
-    while (d->remarks.count())
+    for (int i=0; i<d->remarks.count(); ++i)
     {
-        delete d->remarks.takeAt(0);
+        delete d->remarks.at(i);
     }
     
     delete d;
 }
 
-void PackageSource::addPlugins(const QList<PackageSourceInterface *> plugins)
+void PackageSource::addPlugins(const QVector<PackageSourceInterface *> plugins)
 {
     foreach (PackageSourceInterface *plugin, plugins)
     {
@@ -176,7 +176,7 @@ QVariant PackageSource::option(Option opt, const QVariant &defaultValue)
     return d->options.value(opt);
 }
 
-QList <PackageRemark *> PackageSource::remarks()
+QVector<PackageRemark *> PackageSource::remarks()
 {
     return d->remarks;
 }

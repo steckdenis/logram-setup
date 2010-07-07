@@ -31,7 +31,7 @@
 #include <QObject>
 #include <QEventLoop>
 #include <QStringList>
-#include <QList>
+#include <QVector>
 #include <QHash>
 #include <QByteArray>
 
@@ -129,11 +129,11 @@ class DatabaseWriter : public QObject
         QStringList cacheFiles;
         QList<bool> checkFiles;
 
-        QList<_Package *> packages;
+        QVector<_Package *> packages;
         
         //QHash<int, int> packagesIndexes;
-        QList<_String *> strings;
-        QList<_String *> translate;
+        QVector<_String *> strings;
+        QVector<_String *> translate;
         QHash<QByteArray, int> stringsIndexes;
         QHash<QByteArray, int> translateIndexes;
         QHash<QByteArray, int> fileStringsPtrs;
@@ -143,12 +143,12 @@ class DatabaseWriter : public QObject
 
         int strPtr, transPtr, fileStrPtr;
 
-        QList<QList<_StrPackage *> > strPackages;
-        QList<QList<_Depend *> > depends;
+        QList<QVector<_StrPackage *> > strPackages;
+        QList<QVector<_Depend *> > depends;
         
-        QHash<QByteArray, QList<knownEntry *> > knownPackages; // (nom, [(version, _Package)])
-        QList<knownEntry *> knownEntries;
-        QList<FileFile *> knownFiles;
+        QHash<QByteArray, QVector<knownEntry *> > knownPackages; // (nom, [(version, _Package)])
+        QVector<knownEntry *> knownEntries;
+        QVector<FileFile *> knownFiles;
 
         void handleDl(QIODevice *device);
         int stringIndex(const QByteArray &str, int pkg, bool isTr, bool create = true);

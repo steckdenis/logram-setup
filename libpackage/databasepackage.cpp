@@ -49,7 +49,7 @@ struct DatabasePackage::Private
     _Package *dbpkg;
 
     bool depok;
-    QList<Depend *> deps;
+    QVector<Depend *> deps;
 
     // Téléchargement
     QString waitingDest, usedMirror;
@@ -62,7 +62,7 @@ struct DatabaseDepend::Private
     _Depend *dep;
     DatabaseReader *psd;
 
-    QList<Depend *> subdeps;
+    QVector<Depend *> subdeps;
 };
 
 /*************************************
@@ -327,10 +327,10 @@ int DatabasePackage::index() const
     return d->index;
 }
 
-QList<Package *> DatabasePackage::versions()
+QVector<Package *> DatabasePackage::versions()
 {
     QVector<int> pkgs = d->psd->packagesOfString(0, d->dbpkg->name, DEPEND_OP_NOVERSION);
-    QList<Package *> rs;
+    QVector<Package *> rs;
 
     foreach(int pkg, pkgs)
     {
@@ -341,7 +341,7 @@ QList<Package *> DatabasePackage::versions()
     return rs;
 }
 
-QList<Depend *> DatabasePackage::depends()
+QVector<Depend *> DatabasePackage::depends()
 {
     if (d->depok)
     {
@@ -350,8 +350,8 @@ QList<Depend *> DatabasePackage::depends()
     }
 
     // Trouver les dépendances
-    QList<_Depend *> mdeps = d->psd->depends(d->index);
-    QList<Depend *> rs;
+    QVector<_Depend *> mdeps = d->psd->depends(d->index);
+    QVector<Depend *> rs;
     
     // Créer les dépendances pour tout ça
     Depend *dep;
@@ -482,9 +482,9 @@ bool DatabasePackage::fastNameVersionCompare(Package *other)
     }
 }
 
-QList<PackageFile *> DatabasePackage::files()
+QVector<PackageFile *> DatabasePackage::files()
 {
-    QList<PackageFile *> rs;
+    QVector<PackageFile *> rs;
     _Package *pkg = d->psd->package(d->index);
     
     if (pkg == 0) return rs;

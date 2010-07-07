@@ -29,7 +29,7 @@
 #define __PACKAGELIST_H__
 
 #include <QObject>
-#include <QList>
+#include <QVector>
 #include <QProcess>
 
 #include "solver.h"
@@ -51,7 +51,7 @@ class Communication;
  * paquets voulus insérés dans la liste, il est possible de lancer leur
  * installation.
  */
-class PackageList : public QObject, public QList<Package *>
+class PackageList : public QObject, public QVector<Package *>
 {
     Q_OBJECT
     
