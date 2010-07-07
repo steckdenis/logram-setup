@@ -67,7 +67,7 @@ struct Solver::Private
     // Fonctions
     bool addNode(Package *package, Solver::Node *node);
     Node *checkPackage(int index, Solver::Action action, bool &ok, bool userWanted);
-    bool addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep = false);
+    bool addPkgs(const QVector<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep = false);
     
     bool exploreNode(Solver::Node *node, bool &ended);
     bool verifyNode(Solver::Node *node, Solver::Error* &error);
@@ -960,7 +960,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         _Package *mpkg = psd->package(pindex);
         
         // Explorer les autres versions
-        QList<int> otherVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
+        QVector<int> otherVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
         
         foreach(int otherVersion, otherVersions)
         {
@@ -1117,7 +1117,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             else
             {
                 // Nom depuis la base de donnée
-                QList<int> pkgIndexes = psd->packagesByVString(wp.pattern);
+                QVector<int> pkgIndexes = psd->packagesByVString(wp.pattern);
                 
                 if (pkgIndexes.count() == 0)
                 {
@@ -1185,7 +1185,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             {
                 // Créer plusieurs noeuds pour cet enfant : un pour supprimer cette revdep, un pour chaque provide
                 // qu'on peut installer à la place.
-                QList<int> pkgIndexes;
+                QVector<int> pkgIndexes;
                 
                 // ddep->pkgname = index du paquet
                 pkgIndexes.append(ddep->pkgname);
@@ -1223,7 +1223,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                 continue;
             }
             
-            QList<int> pkgIndexes;
+            QVector<int> pkgIndexes;
             
             // Trouver les indexes des paquets à installer en fonction de l'origine du paquet
             if (package->origin() == Package::Database)
@@ -1269,7 +1269,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     return true;
 }
 
-bool Solver::Private::addPkgs(const QList<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep)
+bool Solver::Private::addPkgs(const QVector<int> &pkgIndexes, Solver::Node *node, Solver::Action action, Solver::Node::Child *child, bool revdep)
 {
     // Si on n'a qu'un enfant, c'est simple
     if (pkgIndexes.count() == 1)

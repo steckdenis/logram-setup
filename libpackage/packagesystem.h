@@ -295,7 +295,7 @@ class PackageSystem : public QObject
          * @return True si tout s'est bien passé
          * @sa package
          */
-        bool packagesByName(const QRegExp &regex, QList<int> &rs);
+        bool packagesByName(const QRegExp &regex, QVector<int> &rs);
         
         /**
          * @brief Trouve un paquet en fonction d'un nom et d'une version
@@ -305,7 +305,7 @@ class PackageSystem : public QObject
          * @return Liste des paquets correspondant
          * @sa parseVersion
          */
-        QList<int> packagesByVString(const QString &name, const QString &version, int op);
+        QVector<int> packagesByVString(const QString &name, const QString &version, int op);
         
         /**
          * @brief Trouve un paquet ayant un nom est une version exacts

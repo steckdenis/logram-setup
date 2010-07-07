@@ -110,10 +110,10 @@ DatabaseReader::~DatabaseReader()
     }
 }
 
-bool DatabaseReader::packagesByName(const QRegExp &regex, QList<int> &rs)
+bool DatabaseReader::packagesByName(const QRegExp &regex, QVector<int> &rs)
 {
     // Explorer le contenu de packages à la recherche d'un paquet dont le nom est bon
-    rs = QList<int>();
+    rs = QVector<int>();
     QString pkgname;
 
     int32_t count = *(int32_t *)m_packages;     // Nombre de paquets
@@ -134,9 +134,9 @@ bool DatabaseReader::packagesByName(const QRegExp &regex, QList<int> &rs)
     return true;
 }
 
-QList<int> DatabaseReader::packagesByVString(const QString &name, const QString &version, int op)
+QVector<int> DatabaseReader::packagesByVString(const QString &name, const QString &version, int op)
 {
-    QList<int> rs;
+    QVector<int> rs;
     int32_t count = *(int32_t *)m_packages;
     
     QString pname, pver;
@@ -167,7 +167,7 @@ QList<int> DatabaseReader::packagesByVString(const QString &name, const QString 
     return rs;
 }
 
-QList<int> DatabaseReader::packagesByVString(const QString &verStr)
+QVector<int> DatabaseReader::packagesByVString(const QString &verStr)
 {
     // Parser la version
     QByteArray name, version;
@@ -318,9 +318,9 @@ QList<_Depend *> DatabaseReader::depends(int pkgIndex)
     return rs;
 }
 
-QList<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, int op)
+QVector<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, int op)
 {
-    QList<int> rs;
+    QVector<int> rs;
     QByteArray cmpVersion;
     
     // Vérifier l'index
@@ -379,10 +379,10 @@ QList<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, int 
     return rs;
 }
 
-QList<int> DatabaseReader::orphans()
+QVector<int> DatabaseReader::orphans()
 {
     int32_t npkgs = *(int *)m_packages;
-    QList<int> rs;
+    QVector<int> rs;
     
     for (int i=0; i<npkgs; ++i)
     {
@@ -401,7 +401,7 @@ QList<int> DatabaseReader::orphans()
 QList<UpgradeInfo> DatabaseReader::upgradePackages()
 {
     int32_t npkgs = *(int *)m_packages;
-    QList<int> otherVersions;
+    QVector<int> otherVersions;
     QList<UpgradeInfo> rs;
     UpgradeInfo ui;
     

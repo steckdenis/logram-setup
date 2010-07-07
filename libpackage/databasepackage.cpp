@@ -329,7 +329,7 @@ int DatabasePackage::index() const
 
 QList<Package *> DatabasePackage::versions()
 {
-    QList<int> pkgs = d->psd->packagesOfString(0, d->dbpkg->name, DEPEND_OP_NOVERSION);
+    QVector<int> pkgs = d->psd->packagesOfString(0, d->dbpkg->name, DEPEND_OP_NOVERSION);
     QList<Package *> rs;
 
     foreach(int pkg, pkgs)

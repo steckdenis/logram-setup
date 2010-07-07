@@ -53,7 +53,7 @@ struct PackageList::Private
     Package *installingPackage;
     QList<Package *> list;
     QList<Package *> downloadedPackages;
-    QList<int> orphans;
+    QVector<int> orphans;
     QList<QString> triggers;
     
     QFile safeRemoveList;
@@ -116,7 +116,7 @@ int PackageList::numLicenses() const
     return d->numLicenses;
 }
 
-QList<int> PackageList::orphans() const
+QVector<int> PackageList::orphans() const
 {
     return d->orphans;
 }
@@ -183,7 +183,7 @@ bool PackageList::process()
     if (rs != 0) return false;
     
     DatabaseReader *dr = d->ps->databaseReader();
-    QList<int> pkgs;
+    QVector<int> pkgs;
     QSettings *set = d->ps->installedPackagesList();
     
     for (int i=0; i<count(); ++i)

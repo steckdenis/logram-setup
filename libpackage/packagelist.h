@@ -148,7 +148,7 @@ class PackageList : public QObject, public QList<Package *>
          * 
          * @return Liste des ID des paquets rendus orphelins par la liste.
          */
-        QList<int> orphans() const;
+        QVector<int> orphans() const;
         
         /**
          * @brief Exécute la liste

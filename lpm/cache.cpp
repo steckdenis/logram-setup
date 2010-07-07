@@ -44,7 +44,7 @@ void App::update()
 
 void App::find(const QString &pattern)
 {
-    QList<int> pkgs;
+    QVector<int> pkgs;
     QRegExp exp;
     
     exp.setCaseSensitivity(Qt::CaseSensitive);
@@ -424,7 +424,7 @@ void App::tagFile(const QString &fileName, const QString &tag)
 void App::tagPackage(const QString &packageName, const QString &tag)
 {
     DatabasePackage *pkg;
-    QList<int> pkgs;
+    QVector<int> pkgs;
     QByteArray n, v;
     int op;
     

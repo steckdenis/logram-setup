@@ -194,7 +194,7 @@ class DatabaseReader
             @param rs Référence sur une liste d'entiers qui recevra le résultat
             @return true si tout s'est bien passé, false sinon
         */
-        bool packagesByName(const QRegExp &regex, QList<int> &rs);
+        bool packagesByName(const QRegExp &regex, QVector<int> &rs);
         
         /**
             @brief Liste des paquets correspondant à une chaîne de version
@@ -208,7 +208,7 @@ class DatabaseReader
             @param verStr chaîne de version
             @return Liste des paquets qui correspondent
         */
-        QList<int> packagesByVString(const QString &verStr);
+        QVector<int> packagesByVString(const QString &verStr);
         
         /**
             @brief Liste des paquets correspondant à un nom, une version et une opération
@@ -224,7 +224,7 @@ class DatabaseReader
             @param op Opération (=, >=, <=, >>, !=, etc)
             @return Liste des paquets qui correspondent
         */
-        QList<int> packagesByVString(const QString &name, const QString &version, int op);
+        QVector<int> packagesByVString(const QString &name, const QString &version, int op);
         
         /**
             @brief Retourne les fichier correspondant au nom name
@@ -291,7 +291,7 @@ class DatabaseReader
                 // Explorer les dépendances et afficher les paquets qui correspondent
                 foreach (_Depend *dep, deps)
                 {
-                    QList<int> matching = dr->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+                    QVector<int> matching = dr->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
                     
                     cout << "Une dépendance de type " << dep->type << " :" << endl;
                     
@@ -316,7 +316,7 @@ class DatabaseReader
             @param op Opération de comparaison
             @return Liste des paquets qui correspondent
         */
-        QList<int> packagesOfString(int stringIndex, int nameIndex, int op);
+        QVector<int> packagesOfString(int stringIndex, int nameIndex, int op);
         
         /**
             @brief Liste des paquets dont la version installée est différente de la version du dépôt
@@ -338,7 +338,7 @@ class DatabaseReader
                      de paquets dans le dépôt
             @return Paquets orphelins
         */
-        QList<int> orphans();
+        QVector<int> orphans();
         
         int packages(); /*!< @brief Nombre de paquets disponibles dans la base de donnée */
 

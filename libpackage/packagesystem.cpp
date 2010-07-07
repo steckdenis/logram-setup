@@ -351,7 +351,7 @@ QList<Logram::DatabasePackage *> Logram::PackageSystem::upgradePackages()
 
 QList<Logram::DatabasePackage *> Logram::PackageSystem::orphans()
 {
-    QList<int> pkgs = d->dr->orphans();
+    QVector<int> pkgs = d->dr->orphans();
     QList<DatabasePackage *> rs;
     
     foreach (int p, pkgs)
@@ -364,12 +364,12 @@ QList<Logram::DatabasePackage *> Logram::PackageSystem::orphans()
     return rs;
 }
 
-bool Logram::PackageSystem::packagesByName(const QRegExp &regex, QList<int> &rs)
+bool Logram::PackageSystem::packagesByName(const QRegExp &regex, QVector<int> &rs)
 {
     return d->dr->packagesByName(regex, rs);
 }
 
-QList<int> Logram::PackageSystem::packagesByVString(const QString &name, const QString &version, int op)
+QVector<int> Logram::PackageSystem::packagesByVString(const QString &name, const QString &version, int op)
 {
     return d->dr->packagesByVString(name, version, op);
 }
