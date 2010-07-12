@@ -122,3 +122,5 @@ void DonePage::addMessage(const QIcon &icon, const QString &title, const QString
     item->setSizeHint(widget->minimumSizeHint());
     listRemarks->setItemWidget(item, widget);
 }
+
+#include "donepage.moc"

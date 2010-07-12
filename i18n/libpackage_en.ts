@@ -120,9 +120,13 @@ Options (case insensitive):
 </translation>
     </message>
     <message>
-        <location line="+65"/>
         <source>Logram LPM </source>
-        <translation>Logram LPM </translation>
+        <translation type="obsolete">Logram LPM </translation>
+    </message>
+    <message>
+        <location line="+65"/>
+        <source>Logram Package Manager </source>
+        <translation>Logram Package Manager </translation>
     </message>
     <message>
         <location line="+17"/>
@@ -1013,6 +1017,30 @@ Options (case insensitive):
     </message>
 </context>
 <context>
+    <name>BranchePage</name>
+    <message>
+        <location filename="../pkgui/branchepage.cpp" line="+265"/>
+        <source>Téléchargement de %1, suppression de %2, %3 licence(s) à accepter</source>
+        <translation>Downloading of %1, deletion of %2, %3 license(s) to accept</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Téléchargement de %1, installation de %2, %3 licence(s) à accepter</source>
+        <translation>Downloading of %1, installation of %2, %3 license(s) to accept</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <location line="+2"/>
+        <source>Entre %1 et %2</source>
+        <translation>Between %1 and %2</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>(n&apos;ajoute pas de dépendance)</source>
+        <translation>(doesn&apos;t add any dependency)</translation>
+    </message>
+</context>
+<context>
     <name>CheckFiles</name>
     <message>
         <location filename="../libpackage/plugins/checkfiles/checkfiles.cpp" line="+64"/>
@@ -1021,11 +1049,295 @@ Options (case insensitive):
     </message>
 </context>
 <context>
+    <name>CommunicationDialog</name>
+    <message>
+        <location filename="../pkgui/communicationdialog.cpp" line="+64"/>
+        <source>Entrez une chaîne de caractère :</source>
+        <translation>Enter a character string :</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Entrez un nombre entier :</source>
+        <translation>Enter a number :</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Entrez un nombre décimal :</source>
+        <translation>Enter a decimal number :</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Sélectionner un choix :</source>
+        <translation>Select one choice :</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sélectionner un ou plusieurs choix :</source>
+        <translation>Select one or more choices :</translation>
+    </message>
+</context>
+<context>
+    <name>DonePage</name>
+    <message>
+        <location filename="../pkgui/donepage.cpp" line="+68"/>
+        <source>&lt;b&gt;Redémarrage de l&apos;ordinateur&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Reboot of the computer&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Un redémarrage de l&apos;ordinateur est nécessaire pour que tous les paquets fonctionnent.</source>
+        <translation>A reboot of the computer is needed for all the packages to function.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&lt;b&gt;Paquets orphelins&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Orphan packages&lt;/b&gt;</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n paquet(s) ne sont plus nécessaires au fonctionnement des autres.</source>
+        <translation>
+            <numerusform>%n package is not needed for the others to function.</numerusform>
+            <numerusform>%n packages are not needed for the others to function.</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&lt;b&gt;Installation des paquets&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Installation of the packages&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>L&apos;installation des paquets s&apos;est déroulée avec succès.</source>
+        <translation>The installation of the packages was successfully executed.</translation>
+    </message>
+</context>
+<context>
     <name>FileManyPackages</name>
     <message>
         <location filename="../libpackage/plugins/filemanypackages/filemanypackages.cpp" line="+76"/>
         <source>Le fichier %1 se trouve également dans %2</source>
         <translation>The file %1 was also found in %2</translation>
+    </message>
+</context>
+<context>
+    <name>Flags</name>
+    <message>
+        <location filename="../pkgui/flags.ui" line="+14"/>
+        <source>Drapeaux du paquet</source>
+        <translation>Flags of the package</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Les drapeaux permettent de spécifier à Logram comment gérer certains paquets. Ils vous permettent par exemple de ne jamais installer un paquet dont vous savez qu&apos;il pose problème.</source>
+        <translation>The flags enable you to specify to Logram how to handle some packages. You can for example ask Logram to never install a package that you known is broken.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Drapeaux</source>
+        <translation>Flags</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Intégration à l&apos;environnement :</source>
+        <translation>Integration in the environment :</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Application graphique</source>
+        <translation>Graphical application</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Ne pas installer</source>
+        <translation>Don&apos;t install</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Ne pas supprimer</source>
+        <translation>Don&apos;t remove</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Ne pas mettre à jour</source>
+        <translation>Don&apos;t update</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Nécessite l&apos;approbation d&apos;une licence</source>
+        <translation>Needs the approval of a license</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Nécessite un redémarrage</source>
+        <translation>Needs a reboot</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Installé</source>
+        <translation>Installed</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Supprimé</source>
+        <translation>Removed</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Conserver même si plus nécessaire</source>
+        <translation>Keep even if not needed</translation>
+    </message>
+</context>
+<context>
+    <name>InstallPage</name>
+    <message>
+        <location filename="../pkgui/installpage.cpp" line="+138"/>
+        <source>Téléchargement de %1</source>
+        <translation>Downloading of %1</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Installation de %1</source>
+        <translation>Installation of %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Suppression de %1</source>
+        <translation>Deletion of %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Suppression totale de %1</source>
+        <translation>Total deletion of %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Mise à jour de %1 vers %2</source>
+        <translation>Updating of %1 to %2</translation>
+    </message>
+</context>
+<context>
+    <name>InstallWizard</name>
+    <message>
+        <location filename="../pkgui/branchepage.cpp" line="+69"/>
+        <source>Installation de &lt;b&gt;%1&lt;/b&gt;~%2</source>
+        <translation>Installation of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Suppression de &lt;b&gt;%1&lt;/b&gt;~%2</source>
+        <translation>Deletion of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Suppression totale de &lt;b&gt;%1&lt;/b&gt;~%2</source>
+        <translation>Total deletion of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mise à jour de &lt;b&gt;%1&lt;/b&gt;~%2 vers %3</source>
+        <translation>Updating of &lt;b&gt;%1&lt;/b&gt;~%2 to %3</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Redémarrage</source>
+        <translation>Reboot</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Licence à approuver</source>
+        <translation>License to accept</translation>
+    </message>
+    <message>
+        <location filename="../pkgui/installwizard.cpp" line="+60"/>
+        <source>Installer et supprimer des paquets</source>
+        <translation>Install and remove packages</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>« &amp;Précédant</source>
+        <translation>« &amp;Previous</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Suivant »</source>
+        <translation>&amp;Next »</translation>
+    </message>
+    <message>
+        <location line="+94"/>
+        <location line="+12"/>
+        <location line="+41"/>
+        <location line="+31"/>
+        <source>Erreur lors de la résolution des dépendances</source>
+        <translation>Error when solving the dependencies</translation>
+    </message>
+    <message>
+        <location line="-84"/>
+        <source>Impossible de résoudre les dépendances, mais le problème n&apos;est pas spécifié par la gestion des paquets de Logram. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Le message suivant pourrait les aider : «errorNode = 0»</source>
+        <translation>Unable to solve the dependencies, but the problem isn&apos;t specified by the Logram&apos;s package management. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). The following message could help them : “errorNode = 0”</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Impossible de résoudre les dépendances, la structure interne de la gestion des paquets semble cassée. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Si vous avez les connaissances nécessaires, essayez de lancer «lpm add -G &lt;les paquets que vous installiez, ou préfixés de &quot;-&quot; si vous les supprimiez&gt;» dans une console, et postez la sortie complète de cette commande dans le rapport de bug</source>
+        <translation>Unable to solve the dependencies, the internal structure of the package management is broken. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). If you have the necessary skills, please try to launch “lpm add -G &lt;the packages you were installing, or prefixed by &quot;-&quot; if you were removing them&gt;” in a console, and post the entire output of this command in your bug report</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Impossible de trouver la dépendance correspondant à %1</source>
+        <translation>Unable to find the dependency matching %1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Impossible de résoudre les dépendances, mais le problème n&apos;est pas spécifié par la gestion des paquets de Logram. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Le message suivant pourrait les aider : «InternalError, ps-&gt;lastError() = 0»</source>
+        <translation>Unable to solve the dependencies, but the problem isn&apos;t specified by the Logram&apos;s package management. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). The following message could help them : “InternalError, ps-&gt;lastError() = 0”</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Aucun des choix nécessaires à l&apos;installation de %1 n&apos;est possible</source>
+        <translation>No choice needed to install %1 is available</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Aucun des choix permettant d&apos;effectuer l&apos;opération que vous demandez n&apos;est possible</source>
+        <translation>No choice allowing to perform the operation you want is possible</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Le paquet %1 devrait être installé et supprimé en même temps</source>
+        <translation>The package %1 wants to be installed and removed at the same time</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Les paquets %1 et %2 devraient être installés en même temps</source>
+        <translation>The packages %1 and %2 want to be installed at the same time</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Le paquet %1 ne peut être installé mais devrait être installé</source>
+        <translation>The package %1 cannot be install but wants to be installed</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Le paquet %1 ne peut être supprimé mais devrait être supprimé</source>
+        <translation>The package %1 cannot be removed but wants to be removed</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Le paquet %1 ne peut être mis à jour mais devrait être mis à jour</source>
+        <translation>The package %1 cannot be updated but wants to be updated</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Impossible de résoudre les dépendances : %1. Si cette erreur est survenue juste après que vous ayiez choisi un choix dans la liste, essayez de cliquer sur le bouton «Remonter»</source>
+        <translation>Unable to solve the dependencies : %1. If this error was raised just after you have selected a choice in the list, try to click on the button “Go up” and choose another choice</translation>
+    </message>
+</context>
+<context>
+    <name>LicensePage</name>
+    <message>
+        <location filename="../pkgui/licensepage.cpp" line="+74"/>
+        <source>Accepter la licence</source>
+        <translation>Accept the license</translation>
     </message>
 </context>
 <context>
@@ -1129,7 +1441,7 @@ Options (case insensitive):
 <context>
     <name>Logram::RepositoryManager</name>
     <message>
-        <location filename="../libpackage/repositorymanager.cpp" line="+1547"/>
+        <location filename="../libpackage/repositorymanager.cpp" line="+1589"/>
         <source>Impossible de trouver la clef %1</source>
         <translation>Unable to find the key %1</translation>
     </message>
@@ -1165,11 +1477,508 @@ Options (case insensitive):
     </message>
 </context>
 <context>
+    <name>MainWindow</name>
+    <message>
+        <location filename="../pkgui/mainwindow.ui" line="+14"/>
+        <source>Gestion des paquets</source>
+        <translation>Package management</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Tous les paquets</source>
+        <translation>All the packages</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paquets installés</source>
+        <translation>Installed packages</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paquets non-installés</source>
+        <translation>Non-installed packages</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paquets pouvant être mis à jour</source>
+        <translation>Updateable packages</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paquets orphelins</source>
+        <translation>Orphan packages</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>&amp;Rechercher</source>
+        <translation>&amp;Search</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>&amp;Simplifié</source>
+        <translation>&amp;Simplified</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <location line="+416"/>
+        <source>Nom</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <location line="-411"/>
+        <source>Version</source>
+        <translation>Version</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Taille</source>
+        <translation>Size</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Dépôt</source>
+        <translation>Repository</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+340"/>
+        <source>Description</source>
+        <translation>Description</translation>
+    </message>
+    <message>
+        <location line="-322"/>
+        <source>&amp;?</source>
+        <translation>&amp;?</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Paquets</source>
+        <translation>&amp;Packages</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Informations de base</source>
+        <translation>Base informations</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Titre</source>
+        <translation>Title</translation>
+    </message>
+    <message>
+        <location line="+57"/>
+        <source>Description courte</source>
+        <translation>Short description</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Section :</source>
+        <translation>Section :</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Dépôt :</source>
+        <translation>Repository :</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Téléchargement :</source>
+        <translation>Downloading :</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Installation :</source>
+        <translation>Installation :</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Site web :</source>
+        <translation>Website :</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Licence :</source>
+        <translation>License :</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Drapeaux :</source>
+        <translation>Flags :</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Voir et modifier</source>
+        <translation>&amp;View and modify</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Versions disponibles :</source>
+        <translation>Available versions :</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <location filename="../pkgui/packageinfo.cpp" line="+144"/>
+        <source>Dépendances</source>
+        <translation>Dependencies</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Historique</source>
+        <translation>History</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Fichiers</source>
+        <translation>Files</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Attributs</source>
+        <translation>Attributes</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Actions à effectuer</source>
+        <translation>Pending actions</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Paquet</source>
+        <translation>Package</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Nom et version du paquet dans la liste</source>
+        <translation>Name and version of the package in the list</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Action</source>
+        <translation>Action</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Téléchargement</source>
+        <translation>Downloading</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Taille à télécharger et à installer</source>
+        <translation>Amont of data to download and install</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>&amp;Appliquer</source>
+        <translation>&amp;Apply</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>&amp;Vider</source>
+        <translation>&amp;Clean</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Sélectionner pour &amp;installation</source>
+        <translation>Select to &amp;install</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sélectionner pour &amp;suppression</source>
+        <translation>Select to &amp;remove</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&amp;Appliquer les changements</source>
+        <translation>&amp;Apply the changes</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Abandonner les &amp;changements</source>
+        <translation>Cancel the &amp;changes</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Quitter</source>
+        <translation>&amp;Quit</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>À &amp;propos de PkgUi</source>
+        <translation>&amp;About PkgUi</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>À propos de &amp;Qt</source>
+        <translation>About &amp;Qt</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sélectionner pour suppression &amp;totale</source>
+        <translation>Select for complete &amp;removing</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Désélectionner</source>
+        <translation>&amp;Deselect</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&amp;Mettre à jour la liste des paquets...</source>
+        <translation>&amp;Update the list of the packages...</translation>
+    </message>
+    <message>
+        <location filename="../pkgui/mainwindow.cpp" line="+213"/>
+        <source>Mise à jour de la base de donnée</source>
+        <translation>Updating of the database</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>La base de donnée a été mise à jour avec succès.</source>
+        <translation>The database was successfully updated.</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Pas d&apos;erreur ou erreur inconnue</source>
+        <translation>No error or unknown error</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Impossible d&apos;ouvrir le fichier </source>
+        <translation>Unable to open the file </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Impossible de mapper le fichier </source>
+        <translation>Unable to map the file </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Erreur dans la commande </source>
+        <translation>Error in the command </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Impossible de télécharger </source>
+        <translation>Unable to download </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Erreur dans le QtScript </source>
+        <translation>Error in the QtScript </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mauvaise signature GPG du fichier </source>
+        <translation>Bad GPG signature of the file </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mauvaise somme SHA1, fichier corrompu : </source>
+        <translation>Bad SHA1 sum, file corrupted: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Paquet inexistant : </source>
+        <translation>Package not found:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mauvais type de téléchargement, vérifier sources.list : </source>
+        <translation>Bad download type, please check sources.list: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Impossible d&apos;ouvrir la base de donnée : </source>
+        <translation>Unable to open the database: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Erreur dans la requête : </source>
+        <translation>Error in the query: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Impossible de vérifier la signature : </source>
+        <translation>Unable to check the signature: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Impossible d&apos;installer le paquet </source>
+        <translation>Unable to install the package </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Opération annulée : </source>
+        <translation>Operation canceled: </translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Erreur</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <location filename="../pkgui/packageinfo.cpp" line="+3"/>
+        <source>Conflict</source>
+        <translation>Conflict</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Fournit</source>
+        <translation>Provide</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Suggère</source>
+        <translation>Suggest</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Requis par</source>
+        <translation>Needed by</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remplace</source>
+        <translation>Replace</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>&lt;b&gt;%1&lt;/b&gt; (par &lt;a href=&quot;mailto:%2&quot;&gt;%3&lt;/a&gt; le %4 dans %5)</source>
+        <translation>&lt;b&gt;%1&lt;/b&gt; (by &lt;a href=&quot;mailto:%2&quot;&gt;%3&lt;/a&gt; on %4 in %5)</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Faible priorité</source>
+        <translation>Low priority</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Fonctionnalité</source>
+        <translation>Feature</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Correction de bug</source>
+        <translation>Bug fix</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Sécurité</source>
+        <translation>Security</translation>
+    </message>
+    <message>
+        <location line="+83"/>
+        <source>Dossier</source>
+        <translation>Directory</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Installé</source>
+        <translation>Installed</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ne pas supprimer</source>
+        <translation>Don&apos;t remove</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ne pas purger</source>
+        <translation>Don&apos;t purge</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sauvegarder</source>
+        <translation>Save</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sauvegarder si modifié</source>
+        <translation>Save if modified</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Écraser</source>
+        <translation>Overwrite</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Virtuel</source>
+        <translation>Virtual</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Pas intégré</source>
+        <translation>Not integrated</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Utilisable</source>
+        <translation>Useable</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Bien intégré</source>
+        <translation>Well integrated</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Parfaitement intégré</source>
+        <translation>Perfectly integrated</translation>
+    </message>
+    <message>
+        <location filename="../pkgui/packageitem.cpp" line="+38"/>
+        <source>Installer</source>
+        <translation>Install</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Supprimer</source>
+        <translation>Remove</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Supprimer totalement</source>
+        <translation>Completely remove</translation>
+    </message>
+</context>
+<context>
     <name>NoInfoDir</name>
     <message>
         <location filename="../libpackage/plugins/noinfodir/noinfodir.cpp" line="+70"/>
         <source>Le fichier /usr/share/info/dir a été trouvé alors qu&apos;il ne peut être présent. Supprimé.</source>
         <translation>The file /usr/share/info/dir was found while it cannot be present. Removed.</translation>
+    </message>
+</context>
+<context>
+    <name>ProgressDialog</name>
+    <message>
+        <location filename="../pkgui/progressdialog.cpp" line="+44"/>
+        <source>&amp;Annuler</source>
+        <translation>&amp;Cancel</translation>
+    </message>
+</context>
+<context>
+    <name>ProgressList</name>
+    <message>
+        <location filename="../pkgui/progresslist.cpp" line="+85"/>
+        <source>Progression : </source>
+        <translation>Progression: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Téléchargement de </source>
+        <translation>Downloading of </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mise à jour de la base de donnée : </source>
+        <translation>Updating of the database: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exécution du trigger </source>
+        <translation>Executing trigger </translation>
     </message>
 </context>
 <context>
@@ -1188,6 +1997,151 @@ Options (case insensitive):
         <location line="+38"/>
         <source>Ajout de %1%2%3 comme dépendance automatique</source>
         <translation>Adding of %1%2%3 as automatic dependency</translation>
+    </message>
+</context>
+<context>
+    <name>actionPage</name>
+    <message>
+        <location filename="../pkgui/actionpage.ui" line="+6"/>
+        <source>Validation de la liste des paquets</source>
+        <translation>Validation of the list of the packages</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Avant de commencer la sélection des dépendances et l&apos;installation des paquets, veuillez commencer par vérifier que la liste des modifications à apporter vous convient.</source>
+        <translation>Before the beginning of the selection of the dependence and the installation of the packages, please begin by verifying that the list of the changes to apply is correct.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Liste des actions à effectuer :</source>
+        <translation>List of the actions to apply :</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Nom</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Version</source>
+        <translation>Version</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Action</source>
+        <translation>Action</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Téléchargement</source>
+        <translation>Downloading</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Installation</source>
+        <translation>Installation</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Description</source>
+        <translation>Description</translation>
+    </message>
+</context>
+<context>
+    <name>branchePage</name>
+    <message>
+        <location filename="../pkgui/branchepage.ui" line="+6"/>
+        <source>Sélection des dépendances</source>
+        <translation>Selection of the dependencies</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Voici la liste des paquets qui devront être installés ou supprimés en plus de ceux que vous avez choisi pour garantir l&apos;intégrité du système. Il se peut que vous ayez des choix à faire.</source>
+        <translation>Here is the list of the packages that will be installed or removed at the same time as those you chosen to keep the system stable. You may have choices to do.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Paquets pouvant être installés ou supprimés :</source>
+        <translation>Packages that will be installed or removed :</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>&amp;Remonter</source>
+        <translation>&amp;Go up</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Utiliser ce choix</source>
+        <translation>&amp;Use this choice</translation>
+    </message>
+</context>
+<context>
+    <name>donePage</name>
+    <message>
+        <location filename="../pkgui/donepage.ui" line="+6"/>
+        <source>WizardPage</source>
+        <translation>WizardPage</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Installation terminée</source>
+        <translation>Installation done</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>L&apos;installation des paquets est terminée ! Voici éventuellement des informations que certains paquets peuvent vous avoir laissé.</source>
+        <translation>The installation of the packages is done ! Here is a possible list of the informations left by some packages.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Informations laissées par les paquets :</source>
+        <translation>Informations left by the packages :</translation>
+    </message>
+</context>
+<context>
+    <name>installPage</name>
+    <message>
+        <location filename="../pkgui/installpage.ui" line="+6"/>
+        <source>Installation</source>
+        <translation>Installation</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Les paquets sont maintenant en cours d&apos;installation. Ceci peut prendre quelques secondes ou quelques minutes, suivant ce que vous avez demandé.</source>
+        <translation>The packages are now being installed. This can take some seconds or some minutes, depending of what you asked.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>%p% (paquet %v sur %m)</source>
+        <translation>%p% (package %v of %m)</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Informations détaillées</source>
+        <translation>Detailed informations</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Téléchargement des paquets...</source>
+        <translation>Downloading of the packages...</translation>
+    </message>
+</context>
+<context>
+    <name>licensePage</name>
+    <message>
+        <location filename="../pkgui/licensepage.ui" line="+6"/>
+        <source>Licences des paquets</source>
+        <translation>Licenses of the packages</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Les paquets suivants possèdent des licences non-libres, ou ne respectant pas celles que vous avez accepté en installant Logram. Il vous faut les accepter maintenant pour installer certains paquets.</source>
+        <translation>The followinf packages have non-free licenses, or licenses not matching what you accepted by installing Logram. You have to accept them now to install some packages.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Licences à accepter :</source>
+        <translation>Licenses to accept :</translation>
     </message>
 </context>
 </TS>

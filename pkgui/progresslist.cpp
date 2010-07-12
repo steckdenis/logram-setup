@@ -160,3 +160,5 @@ void ProgressList::clear()
         endProgress(progress);
     }
 }
+
+#include "progresslist.moc"
