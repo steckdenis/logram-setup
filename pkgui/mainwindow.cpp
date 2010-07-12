@@ -28,6 +28,7 @@
 #include <QMessageBox>
 
 #include <communication.h>
+#include <packagemetadata.h>
 
 using namespace Logram;
 
@@ -55,8 +56,6 @@ MainWindow::MainWindow() : QMainWindow(0)
     actQuit->setIcon(QIcon::fromTheme("application-exit"));
     
     actAboutPkgui->setIcon(QIcon(":/images/icon.svg"));
-    
-    lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(48, 48));
     
     btnListApply->setIcon(QIcon::fromTheme("dialog-ok-apply"));
     btnListClean->setIcon(QIcon::fromTheme("dialog-cancel"));
@@ -212,6 +211,12 @@ void MainWindow::databaseUpdate()
     searchPackages();
     
     QMessageBox::information(this, tr("Mise à jour de la base de donnée"), tr("La base de donnée a été mise à jour avec succès."));
+}
+
+QPixmap MainWindow::iconOfPackage(PackageMetaData *md, int width, int height)
+{
+    QImage img = QImage::fromData(md->packageIconData());
+    return QPixmap::fromImage(img).scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 }
 
 void MainWindow::psError()

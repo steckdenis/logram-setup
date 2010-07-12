@@ -737,9 +737,53 @@ bool RepositoryManager::includePackage(const QString &fileName)
     md = fpkg->metadata();
     md->setCurrentPackage(fpkg->name());
     
+    QDomElement package = md->currentPackageElement();
+    
     // Obtenir l'url du paquet
     QString download_url = lpkFileName(fpkg->name(), fpkg->version(), fpkg->arch());
     QString metadata_url = metaFileName(fpkg->name(), fpkg->version());
+    
+    // Insérer l'icône dans les métadonnées
+    QByteArray icon = fpkg->iconContents();
+    
+    if (!icon.isNull())
+    {
+        // Trouver un éventuel enregistrement <icon /> existant déjà dans les métadonnées
+        QDomElement iconElement = package.firstChildElement("icon");
+        
+        if (iconElement.isNull())
+        {
+            iconElement = md->createElement("icon");
+            package.appendChild(iconElement);
+        }
+        
+        // S'assurer qu'il n'y a pas déjà une section CDATA
+        QDomCDATASection section;
+        QDomNode node = iconElement.firstChild();
+            
+        while (!node.isNull())
+        {
+            if (node.isCDATASection())
+            {
+                section = node.toCDATASection();
+            }
+            
+            node = node.nextSibling();
+        }
+        
+        if (section.isNull())
+        {
+            section = md->createCDATASection(QByteArray());
+            iconElement.appendChild(section);
+        }
+        
+        // Inclure l'icône
+        section.setData(icon.toBase64());
+    }
+    
+    // Hash des métadonnées
+    QByteArray metadataData = md->toByteArray(0);
+    QByteArray metadataHash = QCryptographicHash::hash(metadataData, QCryptographicHash::Sha1).toHex();
     
     // Mettre à jour la base de donnée
     QString sql;
@@ -908,7 +952,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
             .arg(e(fpkg->license()))
             .arg(fpkg->flags())
             .arg(e(QString(fpkg->packageHash())))
-            .arg(e(QString(fpkg->metadataHash())))
+            .arg(e(QString(metadataHash)))
             .arg(e(download_url))
             .arg(e(fpkg->upstreamUrl()))
             .arg(source_id)
@@ -1068,7 +1112,6 @@ bool RepositoryManager::includePackage(const QString &fileName)
     }
     
     // Chaînes
-    QDomElement package = md->currentPackageElement();
     QDomElement el = package.firstChildElement();
     QList<WikiPage> wikiPages;
     
@@ -1448,7 +1491,6 @@ bool RepositoryManager::includePackage(const QString &fileName)
         return false;
     }
     
-    
     // Métadonnées
     if (QFile::exists(metadata_url))
     {
@@ -1466,7 +1508,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
         return false;
     }
     
-    if (!d->writeXZ(metadata_url, fpkg->metadataContents()))
+    if (!d->writeXZ(metadata_url, metadataData))
     {
         return false;
     }

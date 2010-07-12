@@ -25,6 +25,7 @@
 
 #include <QMainWindow>
 #include <QTreeWidgetItem>
+#include <QPixmap>
 
 #include <packagesystem.h>
 #include <databasepackage.h>
@@ -73,6 +74,7 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         Logram::PackageSystem *packageSystem() const;
         
         static Logram::DatabasePackage *duplicatePackage(Logram::PackageSystem *ps, Logram::DatabasePackage *pkg);
+        static QPixmap iconOfPackage(Logram::PackageMetaData *md, int width, int height);
         
     public slots:
         void progress(Logram::Progress *progress);

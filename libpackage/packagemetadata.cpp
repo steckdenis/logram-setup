@@ -301,6 +301,40 @@ QString PackageMetaData::packageEula() const
     return stringOfKey(d->currentPackage.firstChildElement("eula"));
 }
 
+QByteArray PackageMetaData::packageIconData() const
+{
+    QDomElement iconElement = d->currentPackage.firstChildElement("icon");
+    
+    if (iconElement.isNull())
+    {
+        return QByteArray();
+    }
+    
+    // Trouver le noeud CDATA
+    QDomNode node = iconElement.firstChild();
+    QDomCDATASection section;
+    
+    while (!node.isNull())
+    {
+        if (node.isCDATASection())
+        {
+            section = node.toCDATASection();
+            break;
+        }
+        
+        node = node.nextSibling();
+    }
+    
+    if (section.isNull())
+    {
+        return QByteArray();
+    }
+    else
+    {
+        return QByteArray::fromBase64(section.data().toAscii());
+    }
+}
+
 QString PackageMetaData::currentPackage() const
 {
     return d->currentPackage.attribute("name");

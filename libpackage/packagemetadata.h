@@ -236,6 +236,16 @@ class PackageMetaData : public QObject, public QDomDocument
         QVector<SourceDepend *> sourceDepends() const; /*!< @brief Dépendances à la construction du paquet source */
         
         /**
+         * @brief Données brutes de l'icône du paquet courant
+         * 
+         * Retourne les données brutes (fichier PNG valide par exemple, mais 
+         * peut être du SVG, JPG, etc) du paquet courant.
+         * 
+         * @return Données brutes de l'icône du paquet
+         */
+        QByteArray packageIconData() const;
+        
+        /**
          * @brief Définit le paquet courant
          * 
          * Les fonctions du type packageDescription() ne s'occupent que du

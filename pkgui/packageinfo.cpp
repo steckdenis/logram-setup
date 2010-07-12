@@ -31,6 +31,7 @@
 #include <QHBoxLayout>
 #include <QListWidget>
 #include <QDialog>
+#include <QImage>
 #include <QtDebug>
 
 using namespace Logram;
@@ -66,6 +67,18 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     lblInstall->setText(PackageSystem::fileSizeFormat(pkg->installSize()));
     lblWebsite->setText("<a href=\"" + md->upstreamUrl() + "\">" + md->upstreamUrl() + "</a>");
     lblLicense->setText("<a href=\"" + pkg->license() + "\">" + pkg->license() + "</a>");
+    
+    // Icône
+    QByteArray iconData = md->packageIconData();
+    
+    if (iconData.isNull())
+    {
+        lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(48, 48));
+    }
+    else
+    {
+        lblIcon->setPixmap(MainWindow::iconOfPackage(md, 48, 48));
+    }
     
     // Liste des versions
     QVector<DatabasePackage *> pkgs = pkg->versions();

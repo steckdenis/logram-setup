@@ -63,7 +63,7 @@ struct FilePackage::Private
     QString primaryLang;
     
     QVector<PackageFile *> files;
-    QByteArray metadataContents;
+    QByteArray metadataContents, iconContents;
     
     QByteArray packageHash, metadataHash;
     
@@ -225,14 +225,21 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
         }
         
         // Savoir quel type de fichier on a lu
-        if (path == "control/metadata.xml")
+        if (path == "control/metadata.xml" || path.startsWith("control/icon."))
         {
             // Lire le fichier
             size = archive_entry_size(entry);
             buffer = new char[size];
             archive_read_data(a, buffer, size);
             
-            d->metadataContents = QByteArray(buffer, size);
+            if (path == "control/metadata.xml")
+            {
+                d->metadataContents = QByteArray(buffer, size);
+            }
+            else
+            {
+                d->iconContents = QByteArray(buffer, size);
+            }
             
             delete[] buffer;
         }
@@ -447,6 +454,7 @@ FilePackage::FilePackage(const FilePackage &other) : Package(other)
     d->primaryLang = other.d->primaryLang;
     
     d->metadataContents = other.d->metadataContents;
+    d->iconContents = other.d->iconContents;
     
     foreach(Depend *dep, other.d->depends)
     {
@@ -658,6 +666,11 @@ void FilePackage::registerState(int idate, int iby, int flags)
 QByteArray FilePackage::metadataContents()
 {
     return d->metadataContents;
+}
+
+QByteArray FilePackage::iconContents()
+{
+    return d->iconContents;
 }
 
 /* Dépendances */
