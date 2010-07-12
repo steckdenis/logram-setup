@@ -68,6 +68,10 @@ add_definitions(
 qt4_automoc(${lgrpkg_SRCS})
 add_library(lgrpkg SHARED ${lgrpkg_SRCS})
 
+if(SETUP_ARCH)
+    add_definitions(-DSETUP_ARCH="${SETUP_ARCH}")
+endif(SETUP_ARCH)
+
 target_link_libraries(lgrpkg
         ${QT_QTCORE_LIBRARY}
         ${QT_QTNETWORK_LIBRARY}

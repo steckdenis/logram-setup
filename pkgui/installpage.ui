@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>installPage</class>
+ <widget class="QWizardPage" name="installPage">
+  <property name="title">
+   <string>Installation</string>
+  </property>
+  <property name="subTitle">
+   <string>Les paquets sont maintenant en cours d'installation. Ceci peut prendre quelques secondes ou quelques minutes, suivant ce que vous avez demandé.</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="lblInstall"/>
+   </item>
+   <item>
+    <widget class="QProgressBar" name="pgsInstall">
+     <property name="maximum">
+      <number>0</number>
+     </property>
+     <property name="format">
+      <string>%p% (paquet %v sur %m)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="lblInstallMore">
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="grpDetailed">
+     <property name="title">
+      <string>Informations détaillées</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QLabel" name="lblDownload">
+        <property name="text">
+         <string>Téléchargement des paquets...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QProgressBar" name="pgsDownload">
+        <property name="maximum">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lblDownloadMore">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QScrollArea" name="areaProgresses">
+        <property name="widgetResizable">
+         <bool>true</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <widget class="QWidget" name="scrollAreaWidgetContents">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>180</width>
+           <height>64</height>
+          </rect>
+         </property>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

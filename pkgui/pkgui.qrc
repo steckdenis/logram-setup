@@ -1,0 +1,13 @@
+<RCC>
+  <qresource>
+    <file>images/icon.svg</file>
+    <file>images/pkg-install.png</file>
+    <file>images/pkg-remove.png</file>
+    <file>images/list-apply.png</file>
+    <file>images/list-cancel.png</file>
+    <file>images/package.png</file>
+    <file>images/pkg-purge.png</file>
+    <file>images/repository.png</file>
+    <file>images/pkg-update.png</file>
+  </qresource>
+</RCC>

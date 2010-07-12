@@ -756,9 +756,9 @@ void App::showpkg(const QString &name, bool changelog, bool license)
         cout << endl << COLOR(tr("Versions disponibles : "), "35") << endl;
         cout << qPrintable(tr("Légende : * = Disponible, I = installée, R = supprimée")) << endl << endl;
 
-        QVector<Package *> vers = dpkg->versions();
+        QVector<DatabasePackage *> vers = dpkg->versions();
 
-        foreach(Package *ver, vers)
+        foreach(DatabasePackage *ver, vers)
         {
             if (ver->flags() & PACKAGE_FLAG_INSTALLED)
             {

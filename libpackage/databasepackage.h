@@ -169,7 +169,7 @@ class DatabasePackage : public Package
         int downloadSize();
         int installSize();
 
-        QVector<Package *> versions();    /*!< @brief Liste de Package donc chacun est une version différente de ce paquet */
+        QVector<DatabasePackage *> versions();    /*!< @brief Liste de Package donc chacun est une version différente de ce paquet */
         QVector<Depend *> depends();
         QVector<PackageFile *> files();
         

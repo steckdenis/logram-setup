@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>installWizard</class>
+ <widget class="QWizard" name="installWizard">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Installer et supprimer des paquets</string>
+  </property>
+  <widget class="QWizardPage" name="pgActionList">
+   <property name="title">
+    <string>Validation de la liste des paquets</string>
+   </property>
+   <property name="subTitle">
+    <string>Avant de commencer la sélection des dépendances et l'installation des paquets, veuillez commencer par vérifier que la liste des modifications à apporter vous convient.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">ActionList</string>
+   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="lblActions">
+      <property name="text">
+       <string>Liste des actions à effectuer :</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTreeWidget" name="treeActions">
+      <property name="rootIsDecorated">
+       <bool>false</bool>
+      </property>
+      <column>
+       <property name="text">
+        <string>Nom</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Version</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Action</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Téléchargement</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Installation</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Description</string>
+       </property>
+      </column>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="pgBranches">
+   <property name="title">
+    <string>Sélection des dépendances</string>
+   </property>
+   <property name="subTitle">
+    <string>Voici la liste des paquets qui devront être installés ou supprimés en plus de ceux que vous avez choisi pour garantir l'intégrité du système. Il se peut que vous ayez des choix à faire.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">Branches</string>
+   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QLabel" name="lblChoices">
+      <property name="text">
+       <string>Paquets pouvant être installés ou supprimés :</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QListWidget" name="listPackages"/>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="lblSummary"/>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnUp">
+        <property name="text">
+         <string>&amp;Remonter</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnUseChoice">
+        <property name="text">
+         <string>&amp;Utiliser ce choix</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="pgLicenses">
+   <property name="title">
+    <string>Licences des paquets</string>
+   </property>
+   <property name="subTitle">
+    <string>Les paquets suivants possèdent des licences non-libres, ou ne respectant pas celles que vous avez accepté en installant Logram. Il vous faut les accepter maintenant pour installer certains paquets.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">Licenses</string>
+   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_6">
+    <item>
+     <widget class="QLabel" name="lblLicenses">
+      <property name="text">
+       <string>Licences à accepter :</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tbLicences"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="pgInstall">
+   <property name="title">
+    <string>Installation</string>
+   </property>
+   <property name="subTitle">
+    <string>Les paquets sont maintenant en cours d'installation. Ceci peut prendre quelques secondes ou quelques minutes, suivant ce que vous avez demandé.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">Install</string>
+   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
+     <widget class="QLabel" name="lblInstall"/>
+    </item>
+    <item>
+     <widget class="QProgressBar" name="pgsInstall">
+      <property name="maximum">
+       <number>0</number>
+      </property>
+      <property name="format">
+       <string>%p% (paquet %v sur %m)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="lblInstallMore">
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="grpDetailed">
+      <property name="title">
+       <string>Informations détaillées</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QLabel" name="lblDownload">
+         <property name="text">
+          <string>Téléchargement des paquets...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QProgressBar" name="pgsDownload">
+         <property name="maximum">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblDownloadMore">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QScrollArea" name="areaProgresses">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>756</width>
+            <height>314</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="pgDone">
+   <property name="title">
+    <string>Installation terminée</string>
+   </property>
+   <property name="subTitle">
+    <string>L'installation des paquets est terminée ! Voici éventuellement des informations que certains paquets peuvent vous avoir laissé.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">Done</string>
+   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
+     <widget class="QLabel" name="lblInfos">
+      <property name="text">
+       <string>Informations laissées par les paquets :</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QListWidget" name="listRemarks"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

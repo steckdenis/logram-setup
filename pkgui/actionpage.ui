@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>actionPage</class>
+ <widget class="QWizardPage" name="actionPage">
+  <property name="title">
+   <string>Validation de la liste des paquets</string>
+  </property>
+  <property name="subTitle">
+   <string>Avant de commencer la sélection des dépendances et l'installation des paquets, veuillez commencer par vérifier que la liste des modifications à apporter vous convient.</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="lblActions">
+     <property name="text">
+      <string>Liste des actions à effectuer :</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTreeWidget" name="treeActions">
+     <property name="rootIsDecorated">
+      <bool>false</bool>
+     </property>
+     <column>
+      <property name="text">
+       <string>Nom</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Version</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Action</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Téléchargement</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Installation</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Description</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

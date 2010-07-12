@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Gestion des paquets</string>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>true</bool>
+  </property>
+  <widget class="QWidget" name="windowWidget">
+   <layout class="QVBoxLayout" name="verticalLayout_12">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <item>
+       <widget class="QComboBox" name="cboFilter">
+        <item>
+         <property name="text">
+          <string>Tous les paquets</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Paquets installés</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Paquets non-installés</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Paquets pouvant être mis à jour</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Paquets orphelins</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="txtSearch"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSearch">
+        <property name="text">
+         <string>&amp;Rechercher</string>
+        </property>
+        <property name="default">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSimplified">
+        <property name="text">
+         <string>&amp;Simplifié</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QTreeWidget" name="treePackages">
+      <property name="contextMenuPolicy">
+       <enum>Qt::ActionsContextMenu</enum>
+      </property>
+      <property name="animated">
+       <bool>false</bool>
+      </property>
+      <column>
+       <property name="text">
+        <string>Nom</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Version</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Taille</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Dépôt</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Description</string>
+       </property>
+      </column>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>&amp;?</string>
+    </property>
+    <addaction name="actAboutPkgui"/>
+    <addaction name="actAboutQt"/>
+   </widget>
+   <widget class="QMenu" name="menu_Paquets">
+    <property name="title">
+     <string>&amp;Paquets</string>
+    </property>
+    <addaction name="actInstallPackage"/>
+    <addaction name="actRemovePackage"/>
+    <addaction name="actPurge"/>
+    <addaction name="actDeselect"/>
+    <addaction name="separator"/>
+    <addaction name="actApplyChanges"/>
+    <addaction name="actCancelChanges"/>
+    <addaction name="separator"/>
+    <addaction name="actUpdate"/>
+    <addaction name="separator"/>
+    <addaction name="actQuit"/>
+   </widget>
+   <addaction name="menu_Paquets"/>
+   <addaction name="menu"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="docInfos">
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="docInfoWidget">
+    <layout class="QVBoxLayout" name="verticalLayout_11">
+     <item>
+      <widget class="QTabWidget" name="tabInfos">
+       <property name="tabPosition">
+        <enum>QTabWidget::South</enum>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <property name="documentMode">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="tabInfo">
+        <attribute name="title">
+         <string>Informations de base</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QLabel" name="lblIcon">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <item>
+                <widget class="QLabel" name="lblTitle">
+                 <property name="font">
+                  <font>
+                   <pointsize>13</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Titre</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QLabel" name="lblStar1">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lblStar2">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="lblStar3">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QLabel" name="lblShortDesc">
+               <property name="font">
+                <font>
+                 <italic>true</italic>
+                </font>
+               </property>
+               <property name="text">
+                <string>Description courte</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_10">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <item>
+                <layout class="QGridLayout" name="gridLayout">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="lblTitleSection">
+                   <property name="text">
+                    <string>Section :</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QLabel" name="lblSection"/>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="lblTileRepo">
+                   <property name="text">
+                    <string>Dépôt :</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QLabel" name="lblRepo"/>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="lblTitleDownload">
+                   <property name="text">
+                    <string>Téléchargement :</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QLabel" name="lblDownload"/>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="lblTitleInstall">
+                   <property name="text">
+                    <string>Installation :</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QLabel" name="lblInstall"/>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_9">
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_2">
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="lblTitleWebsite">
+                     <property name="text">
+                      <string>Site web :</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QLabel" name="lblWebsite"/>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="lblTitleLicense">
+                     <property name="text">
+                      <string>Licence :</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QLabel" name="lblLicense"/>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="lblTitleFlags">
+                     <property name="text">
+                      <string>Drapeaux :</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QPushButton" name="btnFlags">
+                     <property name="text">
+                      <string>&amp;Voir et modifier</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <spacer name="verticalSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>18</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_8">
+             <item>
+              <widget class="QLabel" name="lblVersions">
+               <property name="text">
+                <string>Versions disponibles :</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QListWidget" name="listVersions"/>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabDescr">
+        <attribute name="title">
+         <string>Description</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QTextEdit" name="txtDescr">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabDepends">
+        <attribute name="title">
+         <string>Dépendances</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QTreeWidget" name="treeDepends">
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string notr="true">1</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabChangelog">
+        <attribute name="title">
+         <string>Historique</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="QListWidget" name="listChangelog"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabFiles">
+        <attribute name="title">
+         <string>Fichiers</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_13">
+         <item>
+          <widget class="QTreeWidget" name="treeFiles">
+           <column>
+            <property name="text">
+             <string>Nom</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Attributs</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="docActions">
+   <property name="windowTitle">
+    <string>Actions à effectuer</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="docActionsWidget">
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QTreeWidget" name="treeActions">
+       <property name="rootIsDecorated">
+        <bool>false</bool>
+       </property>
+       <column>
+        <property name="text">
+         <string>Paquet</string>
+        </property>
+        <property name="toolTip">
+         <string>Nom et version du paquet dans la liste</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Action</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Téléchargement</string>
+        </property>
+        <property name="toolTip">
+         <string>Taille à télécharger et à installer</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QPushButton" name="btnListApply">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>&amp;Appliquer</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnListClean">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>&amp;Vider</string>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="actInstallPackage">
+   <property name="text">
+    <string>Sélectionner pour &amp;installation</string>
+   </property>
+  </action>
+  <action name="actRemovePackage">
+   <property name="text">
+    <string>Sélectionner pour &amp;suppression</string>
+   </property>
+  </action>
+  <action name="actApplyChanges">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Appliquer les changements</string>
+   </property>
+  </action>
+  <action name="actCancelChanges">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Abandonner les &amp;changements</string>
+   </property>
+  </action>
+  <action name="actQuit">
+   <property name="text">
+    <string>&amp;Quitter</string>
+   </property>
+  </action>
+  <action name="actAboutPkgui">
+   <property name="text">
+    <string>À &amp;propos de PkgUi</string>
+   </property>
+  </action>
+  <action name="actAboutQt">
+   <property name="text">
+    <string>À propos de &amp;Qt</string>
+   </property>
+  </action>
+  <action name="actPurge">
+   <property name="text">
+    <string>Sélectionner pour suppression &amp;totale</string>
+   </property>
+  </action>
+  <action name="actDeselect">
+   <property name="text">
+    <string>&amp;Désélectionner</string>
+   </property>
+  </action>
+  <action name="actUpdate">
+   <property name="text">
+    <string>&amp;Mettre à jour la liste des paquets...</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

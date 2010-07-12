@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>donePage</class>
+ <widget class="QWizardPage" name="donePage">
+  <property name="windowTitle">
+   <string>WizardPage</string>
+  </property>
+  <property name="title">
+   <string>Installation terminée</string>
+  </property>
+  <property name="subTitle">
+   <string>L'installation des paquets est terminée ! Voici éventuellement des informations que certains paquets peuvent vous avoir laissé.</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="lblInfos">
+     <property name="text">
+      <string>Informations laissées par les paquets :</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="listRemarks"/>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

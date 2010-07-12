@@ -327,14 +327,14 @@ int DatabasePackage::index() const
     return d->index;
 }
 
-QVector<Package *> DatabasePackage::versions()
+QVector<DatabasePackage *> DatabasePackage::versions()
 {
     QVector<int> pkgs = d->psd->packagesOfString(0, d->dbpkg->name, DEPEND_OP_NOVERSION);
-    QVector<Package *> rs;
+    QVector<DatabasePackage *> rs;
 
     foreach(int pkg, pkgs)
     {
-        Package *pk = new DatabasePackage(pkg, d->ps, d->psd);
+        DatabasePackage *pk = new DatabasePackage(pkg, d->ps, d->psd);
         rs.append(pk);
     }
 

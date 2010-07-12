@@ -177,6 +177,11 @@ void Package::processLineOut(QProcess *process, const QByteArray &line)
             process->kill();     // Va émettre processEnded avec une erreur, dans packagemetadata
             return;
         }
+
+        // Ajout de clef de base
+        comm->addKey("packagename", this->name());
+        comm->addKey("packageversion", this->version());
+        comm->addKey("arch", SETUP_ARCH);
         
         // Explorer les paramètres
         while (parts.count() != 1)
