@@ -30,6 +30,8 @@ class InstallWizard;
 
 class DonePage : public QWizardPage, public Ui_donePage
 {
+    Q_OBJECT
+    
     public:
         DonePage(InstallWizard *_wizard);
         

@@ -33,6 +33,7 @@ struct ProgressData;
 
 class ProgressList : public QWidget
 {
+    Q_OBJECT
     public:
         ProgressList(QWidget *parent);
         virtual ~ProgressList();

@@ -22,6 +22,7 @@
 
 #include <QApplication>
 #include <QTextCodec>
+#include <QTranslator>
 
 #include "mainwindow.h"
 
@@ -31,6 +32,11 @@ int main(int argc, char **argv)
     
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
+    
+    QTranslator translator;
+    
+    translator.load("libpackage_" + QLocale::system().name(), "/usr/share/qt4/translations");
+    app.installTranslator(&translator);
     
     MainWindow win;
     
