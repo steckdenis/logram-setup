@@ -5,7 +5,7 @@
 <context>
     <name>App</name>
     <message>
-        <location filename="../lpm/app.cpp" line="+459"/>
+        <location filename="../lpm/app.cpp" line="+464"/>
         <source>Utilisation : lpm [options] &lt;action&gt; [arguments]
     help               Afficher l&apos;aide
     version            Afficher la version
@@ -48,6 +48,7 @@ Options (insensible à la casse) :
                        et uniquement eux.
     -nI                Ignorer les paquets installés, générer tout l&apos;arbre de
                        dépendances.
+    -nC                Ne pas confirmer les messages des paquets par Entrée.
     -G                 Sortie dans stdout la représentation Graphviz de l&apos;arbre
                        des dépendances.
     -I &lt;num&gt;           Définit le nombre de téléchargements en parallèle.
@@ -104,6 +105,7 @@ Options (case insensitive):
     -nD                Ignore the dependencies, only install the packages specified
                        on the command line.
     -nI                Ingore the installed packages, re-install all the dependencies
+    -nC                Don&apos;t confirm the messages from the packages by typing ENTER
     -G                 Output on stdout the Graphviz form of the dependencies tree.
     -I &lt;num&gt;           Number of parallel installations.
     -D &lt;num&gt;           Number of parallel downloads.
@@ -120,11 +122,7 @@ Options (case insensitive):
 </translation>
     </message>
     <message>
-        <source>Logram LPM </source>
-        <translation type="obsolete">Logram LPM </translation>
-    </message>
-    <message>
-        <location line="+65"/>
+        <location line="+66"/>
         <source>Logram Package Manager </source>
         <translation>Logram Package Manager </translation>
     </message>
@@ -1084,7 +1082,7 @@ Options (case insensitive):
 <context>
     <name>DonePage</name>
     <message>
-        <location filename="../pkgui/donepage.cpp" line="+68"/>
+        <location filename="../pkgui/donepage.cpp" line="+72"/>
         <source>&lt;b&gt;Redémarrage de l&apos;ordinateur&lt;/b&gt;</source>
         <translation>&lt;b&gt;Reboot of the computer&lt;/b&gt;</translation>
     </message>
@@ -1107,7 +1105,12 @@ Options (case insensitive):
         </translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+49"/>
+        <source>Lancer l&apos;application</source>
+        <translation>Launch the application</translation>
+    </message>
+    <message>
+        <location line="+22"/>
         <source>&lt;b&gt;Installation des paquets&lt;/b&gt;</source>
         <translation>&lt;b&gt;Installation of the packages&lt;/b&gt;</translation>
     </message>

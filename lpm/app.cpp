@@ -78,6 +78,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     useDeps = true;
     useInstalled = true;
     depsTree = false;
+    confirmMessages = true;
 
     while (opt.startsWith('-'))
     {
@@ -151,6 +152,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         else if (opt == "-ni")
         {
             useInstalled = false;
+        }
+        else if (opt == "-nc")
+        {
+            confirmMessages = false;
         }
         else if (opt == "-g")
         {
@@ -498,6 +503,7 @@ void App::help()
             "                       et uniquement eux.\n"
             "    -nI                Ignorer les paquets installés, générer tout l'arbre de\n"
             "                       dépendances.\n"
+            "    -nC                Ne pas confirmer les messages des paquets par Entrée.\n"
             "    -G                 Sortie dans stdout la représentation Graphviz de l'arbre\n"
             "                       des dépendances.\n"
             "    -I <num>           Définit le nombre de téléchargements en parallèle.\n"

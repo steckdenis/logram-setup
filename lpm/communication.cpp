@@ -78,7 +78,7 @@ void App::communication(Package *sender, Communication *comm)
     cout << qPrintable(comm->description()) << endl << endl;
     
     // Information sur le type de question attendue
-    if (comm->type() == Communication::Message)
+    if (comm->type() == Communication::Message && confirmMessages)
     {
         cout << COLOR(tr("Appuyez sur Entrée pour continuer "), "34");
         
