@@ -408,6 +408,7 @@ void MainWindow::showFlags()
     flags.chkReboot->setChecked(pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT);
     flags.chkRemoved->setChecked(pkg->flags() & PACKAGE_FLAG_REMOVED);
     flags.chkWanted->setChecked(pkg->flags() & PACKAGE_FLAG_WANTED);
+    flags.chkPrimary->setChecked(pkg->flags() & PACKAGE_FLAG_PRIMARY);
     
     // Afficher la boîte de dialogue
     if (dialog.exec() == QDialog::Accepted)

@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>Flags</class>
  <widget class="QDialog" name="Flags">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>358</width>
-    <height>400</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Drapeaux du paquet</string>
   </property>
@@ -51,6 +43,16 @@
         </property>
         <property name="text">
          <string>Application graphique</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chkPrimary">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Paquet principal construit par sa source</string>
         </property>
        </widget>
       </item>

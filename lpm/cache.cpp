@@ -548,6 +548,9 @@ QStringList App::pkgFlags(Package *pkg)
     // Graphique
     YESNO(PACKAGE_FLAG_GUI,         App::tr("Paquet graphique         : "))
     
+    // Principal
+    YESNO(PACKAGE_FLAG_PRIMARY,     App::tr("Paquet principal         : "))
+    
     // Ne pas mettre à jour
     YESNO(PACKAGE_FLAG_DONTUPDATE,  App::tr("Ne pas mettre à jour     : "))
     
@@ -565,7 +568,6 @@ QStringList App::pkgFlags(Package *pkg)
     
     // Ne pas être supprimé par dépendances auto
     YESNO(PACKAGE_FLAG_WANTED,      App::tr("Installé manuellement    : "))
-    
     
     return rs;
 }

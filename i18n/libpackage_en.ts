@@ -410,6 +410,11 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+3"/>
+        <source>Paquet principal         : </source>
+        <translation>Primary package          : </translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Ne pas mettre à jour     : </source>
         <translation>Don&apos;t update             : </translation>
     </message>
@@ -439,7 +444,7 @@ Options (case insensitive):
         <translation>Manually installed       : </translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+39"/>
         <source>Supprimé</source>
         <translation>Deleted</translation>
     </message>
@@ -1123,7 +1128,7 @@ Options (case insensitive):
 <context>
     <name>Flags</name>
     <message>
-        <location filename="../pkgui/flags.ui" line="+14"/>
+        <location filename="../pkgui/flags.ui" line="+6"/>
         <source>Drapeaux du paquet</source>
         <translation>Flags of the package</translation>
     </message>
@@ -1146,6 +1151,11 @@ Options (case insensitive):
         <location line="+15"/>
         <source>Application graphique</source>
         <translation>Graphical application</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Paquet principal construit par sa source</source>
+        <translation>Primary package built by its source</translation>
     </message>
     <message>
         <location line="+7"/>

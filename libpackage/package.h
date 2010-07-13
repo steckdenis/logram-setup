@@ -450,19 +450,20 @@ class PackageFile
 #define DEPEND_OP_LO         5   /*!< @brief < */
 #define DEPEND_OP_NE         6   /*!< @brief != */
 
-#define PACKAGE_FLAG_KDEINTEGRATION         0b00000000000011
-#define PACKAGE_FLAG_GUI                    0b00000000000100
-#define PACKAGE_FLAG_DONTUPDATE             0b00000000001000
-#define PACKAGE_FLAG_DONTINSTALL            0b00000000010000
-#define PACKAGE_FLAG_DONTREMOVE             0b00000000100000
-#define PACKAGE_FLAG_EULA                   0b00000001000000
-#define PACKAGE_FLAG_NEEDSREBOOT            0b00000010000000
-#define PACKAGE_FLAG_WANTED                 0b00000100000000
-#define PACKAGE_FLAG_INSTALLED              0b00001000000000
-#define PACKAGE_FLAG_REMOVED                0b00010000000000
-#define PACKAGE_FLAG_REBUILD                0b00100000000000
-#define PACKAGE_FLAG_RECOMPILE              0b01000000000000
-#define PACKAGE_FLAG_CONTINUOUSRECOMPILE    0b10000000000000
+#define PACKAGE_FLAG_KDEINTEGRATION         0b000000000000011   /*!< @brief Intégration à KDE (0 à 3) */
+#define PACKAGE_FLAG_GUI                    0b000000000000100   /*!< @brief Paquet graphique */
+#define PACKAGE_FLAG_DONTUPDATE             0b000000000001000   /*!< @brief Ne pas mettre à jour */
+#define PACKAGE_FLAG_DONTINSTALL            0b000000000010000   /*!< @brief Ne pas installer */
+#define PACKAGE_FLAG_DONTREMOVE             0b000000000100000   /*!< @brief Ne pas supprimer */
+#define PACKAGE_FLAG_EULA                   0b000000001000000   /*!< @brief Nécessite l'approbation d'une licence */
+#define PACKAGE_FLAG_NEEDSREBOOT            0b000000010000000   /*!< @brief Nécessite un redémarrage */
+#define PACKAGE_FLAG_WANTED                 0b000000100000000   /*!< @brief Installé manuellement */
+#define PACKAGE_FLAG_INSTALLED              0b000001000000000   /*!< @brief Installé */
+#define PACKAGE_FLAG_REMOVED                0b000010000000000   /*!< @brief Supprimé */
+#define PACKAGE_FLAG_REBUILD                0b000100000000000   /*!< @brief Reconstruire (buildserver) */
+#define PACKAGE_FLAG_RECOMPILE              0b001000000000000   /*!< @brief Recompiler (buildserver, pas utilisé) */
+#define PACKAGE_FLAG_CONTINUOUSRECOMPILE    0b010000000000000   /*!< @brief Recompiler en continu */
+#define PACKAGE_FLAG_PRIMARY                0b100000000000000   /*!< @brief Paquet primaire (bash, pas bash-doc) */
 
 #define PACKAGE_FILE_INSTALLED              0b00000001
 #define PACKAGE_FILE_DIR                    0b00000010

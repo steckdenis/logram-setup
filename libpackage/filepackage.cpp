@@ -265,7 +265,38 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     
     d->primaryLang = doc.documentElement().attribute("primarylang");
     
-    QDomElement package = doc.documentElement().firstChildElement();
+    QDomElement package = doc.documentElement().firstChildElement("package");
+    bool packageIsFirst = (package.attribute("name") == d->name);
+    bool primaryPackageFound = false;
+    
+    // Si aucun paquet n'est primaire, prendre le premier
+    while (!package.isNull())
+    {
+        QDomElement el = package.firstChildElement("flag");
+        
+        while (!el.isNull())
+        {
+            if (el.attribute("name") == "primary" && el.attribute("value", "1") == "1")
+            {
+                primaryPackageFound = true;
+                break;
+            }
+            
+            el = el.nextSiblingElement("flag");
+        }
+        
+        if (primaryPackageFound) break;
+        
+        package = package.nextSiblingElement("package");
+    }
+    
+    if (!primaryPackageFound && packageIsFirst)
+    {
+        d->flags |= PACKAGE_FLAG_PRIMARY;
+    }
+    
+    // Attributs du paquet
+    package = doc.documentElement().firstChildElement();
     
     while (!package.isNull())
     {
@@ -329,6 +360,11 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     else if (name == "needsreboot")
                     {
                         d->flags |= ((val & 1) << 7);
+                    }
+                    else if (name == "primary")
+                    {
+                        d->flags &= ~PACKAGE_FLAG_PRIMARY;   // Si val = 0, le flag doit être à zéro
+                        d->flags |= ((val & 1) << 14);
                     }
                 }
                 else if (el.tagName() == "shortdesc")
