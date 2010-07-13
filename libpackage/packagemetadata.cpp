@@ -301,6 +301,11 @@ QString PackageMetaData::packageEula() const
     return stringOfKey(d->currentPackage.firstChildElement("eula"));
 }
 
+QString PackageMetaData::packageExecutable() const
+{
+    return d->currentPackage.firstChildElement("executable").attribute("path");
+}
+
 QByteArray PackageMetaData::packageIconData() const
 {
     QDomElement iconElement = d->currentPackage.firstChildElement("icon");

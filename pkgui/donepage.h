@@ -36,7 +36,10 @@ class DonePage : public QWizardPage, public Ui_donePage
         DonePage(InstallWizard *_wizard);
         
         void initializePage();
-
+        
+    private slots:
+        void launchApp();
+        
     private:
         InstallWizard *wizard;
         

@@ -228,6 +228,7 @@ class PackageMetaData : public QObject, public QDomDocument
         QString packageDescription() const;     /*!< @brief Description du paquet courant, dans la langue de l'utilisateur ou primaryLang si non disponible */
         QString packageTitle() const;           /*!< @brief Titre du paquet courant */
         QString packageEula() const;            /*!< @brief License utilisateur finale du paquet courant */
+        QString packageExecutable() const;      /*!< @brief Exécutable principal du paquet (/usr/bin/firefox) */
         QString currentPackage() const;         /*!< @brief Nom du paquet courant, un paquet binaire construit par ce paquet source */
         QString upstreamUrl() const;            /*!< @brief Url du site web de l'auteur du paquet source (gcc.gnu.org, etc) */
         QStringList triggers() const;           /*!< @brief Liste des triggers lancés par le paquet courant */

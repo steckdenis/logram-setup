@@ -22,13 +22,17 @@
 
 #include "donepage.h"
 #include "installwizard.h"
+#include "mainwindow.h"
 
 #include <QIcon>
 #include <QGridLayout>
 #include <QFrame>
+#include <QPushButton>
+#include <QProcess>
 
 #include <package.h>
 #include <packagelist.h>
+#include <packagemetadata.h>
 
 using namespace Logram;
 
@@ -78,11 +82,83 @@ void DonePage::initializePage()
         msgcount++;
     }
     
+    // Voir si des paquets ont des exécutables à lancer
+    for (int i=0; i<wizard->packageList()->count(); ++i)
+    {
+        Package *pkg = wizard->packageList()->at(i);
+        PackageMetaData *md = pkg->metadata();
+        
+        if (md == 0)
+        {
+            wizard->mainWindow()->psError();
+            continue;
+        }
+        
+        md->setCurrentPackage(pkg->name());
+        QString exec = md->packageExecutable();
+        
+        if (!exec.isNull())
+        {
+            // Ajouter un enregistrement pour lancer l'exécutable
+            QListWidgetItem *item = new QListWidgetItem(listRemarks);
+            listRemarks->addItem(item);
+            
+            // Créer un widget
+            QWidget *widget = new QWidget(this);
+            QGridLayout *layout = new QGridLayout(widget);
+            QLabel *lblIcon = new QLabel(widget);
+            QLabel *lblTitle = new QLabel(widget);
+            QLabel *lblMessage = new QLabel(widget);
+            QFrame *vline = new QFrame(widget);
+            QPushButton *btn = new QPushButton(widget);
+            
+            // Propriétés
+            widget->setLayout(layout);
+            
+            vline->setFrameShape(QFrame::VLine);
+            
+            lblIcon->setPixmap(MainWindow::iconOfPackage(md, 22, 22));
+            lblIcon->resize(22, 22);
+            lblIcon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+            
+            lblTitle->setText(QString("<b>%1</b>").arg(md->packageTitle()));
+            
+            lblMessage->setText(pkg->shortDesc());
+            lblMessage->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            
+            btn->setText(tr("Lancer l'application"));
+            btn->setProperty("lgr_exec", exec);
+            connect(btn, SIGNAL(clicked(bool)), this, SLOT(launchApp()));
+            
+            // Remplir le layout
+            layout->addWidget(lblIcon, 0, 0);
+            layout->addWidget(lblTitle, 0, 2);
+            
+            layout->addWidget(vline, 1, 1);
+            layout->addWidget(lblMessage, 1, 2);
+            
+            layout->addWidget(btn, 0, 3, 2, 1, Qt::AlignVCenter | Qt::AlignHCenter);
+            
+            // Ajouter l'enregistrement
+            item->setSizeHint(widget->minimumSizeHint());
+            listRemarks->setItemWidget(item, widget);
+        }
+    }
+    
     // Si aucun message n'a encore été affiché, dire que tout s'est bien passé
     if (msgcount == 0)
     {
         addMessage(QIcon::fromTheme("dialog-ok-apply"), tr("<b>Installation des paquets</b>"), tr("L'installation des paquets s'est déroulée avec succès."));
     }
+}
+
+void DonePage::launchApp()
+{
+    QPushButton *btn = qobject_cast<QPushButton *>(sender());
+    
+    if (btn == 0) return;
+    
+    QProcess::startDetached(btn->property("lgr_exec").toString());
 }
 
 void DonePage::addMessage(const QIcon &icon, const QString &title, const QString &message)
@@ -110,6 +186,7 @@ void DonePage::addMessage(const QIcon &icon, const QString &title, const QString
     lblTitle->setText(title);
     
     lblMessage->setText(message);
+    lblMessage->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     
     // Remplir le layout
     layout->addWidget(lblIcon, 0, 0);
