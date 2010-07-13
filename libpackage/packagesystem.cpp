@@ -272,7 +272,7 @@ bool Logram::PackageSystem::update()
 
     // Explorer les enregistrements et les télécharger
     int count = enrgs.count();
-    int progress = startProgress(Progress::GlobalDownload, count*2);
+    int progress = startProgress(Progress::GlobalDownload, count*4);
     
     for (int i=0; i<count; ++i)
     {
@@ -281,7 +281,7 @@ bool Logram::PackageSystem::update()
         QString path = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch;
         QString u = path + "/packages.xz";
         
-        if (!sendProgress(progress, i*3, u))
+        if (!sendProgress(progress, i*4, u))
         {
             return false;
         }
@@ -294,7 +294,7 @@ bool Logram::PackageSystem::update()
         // Traductions
         u = path + "/translate." + lang + ".xz";
         
-        if (!sendProgress(progress, i*3+1, u))
+        if (!sendProgress(progress, i*4+1, u))
         {
             return false;
         }
@@ -307,12 +307,27 @@ bool Logram::PackageSystem::update()
         // Liste des fichiers
         u = path + "/files.xz";
         
-        if (!sendProgress(progress, i*3+2, u))
+        if (!sendProgress(progress, i*4+2, u))
         {
             return false;
         }
         
         if (!db->download(enrg->sourceName, u, enrg->type, DatabaseWriter::FilesList, enrg->gpgCheck))
+        {
+            return false;
+        }
+        
+        // Sections
+        u = path + "/sections.xz";
+        ManagedDownload *unused;
+        
+        if (!sendProgress(progress, i*4+3, u))
+        {
+            return false;
+        }
+        
+        //if (!download(enrg->type, u, varRoot() + "/var/cache/lgrpkg/download/sections.xz", true, unused))
+        if (!db->download(enrg->sourceName, u, enrg->type, DatabaseWriter::SectionsList, enrg->gpgCheck))
         {
             return false;
         }

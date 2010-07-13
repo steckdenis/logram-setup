@@ -479,8 +479,58 @@ bool DatabaseWriter::rebuild()
                 datatype = (FileDataType)parts.at(3).toInt();
                 method = parts.at(4);
             }
+            
+            // On ne fait que décompresser sections.list
+            if (datatype == SectionsList)
+            {
+                if (pass != 0) continue;
+                
+                // Vérifier la signature de ce fichier
+                bool signvalid;
+            
+                if (checkFiles.at(cfIndex))
+                {
+                    QFile fl(file);
+                    
+                    if (!fl.open(QIODevice::ReadOnly))
+                    {
+                        PackageError *err = new PackageError;
+                        err->type = PackageError::OpenFileError,
+                        err->info = fl.fileName();
+                        
+                        parent->setLastError(err);
+                        
+                        foreach(char *buf, buffers)
+                        {
+                            delete[] buf;
+                        }
+                        
+                        return false;
+                    }
+                    
+                    if (!verifySign(file + ".sig", fl.readAll(), signvalid))
+                    {
+                        foreach(char *buf, buffers)
+                        {
+                            delete[] buf;
+                        }
+                        
+                        return false;
+                    }
+                    
+                    if (!signvalid)
+                    {   
+                        foreach(char *buf, buffers)
+                        {
+                            delete[] buf;
+                        }
+                        
+                        return false;
+                    }
+                }
+            }
 
-            // Pas de passe 1 pour translate
+            // Pas de passe 1 pour translate et filelist
             if (pass == 0 && datatype != PackagesList) continue;
             
             // Préparation pour les traductions
@@ -502,6 +552,12 @@ bool DatabaseWriter::rebuild()
                 err->info = fname;
                 
                 parent->setLastError(err);
+                
+                foreach(char *buf, buffers)
+                {
+                    delete[] buf;
+                }
+                
                 return false;
             }
 
@@ -534,11 +590,21 @@ bool DatabaseWriter::rebuild()
             {
                 if (!verifySign(file + ".sig", QByteArray::fromRawData(buffer, flength), signvalid))
                 {
+                    foreach(char *buf, buffers)
+                    {
+                        delete[] buf;
+                    }
+                    
                     return false;
                 }
                 
                 if (!signvalid)
                 {   
+                    foreach(char *buf, buffers)
+                    {
+                        delete[] buf;
+                    }
+                    
                     return false;
                 }
             }
@@ -1194,13 +1260,26 @@ bool DatabaseWriter::rebuild()
     for (int cfIndex=0; cfIndex < cacheFiles.count(); ++cfIndex)
     {
         const QString &file = cacheFiles.at(cfIndex);
-
+        
         if (cfIndex != installedPackagesListIndex && cfIndex != installedFilesListIndex)
         {
             QString fname = file;
             fname.replace(".xz", "");
+            
+            QStringList parts = file.section('/', -1, -1).split('.');
+            FileDataType datatype = (FileDataType)parts.at(3).toInt();
 
-            QFile::remove(fname);
+            if (datatype == SectionsList)
+            {
+                QString reponame = parts.at(0);
+                QString distroname = parts.at(1);
+                
+                QFile::rename(fname, parent->varRoot() + QString("/var/cache/lgrpkg/db/%1_%2.sections").arg(reponame, distroname));
+            }
+            else
+            {
+                QFile::remove(fname);
+            }
         }
     }
 

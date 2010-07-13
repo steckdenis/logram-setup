@@ -63,6 +63,31 @@ MainWindow::MainWindow() : QMainWindow(0)
     btnFlags->setIcon(QIcon::fromTheme("flag"));
     
     txtSearch->setFocus();
+    
+    // Icônes de la liste des filtres de paquets
+    for (int i=0; i<cboFilter->count(); ++i)
+    {
+        PackageFilter filter = (PackageFilter)i;
+        
+        switch (filter)
+        {
+            case NoFilter:
+                cboFilter->setItemIcon(i, QIcon::fromTheme("view-filter"));
+                break;
+            case Installed:
+                cboFilter->setItemIcon(i, QIcon(":/images/pkg-install.png"));
+                break;
+            case NotInstalled:
+                cboFilter->setItemIcon(i, QIcon(":/images/package.png"));
+                break;    
+            case Updateable:
+                cboFilter->setItemIcon(i, QIcon(":/images/pkg-update.png"));
+                break;
+            case Orphan:
+                cboFilter->setItemIcon(i, QIcon(":/images/pkg-purge.png"));
+                break;
+        }
+    }
         
     // Ajouter les actions
     treePackages->addAction(actInstallPackage);
@@ -87,6 +112,9 @@ MainWindow::MainWindow() : QMainWindow(0)
         return;
     }
     
+    // Remplir les sections
+    populateSections();
+    
     // Remplir la liste des paquets
     displayPackages(NoFilter, QString());
     
@@ -107,6 +135,8 @@ MainWindow::MainWindow() : QMainWindow(0)
             this,        SLOT(searchPackages()));
     connect(cboFilter, SIGNAL(currentIndexChanged(int)),
             this,        SLOT(searchPackages()));
+    connect(treeSections, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)),
+            this,           SLOT(searchPackages()));
     connect(actInstallPackage, SIGNAL(triggered(bool)),
             this,                SLOT(installPackage()));
     connect(actRemovePackage, SIGNAL(triggered(bool)),
@@ -213,9 +243,9 @@ void MainWindow::databaseUpdate()
     QMessageBox::information(this, tr("Mise à jour de la base de donnée"), tr("La base de donnée a été mise à jour avec succès."));
 }
 
-QPixmap MainWindow::iconOfPackage(PackageMetaData *md, int width, int height)
+QPixmap MainWindow::pixmapFromData(const QByteArray &data, int width, int height)
 {
-    QImage img = QImage::fromData(md->packageIconData());
+    QImage img = QImage::fromData(data);
     return QPixmap::fromImage(img).scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 }
 

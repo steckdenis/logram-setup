@@ -21,6 +21,7 @@ set(pkgui_SRCS
         mainwindow.cpp
         packagelist.cpp
         packageinfo.cpp
+        packagesection.cpp
         actionlist.cpp
         progressdialog.cpp
         progresslist.cpp

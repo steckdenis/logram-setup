@@ -59,6 +59,17 @@ class PackageItem : public QTreeWidgetItem
         Type _type;
 };
 
+class SectionItem : public QTreeWidgetItem
+{
+    public:
+        SectionItem(const QString &section, QTreeWidgetItem *parent);
+        
+        QString section() const;
+        
+    private:
+        QString _section;
+};
+
 class MainWindow : public QMainWindow, public Ui_MainWindow
 {
     Q_OBJECT
@@ -74,7 +85,7 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         Logram::PackageSystem *packageSystem() const;
         
         static Logram::DatabasePackage *duplicatePackage(Logram::PackageSystem *ps, Logram::DatabasePackage *pkg);
-        static QPixmap iconOfPackage(Logram::PackageMetaData *md, int width, int height);
+        static QPixmap pixmapFromData(const QByteArray &data, int width, int height);
         
     public slots:
         void progress(Logram::Progress *progress);
@@ -90,7 +101,8 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         };
         
         void displayPackages(PackageFilter filter, const QString &pattern);
-        void addPackage(Logram::DatabasePackage* pkg);
+        void populateSections();
+        bool addPackage(Logram::DatabasePackage* pkg);
         void actionsForPackage(Logram::DatabasePackage *pkg);
         
         void addPackageInList(Logram::DatabasePackage *pkg, QTreeWidget *treeActions);
@@ -120,6 +132,7 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         bool _error, _progresses;
         QVector<Logram::DatabasePackage *> actionPackages;
         ProgressDialog *progressDialog;
+        QTreeWidgetItem *noSectionFilterItem;
 };
 
 #endif

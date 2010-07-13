@@ -117,7 +117,17 @@ void DonePage::initializePage()
             
             vline->setFrameShape(QFrame::VLine);
             
-            lblIcon->setPixmap(MainWindow::iconOfPackage(md, 22, 22));
+            QByteArray iconData = md->packageIconData();
+            
+            if (!iconData.isNull())
+            {
+                lblIcon->setPixmap(MainWindow::pixmapFromData(iconData, 22, 22));
+            }
+            else
+            {
+                lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(22, 22));
+            }
+            
             lblIcon->resize(22, 22);
             lblIcon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             

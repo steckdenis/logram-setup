@@ -77,7 +77,7 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     }
     else
     {
-        lblIcon->setPixmap(MainWindow::iconOfPackage(md, 48, 48));
+        lblIcon->setPixmap(MainWindow::pixmapFromData(iconData, 48, 48));
     }
     
     // Liste des versions

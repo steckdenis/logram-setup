@@ -1554,14 +1554,15 @@ bool RepositoryManager::exp(const QStringList &distros)
     // QByteArrays nécessaires à l'écriture
     QList<QByteArray> streams;
     
-    for (int i=0; i<=langs.count()+1; ++i)
+    for (int i=0; i<=langs.count()+2; ++i)
     {
-        // un tour en plus, parce qu'on a aussi la liste des paquets à écrire
+        // deux tours en plus, parce qu'on a aussi la liste des paquets et des sections à écrire
         streams.append(QByteArray());
     }
     
     QByteArray &pkgstream = streams[langs.count()];
     QByteArray &filestream = streams[langs.count()+1];
+    QByteArray &sectionstream = streams[langs.count()+2];
 
 #ifdef GPGME_FOUND
     // Initialiser GPGME
@@ -1673,6 +1674,90 @@ bool RepositoryManager::exp(const QStringList &distros)
                     );
                 }
             }
+            
+            // Sauvegarder les sections (nom, description et icône)
+            sectionstream = "<?xml version='1.0'?>\n";
+            sectionstream += "<sections>\n";
+            
+            sql = " SELECT \
+                    section.name, \
+                    section.icon, \
+                    string.long_name, \
+                    string.`desc`, \
+                    string.lang \
+                    FROM packages_sectionstring string \
+                    LEFT JOIN packages_section section ON section.id = string.section_id \
+                    ORDER BY section.name DESC;";
+            
+            if (!query.exec(sql))
+            {
+                PackageError *err = new PackageError;
+                err->type = PackageError::QueryError;
+                err->info = query.lastQuery();
+                    
+                d->ps->setLastError(err);
+                    
+                return false;
+            }
+            
+            QDomDocument sectionDoc;
+            
+            // Element root
+            QDomElement rootElement = sectionDoc.createElement("sections");
+            sectionDoc.appendChild(rootElement);
+            
+            QDomElement lastSection, sectionDesc, sectionTitle;
+            
+            while (query.next())
+            {
+                QString sectname, sectlongname, sectdesc, secticon, sectlang;
+                sectname = query.value(0).toString();
+                secticon = query.value(1).toString();
+                sectlongname = query.value(2).toString();
+                sectdesc = query.value(3).toString();
+                sectlang = query.value(4).toString();
+                
+                if (lastSection.attribute("name") != sectname)
+                {
+                    lastSection = sectionDoc.createElement("section");
+                    rootElement.appendChild(lastSection);
+                    
+                    lastSection.setAttribute("name", sectname);
+                    
+                    // Icône de la section
+                    QFile fl(d->set->value("SectionsIconBaseDir").toString() + secticon);
+                    
+                    if (fl.open(QIODevice::ReadOnly))
+                    {
+                        QDomElement sectionIcon = sectionDoc.createElement("icon");
+                        lastSection.appendChild(sectionIcon);
+                        
+                        QDomCDATASection cdata = sectionDoc.createCDATASection(fl.readAll().toBase64());
+                        sectionIcon.appendChild(cdata);
+                    }
+                    
+                    // Description et titre
+                    sectionDesc = sectionDoc.createElement("description");
+                    sectionTitle = sectionDoc.createElement("title");
+                    
+                    lastSection.appendChild(sectionDesc);
+                    lastSection.appendChild(sectionTitle);
+                }
+                
+                QDomNode titleLang = sectionDoc.createElement(sectlang);
+                QDomText titleText = sectionDoc.createTextNode(sectlongname);
+                
+                titleLang.appendChild(titleText);
+                sectionTitle.appendChild(titleLang);
+                
+                QDomNode descLang = sectionDoc.createElement(sectlang);
+                QDomText descText = sectionDoc.createTextNode(sectdesc);
+                
+                descLang.appendChild(descText);
+                sectionDesc.appendChild(descLang);
+            }
+            
+            sectionstream = sectionDoc.toByteArray(0);
             
             // Explorer les fichiers, et les placer dans un fichier du format
             // :usr
@@ -1897,9 +1982,13 @@ bool RepositoryManager::exp(const QStringList &distros)
                     // Liste des paquets
                     fileName = filePath + "/packages.xz";
                 }
-                else
+                else if (i == langs.count() + 1)
                 {
                     fileName = filePath + "/files.xz";
+                }
+                else
+                {
+                    fileName = filePath + "/sections.xz";
                 }
                 
                 // Créer le dossier s'il le fait

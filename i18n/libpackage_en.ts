@@ -1105,7 +1105,7 @@ Options (case insensitive):
         </translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+59"/>
         <source>Lancer l&apos;application</source>
         <translation>Launch the application</translation>
     </message>
@@ -1376,7 +1376,7 @@ Options (case insensitive):
         <translation>Reading of the lists</translation>
     </message>
     <message>
-        <location line="+816"/>
+        <location line="+895"/>
         <source>Génération de la liste des paquets</source>
         <translation>Generation of the list of the packages</translation>
     </message>
@@ -1454,7 +1454,7 @@ Options (case insensitive):
 <context>
     <name>Logram::RepositoryManager</name>
     <message>
-        <location filename="../libpackage/repositorymanager.cpp" line="+1589"/>
+        <location filename="../libpackage/repositorymanager.cpp" line="+1590"/>
         <source>Impossible de trouver la clef %1</source>
         <translation>Unable to find the key %1</translation>
     </message>
@@ -1464,7 +1464,7 @@ Options (case insensitive):
         <translation>Unable to add the key %1 for the signature</translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+421"/>
         <source>Impossible de créer le tampon mémoire pour la signature.</source>
         <translation>Unable to create the memory buffer for the signature.</translation>
     </message>
@@ -1651,6 +1651,11 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+14"/>
+        <source>Sections</source>
+        <translation>Sections</translation>
+    </message>
+    <message>
+        <location line="+33"/>
         <source>Actions à effectuer</source>
         <translation>Pending actions</translation>
     </message>
@@ -1740,7 +1745,7 @@ Options (case insensitive):
         <translation>&amp;Update the list of the packages...</translation>
     </message>
     <message>
-        <location filename="../pkgui/mainwindow.cpp" line="+213"/>
+        <location filename="../pkgui/mainwindow.cpp" line="+243"/>
         <source>Mise à jour de la base de donnée</source>
         <translation>Updating of the database</translation>
     </message>
@@ -1953,6 +1958,16 @@ Options (case insensitive):
         <location line="+3"/>
         <source>Supprimer totalement</source>
         <translation>Completely remove</translation>
+    </message>
+    <message>
+        <location filename="../pkgui/packagesection.cpp" line="+55"/>
+        <source>Tout afficher</source>
+        <translation>Show all</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Distribution %1 du dépôt %2</source>
+        <translation>Distribution %1 of the %2 repository</translation>
     </message>
 </context>
 <context>

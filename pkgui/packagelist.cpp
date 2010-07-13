@@ -33,8 +33,32 @@
 
 using namespace Logram;
 
-void MainWindow::addPackage(DatabasePackage *pkg)
+bool MainWindow::addPackage(DatabasePackage *pkg)
 {
+    // Filtrer en fonction de la section
+    QTreeWidgetItem *currentItem = treeSections->currentItem();
+    
+    if (currentItem != 0 && currentItem != noSectionFilterItem)
+    {
+        if (pkg->repo() != currentItem->data(0, Qt::UserRole).toString() || pkg->distribution() != currentItem->data(0, Qt::UserRole + 1).toString())
+        {
+            delete pkg;
+            return false;
+        }
+        
+        if (currentItem->parent() != 0)
+        {
+            // Filtrage également avec la section
+            SectionItem *i = static_cast<SectionItem *>(currentItem);
+            
+            if (pkg->section() != i->section())
+            {
+                delete pkg;
+                return false;
+            }
+        }
+    }
+    
     // Explorer les paquets dans la liste des changements pour voir s'il n'y est pas déjà
     QTreeWidgetItem *root = treeActions->invisibleRootItem();
     
@@ -60,6 +84,8 @@ void MainWindow::addPackage(DatabasePackage *pkg)
         treePackages->setCurrentItem(item);
         itemActivated(item);
     }
+    
+    return true;    // Paquet inséré
 }
 
 void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
@@ -170,7 +196,7 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
         
         // Ajouter ce paquet aux listes
         DatabasePackage *dpkg = ps->package(index);
-        addPackage(dpkg);
+        if (!addPackage(dpkg)) continue;
         
         // Trouver les paquets ayant le même nom, donc des versions différentes
         _Package *pkg = dr->package(index);
