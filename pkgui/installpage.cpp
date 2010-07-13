@@ -65,7 +65,7 @@ void InstallPage::initializePage()
             this, SLOT(communication(Logram::Package*,Logram::Communication*)));
     
     // Installer les paquets
-    /*if (!packageList->process())
+    if (!packageList->process())
     {
         win->psError();
         
@@ -75,7 +75,7 @@ void InstallPage::initializePage()
         
         wizard->reject();
         return;
-    }*/
+    }
 
     // MainWindow peut à nouveau gérer les progressions
     win->enableProgressions();

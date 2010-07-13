@@ -190,6 +190,9 @@ void MainWindow::applyList()
     InstallWizard wizard(this);
     
     wizard.exec();
+    
+    // Liste appliquée, fini
+    cancelList();
 }
 
 void MainWindow::cancelList()
