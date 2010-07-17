@@ -5,7 +5,6 @@
 <context>
     <name>App</name>
     <message>
-        <location filename="../lpm/app.cpp" line="+464"/>
         <source>Utilisation : lpm [options] &lt;action&gt; [arguments]
     help               Afficher l&apos;aide
     version            Afficher la version
@@ -65,7 +64,7 @@ Options (insensible à la casse) :
     -T                 Désactive l&apos;exécution des triggers.
     -W                 Désactive les couleurs dans la sortie de LPM.
 </source>
-        <translation>Usage: lpm [options] &lt;action&gt; [arguments]
+        <translation type="obsolete">Usage: lpm [options] &lt;action&gt; [arguments]
     help               Show help
     version            Afficher the version
     search &lt;pattern&gt;   Show all packages with a name
@@ -102,6 +101,123 @@ Commands to manage repositories:
 
 Options (case insensitive):
     -S [off]           Enable (on) or not (off) the installation of the suggestions.
+    -nD                Ignore the dependencies, only install the packages specified
+                       on the command line.
+    -nI                Ingore the installed packages, re-install all the dependencies
+    -nC                Don&apos;t confirm the messages from the packages by typing ENTER
+    -G                 Output on stdout the Graphviz form of the dependencies tree.
+    -I &lt;num&gt;           Number of parallel installations.
+    -D &lt;num&gt;           Number of parallel downloads.
+    -iR &lt;install root&gt; Root installation path (&quot;/&quot; by default).
+                       Useful to install a «Logram in Logram».
+    -cR &lt;conf root&gt;    Root path of the configuration (&quot;/&quot; by default).
+    -vR &lt;var root&gt;     Root path of the temporary files (&quot;/&quot; by default).
+    -P path            Add a path to explore to find plugins used to check
+                       the binary packages made by the &quot;binaries&quot; operation.
+    -C                 Show the package history when used with &quot;showpkg&quot;.
+    -L                 Show the package license when used with &quot;showpkg&quot;.
+    -T                 Disable the execution of the triggers.
+    -W                 Disable the colored output of LPM.
+</translation>
+    </message>
+    <message>
+        <location filename="../lpm/app.cpp" line="+457"/>
+        <source>Utilisation : lpm [options] &lt;action&gt; [arguments]
+    help               Afficher l&apos;aide
+    version            Afficher la version
+    search &lt;pattern&gt;   Afficher tous les paquets dont le nom
+                       correspond à &lt;pattern&gt;
+    showpkg &lt;name&gt;     Affiche les informations du paquet &lt;name&gt;
+    getsource &lt;name&gt;   Télécharge le paquet source de &lt;name&gt;
+    update             Met à jour la base de donnée des paquets
+    add &lt;packages&gt;     Ajoute des paquets (préfixés de &quot;-&quot; pour les supprimer)
+    files &lt;pkg&gt;        Affiche la liste des fichiers installés par &lt;pkg&gt;
+    file &lt;path|regex&gt;  Affiche des informations sur le fichier &lt;path&gt;,
+                       s&apos;il commence par &quot;/&quot;. Sinon, &lt;path&gt; est considéré
+                       comme une expression régulière permettant de trouver
+                       la liste des fichiers correspondant à ce motif.
+    upgrade            Mise à jour des paquets. Lancez update avant.
+    autoremove         Supprimer automatiquement les paquets orphelins.
+    tag [file|package] Tag les paquets correspondants à &lt;pkg&gt; (p&gt;=v, etc) avec
+        &lt;pkg|fl&gt; &lt;tag&gt; le tag &lt;tag&gt;. Si &lt;tag&gt; commence par &quot;-&quot;, alors retirer
+                       ce tag. Si &lt;pkg&gt; est un fichier (/usr/truc, ou mac*n),
+                       alors c&apos;est ce seront les fichiers correspondants au
+                       motif qui seront taggués. &lt;fl&gt; peut être de la forme
+                       &quot;pkg:fl&quot;, ce qui permet de ne taguer que les
+                       fichiers correspondants à &lt;fl&gt; et appartenant à &lt;pkg&gt;
+
+Commandes pour la gestion des sources :
+    download &lt;src&gt;     Télécharge la source du paquet dont &lt;src&gt; est le
+                       metadata.xml.
+    build &lt;src&gt;        Compile la source spécifiée par le metadata.xml &lt;src&gt;.
+    binaries &lt;src&gt;     Créer les .lpk binaires du metadata.xml &lt;src&gt;.
+
+Commandes pour la gestion des dépôts :
+    include &lt;pkg&gt;      Inclus le paquet &lt;pkg&gt; dans le dépôt config/repo.conf
+    export &lt;distros&gt;   Exporte la liste des paquets et créer les fichiers
+                       packages.lzma et translate.lang.lzma pour les
+                       distributions spécifiées.
+
+Options (insensible à la casse) :
+    -S                 Active l&apos;installation des suggestions.
+    -nD                Ignorer les dépendances : installer les paquets demandés
+                       et uniquement eux.
+    -nI                Ignorer les paquets installés, générer tout l&apos;arbre de
+                       dépendances.
+    -nC                Ne pas confirmer les messages des paquets par Entrée.
+    -G                 Sortie dans stdout la représentation Graphviz de l&apos;arbre
+                       des dépendances.
+    -I &lt;num&gt;           Définit le nombre de téléchargements en parallèle.
+    -D &lt;num&gt;           Définit le nombre d&apos;installations en parallèle.
+    -iR &lt;install root&gt; Chemin d&apos;installation racine (&quot;/&quot; par défaut).
+                       Sert à installer un «Logram dans le Logram».
+    -cR &lt;conf root&gt;    Chemin racine de la configuration (&quot;/&quot; par défaut).
+    -vR &lt;var root&gt;     Chemin racine des fichiers temporaires (&quot;/&quot; par défaut).
+    -P path            Ajoute un chemin à inspecter pour trouver les plugins
+                       de vérification des paquets (lpm binaries).
+    -C                 Affiche l&apos;historique des modifications d&apos;un paquet
+                       quand utilisé avec showpkg.
+    -L                 Affiche la licence d&apos;un paquet quand utilisé avec showpkg.
+    -T                 Désactive l&apos;exécution des triggers.
+    -W                 Désactive les couleurs dans la sortie de LPM.
+</source>
+        <translation>Usage: lpm [options] &lt;action&gt; [arguments]
+    help               Show help
+    version            Afficher the version
+    search &lt;pattern&gt;   Show all packages with a name
+                       matching &lt;pattern&gt;
+    showpkg &lt;name&gt;     Show informations about &lt;name&gt;
+    getsource &lt;name&gt;   Download the source package of &lt;name&gt;
+    update             Update the packages database
+    add &lt;packages&gt;     Add packages (prefix them with &quot;-&quot; to remove)
+    files &lt;pkg&gt;        Show the files installed by &lt;pkg&gt;
+    file &lt;path|regex&gt;  Show informations about the file &lt;path&gt;,
+                       if it begins with &quot;/&quot;. Else, &lt;path&gt; is considered
+                       as a regular expression returing the list of the
+                       files matching this pattern.
+    upgrade            Updating of the packages. Launch update before.
+    autoremove         Automatically remove orphan packages.
+    tag [file|package] Tag the packages matching &lt;pkg&gt; (e.g. p&gt;=v) with
+        &lt;pkg|fl&gt; &lt;tag&gt; the tag &lt;tag&gt;. If &lt;tag&gt; begins with &quot;-&quot; then remove
+                       it. If &lt;pkg&gt; is a file (/usr/truc, or some*ing)
+                       then the files matching &lt;fl&gt; (see the &quot;file&quot; operation) will be
+                       tagged. &lt;fl&gt; can be in the form of &quot;pkg:fl&quot;, and will tag
+                       the files matching &lt;fl&gt; and belonging to &lt;pkg&gt;
+
+Commands to manage source packages:
+    download &lt;src&gt;     Download the source of the package, following the
+                       instructions in the XML file &lt;src&gt;.
+    build &lt;src&gt;        Compile the source following the XML file &lt;src&gt;.
+    binaries &lt;src&gt;     Create the binary .lpk packages of &lt;src&gt;.
+
+Commands to manage repositories:
+    include &lt;pkg&gt;      Include the package &lt;pkg&gt; in the repository
+    export &lt;distros&gt;   Exports the repository, create the files in dist/
+                       (packages.xz and translate.lang.xz)for the distributions
+                       &lt;distros&gt; (space separated names).
+
+Options (case insensitive):
+    -S                 Enable the installation of the suggestions.
     -nD                Ignore the dependencies, only install the packages specified
                        on the command line.
     -nI                Ingore the installed packages, re-install all the dependencies
@@ -198,7 +314,7 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+11"/>
-        <location filename="../lpm/package.cpp" line="+67"/>
+        <location filename="../lpm/package.cpp" line="+68"/>
         <location line="+34"/>
         <source>ERREUR : </source>
         <translation>ERROR: </translation>
@@ -884,12 +1000,12 @@ Options (case insensitive):
         <translation>The package %1~%2 has a dependency allowing a choice:</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+6"/>
         <source>Un des paquets que vous avez demandé peut être obtenu de plusieurs manières :</source>
         <translation>One of the packages you want to install can be obtained by several manners:</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+25"/>
         <source>(ce choix n&apos;aura aucune influence sur le système)</source>
         <translation>(this choice will have no influence on your system)</translation>
     </message>
@@ -1022,7 +1138,7 @@ Options (case insensitive):
 <context>
     <name>BranchePage</name>
     <message>
-        <location filename="../pkgui/branchepage.cpp" line="+265"/>
+        <location filename="../pkgui/branchepage.cpp" line="+268"/>
         <source>Téléchargement de %1, suppression de %2, %3 licence(s) à accepter</source>
         <translation>Downloading of %1, deletion of %2, %3 license(s) to accept</translation>
     </message>
@@ -1054,7 +1170,7 @@ Options (case insensitive):
 <context>
     <name>CommunicationDialog</name>
     <message>
-        <location filename="../pkgui/communicationdialog.cpp" line="+64"/>
+        <location filename="../pkgui/communicationdialog.cpp" line="+82"/>
         <source>Entrez une chaîne de caractère :</source>
         <translation>Enter a character string :</translation>
     </message>
@@ -1417,7 +1533,7 @@ Options (case insensitive):
 <context>
     <name>Logram::PackageSystem</name>
     <message>
-        <location filename="../libpackage/packagesystem.cpp" line="+241"/>
+        <location filename="../libpackage/packagesystem.cpp" line="+247"/>
         <source>fr</source>
         <comment>Langue par défaut pour les paquets</comment>
         <translation>en</translation>
@@ -1745,7 +1861,7 @@ Options (case insensitive):
         <translation>&amp;Update the list of the packages...</translation>
     </message>
     <message>
-        <location filename="../pkgui/mainwindow.cpp" line="+243"/>
+        <location filename="../pkgui/mainwindow.cpp" line="+250"/>
         <source>Mise à jour de la base de donnée</source>
         <translation>Updating of the database</translation>
     </message>
@@ -1960,7 +2076,7 @@ Options (case insensitive):
         <translation>Completely remove</translation>
     </message>
     <message>
-        <location filename="../pkgui/packagesection.cpp" line="+55"/>
+        <location filename="../pkgui/packagesection.cpp" line="+57"/>
         <source>Tout afficher</source>
         <translation>Show all</translation>
     </message>
@@ -1994,6 +2110,7 @@ Options (case insensitive):
         <translation>Progression: </translation>
     </message>
     <message>
+        <location line="+4"/>
         <location line="+4"/>
         <source>Téléchargement de </source>
         <translation>Downloading of </translation>
@@ -2073,6 +2190,11 @@ Options (case insensitive):
         <location line="+5"/>
         <source>Description</source>
         <translation>Description</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&amp;Installer les paquets suggérés par ceux de la liste</source>
+        <translation>&amp;Install the packages suggested by the ones in the list</translation>
     </message>
 </context>
 <context>
