@@ -126,8 +126,8 @@ MainWindow::MainWindow() : QMainWindow(0)
     connect(actQuit, SIGNAL(triggered(bool)), this, SLOT(close()));
     connect(treePackages, SIGNAL(itemActivated(QTreeWidgetItem *, int)), 
             this,         SLOT(itemActivated(QTreeWidgetItem *)));
-    connect(lblWebsite, SIGNAL(linkActivated(const QString &)),
-            this,         SLOT(websiteActivated(const QString &)));
+    connect(lblTitle, SIGNAL(linkActivated(const QString &)),
+            this,       SLOT(websiteActivated(const QString &)));
     connect(lblLicense, SIGNAL(linkActivated(const QString &)),
             this,         SLOT(licenseActivated(const QString &)));
     connect(btnFlags, SIGNAL(clicked(bool)),

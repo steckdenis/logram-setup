@@ -59,13 +59,12 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     
     // Infos de base
     docInfos->setWindowTitle(pkg->name() + "~" + pkg->version());
-    lblTitle->setText(md->packageTitle());
+    lblTitle->setText("<a href=\"" + md->upstreamUrl() + "\">" + md->packageTitle() + "</a>");
     lblShortDesc->setText(pkg->shortDesc());
     lblSection->setText(pkg->section());
     lblRepo->setText(pkg->repo() + "»" + pkg->distribution());
     lblDownload->setText(PackageSystem::fileSizeFormat(pkg->downloadSize()));
     lblInstall->setText(PackageSystem::fileSizeFormat(pkg->installSize()));
-    lblWebsite->setText("<a href=\"" + md->upstreamUrl() + "\">" + md->upstreamUrl() + "</a>");
     lblLicense->setText("<a href=\"" + pkg->license() + "\">" + pkg->license() + "</a>");
     
     // Icône
