@@ -34,7 +34,6 @@ enum PageIds
     Done
 };
 
-#include "ui_installwizard.h"
 #include <package.h>
 
 class MainWindow;
