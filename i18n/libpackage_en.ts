@@ -1649,12 +1649,12 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+22"/>
-        <location line="+416"/>
+        <location line="+399"/>
         <source>Nom</source>
         <translation>Name</translation>
     </message>
     <message>
-        <location line="-411"/>
+        <location line="-394"/>
         <source>Version</source>
         <translation>Version</translation>
     </message>
@@ -1670,12 +1670,12 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+5"/>
-        <location line="+340"/>
+        <location line="+323"/>
         <source>Description</source>
         <translation>Description</translation>
     </message>
     <message>
-        <location line="-322"/>
+        <location line="-305"/>
         <source>&amp;?</source>
         <translation>&amp;?</translation>
     </message>
@@ -1720,33 +1720,30 @@ Options (case insensitive):
         <translation>Installation :</translation>
     </message>
     <message>
-        <location line="+29"/>
         <source>Site web :</source>
-        <translation>Website :</translation>
+        <translation type="obsolete">Website :</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+29"/>
         <source>Licence :</source>
         <translation>License :</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Drapeaux :</source>
-        <translation>Flags :</translation>
+        <translation type="obsolete">Flags :</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>&amp;Voir et modifier</source>
-        <translation>&amp;View and modify</translation>
+        <translation type="obsolete">&amp;View and modify</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+66"/>
         <source>Versions disponibles :</source>
         <translation>Available versions :</translation>
     </message>
     <message>
         <location line="+32"/>
-        <location filename="../pkgui/packageinfo.cpp" line="+144"/>
+        <location filename="../pkgui/packageinfo.cpp" line="+143"/>
         <source>Dépendances</source>
         <translation>Dependencies</translation>
     </message>
@@ -1766,17 +1763,22 @@ Options (case insensitive):
         <translation>Attributes</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+81"/>
         <source>Sections</source>
         <translation>Sections</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="-67"/>
         <source>Actions à effectuer</source>
         <translation>Pending actions</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-144"/>
+        <source>&amp;Gérer les drapeaux</source>
+        <translation>&amp;Manage the flags</translation>
+    </message>
+    <message>
+        <location line="+158"/>
         <source>Paquet</source>
         <translation>Package</translation>
     </message>
@@ -1811,7 +1813,7 @@ Options (case insensitive):
         <translation>&amp;Clean</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+47"/>
         <source>Sélectionner pour &amp;installation</source>
         <translation>Select to &amp;install</translation>
     </message>
@@ -1861,7 +1863,7 @@ Options (case insensitive):
         <translation>&amp;Update the list of the packages...</translation>
     </message>
     <message>
-        <location filename="../pkgui/mainwindow.cpp" line="+250"/>
+        <location filename="../pkgui/mainwindow.cpp" line="+254"/>
         <source>Mise à jour de la base de donnée</source>
         <translation>Updating of the database</translation>
     </message>
@@ -1871,7 +1873,7 @@ Options (case insensitive):
         <translation>The database was successfully updated.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+29"/>
         <source>Pas d&apos;erreur ou erreur inconnue</source>
         <translation>No error or unknown error</translation>
     </message>
@@ -2105,7 +2107,7 @@ Options (case insensitive):
 <context>
     <name>ProgressList</name>
     <message>
-        <location filename="../pkgui/progresslist.cpp" line="+85"/>
+        <location filename="../pkgui/progresslist.cpp" line="+90"/>
         <source>Progression : </source>
         <translation>Progression: </translation>
     </message>
