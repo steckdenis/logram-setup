@@ -21,6 +21,7 @@
  */
 
 #include "communicationdialog.h"
+#include "mainwindow.h"
 
 #include <QIcon>
 #include <QCheckBox>
@@ -32,6 +33,7 @@
 
 #include <communication.h>
 #include <package.h>
+#include <packagemetadata.h>
 
 using namespace Logram;
 
@@ -46,7 +48,23 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
     if (_pkg != 0)
     {
         setWindowTitle(QString("%1 - %2~%3").arg(_comm->title(), _pkg->name(), _pkg->version()));
-        lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(48, 48));
+        
+        PackageMetaData *md = _pkg->metadata();
+        QByteArray iconData;
+        
+        if (md != 0)
+        {
+            md->setCurrentPackage(_pkg->name());
+        }
+        
+        if (md == 0 || (iconData = md->packageIconData()).isNull())
+        {
+            lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(32, 32));
+        }
+        else
+        {
+            lblIcon->setPixmap(MainWindow::pixmapFromData(iconData, 32, 32));
+        }
     }
     else
     {
