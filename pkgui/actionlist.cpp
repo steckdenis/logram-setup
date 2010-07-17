@@ -70,7 +70,7 @@ void MainWindow::addPackageInList(DatabasePackage *pkg, QTreeWidget *treeActions
     }
     
     // Il faut ajouter un élément
-    PackageItem *item = new PackageItem(pkg, treeActions, PackageItem::SmallActionList);
+    PackageItem *item = new PackageItem(pkg, treeActions, PackageItem::SmallActionList, false);
     root->addChild(item);
     
     // S'assurer que l'action et le bouton sont activés

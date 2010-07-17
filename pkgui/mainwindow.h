@@ -45,7 +45,7 @@ class PackageItem : public QTreeWidgetItem
             LargeActionList     // Liste des actions, quand on applique les changements
         };
         
-        PackageItem(Logram::DatabasePackage *pkg, QTreeWidget *parent, Type type);
+        PackageItem(Logram::DatabasePackage *pkg, QTreeWidget *parent, Type type, bool expand);
         PackageItem(Logram::DatabasePackage *pkg, QTreeWidgetItem *parent, Type type);
         virtual ~PackageItem();
         
@@ -103,7 +103,7 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         
         void displayPackages(PackageFilter filter, const QString &pattern);
         void populateSections();
-        bool addPackage(Logram::DatabasePackage* pkg);
+        bool addPackage(Logram::DatabasePackage* pkg, bool expand);
         void actionsForPackage(Logram::DatabasePackage *pkg);
         
         void addPackageInList(Logram::DatabasePackage *pkg, QTreeWidget *treeActions);

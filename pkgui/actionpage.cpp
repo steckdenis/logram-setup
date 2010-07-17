@@ -49,7 +49,7 @@ void ActionPage::initializePage()
         if (!item) continue;
         
         DatabasePackage *pkg = win->duplicatePackage(win->packageSystem(), item->package());
-        PackageItem *newItem = new PackageItem(pkg, treeActions, PackageItem::LargeActionList);
+        PackageItem *newItem = new PackageItem(pkg, treeActions, PackageItem::LargeActionList, false);
         
         treeActions->addTopLevelItem(newItem);
     }

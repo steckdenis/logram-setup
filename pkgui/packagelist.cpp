@@ -33,7 +33,7 @@
 
 using namespace Logram;
 
-bool MainWindow::addPackage(DatabasePackage *pkg)
+bool MainWindow::addPackage(DatabasePackage *pkg, bool expand)
 {
     // Filtrer en fonction de la section
     QTreeWidgetItem *currentItem = treeSections->currentItem();
@@ -57,6 +57,9 @@ bool MainWindow::addPackage(DatabasePackage *pkg)
                 return false;
             }
         }
+        
+        // On ne peut n'avoir qu'une version par dépôt et distro, donc pas besoin de déployer
+        expand = false;
     }
     
     // Explorer les paquets dans la liste des changements pour voir s'il n'y est pas déjà
@@ -76,7 +79,7 @@ bool MainWindow::addPackage(DatabasePackage *pkg)
     }
     
     // Créer l'élément
-    PackageItem *item = new PackageItem(pkg, treePackages, PackageItem::PackageList);
+    PackageItem *item = new PackageItem(pkg, treePackages, PackageItem::PackageList, expand);
     treePackages->addTopLevelItem(item);
     
     if (treePackages->currentItem() == 0)
@@ -115,7 +118,7 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
         {
             for (int i=0; i<pkgs.count(); ++i)
             {
-                addPackage(pkgs.at(i));
+                addPackage(pkgs.at(i), (filter == Updateable));
             }
         }
         else
@@ -128,7 +131,7 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
                 
                 if (regex.exactMatch(pkg->name()))
                 {
-                    addPackage(pkg);
+                    addPackage(pkg, (filter == Updateable));
                 }
                 else
                 {
@@ -162,7 +165,7 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
     }
     
     // Filtrer les paquets
-    if (filter != NoFilter && filter != Updateable)
+    if (filter == Installed || filter == NotInstalled)
     {
         for (int i=0; i<ids.count(); ++i)
         {
@@ -197,7 +200,7 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
         
         // Ajouter ce paquet aux listes
         DatabasePackage *dpkg = ps->package(index);
-        if (!addPackage(dpkg)) continue;
+        if (!addPackage(dpkg, (filter != Installed))) continue;
         
         // Trouver les paquets ayant le même nom, donc des versions différentes
         _Package *pkg = dr->package(index);

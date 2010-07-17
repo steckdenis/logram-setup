@@ -48,13 +48,13 @@ static QString actionNameInf(Solver::Action act)
     }
 }
 
-PackageItem::PackageItem(DatabasePackage* pkg, QTreeWidget* parent, PackageItem::Type type) : QTreeWidgetItem(parent, QTreeWidgetItem::Type)
+PackageItem::PackageItem(DatabasePackage* pkg, QTreeWidget* parent, PackageItem::Type type, bool expand) : QTreeWidgetItem(parent, QTreeWidgetItem::Type)
 {
     _pkg = pkg;
     _type = type;
     
     updateIcon();
-    updateText(true);
+    updateText(expand);
 }
 
 PackageItem::PackageItem(DatabasePackage* pkg, QTreeWidgetItem* parent, PackageItem::Type type) : QTreeWidgetItem(parent, QTreeWidgetItem::Type)
