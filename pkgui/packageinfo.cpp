@@ -119,7 +119,7 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     lblStar3->setPixmap(kdeintegration > 2 ? starOn : starOff);
     
     // Description
-    txtDescr->setText(md->packageDescription());
+    txtDescr->setText(MainWindow::markdown(md->packageDescription()));
     
     // Dépendances
     QVector<Depend *> deps = pkg->depends();

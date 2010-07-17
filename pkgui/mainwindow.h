@@ -86,6 +86,7 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         
         static Logram::DatabasePackage *duplicatePackage(Logram::PackageSystem *ps, Logram::DatabasePackage *pkg);
         static QPixmap pixmapFromData(const QByteArray &data, int width, int height);
+        static QString markdown(const QString &source);
         
     public slots:
         void progress(Logram::Progress *progress);

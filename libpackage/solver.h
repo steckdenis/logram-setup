@@ -150,6 +150,7 @@ class Solver : public QObject
                 WeightMin = 16,         /*!< @brief Utilisé par weightChildren */
                 MinMaxDone = 32,        /*!< @brief Protection de weightChildren */
                 BeingExplored = 64,     /*!< @brief Utilisé par exploreNode */
+                Explored = 128,         /*!< @brief Exploration terminée */
             };
             
             Q_DECLARE_FLAGS(Flags, Flag)

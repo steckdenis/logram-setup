@@ -100,7 +100,7 @@ void LicensePage::initializePage()
         
         md->setCurrentPackage(pkg->name());
         
-        edit->setText(md->packageEula());
+        edit->setText(MainWindow::markdown(md->packageEula()));
     }
     
     boxChecked();

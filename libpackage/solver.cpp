@@ -530,6 +530,7 @@ bool Solver::upList()
         
         nd->nodeListIndex = -1;
         nd->currentChild = 0;
+        nd->flags &= ~Node::Explored;
         
         // Effacer les choix déjà faits
         Node::Child *children = nd->children;
@@ -661,7 +662,7 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
     }
     
     // Un noeud complètement exploré ne doit pas être continué
-    if (node->currentChild == node->childcount)
+    if ((node->flags & Solver::Node::Explored) != 0)
     {
         return false;
     }
@@ -828,6 +829,8 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                         }
                     }
                 }
+                
+                qDebug() << autoCount << goodCount << wantedCount;
             
                 if (autoCount != 0)
                 {
@@ -847,10 +850,10 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     node->flags &= ~Solver::Node::BeingExplored;
                     return false;
                 }
-                else if (goodCount == 1)
+                else if (node == rootNode && wantedCount == 1)
                 {
-                    // Un choix où on n'a qu'une possibilité n'est plus un choix
-                    if (!exploreNode(goodNode, ended))
+                    // Mise à jour auto sans demander à l'utilisateur s'il veut un wanted et un pas wanted
+                    if (!exploreNode(wanted, ended))
                     {
                         node->flags &= ~Solver::Node::BeingExplored;
                         return false;
@@ -863,9 +866,9 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                         return true;
                     }
                 }
-                else if (node == rootNode && wantedCount == 1)
+                else if (goodCount == 1)
                 {
-                    // Mise à jour auto sans demander à l'utilisateur s'il veut un wanted et un pas wanted
+                    // Un choix où on n'a qu'une possibilité n'est plus un choix
                     if (!exploreNode(goodNode, ended))
                     {
                         node->flags &= ~Solver::Node::BeingExplored;
@@ -903,6 +906,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
     
     // On a exploré ce noeud en entier
     node->flags &= ~Solver::Node::BeingExplored;
+    node->flags |= Solver::Node::Explored;
     
     return true;
 }

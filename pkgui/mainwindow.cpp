@@ -23,12 +23,16 @@
 #include "mainwindow.h"
 #include "progressdialog.h"
 #include "communicationdialog.h"
+#include "markdown/markdown.h"
 
 #include <QIcon>
 #include <QMessageBox>
 
 #include <communication.h>
 #include <packagemetadata.h>
+
+#include <string>
+#include <sstream>
 
 using namespace Logram;
 
@@ -254,6 +258,19 @@ QPixmap MainWindow::pixmapFromData(const QByteArray &data, int width, int height
 {
     QImage img = QImage::fromData(data);
     return QPixmap::fromImage(img).scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+}
+
+QString MainWindow::markdown(const QString &source)
+{
+    std::string s = source.toStdString();
+    
+    markdown::Document doc(4);
+    doc.read(s);
+    
+    std::stringstream str;
+    doc.write(str);
+    
+    return QString::fromStdString(str.str());
 }
 
 void MainWindow::psError()
