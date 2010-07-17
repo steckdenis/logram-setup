@@ -146,7 +146,7 @@ class DatabaseReader
 {
     public:
         /**
-            @brief Construit un PackageSystem
+            @brief Constructeur
             @param _ps PackageSystem utilisé
         */
         DatabaseReader(PackageSystem *_ps);
@@ -162,6 +162,21 @@ class DatabaseReader
             @return true si tout s'est bien passé, false sinon
         */
         bool init();
+        
+        /**
+         * @brief Réinitialise le lecteur de base de donnée
+         * 
+         * Si l'application cliente ne détruit pas son PackageSystem après
+         * un appel à PackageSystem::update(), et qu'il avait été initialisé,
+         * la base de donnée binaire mappée par cette classe devient invalide
+         * et son utilisation peut entraîner des corruptions.
+         * 
+         * Cette fonction doit alors être appelée pour fermer la base de donnée
+         * binaire et la rouvrir. Elle peut alors être utilisée.
+         * 
+         * @return True si tout s'est bien passé, false sinon.
+         */
+        bool reset();
         
         bool initialized() const; /*!< @brief Permet de savoir si init() a déjà été appelé */
 
@@ -413,6 +428,7 @@ class DatabaseReader
         
     private:
         bool mapFile(const QString &file, QFile **ptr, uchar **map);
+        void closeFiles();
 
     private:
         bool _initialized;

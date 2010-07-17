@@ -168,6 +168,11 @@ bool Logram::PackageSystem::init()
     return d->dr->init();
 }
 
+bool Logram::PackageSystem::reset()
+{
+    return d->dr->reset();
+}
+
 struct Enrg
 {
     QString url, distroName, arch, sourceName;

@@ -50,6 +50,8 @@ void MainWindow::populateSections()
     QDir dir(ps->varRoot() + "/var/cache/lgrpkg/db");
     QStringList files = dir.entryList(QDir::Files);
     
+    treeSections->clear();
+    
     noSectionFilterItem = new QTreeWidgetItem(treeSections);
     noSectionFilterItem->setIcon(0, QIcon::fromTheme("edit-select-all"));
     noSectionFilterItem->setText(0, tr("Tout afficher"));

@@ -284,6 +284,7 @@ class PackageSystem : public QObject
         PackageSystem(QObject *parent = 0);
         ~PackageSystem();                   /*!< @brief Destructeur */
         bool init();                        /*!< @brief Initialise la base de donnée binaire */
+        bool reset();                       /*!< @brief Réinitialise la base de donnée (cf DatabaseReader::reset()) */
         bool initialized() const;           /*!< @brief Permet de savoir si la base de donnée binaire est initialisée */
         void loadConfig();                  /*!< @brief Charge la configuration */
 
@@ -363,7 +364,14 @@ class PackageSystem : public QObject
          */
         QVector<PackageFile *> files(const QRegExp &regex);
         int packages();                                 /*!< @brief Nombre de paquets dans la base de donnée */
-        bool update();                                  /*!< @brief Met à jour la base de donnée, fonction bloquante */
+        
+        /**
+         * @brief Met à jour la base de donnée, fonction bloquante
+         * @return True si tout s'est bien passé
+         * @sa reset
+         */
+        bool update();
+        
         QVector<DatabasePackage *> upgradePackages();     /*!< @brief Liste des paquets pouvant être mis à jour */
         QVector<DatabasePackage *> orphans();             /*!< @brief Liste des paquets orphelins */
         Solver *newSolver();                            /*!< @brief Crée un solveur (classe qui a besoin de structures internes de PackageSystem) */

@@ -106,7 +106,6 @@ MainWindow::MainWindow() : QMainWindow(0)
     
     if (!ps->init())
     {
-        //QMessageBox::critical(this, tr("Impossible d'ouvrir la base de donnée"), tr("Impossible d'ouvrir la base de donnée des paquets gérés par Logram. Vérifiez que Pkgui est lancé en mode Administrateur"));
         psError();
         _error = true;
         return;
@@ -236,8 +235,16 @@ void MainWindow::databaseUpdate()
     if (!ps->update())
     {
         psError();
+        return;
     }
     
+    if (!ps->reset())
+    {
+        psError();
+        return;
+    }
+    
+    populateSections();
     searchPackages();
     
     QMessageBox::information(this, tr("Mise à jour de la base de donnée"), tr("La base de donnée a été mise à jour avec succès."));

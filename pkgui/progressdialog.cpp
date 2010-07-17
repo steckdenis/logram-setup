@@ -64,7 +64,13 @@ ProgressDialog::ProgressDialog(QWidget *parent) : QDialog(parent)
     
     // Timer pour fermer la fenêtre 1 seconde après la dernière progression
     closeTimer = new QTimer(this);
-    connect(closeTimer, SIGNAL(timeout()), this, SLOT(timeout()));
+    showTimer = new QTimer(this);
+    
+    closeTimer->setSingleShot(true);
+    showTimer->setSingleShot(true);
+    
+    connect(closeTimer, SIGNAL(timeout()), this, SLOT(hideElapsed()));
+    connect(showTimer, SIGNAL(timeout()), this, SLOT(showElapsed()));
 }
 
 ProgressDialog::~ProgressDialog()
@@ -85,6 +91,13 @@ void ProgressDialog::addProgress(Progress *progress)
         progressToDelete = 0;
     }
     
+    // Bien afficher la fenêtre, 1/2 après le début de la progression, pour que celles qui sont rapide (DL de métadonnées) ne
+    // gênent pas
+    if (!isVisible() && !showTimer->isActive())
+    {
+        showTimer->start(500);
+    }
+    
     list->addProgress(progress);
 }
 
@@ -93,12 +106,6 @@ void ProgressDialog::updateProgress(Progress *progress)
     QApplication::processEvents();
     
     if (_canceled) return;
-    
-    // Bien afficher la fenêtre
-    if (!isVisible())
-    {
-        show();
-    }
     
     list->updateProgress(progress);
 }
@@ -111,6 +118,7 @@ void ProgressDialog::endProgress(Progress *progress)
         // On ne retire pas la dernière progression, il faut que l'utilisateur la voie. On attend une seconde
         closeTimer->start(1000);
         progressToDelete = progress;
+        
         return;
     }
     
@@ -138,7 +146,7 @@ void ProgressDialog::cancelClicked()
     emit rejected();
 }
 
-void ProgressDialog::timeout()
+void ProgressDialog::hideElapsed()
 {
     // Supprimer la dernière progression, si elle existe
     list->endProgress(progressToDelete);
@@ -146,6 +154,17 @@ void ProgressDialog::timeout()
     // Fermer
     hide();
     emit accepted();
+}
+
+void ProgressDialog::showElapsed()
+{
+    if (closeTimer->isActive())
+    {
+        // Ne pas afficher une boîte de dialogue pour la fermer ensuite
+        return;
+    }
+    
+    show();
 }
 
 #include "progressdialog.moc"

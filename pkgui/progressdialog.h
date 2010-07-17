@@ -51,13 +51,14 @@ class ProgressDialog : public QDialog
         
     private slots:
         void cancelClicked();
-        void timeout();
+        void hideElapsed();
+        void showElapsed();
         
     protected:
         void closeEvent(QCloseEvent *event);
         
     private:
-        QTimer *closeTimer;
+        QTimer *closeTimer, *showTimer;
         Logram::Progress *progressToDelete;
         
         bool _canceled;

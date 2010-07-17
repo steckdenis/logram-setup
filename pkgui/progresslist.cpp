@@ -85,6 +85,10 @@ void ProgressList::addProgress(Logram::Progress* progress)
             data->s = tr("Progression : ");
             break;
             
+        case Progress::GlobalDownload:
+            data->s = tr("Téléchargement de ");
+            break;
+            
         case Progress::Download:
             data->s = tr("Téléchargement de ");
             break;

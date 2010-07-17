@@ -64,7 +64,13 @@ bool DatabaseReader::init()
     return true;
 }
 
-DatabaseReader::~DatabaseReader()
+bool DatabaseReader::reset()
+{
+    closeFiles();
+    init();
+}
+
+void DatabaseReader::closeFiles()
 {
     if (f_packages != 0)
     {
@@ -108,6 +114,11 @@ DatabaseReader::~DatabaseReader()
         delete f_files;
         f_files = 0;
     }
+}
+
+DatabaseReader::~DatabaseReader()
+{
+    closeFiles();
 }
 
 bool DatabaseReader::packagesByName(const QRegExp &regex, QVector<int> &rs)
