@@ -138,6 +138,7 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
         }
         
         // Fini
+        treePackages->expandAll();
         return;
     }
     
@@ -213,6 +214,8 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
             }
         }
     }
+    
+    treePackages->expandAll();
 }
 
 void MainWindow::searchPackages()
