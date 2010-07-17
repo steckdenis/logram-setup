@@ -28,6 +28,7 @@
 #include <QProgressBar>
 #include <QFrame>
 #include <QLabel>
+#include <QTime>
 
 struct ProgressData
 {
@@ -36,6 +37,8 @@ struct ProgressData
     QFrame *frm;
     QLabel *lblInfo, *lblMore;
     QString s;
+    QTime lastTime;
+    int lastValue;
 };
 
 using namespace Logram;
@@ -56,6 +59,8 @@ void ProgressList::addProgress(Logram::Progress* progress)
 {
     // Créer les différent éléments
     ProgressData *data = new ProgressData;
+    
+    data->lastValue = 0;
     
     data->widget = new QWidget(this);
     data->pgs = new QProgressBar(data->widget);
@@ -134,6 +139,27 @@ void ProgressList::updateProgress(Logram::Progress* progress)
     {
         data->lblMore->show();
         data->lblMore->setText(progress->more);
+    }
+    
+    // Si la progression est un téléchargement, mettre à jour quelques infos
+    if (progress->type == Progress::Download)
+    {
+        QTime curTime = QTime::currentTime();
+        
+        if (data->lastTime.isNull() || data->lastTime.msecsTo(curTime) > 500)
+        {
+            // Vitesse de DL toutes les demi secondes
+            int lastSpeed = (progress->current - data->lastValue) * 1000 / data->lastTime.msecsTo(curTime);
+            
+            // Mise à jour de la progressbar
+            data->pgs->setFormat(QString("%p% (%1 / %2) %3/s").arg(
+                PackageSystem::fileSizeFormat(progress->current), 
+                PackageSystem::fileSizeFormat(progress->total),
+                PackageSystem::fileSizeFormat(lastSpeed)));
+            
+            data->lastTime = curTime;
+            data->lastValue = progress->current;
+        }
     }
 }
 
