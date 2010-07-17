@@ -149,7 +149,7 @@ class Solver : public QObject
                 MinMaxWeighted = 8,     /*!< @brief Protection de minMaxWeight */
                 WeightMin = 16,         /*!< @brief Utilisé par weightChildren */
                 MinMaxDone = 32,        /*!< @brief Protection de weightChildren */
-                Explored = 64,          /*!< @brief Utilisé par exploreNode */
+                BeingExplored = 64,     /*!< @brief Utilisé par exploreNode */
             };
             
             Q_DECLARE_FLAGS(Flags, Flag)

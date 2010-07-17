@@ -30,6 +30,7 @@
 #include <packagelist.h>
 
 #include <QGridLayout>
+#include <QtDebug>
 
 using namespace Logram;
 
@@ -45,7 +46,7 @@ BranchePage::BranchePage(InstallWizard *_wizard) : QWizardPage(_wizard)
     setupUi(this);
     
     btnUp->setIcon(QIcon::fromTheme("go-up"));
-    btnUseChoice->setIcon(QIcon::fromTheme("go-next"));
+    btnUseChoice->setIcon(QIcon::fromTheme("go-down"));
     
     connect(btnUp, SIGNAL(clicked(bool)), this, SLOT(choiceUp()));
     connect(btnUseChoice, SIGNAL(clicked(bool)), this, SLOT(choiceSelect()));

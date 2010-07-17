@@ -527,10 +527,17 @@ bool Solver::upList()
         
         nd->nodeListIndex = -1;
         nd->currentChild = 0;
-        nd->flags &= ~Node::Explored;
         
-        d->nodeList.resize(d->nodeList.count()-1);
+        // Effacer les choix déjà faits
+        Node::Child *children = nd->children;
+        
+        for (int i=0; i<nd->childcount; ++i)
+        {
+            children[i].chosenNode = -1;
+        }
     }
+        
+    d->nodeList.resize(level.lastNodeIndex + 1);
     
     // Liste ok. Il faut maintenant re-peupler d->choiceChild, puisqu'on retourne à un choix
     Node *node = d->nodeList.at(level.choiceNodeIndex);
@@ -643,16 +650,16 @@ bool Solver::Private::verifyNode(Solver::Node *node, Solver::Error* &error)
         }
     }
     
-    // Si le noeud est déjà complètement exploré, on n'en a plus besoin
-    if ((node->flags & Solver::Node::Explored) != 0)
+    // Si le noeud est en cours d'exploration, on ne peut pas re-rentrer dedans
+    if ((node->flags & Solver::Node::BeingExplored) != 0)
     {
+        // Éviter les récursions en boucle
         return false;
     }
-    else if (node->nodeListIndex != -1)
+    
+    // Un noeud complètement exploré ne doit pas être continué
+    if (node->currentChild == node->childcount)
     {
-        // Éviter les récursions en boucle : ce noeud est déjà dans un
-        // exploreNode si son nodeListIndex != -1 mais que ses flags
-        // ne contiennent pas Node::Explored
         return false;
     }
     
@@ -721,6 +728,8 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
     Solver::Node::Child *children = node->children, *child;
     Solver::Error *error = 0;
     
+    node->flags |= Solver::Node::BeingExplored;
+    
     for (; node->currentChild < node->childcount; node->currentChild++)
     {
         child = &children[node->currentChild];
@@ -735,6 +744,8 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     // VerifyNode a détecté une erreur dans le noeud
                     child->node->error = error;
                     errorNode = child->node;
+                    
+                    node->flags &= ~Solver::Node::BeingExplored;
                     return false;
                 }
                 
@@ -745,11 +756,16 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
             // Explorer cet enfant, simplement
             if (!exploreNode(child->node, ended))
             {
+                node->flags &= ~Solver::Node::BeingExplored;
                 return false;
             }
             
             // Si un choix s'est présenté, retourner pour permettre à l'utilisateur de choisir.
-            if (!ended) return true;
+            if (!ended)
+            {
+                node->flags &= ~Solver::Node::BeingExplored;
+                return true;
+            }
         }
         else
         {
@@ -762,11 +778,16 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                 
                 if (!exploreNode(nd, ended))
                 {
+                    node->flags &= ~Solver::Node::BeingExplored;
                     return false;
                 }
                 
                 // Si un choix s'est présenté, retourner pour permettre à l'utilisateur de choisir.
-                if (!ended) return true;
+                if (!ended)
+                {
+                    node->flags &= ~Solver::Node::BeingExplored;
+                    return true;
+                }
             }
             else
             {
@@ -820,6 +841,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     node->error = err;
                     errorNode = node;
                     
+                    node->flags &= ~Solver::Node::BeingExplored;
                     return false;
                 }
                 else if (goodCount == 1)
@@ -827,22 +849,32 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     // Un choix où on n'a qu'une possibilité n'est plus un choix
                     if (!exploreNode(goodNode, ended))
                     {
+                        node->flags &= ~Solver::Node::BeingExplored;
                         return false;
                     }
                     
                     // Si un choix s'est présenté, retourner pour permettre à l'utilisateur de choisir.
-                    if (!ended) return true;
+                    if (!ended)
+                    {
+                        node->flags &= ~Solver::Node::BeingExplored;
+                        return true;
+                    }
                 }
                 else if (node == rootNode && wantedCount == 1)
                 {
                     // Mise à jour auto sans demander à l'utilisateur s'il veut un wanted et un pas wanted
                     if (!exploreNode(goodNode, ended))
                     {
+                        node->flags &= ~Solver::Node::BeingExplored;
                         return false;
                     }
                     
                     // Si un choix s'est présenté, retourner pour permettre à l'utilisateur de choisir.
-                    if (!ended) return true;
+                    if (!ended)
+                    {
+                        node->flags &= ~Solver::Node::BeingExplored;
+                        return true;
+                    }
                 }
                 else
                 {
@@ -859,6 +891,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
                     
                     levels.append(level);
                     
+                    node->flags &= ~Solver::Node::BeingExplored;
                     return true;
                 }
             }
@@ -866,7 +899,7 @@ bool Solver::Private::exploreNode(Solver::Node* node, bool& ended)
     }
     
     // On a exploré ce noeud en entier
-    node->flags |= Solver::Node::Explored;
+    node->flags &= ~Solver::Node::BeingExplored;
     
     return true;
 }

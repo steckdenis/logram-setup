@@ -763,9 +763,6 @@ void App::manageResults(Solver *solver)
             cout << endl;
             cout << COLOR(tr("Le paquet %1~%2 possède une dépendance permettant un choix :").arg(pkg->name(), pkg->version()), "32") << endl;
             cout << endl;
-            
-            // Plus besoin de la liste
-            delete ps;
         }
         else
         {
@@ -773,6 +770,9 @@ void App::manageResults(Solver *solver)
             cout << COLOR(tr("Un des paquets que vous avez demandé peut être obtenu de plusieurs manières :"), "32") << endl;
             cout << endl;
         }
+            
+        // Plus besoin de la liste
+        delete ps;
         
         // Afficher la liste des choix
         int minWeightIndex = -1;
