@@ -245,7 +245,7 @@ struct UpgradeInfo;
  * Ensuite, on peut définir des paramètres, et charger les valeurs par défaut @b après les initialisations
  * 
  * @code
- * ps->setInstallSuggests(true);
+ * ps->setParallelDownloads(3);
  * ps->loadConfig();
  * @endcode
  * 
@@ -494,7 +494,6 @@ class PackageSystem : public QObject
         QSettings *installedPackagesList() const;
 
         // Options
-        bool installSuggests() const;               /*!< @brief Installe les suggestions des paquets */
         int parallelDownloads() const;              /*!< @brief Nombre de téléchargements en parallèle */
         int parallelInstalls() const;               /*!< @brief Nombre d'installations parallèle */
         QString installRoot() const;                /*!< @brief Dossier racine pour l'installation */
@@ -502,7 +501,6 @@ class PackageSystem : public QObject
         QString varRoot() const;                    /*!< @brief Dossier racine pour la base de donnée (root/var/cache/...) */
         QStringList pluginPaths() const;            /*!< @brief Chemin d'accès aux plugins PackageSource */
         bool runTriggers() const;                   /*!< @brief True pour lancer les triggers */
-        void setInstallSuggests(bool enable);       /*!< @brief Installe les suggestions des paquets */
         void setParallelDownloads(int num);         /*!< @brief Nombre de téléchargements en parallèle */
         void setParallelInstalls(int num);          /*!< @brief Nombre d'installations en parallèle */
         void setInstallRoot(const QString &root);   /*!< @brief Dossier racine pour l'installation */

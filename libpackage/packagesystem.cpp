@@ -48,6 +48,12 @@
 
 #include <QtDebug>
 
+#define PACKAGESYSTEM_OPT_PARALLELINSTALLS   1
+#define PACKAGESYSTEM_OPT_PARALLELDOWNLOADS  2
+#define PACKAGESYSTEM_OPT_INSTALLROOT        4
+#define PACKAGESYSTEM_OPT_CONFROOT           8
+#define PACKAGESYSTEM_OPT_VARROOT           16
+
 using namespace Logram;
 using namespace std;
 
@@ -71,7 +77,6 @@ struct Logram::PackageSystem::Private
     QMutex errorMutex;
 
     // Options
-    bool installSuggests;
     int parallelInstalls, parallelDownloads;
     QString installRoot, confRoot, varRoot;
     bool triggers;
@@ -128,10 +133,6 @@ void Logram::PackageSystem::loadConfig()
     d->set = new QSettings(confRoot() + "/etc/lgrpkg/sources.list", QSettings::IniFormat, this);
     d->set->setIniCodec(QTextCodec::codecForCStrings());
     
-    if ((d->setParams & PACKAGESYSTEM_OPT_INSTALLSUGGESTS) == 0)
-    {
-        d->installSuggests = d->set->value("InstallSuggests", true).toBool();
-    }
     if ((d->setParams & PACKAGESYSTEM_OPT_PARALLELINSTALLS) == 0)
     {
         d->parallelInstalls = d->set->value("ParallelInstalls", 1).toInt();
@@ -962,11 +963,6 @@ QString Logram::PackageSystem::dependString(const QString &name, const QString &
 
 /* Options */
 
-bool Logram::PackageSystem::installSuggests() const
-{
-    return d->installSuggests;
-}
-
 int Logram::PackageSystem::parallelDownloads() const
 {
     return d->parallelDownloads;
@@ -1014,13 +1010,6 @@ void Logram::PackageSystem::setVarRoot(const QString &root)
     d->setParams |= PACKAGESYSTEM_OPT_VARROOT;
     
     d->varRoot = root;
-}
-
-void Logram::PackageSystem::setInstallSuggests(bool enable)
-{
-    d->setParams |= PACKAGESYSTEM_OPT_INSTALLSUGGESTS;
-    
-    d->installSuggests = enable;
 }
 
 void Logram::PackageSystem::setParallelDownloads(int num)

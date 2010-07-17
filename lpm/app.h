@@ -94,7 +94,7 @@ class App : public QCoreApplication
 
     private:
         Logram::PackageSystem *ps;
-        bool colored, useDeps, useInstalled, depsTree, confirmMessages;
+        bool colored, useDeps, useInstalled, depsTree, confirmMessages, installSuggests;
 
         void manageResults(Logram::Solver *solver);
         void updatePgs(Logram::Progress *p);

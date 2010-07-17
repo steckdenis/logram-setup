@@ -83,8 +83,6 @@ Solver::Solver(PackageSystem *ps, DatabaseReader *psd)
     d->useInstalled = true;
     d->errorNode = 0;
     d->rootNode = 0;
-
-    d->installSuggests = ps->installSuggests();
 }
 
 Solver::~Solver()
@@ -121,6 +119,11 @@ void Solver::setUseDeps(bool enable)
 void Solver::setUseInstalled(bool enable)
 {
     d->useInstalled = enable;
+}
+
+void Solver::setInstallSuggests(bool enable)
+{
+    d->installSuggests = enable;
 }
 
 void Solver::addPackage(const QString &nameStr, Action action)

@@ -53,6 +53,13 @@
      </column>
     </widget>
    </item>
+   <item>
+    <widget class="QCheckBox" name="chkInstallSuggests">
+     <property name="text">
+      <string>&amp;Installer les paquets suggérés par ceux de la liste</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

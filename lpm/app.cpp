@@ -79,6 +79,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     useInstalled = true;
     depsTree = false;
     confirmMessages = true;
+    installSuggests = false;
 
     while (opt.startsWith('-'))
     {
@@ -91,15 +92,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         
         if (opt == "-s")
         {
-            bool isug = true;
-
-            if (args.at(2) == "off")
-            {
-                isug = false;
-                args.removeAt(1); // normal que ce soit 1 pas 2
-            }
-
-            ps->setInstallSuggests(isug);
+            installSuggests = true;
         }
         else if (opt == "-w")
         {
@@ -498,7 +491,7 @@ void App::help()
             "                       distributions spécifiées.\n"
             "\n"
             "Options (insensible à la casse) :\n"
-            "    -S [off]           Active (on) ou pas (off) l'installation des suggestions.\n"
+            "    -S                 Active l'installation des suggestions.\n"
             "    -nD                Ignorer les dépendances : installer les paquets demandés\n"
             "                       et uniquement eux.\n"
             "    -nI                Ignorer les paquets installés, générer tout l'arbre de\n"

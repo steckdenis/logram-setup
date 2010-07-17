@@ -83,6 +83,8 @@ void BranchePage::initializePage()
     ActionPage *actPage = static_cast<ActionPage *>(wizard->page(InstallWizard::Actions));
     QTreeWidgetItem *root = actPage->treeActions->invisibleRootItem();
     
+    solver->setInstallSuggests(actPage->chkInstallSuggests->isEnabled());
+    
     for (int i=0; i<root->childCount(); ++i)
     {
         PackageItem *item = static_cast<PackageItem *>(root->child(i));

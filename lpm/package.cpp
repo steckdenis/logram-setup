@@ -38,6 +38,7 @@ void App::add(const QStringList &packages)
     
     solver->setUseDeps(useDeps);
     solver->setUseInstalled(useInstalled);
+    solver->setInstallSuggests(installSuggests);
     
     foreach(const QString &package, packages)
     {

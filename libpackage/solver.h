@@ -334,6 +334,11 @@ class Solver : public QObject
          * @brief Définit si les paquets déjà installés/supprimés doivent être utilisés pour simplifier l'arbre (@b true par défaut) 
          */
         void setUseInstalled(bool enable);
+        
+        /**
+         * @brief Définit si les paquets suggérés par ceux que l'utilisateur veut (pas leurs dépendances) doivent être installés
+         */
+        void setInstallSuggests(bool enable);
 
     private:
         struct Private;
