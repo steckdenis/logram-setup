@@ -595,11 +595,13 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     
     if (metadata == 0)
     {
+        // Pas Internet ?
         error();
-        return;
+        
+        // On ne retourne pas, ça permet de garder LPM utilisable même hors ligne
     }
     
-    metadata->setCurrentPackage(pkg->name());
+    if (metadata) metadata->setCurrentPackage(pkg->name());
 
     // Status du paquet
     QString status;
@@ -620,6 +622,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     // Afficher les informations
     cout << COLOR(tr("Nom                 : "), "33") << COLOR(pkg->name(), "34") << endl;
     cout << COLOR(tr("Version             : "), "33") << qPrintable(pkg->version()) << endl;
+    if (metadata) 
     cout << COLOR(tr("Titre               : "), "33") << qPrintable(metadata->packageTitle()) << endl;
     cout << COLOR(tr("Drapeaux            : "), "33");
     
@@ -667,9 +670,12 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     cout << COLOR(tr("Mainteneur          : "), "33") << qPrintable(pkg->maintainer()) << endl;
     cout << COLOR(tr("Description courte  : "), "33") << qPrintable(pkg->shortDesc()) << endl;
     
-    cout << endl << COLOR(tr("Description longue : "), "35") << endl << endl;
-    printIndented(metadata->packageDescription().toUtf8(), 4);
-    cout << endl;
+    if (metadata)
+    {
+        cout << endl << COLOR(tr("Description longue : "), "35") << endl << endl;
+        printIndented(metadata->packageDescription().toUtf8(), 4);
+        cout << endl;
+    }
 
     // Afficher les dépendances
     QVector<Depend *> deps = pkg->depends();
@@ -785,7 +791,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
         cout << endl;
     }
     
-    if (changelog)
+    if (changelog && metadata)
     {
         cout << COLOR(tr("Historique des versions : "), "35") << endl << endl;
         
@@ -837,7 +843,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
         qDeleteAll(entries);
     }
     
-    if (license && (pkg->flags() & PACKAGE_FLAG_EULA))
+    if (license && (pkg->flags() & PACKAGE_FLAG_EULA) && metadata)
     {
         cout <<  COLOR(tr("Texte de la licence : "), "35") << endl << endl;
         printIndented(metadata->packageEula().toUtf8(), 4);

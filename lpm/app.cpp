@@ -659,7 +659,7 @@ void App::updatePgs(Progress *p)
         const QTime &oldTime = tProgresses.at(i);
         
         // Le pourcentage
-        int percent = progress->current * 100 / progress->total;
+        int percent = (progress->total == 0 ? 0 : progress->current * 100 / progress->total);
         
         cout << ' ';
         cout << COLOR(QString::number(percent).rightJustified(3, ' ', true) + '%', "33");
@@ -681,7 +681,7 @@ void App::updatePgs(Progress *p)
             maxcara = width-9;
         }
         
-        int caracount = progress->current * maxcara / progress->total;
+        int caracount = (progress->total == 0 ? 0 : progress->current * maxcara / progress->total);
         
         if (caracount > maxcara) caracount = maxcara;
         

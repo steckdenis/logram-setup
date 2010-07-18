@@ -49,16 +49,18 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     if (md == 0)
     {
         psError();
-        return;
+        
+        // Ne pas quitter, ça permet de garder Pkgui utilisable sans Internet
     }
     
-    md->setCurrentPackage(pkg->name());
+    if (md) md->setCurrentPackage(pkg->name());
     
     // Gérer les actions possibles avec ce paquet
     actionsForPackage(pkg);
     
     // Infos de base
     docInfos->setWindowTitle(pkg->name() + "~" + pkg->version());
+    if (md)
     lblTitle->setText("<a href=\"" + md->upstreamUrl() + "\">" + md->packageTitle() + "</a>");
     lblShortDesc->setText(pkg->shortDesc());
     lblSection->setText(pkg->section());
@@ -68,7 +70,7 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     lblLicense->setText("<a href=\"" + pkg->license() + "\">" + pkg->license() + "</a>");
     
     // Icône
-    QByteArray iconData = md->packageIconData();
+    QByteArray iconData = (md ? md->packageIconData() : QByteArray());
     
     if (iconData.isNull())
     {
@@ -118,7 +120,7 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     lblStar3->setPixmap(kdeintegration > 2 ? starOn : starOff);
     
     // Description
-    txtDescr->setText(MainWindow::markdown(md->packageDescription()));
+    txtDescr->setText(md ? MainWindow::markdown(md->packageDescription()) : QString());
     
     // Dépendances
     QVector<Depend *> deps = pkg->depends();
@@ -174,87 +176,91 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     }
     
     // Historique
-    QVector<ChangeLogEntry *> entries = md->changelog();
     listChangelog->clear();
     
-    for (int i=0; i<entries.count(); ++i)
+    if (md)
     {
-        ChangeLogEntry *entry = entries.at(i);
+        QVector<ChangeLogEntry *> entries = md->changelog();
         
-        QListWidgetItem *mitem = new QListWidgetItem(QString(), listChangelog);
-        listChangelog->addItem(mitem);
-        
-        // Créer le widget
-        // ----------------------------------------------------------------------------------
-        // | VERSION (par [email](auteur) le <date> dans <distro>)    <---->   type + icône |
-        // |                                                                                |
-        // |    | texte                                                                          |
-        // ----------------------------------------------------------------------------------
-        
-        QWidget *widget = new QWidget(listChangelog);
-        widget->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
-        QVBoxLayout *vlayout = new QVBoxLayout(widget);
-        QHBoxLayout *hlayout = new QHBoxLayout();
-        QHBoxLayout *hboxlayout2 = new QHBoxLayout();
-        
-        QLabel *lblText = new QLabel(listChangelog);
-        lblText->setText(tr("<b>%1</b> (par <a href=\"mailto:%2\">%3</a> le %4 dans %5)")
-            .arg(entry->version)
-            .arg(entry->email)
-            .arg(entry->author)
-            .arg(entry->date.toString(Qt::SystemLocaleShortDate))
-            .arg(entry->distribution));
-        
-        connect(lblText, SIGNAL(linkActivated(const QString &)), this, SLOT(websiteActivated(const QString &)));
-        
-        QLabel *lblIconType = new QLabel(listChangelog);
-        lblIconType->resize(22, 22);
-        lblIconType->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
-        
-        QLabel *lblType = new QLabel(listChangelog);
-        
-        switch (entry->type)
+        for (int i=0; i<entries.count(); ++i)
         {
-            case ChangeLogEntry::LowPriority:
-                lblType->setText(tr("Faible priorité"));
-                lblIconType->setPixmap(QIcon::fromTheme("text-x-generic").pixmap(22, 22));
-                break;
-            case ChangeLogEntry::Feature:
-                lblType->setText(tr("Fonctionnalité"));
-                lblIconType->setPixmap(QIcon::fromTheme("applications-other").pixmap(22, 22));
-                break;
-            case ChangeLogEntry::BugFix:
-                lblType->setText(tr("Correction de bug"));
-                lblIconType->setPixmap(QIcon::fromTheme("tools-report-bug").pixmap(22, 22));
-                break;
-            case ChangeLogEntry::Security:
-                lblType->setText(tr("Sécurité"));
-                lblIconType->setPixmap(QIcon::fromTheme("security-high").pixmap(22, 22));
-                break;
+            ChangeLogEntry *entry = entries.at(i);
+            
+            QListWidgetItem *mitem = new QListWidgetItem(QString(), listChangelog);
+            listChangelog->addItem(mitem);
+            
+            // Créer le widget
+            // ----------------------------------------------------------------------------------
+            // | VERSION (par [email](auteur) le <date> dans <distro>)    <---->   type + icône |
+            // |                                                                                |
+            // |    | texte                                                                          |
+            // ----------------------------------------------------------------------------------
+            
+            QWidget *widget = new QWidget(listChangelog);
+            widget->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
+            QVBoxLayout *vlayout = new QVBoxLayout(widget);
+            QHBoxLayout *hlayout = new QHBoxLayout();
+            QHBoxLayout *hboxlayout2 = new QHBoxLayout();
+            
+            QLabel *lblText = new QLabel(listChangelog);
+            lblText->setText(tr("<b>%1</b> (par <a href=\"mailto:%2\">%3</a> le %4 dans %5)")
+                .arg(entry->version)
+                .arg(entry->email)
+                .arg(entry->author)
+                .arg(entry->date.toString(Qt::SystemLocaleShortDate))
+                .arg(entry->distribution));
+            
+            connect(lblText, SIGNAL(linkActivated(const QString &)), this, SLOT(websiteActivated(const QString &)));
+            
+            QLabel *lblIconType = new QLabel(listChangelog);
+            lblIconType->resize(22, 22);
+            lblIconType->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+            
+            QLabel *lblType = new QLabel(listChangelog);
+            
+            switch (entry->type)
+            {
+                case ChangeLogEntry::LowPriority:
+                    lblType->setText(tr("Faible priorité"));
+                    lblIconType->setPixmap(QIcon::fromTheme("text-x-generic").pixmap(22, 22));
+                    break;
+                case ChangeLogEntry::Feature:
+                    lblType->setText(tr("Fonctionnalité"));
+                    lblIconType->setPixmap(QIcon::fromTheme("applications-other").pixmap(22, 22));
+                    break;
+                case ChangeLogEntry::BugFix:
+                    lblType->setText(tr("Correction de bug"));
+                    lblIconType->setPixmap(QIcon::fromTheme("tools-report-bug").pixmap(22, 22));
+                    break;
+                case ChangeLogEntry::Security:
+                    lblType->setText(tr("Sécurité"));
+                    lblIconType->setPixmap(QIcon::fromTheme("security-high").pixmap(22, 22));
+                    break;
+            }
+            
+            QLabel *lblDescr = new QLabel(listChangelog);
+            lblDescr->setText(entry->text);
+            
+            // Peupler les layouts
+            hlayout->addWidget(lblText);
+            hlayout->addStretch();
+            hlayout->addWidget(lblIconType);
+            hlayout->addWidget(lblType);
+            
+            QFrame *line = new QFrame(listChangelog);
+            line->setFrameShape(QFrame::VLine);
+            
+            hboxlayout2->addSpacing(30);
+            hboxlayout2->addWidget(line);
+            hboxlayout2->addWidget(lblDescr);
+            
+            vlayout->addLayout(hlayout);
+            vlayout->addLayout(hboxlayout2);
+            
+            widget->setLayout(vlayout);
+            mitem->setSizeHint(widget->minimumSizeHint());
+            listChangelog->setItemWidget(mitem, widget);
         }
-        
-        QLabel *lblDescr = new QLabel(listChangelog);
-        lblDescr->setText(entry->text);
-        
-        // Peupler les layouts
-        hlayout->addWidget(lblText);
-        hlayout->addStretch();
-        hlayout->addWidget(lblIconType);
-        hlayout->addWidget(lblType);
-        
-        QFrame *line = new QFrame(listChangelog);
-        line->setFrameShape(QFrame::VLine);
-        
-        hboxlayout2->addSpacing(30);
-        hboxlayout2->addWidget(line);
-        hboxlayout2->addWidget(lblDescr);
-        
-        vlayout->addLayout(hlayout);
-        vlayout->addLayout(hboxlayout2);
-        
-        widget->setLayout(vlayout);
-        mitem->setSizeHint(widget->minimumSizeHint());
-        listChangelog->setItemWidget(mitem, widget);
     }
     
     // Fichiers
