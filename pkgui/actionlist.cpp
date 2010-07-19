@@ -23,6 +23,8 @@
 #include "mainwindow.h"
 #include <installwizard.h>
 
+#include <QtDebug>
+
 using namespace Logram;
 using namespace LogramUi;
 
@@ -189,6 +191,18 @@ void MainWindow::deselectPackage()
 void MainWindow::applyList()
 {
     InstallWizard wizard(ps, this);
+    
+    // Ajouter les paquets
+    QTreeWidgetItem *item = treeActions->invisibleRootItem();
+    
+    for (int i=0; i<item->childCount(); ++i)
+    {
+        PackageItem *it = static_cast<PackageItem *>(item->child(i));
+        
+        if (!it) continue;
+        
+        wizard.addPackage(it->package());
+    }
     
     disableProgressions();
     wizard.exec();
