@@ -77,7 +77,7 @@ void CategoryView::updateFilter()
     {
         d->interface->setRepository(item->data(0, Qt::UserRole).toString());
         d->interface->setDistribution(item->data(0, Qt::UserRole + 1).toString());
-        d->interface->setSection(item->data(0, Qt::UserRole + 1).toString());
+        d->interface->setSection(item->data(0, Qt::UserRole + 2).toString());
     }
     
     d->interface->updateViews();

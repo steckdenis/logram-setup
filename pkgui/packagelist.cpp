@@ -38,9 +38,9 @@ using namespace LogramUi;
 bool MainWindow::addPackage(DatabasePackage *pkg, bool expand)
 {
     // Filtrer en fonction de la section
-    if (!filterInterface->repository().isNull() && pkg->repo() != filterInterface->repository() ||
-        !filterInterface->distribution().isNull() && pkg->distribution() != filterInterface->distribution() ||
-        !filterInterface->section().isNull() && pkg->section() != filterInterface->section())
+    if ((!filterInterface->repository().isNull() && pkg->repo() != filterInterface->repository()) ||
+        (!filterInterface->distribution().isNull() && pkg->distribution() != filterInterface->distribution()) ||
+        (!filterInterface->section().isNull() && pkg->section() != filterInterface->section()))
     {
         delete pkg;
         return false;
