@@ -21,8 +21,6 @@
  */
 
 #include "installwizard.h"
-#include "mainwindow.h"
-#include "progresslist.h"
 
 #include "actionpage.h"
 #include "branchepage.h"
@@ -35,26 +33,30 @@
 #include <solver.h>
 #include <packagelist.h>
 
-#include <QTreeWidget>
 #include <QIcon>
-#include <QPixmap>
 #include <QMessageBox>
-#include <QLabel>
-#include <QFrame>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QVector>
 
 #include <QtDebug>
 
 using namespace Logram;
+using namespace LogramUi;
 
-InstallWizard::InstallWizard(MainWindow* parent): QWizard(parent)
+struct LogramUi::InstallWizard::Private
 {
-    win = parent;
-    _packageList = 0;
-    _solver = 0;
-    ps = parent->packageSystem();
+    Logram::Solver *solver;
+    Logram::PackageList *packageList;
+    Logram::PackageSystem *ps;
+    
+    QList<PackageMessage> messages;
+    QVector<Logram::Package *> packages;
+};
+
+LogramUi::InstallWizard::InstallWizard(PackageSystem *ps, QWidget* parent): QWizard(parent)
+{
+    d = new Private;
+    d->solver = 0;
+    d->ps = ps;
     
     resize(800, 600);
     setWindowTitle(tr("Installer et supprimer des paquets"));
@@ -79,84 +81,78 @@ InstallWizard::InstallWizard(MainWindow* parent): QWizard(parent)
     
     // Signaux
     connect(this, SIGNAL(currentIdChanged(int)), this, SLOT(pageChanged(int)));
-    
-    //btnUp->setIcon(QIcon::fromTheme("go-up"));
-    //btnUseChoice->setIcon(QIcon::fromTheme("go-next"));
-    
-    /*
-    
-    // Liste des progressions
-    progressList = new ProgressList(areaProgresses);
-    QWidget *pgsWidget = areaProgresses->widget();
-    QVBoxLayout *vlayout = new QVBoxLayout(pgsWidget);
-    
-    pgsWidget->setLayout(vlayout);
-    
-    vlayout->addWidget(progressList);
-    vlayout->addStretch();
-    */
 }
 
-MainWindow *InstallWizard::mainWindow() const
+LogramUi::InstallWizard::~InstallWizard()
 {
-    return win;
+    delete d;
 }
 
-PackageList *InstallWizard::packageList() const
+void LogramUi::InstallWizard::addPackage(Package* package)
 {
-    return _packageList;
+    d->packages.append(package);
 }
 
-Solver *InstallWizard::solver() const
+QVector<Package *> LogramUi::InstallWizard::packages() const
 {
-    return _solver;
+    return d->packages;
 }
 
-PackageSystem *InstallWizard::packageSystem() const
+PackageList *LogramUi::InstallWizard::packageList() const
 {
-    return ps;
+    return d->packageList;
 }
 
-void InstallWizard::setPackageList(PackageList *_packageList)
+Solver *LogramUi::InstallWizard::solver() const
 {
-    this->_packageList = _packageList;
+    return d->solver;
 }
 
-void InstallWizard::setSolver(Solver *_solver)
+PackageSystem *LogramUi::InstallWizard::packageSystem() const
 {
-    this->_solver = _solver;
+    return d->ps;
 }
 
-void InstallWizard::addMessage(const PackageMessage &message)
+void LogramUi::InstallWizard::setPackageList(PackageList *packageList)
 {
-    messages.append(message);
+    d->packageList = packageList;
 }
 
-QList<PackageMessage> InstallWizard::packageMessages() const
+void LogramUi::InstallWizard::setSolver(Solver *solver)
 {
-    return messages;
+    d->solver = solver;
 }
 
-void InstallWizard::pageChanged(int id)
+void LogramUi::InstallWizard::addMessage(const PackageMessage &message)
+{
+    d->messages.append(message);
+}
+
+QList<PackageMessage> LogramUi::InstallWizard::messages() const
+{
+    return d->messages;
+}
+
+void LogramUi::InstallWizard::pageChanged(int id)
 {
     // On ne peut jamais revenir en arrière
     button(BackButton)->setEnabled(false);
 }
 
 // NOTE: Synchronize with lpm/package.cpp:solverError
-void InstallWizard::solverError()
+void LogramUi::InstallWizard::solverError()
 {
     // Trouver le noeud du solveur qui a une erreur
-    Solver::Node *errorNode = _solver->errorNode();
+    Solver::Node *errorNode = d->solver->errorNode();
     
     if (errorNode == 0)
     {
         // Ce n'est pas un noeud qui a provoqué l'erreur, voir si ce n'est pas PackageSystem
-        PackageError *err = ps->lastError();
+        PackageError *err = d->ps->lastError();
         
         if (err != 0)
         {
-            win->psError();
+            // TODO win->psError();
             return;
         }
         else
@@ -205,11 +201,11 @@ void InstallWizard::solverError()
             s = tr("Impossible de trouver la dépendance correspondant à %1").arg(err->pattern);
        
         case Solver::Error::InternalError:
-            perr = ps->lastError();
+            perr = d->ps->lastError();
         
             if (perr != 0)
             {
-                win->psError();
+                // TODO win->psError();
                 return;
             }
             else

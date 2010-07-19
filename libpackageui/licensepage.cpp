@@ -22,7 +22,7 @@
 
 #include "licensepage.h"
 #include "installwizard.h"
-#include "mainwindow.h"
+#include "utils.h"
 
 #include <packagelist.h>
 #include <packagemetadata.h>
@@ -33,6 +33,7 @@
 #include <QVBoxLayout>
 
 using namespace Logram;
+using namespace LogramUi;
 
 LicensePage::LicensePage(InstallWizard *_wizard) : QWizardPage(_wizard)
 {
@@ -91,7 +92,7 @@ void LicensePage::initializePage()
         
         if (md == 0)
         {
-            wizard->mainWindow()->psError();
+            // TODO wizard->mainWindow()->psError();
             wizard->reject();
             
             delete list;
@@ -100,7 +101,7 @@ void LicensePage::initializePage()
         
         md->setCurrentPackage(pkg->name());
         
-        edit->setText(MainWindow::markdown(md->packageEula()));
+        edit->setText(Utils::markdown(md->packageEula()));
     }
     
     boxChecked();

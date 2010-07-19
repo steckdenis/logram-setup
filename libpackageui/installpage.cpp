@@ -22,19 +22,23 @@
 
 #include "installpage.h"
 #include "installwizard.h"
-#include "mainwindow.h"
+#include "progresslist.h"
 
 #include <packagesystem.h>
 #include <packagelist.h>
 #include <communication.h>
+#include <package.h>
+#include <databasepackage.h>
+
+#include <QAbstractButton>
 
 using namespace Logram;
+using namespace LogramUi;
 
 InstallPage::InstallPage(InstallWizard *_wizard) : QWizardPage(_wizard)
 {
     _cancel = false;
     wizard = _wizard;
-    win = wizard->mainWindow();
     ps = wizard->packageSystem();
 
     setupUi(this);
@@ -59,7 +63,6 @@ void InstallPage::initializePage()
     packageList = wizard->packageList();
         
     // On a besoin des progressions
-    win->disableProgressions();
     connect(ps, SIGNAL(progress(Logram::Progress *)), this, SLOT(progress(Logram::Progress *)));
     connect(ps, SIGNAL(communication(Logram::Package*,Logram::Communication*)), 
             this, SLOT(communication(Logram::Package*,Logram::Communication*)));
@@ -67,7 +70,7 @@ void InstallPage::initializePage()
     // Installer les paquets
     if (!packageList->process())
     {
-        win->psError();
+        // TODO win->psError();
         
         delete packageList;
         delete wizard->solver();
@@ -78,7 +81,6 @@ void InstallPage::initializePage()
     }
 
     // MainWindow peut à nouveau gérer les progressions
-    win->enableProgressions();
     disconnect(this, SLOT(progress(Logram::Progress *)));
     disconnect(this, SLOT(communication(Logram::Package*,Logram::Communication*)));
     

@@ -22,7 +22,7 @@
 
 #include "donepage.h"
 #include "installwizard.h"
-#include "mainwindow.h"
+#include "utils.h"
 
 #include <QIcon>
 #include <QGridLayout>
@@ -35,6 +35,7 @@
 #include <packagemetadata.h>
 
 using namespace Logram;
+using namespace LogramUi;
 
 DonePage::DonePage(InstallWizard *_wizard) : QWizardPage(_wizard)
 {
@@ -48,7 +49,7 @@ void DonePage::initializePage()
     int msgcount = 0;       // Permettra de savoir s'il faut afficher ou pas «L'installation s'est bien déroulée»
     
     // Commencer par les messages des paquets
-    QList<PackageMessage> messages = wizard->packageMessages();
+    QList<PackageMessage> messages = wizard->messages();
     
     foreach (const PackageMessage &message, messages)
     {
@@ -90,7 +91,7 @@ void DonePage::initializePage()
         
         if (md == 0)
         {
-            wizard->mainWindow()->psError();
+            // TODO wizard->mainWindow()->psError();
             continue;
         }
         
@@ -121,7 +122,7 @@ void DonePage::initializePage()
             
             if (!iconData.isNull())
             {
-                lblIcon->setPixmap(MainWindow::pixmapFromData(iconData, 22, 22));
+                lblIcon->setPixmap(Utils::pixmapFromData(iconData, 22, 22));
             }
             else
             {

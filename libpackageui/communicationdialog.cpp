@@ -21,7 +21,7 @@
  */
 
 #include "communicationdialog.h"
-#include "mainwindow.h"
+#include "utils.h"
 
 #include <QIcon>
 #include <QCheckBox>
@@ -36,11 +36,23 @@
 #include <packagemetadata.h>
 
 using namespace Logram;
+using namespace LogramUi;
+
+struct CommunicationDialog::Private
+{
+    Logram::Communication *comm;
+    Logram::Package *pkg;
+    
+    QVector<QAbstractButton *> listWidgets;
+    QWidget *inputWidget;
+    const char *inputProperty;
+};
 
 CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QWidget* parent): QDialog(parent)
 {
-    comm = _comm;
-    pkg = _pkg;
+    d = new Private;
+    d->comm = _comm;
+    d->pkg = _pkg;
     
     setupUi(this);
     
@@ -63,7 +75,7 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
         }
         else
         {
-            lblIcon->setPixmap(MainWindow::pixmapFromData(iconData, 32, 32));
+            lblIcon->setPixmap(Utils::pixmapFromData(iconData, 32, 32));
         }
     }
     else
@@ -82,13 +94,13 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
             lblChoiceType->setText(tr("Entrez une chaîne de caractère :"));
             
             QLineEdit *edit = new QLineEdit(this);
-            edit->setText(comm->defaultString());
+            edit->setText(_comm->defaultString());
             verticalLayout->insertWidget(2, edit);
             
             connect(edit, SIGNAL(textChanged(QString)), this, SLOT(updateValues()));
             
-            inputWidget = edit;
-            inputProperty = "text";
+            d->inputWidget = edit;
+            d->inputProperty = "text";
         }    
             break;
         case Communication::Integer:
@@ -97,13 +109,13 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
             
             QSpinBox *spinBox = new QSpinBox(this);
             spinBox->setMaximum(INT_MAX);
-            spinBox->setValue(comm->defaultInt());
+            spinBox->setValue(_comm->defaultInt());
             verticalLayout->insertWidget(2, spinBox);
             
             connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(updateValues()));
             
-            inputWidget = spinBox;
-            inputProperty = "value";
+            d->inputWidget = spinBox;
+            d->inputProperty = "value";
         }
             break;
         case Communication::Float:
@@ -111,23 +123,23 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
             lblChoiceType->setText(tr("Entrez un nombre décimal :"));
             
             QDoubleSpinBox *doubleSpinBox = new QDoubleSpinBox(this);
-            doubleSpinBox->setValue(comm->defaultDouble());
+            doubleSpinBox->setValue(_comm->defaultDouble());
             verticalLayout->insertWidget(2, doubleSpinBox);
             
             connect(doubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(updateValues()));
             
-            inputWidget = doubleSpinBox;
-            inputProperty = "value";
+            d->inputWidget = doubleSpinBox;
+            d->inputProperty = "value";
         }
             break;
         case Communication::MultiChoice:
         case Communication::SingleChoice:
-            for (int i=0; i<comm->choicesCount(); ++i)
+            for (int i=0; i<_comm->choicesCount(); ++i)
             {
-                Communication::Choice c = comm->choice(i);
+                Communication::Choice c = _comm->choice(i);
                 QAbstractButton *btn;
                 
-                if (comm->returnType() == Communication::SingleChoice)
+                if (_comm->returnType() == Communication::SingleChoice)
                 {
                     lblChoiceType->setText(tr("Sélectionner un choix :"));
                     btn = new QRadioButton(this);
@@ -143,12 +155,12 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
                 
                 connect(btn, SIGNAL(toggled(bool)), this, SLOT(updateValues()));
                 
-                listWidgets.append(btn);
+                d->listWidgets.append(btn);
             }
             
-            for (int i=listWidgets.count() - 1; i >= 0; --i)
+            for (int i=d->listWidgets.count() - 1; i >= 0; --i)
             {
-                verticalLayout->insertWidget(2, listWidgets.at(i));
+                verticalLayout->insertWidget(2, d->listWidgets.at(i));
             }
             
             break;
@@ -159,27 +171,32 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
     updateValues();     // Voir si les valeurs par défaut sont bonnes
 }
 
+CommunicationDialog::~CommunicationDialog()
+{
+    delete d;
+}
+
 void CommunicationDialog::updateValues()
 {
     // Définir les valeurs
-    switch (comm->returnType())
+    switch (d->comm->returnType())
     {
         case Communication::String:
-            comm->setValue(inputWidget->property(inputProperty).toString());
+            d->comm->setValue(d->inputWidget->property(d->inputProperty).toString());
             break;
         case Communication::Integer:
-            comm->setValue(inputWidget->property(inputProperty).toInt());
+            d->comm->setValue(d->inputWidget->property(d->inputProperty).toInt());
             break;
         case Communication::Float:
-            comm->setValue(inputWidget->property(inputProperty).toDouble());
+            d->comm->setValue(d->inputWidget->property(d->inputProperty).toDouble());
             break;
         case Communication::SingleChoice:
         case Communication::MultiChoice:
-            for (int i=0; i<listWidgets.count(); ++i)
+            for (int i=0; i<d->listWidgets.count(); ++i)
             {
-                QAbstractButton *btn = listWidgets.at(i);
+                QAbstractButton *btn = d->listWidgets.at(i);
                 
-                comm->enableChoice(i, btn->isChecked());
+                d->comm->enableChoice(i, btn->isChecked());
             }
             
             break;
@@ -187,10 +204,10 @@ void CommunicationDialog::updateValues()
             break;
     }
     
-    if (!comm->isEntryValid())
+    if (!d->comm->isEntryValid())
     {
         buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
-        lblError->setText(QString("<span style=\"color: #ff0000\">%1</span>").arg(comm->entryValidationErrorString()));
+        lblError->setText(QString("<span style=\"color: #ff0000\">%1</span>").arg(d->comm->entryValidationErrorString()));
     }
     else
     {

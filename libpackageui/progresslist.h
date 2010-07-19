@@ -1,5 +1,5 @@
 /*
- * communicationdialog.h
+ * progresslist.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,38 +20,38 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __COMMUNICATIONDIALOG_H__
-#define __COMMUNICATIONDIALOG_H__
+#ifndef __PROGRESSLIST_H__
+#define __PROGRESSLIST_H__
 
-#include <QDialog>
-#include <QVector>
-#include "ui_communicationdialog.h"
-
-class QAbstractButton;
+#include <QWidget>
 
 namespace Logram
 {
-    class Communication;
-    class Package;
+    struct Progress;
 }
 
-class CommunicationDialog : public QDialog, private Ui_CommunicationDialog
+namespace LogramUi
+{
+    
+class ProgressList : public QWidget
 {
     Q_OBJECT
-    
     public:
-        CommunicationDialog(Logram::Package *_pkg, Logram::Communication *_comm, QWidget* parent = 0);
+        ProgressList(QWidget *parent);
+        ~ProgressList();
         
-    private slots:
-        void updateValues();
+        void addProgress(Logram::Progress *progress);
+        void updateProgress(Logram::Progress *progress);
+        void endProgress(Logram::Progress *progress);
+        
+        int count() const;
+        void clear();
         
     private:
-        Logram::Communication *comm;
-        Logram::Package *pkg;
-        
-        QVector<QAbstractButton *> listWidgets;
-        QWidget *inputWidget;
-        const char *inputProperty;
+        struct Private;
+        Private *d;
 };
+
+}
 
 #endif

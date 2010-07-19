@@ -23,42 +23,53 @@
 #include "progresslist.h"
 
 #include <package.h>
+#include <packagesystem.h>
 
+#include <QHash>
 #include <QVBoxLayout>
 #include <QProgressBar>
 #include <QFrame>
 #include <QLabel>
 #include <QTime>
 
-struct ProgressData
-{
-    QWidget *widget;
-    QProgressBar *pgs;
-    QFrame *frm;
-    QLabel *lblInfo, *lblMore;
-    QString s;
-    QTime lastTime;
-    int lastValue;
-};
-
 using namespace Logram;
+using namespace LogramUi;
+
+struct LogramUi::ProgressList::Private
+{
+    struct ProgressData
+    {
+        QWidget *widget;
+        QProgressBar *pgs;
+        QFrame *frm;
+        QLabel *lblInfo, *lblMore;
+        QString s;
+        QTime lastTime;
+        int lastValue;
+    };
+  
+    QHash<Logram::Progress *, ProgressData *> progresses;
+    QVBoxLayout *layout;
+    int count;
+};
 
 ProgressList::ProgressList(QWidget *parent) : QWidget(parent)
 {
-    _count = 0;
-    _layout = new QVBoxLayout(this);
-    setLayout(_layout);
+    d = new Private;
+    d->count = 0;
+    d->layout = new QVBoxLayout(this);
+    setLayout(d->layout);
 }
 
 ProgressList::~ProgressList()
 {
-
+    delete d;
 }
 
 void ProgressList::addProgress(Logram::Progress* progress)
 {
     // Créer les différent éléments
-    ProgressData *data = new ProgressData;
+    Private::ProgressData *data = new Private::ProgressData;
     
     data->lastValue = 0;
     
@@ -114,15 +125,15 @@ void ProgressList::addProgress(Logram::Progress* progress)
     data->s = "<b>" + data->s + "</b>";
     
     // Insérer le widget dans le layout principal
-    _layout->addWidget(data->widget);
-    progresses.insert(progress, data);
+    d->layout->addWidget(data->widget);
+    d->progresses.insert(progress, data);
     
-    _count++;
+    d->count++;
 }
 
 void ProgressList::updateProgress(Logram::Progress* progress)
 {
-    ProgressData *data = progresses.value(progress);
+    Private::ProgressData *data = d->progresses.value(progress);
     
     if (data == 0) return;
     
@@ -165,25 +176,25 @@ void ProgressList::updateProgress(Logram::Progress* progress)
 
 void ProgressList::endProgress(Logram::Progress* progress)
 {
-    ProgressData *data = progresses.value(progress);
+    Private::ProgressData *data = d->progresses.value(progress);
     
     if (data == 0) return;
     
-    progresses.remove(progress);
+    d->progresses.remove(progress);
     delete data->widget;            // Supprime tout le reste aussi
     delete data;
     
-    _count--;
+    d->count--;
 }
 
 int ProgressList::count() const
 {
-    return _count;
+    return d->count;
 }
 
 void ProgressList::clear()
 {
-    QList<Progress *> pgs = progresses.keys();          // Liste séparée car endProgress modifie progresses.keys()
+    QList<Progress *> pgs = d->progresses.keys();          // Liste séparée car endProgress modifie progresses.keys()
     
     foreach (Progress *progress, pgs)
     {

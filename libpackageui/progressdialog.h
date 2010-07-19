@@ -1,5 +1,5 @@
 /*
- * progresslist.h
+ * progressdialog.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,35 +20,50 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __PROGRESSLIST_H__
-#define __PROGRESSLIST_H__
+#ifndef __PROGRESSDIALOG_H__
+#define __PROGRESSDIALOG_H__
 
-#include <QWidget>
 #include <QHash>
+#include <QDialog>
 
 #include <packagesystem.h>
 
 class QVBoxLayout;
-struct ProgressData;
+class QPushButton;
+class QTimer;
 
-class ProgressList : public QWidget
+namespace LogramUi
+{
+
+class ProgressList;
+
+class ProgressDialog : public QDialog
 {
     Q_OBJECT
+    
     public:
-        ProgressList(QWidget *parent);
-        virtual ~ProgressList();
+        ProgressDialog(QWidget *parent);
+        ~ProgressDialog();
         
         void addProgress(Logram::Progress *progress);
         void updateProgress(Logram::Progress *progress);
         void endProgress(Logram::Progress *progress);
         
-        int count() const;
-        void clear();
+        bool canceled();
+        
+    private slots:
+        void cancelClicked();
+        void hideElapsed();
+        void showElapsed();
+        
+    protected:
+        void closeEvent(QCloseEvent *event);
         
     private:
-        QHash<Logram::Progress *, ProgressData *> progresses;
-        QVBoxLayout *_layout;
-        int _count;
+        struct Private;
+        Private *d;
 };
+
+}
 
 #endif

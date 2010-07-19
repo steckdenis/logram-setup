@@ -1,5 +1,5 @@
 /*
- * donepage.h
+ * categoryview.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,30 +20,39 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __DONEPAGE_H__
-#define __DONEPAGE_H__
+#ifndef __CATEGORYVIEW_H__
+#define __CATEGORYVIEW_H__
 
-#include <QWizardPage>
-#include "ui_donepage.h"
+#include <QTreeWidget>
 
-class InstallWizard;
+namespace Logram
+{
+    class PackageSystem;
+}
 
-class DonePage : public QWizardPage, public Ui_donePage
+namespace LogramUi
+{
+
+class FilterInterface;
+
+class CategoryView : public QTreeWidget
 {
     Q_OBJECT
     
     public:
-        DonePage(InstallWizard *_wizard);
+        CategoryView(Logram::PackageSystem *ps, FilterInterface *interface, QWidget* parent = 0);
+        ~CategoryView();
         
-        void initializePage();
+        void reset();
         
     private slots:
-        void launchApp();
+        void updateFilter();
         
     private:
-        InstallWizard *wizard;
-        
-        void addMessage(const QIcon &icon, const QString &title, const QString &message);
+        struct Private;
+        Private *d;
 };
+
+}
 
 #endif

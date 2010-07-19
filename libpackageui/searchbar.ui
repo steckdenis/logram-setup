@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>searchBar</class>
+ <widget class="QWidget" name="searchBar">
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <widget class="QComboBox" name="cboFilter">
+     <item>
+      <property name="text">
+       <string>Tous les paquets</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Paquets installés</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Paquets non-installés</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Paquets pouvant être mis à jour</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Paquets orphelins</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="txtSearch"/>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btnSearch">
+     <property name="text">
+      <string>&amp;Rechercher</string>
+     </property>
+     <property name="default">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

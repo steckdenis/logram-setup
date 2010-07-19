@@ -1,5 +1,5 @@
 /*
- * actionpage.h
+ * searchbar.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,23 +20,35 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __ACTIONPAGE_H__
-#define __ACTIONPAGE_H__
+#ifndef __SEARCHBAR_H__
+#define __SEARCHBAR_H__
 
-#include <QWizardPage>
-#include "ui_actionpage.h"
+#include <QWidget>
+#include "ui_searchbar.h"
 
-class InstallWizard;
-
-class ActionPage : public QWizardPage, public Ui_actionPage
+namespace LogramUi
 {
-    public:
-        ActionPage(InstallWizard *_wizard);
-        
-        void initializePage();
 
+class FilterInterface;
+
+class SearchBar : public QWidget, private Ui_searchBar
+{
+    Q_OBJECT
+    
+    public:
+        SearchBar(FilterInterface *interface, QWidget *parent);
+        ~SearchBar();
+        
+        void setFocus();
+        
+    private slots:
+        void updateFilter();
+        
     private:
-        InstallWizard *wizard;
+        struct Private;
+        Private *d;
 };
+
+}
 
 #endif

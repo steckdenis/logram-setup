@@ -1,5 +1,5 @@
 /*
- * branchepage.h
+ * donepage.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,47 +20,33 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __BRANCHEPAGE_H__
-#define __BRANCHEPAGE_H__
+#ifndef __DONEPAGE_H__
+#define __DONEPAGE_H__
 
 #include <QWizardPage>
-#include "ui_branchepage.h"
+#include "ui_donepage.h"
 
-class InstallWizard;
-
-namespace Logram
+namespace LogramUi
 {
-    class PackageSystem;
-    class Solver;
-    class PackageList;
+    class InstallWizard;
 }
 
-class BranchePage : public QWizardPage, public Ui_branchePage
+class DonePage : public QWizardPage, public Ui_donePage
 {
     Q_OBJECT
     
     public:
-        BranchePage(InstallWizard *_wizard);
+        DonePage(LogramUi::InstallWizard *_wizard);
         
         void initializePage();
-        bool isComplete();
-        int nextId() const;
-        
-        void updateChoiceList();
         
     private slots:
-        void choiceUp();
-        void choiceSelect();
-
+        void launchApp();
+        
     private:
-        InstallWizard *wizard;
+        LogramUi::InstallWizard *wizard;
         
-        Logram::PackageSystem *ps;
-        Logram::Solver *solver;
-        Logram::PackageList *packageList;
-        
-        bool nextOk;
-        int level;
+        void addMessage(const QIcon &icon, const QString &title, const QString &message);
 };
 
 #endif

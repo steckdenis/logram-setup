@@ -1,5 +1,5 @@
 /*
- * licensepage.h
+ * utils.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,34 +20,29 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __LICENSEPAGE_H__
-#define __LICENSEPAGE_H__
+#ifndef __UTILS_H__
+#define __UTILS_H__
 
-#include <QWizardPage>
-#include <QVector>
-#include "ui_licensepage.h"
+#include <QString>
+#include <QByteArray>
+#include <QPixmap>
 
-class InstallWizard;
-class QCheckBox;
+#include <solver.h>
 
-class LicensePage : public QWizardPage, public Ui_licensePage
+namespace LogramUi
 {
-    Q_OBJECT
-    
-    public:
-        LicensePage(InstallWizard *_wizard);
-        
-        void initializePage();
-        bool isComplete();
-        bool validatePage();
-        
-    private slots:
-        void boxChecked();
 
+class Utils
+{
+    public:
+        static QPixmap pixmapFromData(const QByteArray &data, int width, int height);
+        static QString markdown(const QString &source);
+        static QString actionNameInf(Logram::Solver::Action action);
+        
     private:
-        InstallWizard *wizard;
-        QVector<QCheckBox *> checkBoxes;
-        bool nextOk;
+        Utils(){}
 };
+
+}
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * actionpage.cpp
+ * communicationdialog.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,37 +20,40 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include "actionpage.h"
-#include "installwizard.h"
-#include "mainwindow.h"
+#ifndef __COMMUNICATIONDIALOG_H__
+#define __COMMUNICATIONDIALOG_H__
 
-#include <databasepackage.h>
+#include <QDialog>
+#include <QVector>
+#include "ui_communicationdialog.h"
 
-using namespace Logram;
+class QAbstractButton;
 
-ActionPage::ActionPage(InstallWizard *_wizard) : QWizardPage(_wizard)
+namespace Logram
 {
-    wizard = _wizard;
-
-    setupUi(this);
+    class Communication;
+    class Package;
 }
 
-void ActionPage::initializePage()
+namespace LogramUi
 {
-    MainWindow *win = wizard->mainWindow();
-    QTreeWidgetItem *root = win->treeActions->invisibleRootItem();
+
+class CommunicationDialog : public QDialog, private Ui_CommunicationDialog
+{
+    Q_OBJECT
     
-    treeActions->clear();
-    
-    for (int i=0; i<root->childCount(); ++i)
-    {
-        PackageItem *item = static_cast<PackageItem *>(root->child(i));
+    public:
+        CommunicationDialog(Logram::Package *_pkg, Logram::Communication *_comm, QWidget* parent = 0);
+        ~CommunicationDialog();
         
-        if (!item) continue;
+    private slots:
+        void updateValues();
         
-        DatabasePackage *pkg = win->duplicatePackage(win->packageSystem(), item->package());
-        PackageItem *newItem = new PackageItem(pkg, treeActions, PackageItem::LargeActionList, false);
-        
-        treeActions->addTopLevelItem(newItem);
-    }
+    private:
+        struct Private;
+        Private *d;
+};
+
 }
+
+#endif

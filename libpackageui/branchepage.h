@@ -1,5 +1,5 @@
 /*
- * progressdialog.h
+ * branchepage.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,52 +20,50 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __PROGRESSDIALOG_H__
-#define __PROGRESSDIALOG_H__
+#ifndef __BRANCHEPAGE_H__
+#define __BRANCHEPAGE_H__
 
-#include <QHash>
-#include <QDialog>
+#include <QWizardPage>
+#include "ui_branchepage.h"
 
-#include <packagesystem.h>
+namespace LogramUi
+{
+    class InstallWizard;
+}
 
-class MainWindow;
-class QVBoxLayout;
-class QPushButton;
-class QTimer;
-class ProgressList;
-struct ProgressData;
+namespace Logram
+{
+    class PackageSystem;
+    class Solver;
+    class PackageList;
+}
 
-class ProgressDialog : public QDialog
+class BranchePage : public QWizardPage, public Ui_branchePage
 {
     Q_OBJECT
     
     public:
-        ProgressDialog(QWidget *parent);
-        ~ProgressDialog();
+        BranchePage(LogramUi::InstallWizard *_wizard);
         
-        void addProgress(Logram::Progress *progress);
-        void updateProgress(Logram::Progress *progress);
-        void endProgress(Logram::Progress *progress);
+        void initializePage();
+        bool isComplete();
+        int nextId() const;
         
-        bool canceled();
+        void updateChoiceList();
         
     private slots:
-        void cancelClicked();
-        void hideElapsed();
-        void showElapsed();
-        
-    protected:
-        void closeEvent(QCloseEvent *event);
-        
+        void choiceUp();
+        void choiceSelect();
+
     private:
-        QTimer *closeTimer, *showTimer;
-        Logram::Progress *progressToDelete;
+        LogramUi::InstallWizard *wizard;
         
-        bool _canceled;
-        QPushButton *btnCancel;
-        QVBoxLayout *_layout;
+        Logram::PackageSystem *ps;
+        Logram::Solver *solver;
+        Logram::PackageList *packageList;
         
-        ProgressList *list;
+        bool nextOk;
+        int level;
 };
 
 #endif

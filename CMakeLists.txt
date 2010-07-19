@@ -21,6 +21,7 @@ install(FILES ${QM_FILES} DESTINATION /usr/share/qt4/translations/)
 
 # Build everything
 add_subdirectory(libpackage)
+add_subdirectory(libpackageui)
 add_subdirectory(lpm)
 add_subdirectory(buildserver)
-add_subdirectory(pkgui)
+#add_subdirectory(pkgui)

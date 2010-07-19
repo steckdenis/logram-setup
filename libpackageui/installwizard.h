@@ -24,20 +24,7 @@
 #define __INSTALLWIZARD_H__
 
 #include <QWizard>
-
-enum PageIds
-{
-    ActionList,
-    Branches,
-    Licenses,
-    Install,
-    Done
-};
-
-#include <package.h>
-
-class MainWindow;
-class ProgressList;
+#include <QVector>
 
 namespace Logram
 {
@@ -45,7 +32,17 @@ namespace Logram
     class PackageList;
     class PackageSystem;
     class Progress;
+    class Package;
 }
+
+class ActionPage;
+class BranchePage;
+class LicensePage;
+class InstallPage;
+class DonePage;
+
+namespace LogramUi
+{
 
 struct PackageMessage
 {
@@ -58,21 +55,18 @@ class InstallWizard : public QWizard
 {
     Q_OBJECT
     
+    friend class ::ActionPage;
+    friend class ::BranchePage;
+    friend class ::LicensePage;
+    friend class ::InstallPage;
+    friend class ::DonePage;
+    
     public:
-        InstallWizard(MainWindow *parent);
+        InstallWizard(Logram::PackageSystem *ps, QWidget *parent);
+        ~InstallWizard();
         
-        void solverError();
-        
-        MainWindow *mainWindow() const;
-        Logram::Solver *solver() const;
-        Logram::PackageList *packageList() const;
-        Logram::PackageSystem *packageSystem() const;
-        
-        void setSolver(Logram::Solver *_solver);
-        void setPackageList(Logram::PackageList *_packageList);
-        
-        void addMessage(const PackageMessage &message);
-        QList<PackageMessage> packageMessages() const;
+        void addPackage(Logram::Package *package);
+        QVector<Logram::Package *> packages() const;
         
         enum PageIds
         {
@@ -83,17 +77,27 @@ class InstallWizard : public QWizard
             Done
         };
         
+    private:
+        void solverError();
+        
+        Logram::Solver *solver() const;
+        Logram::PackageSystem *packageSystem() const;
+        Logram::PackageList *packageList() const;
+        
+        void setSolver(Logram::Solver *solver);
+        void setPackageList(Logram::PackageList *packageList);
+        
+        void addMessage(const PackageMessage &message);
+        QList<PackageMessage> messages() const;
+        
     private slots:
         void pageChanged(int id);
         
     private:
-        MainWindow *win;
-        
-        Logram::Solver *_solver;
-        Logram::PackageList *_packageList;
-        Logram::PackageSystem *ps;
-        
-        QList<PackageMessage> messages;
+        struct Private;
+        Private *d;
 };
+
+}
 
 #endif

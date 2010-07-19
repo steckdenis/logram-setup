@@ -1,5 +1,5 @@
 /*
- * installpage.h
+ * actionpage.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,47 +20,26 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __INSTALLPAGE_H__
-#define __INSTALLPAGE_H__
+#ifndef __ACTIONPAGE_H__
+#define __ACTIONPAGE_H__
 
 #include <QWizardPage>
+#include "ui_actionpage.h"
 
-#include "ui_installpage.h"
-#include "progresslist.h"
-
-class InstallWizard;
-class MainWindow;
-
-namespace Logram
+namespace LogramUi
 {
-    class PackageSystem;
-    class PackageList;
-    class Package;
-    class Communication;
+    class InstallWizard;
 }
 
-class InstallPage : public QWizardPage, public Ui_installPage
+class ActionPage : public QWizardPage, public Ui_actionPage
 {
-    Q_OBJECT
-    
     public:
-        InstallPage(InstallWizard *_wizard);
+        ActionPage(LogramUi::InstallWizard *_wizard);
         
         void initializePage();
-        
-    private slots:
-        void communication(Logram::Package *sender, Logram::Communication *comm);
-        void progress(Logram::Progress *progress);
-        void wizardRejected();
 
     private:
-        InstallWizard *wizard;
-        ProgressList *progressList;
-        MainWindow *win;
-        
-        Logram::PackageSystem *ps;
-        Logram::PackageList *packageList;
-        bool _cancel;
+        LogramUi::InstallWizard *wizard;
 };
 
 #endif

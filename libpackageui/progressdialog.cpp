@@ -33,44 +33,58 @@
 #include <QApplication>
 
 using namespace Logram;
+using namespace LogramUi;
+
+struct ProgressDialog::Private
+{
+    QTimer *closeTimer, *showTimer;
+    Logram::Progress *progressToDelete;
+    
+    bool canceled;
+    QPushButton *btnCancel;
+    QVBoxLayout *layout;
+    
+    ProgressList *list;
+};
 
 ProgressDialog::ProgressDialog(QWidget *parent) : QDialog(parent)
 {
-    _canceled = false;
-    progressToDelete = 0;
+    d = new Private;
+    d->canceled = false;
+    d->progressToDelete = 0;
     
     // Créer le bouton d'annulation
-    btnCancel = new QPushButton(this);
-    btnCancel->setText(tr("&Annuler"));
-    btnCancel->setIcon(QIcon::fromTheme("dialog-cancel"));
+    d->btnCancel = new QPushButton(this);
+    d->btnCancel->setText(tr("&Annuler"));
+    d->btnCancel->setIcon(QIcon::fromTheme("dialog-cancel"));
     
-    connect(btnCancel, SIGNAL(clicked(bool)), this, SLOT(cancelClicked()));
+    connect(d->btnCancel, SIGNAL(clicked(bool)), this, SLOT(cancelClicked()));
     
     // Initialiser la liste des progressions
-    list = new ProgressList(this);
+    d->list = new ProgressList(this);
     
     // Remplir les layouts
-    _layout = new QVBoxLayout(this);
-    setLayout(_layout);
+    d->layout = new QVBoxLayout(this);
+    setLayout(d->layout);
     
     QHBoxLayout *hl = new QHBoxLayout();
     
     hl->addStretch();
-    hl->addWidget(btnCancel);
+    hl->addWidget(d->btnCancel);
     
-    _layout->addWidget(list);
-    _layout->addStretch();
-    _layout->addLayout(hl);
+    d->layout->addWidget(d->list);
+    d->layout->addStretch();
+    d->layout->addLayout(hl);
     
     // Timer pour fermer la fenêtre 1 seconde après la dernière progression
-    closeTimer = new QTimer(this);
-    showTimer = new QTimer(this);
+    d->closeTimer = new QTimer(this);
+    d->showTimer = new QTimer(this);
     
-    closeTimer->setSingleShot(true);
-    showTimer->setSingleShot(true);
+    d->closeTimer->setSingleShot(true);
+    d->showTimer->setSingleShot(true);
     
-    connect(closeTimer, SIGNAL(timeout()), this, SLOT(hideElapsed()));
-    connect(showTimer, SIGNAL(timeout()), this, SLOT(showElapsed()));
+    connect(d->closeTimer, SIGNAL(timeout()), this, SLOT(hideElapsed()));
+    connect(d->showTimer, SIGNAL(timeout()), this, SLOT(showElapsed()));
 }
 
 ProgressDialog::~ProgressDialog()
@@ -80,54 +94,54 @@ ProgressDialog::~ProgressDialog()
 
 void ProgressDialog::addProgress(Progress *progress)
 {
-    _canceled = false;
+    d->canceled = false;
     
     // S'assurer qu'on ne ferme pas la fenêtre
-    closeTimer->stop();
+    d->closeTimer->stop();
     
-    if (progressToDelete != 0)
+    if (d->progressToDelete != 0)
     {
-        list->endProgress(progressToDelete);
-        progressToDelete = 0;
+        d->list->endProgress(d->progressToDelete);
+        d->progressToDelete = 0;
     }
     
     // Bien afficher la fenêtre, 1/2 après le début de la progression, pour que celles qui sont rapide (DL de métadonnées) ne
     // gênent pas
-    if (!isVisible() && !showTimer->isActive())
+    if (!isVisible() && !d->showTimer->isActive())
     {
-        showTimer->start(500);
+        d->showTimer->start(500);
     }
     
-    list->addProgress(progress);
+    d->list->addProgress(progress);
 }
 
 void ProgressDialog::updateProgress(Progress *progress)
 {
     QApplication::processEvents();
     
-    if (_canceled) return;
+    if (d->canceled) return;
     
-    list->updateProgress(progress);
+    d->list->updateProgress(progress);
 }
 
 void ProgressDialog::endProgress(Progress *progress)
 {
     // Si on n'a plus de progressions
-    if (list->count() == 1)
+    if (d->list->count() == 1)
     {
         // On ne retire pas la dernière progression, il faut que l'utilisateur la voie. On attend une seconde
-        closeTimer->start(1000);
-        progressToDelete = progress;
+        d->closeTimer->start(1000);
+        d->progressToDelete = progress;
         
         return;
     }
     
-    list->endProgress(progress);
+    d->list->endProgress(progress);
 }
 
 bool ProgressDialog::canceled()
 {
-    return _canceled;
+    return d->canceled;
 }
 
 void ProgressDialog::closeEvent(QCloseEvent *event)
@@ -137,11 +151,11 @@ void ProgressDialog::closeEvent(QCloseEvent *event)
 
 void ProgressDialog::cancelClicked()
 {
-    _canceled = true;
+    d->canceled = true;
     hide();
     
     // Supprimer les progressions
-    list->clear();
+    d->list->clear();
     
     emit rejected();
 }
@@ -149,7 +163,7 @@ void ProgressDialog::cancelClicked()
 void ProgressDialog::hideElapsed()
 {
     // Supprimer la dernière progression, si elle existe
-    list->endProgress(progressToDelete);
+    d->list->endProgress(d->progressToDelete);
     
     // Fermer
     hide();
@@ -158,7 +172,7 @@ void ProgressDialog::hideElapsed()
 
 void ProgressDialog::showElapsed()
 {
-    if (closeTimer->isActive())
+    if (d->closeTimer->isActive())
     {
         // Ne pas afficher une boîte de dialogue pour la fermer ensuite
         return;

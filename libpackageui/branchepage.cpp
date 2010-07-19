@@ -22,17 +22,19 @@
 
 #include "branchepage.h"
 #include "installwizard.h"
-#include "mainwindow.h"
 #include "actionpage.h"
 
 #include <packagesystem.h>
 #include <solver.h>
 #include <packagelist.h>
+#include <package.h>
+#include <databasepackage.h>
 
 #include <QGridLayout>
 #include <QtDebug>
 
 using namespace Logram;
+using namespace LogramUi;
 
 static QWidget *choiceWidget(QWidget *parent, bool first, const QString &downloadString, const QString &installString, const QString &shortDesc, const QString &name, const QString &version, const QString &updateVersion, Solver::Action action, int flags);
 
@@ -80,18 +82,19 @@ void BranchePage::initializePage()
     // On ne peut pas passer à l'étape suivante tant que tout n'est pas prêt
     nextOk = false;
     
+    // Suggestions
     ActionPage *actPage = static_cast<ActionPage *>(wizard->page(InstallWizard::Actions));
-    QTreeWidgetItem *root = actPage->treeActions->invisibleRootItem();
     
     solver->setInstallSuggests(actPage->chkInstallSuggests->isEnabled());
     
-    for (int i=0; i<root->childCount(); ++i)
+    // Liste des paquets
+    QVector<Package *> packages = wizard->packages();
+    
+    for (int i=0; i<packages.count(); ++i)
     {
-        PackageItem *item = static_cast<PackageItem *>(root->child(i));
+        Package *pkg = packages.at(i);
         
-        if (!item) continue;
-        
-        solver->addPackage(item->package()->name() + "=" + item->package()->version(), item->package()->action());
+        solver->addPackage(pkg->name() + "=" + pkg->version(), pkg->action());
     }
     
     // Résoudre les dépendances et peser
@@ -220,15 +223,11 @@ void BranchePage::updateChoiceList()
         }
         else if (pkg->action() == Solver::Update)
         {
-            Package *other = pkg->upgradePackage();
+            DatabasePackage *other = pkg->upgradePackage();
             
             if (other != 0)
             {
-                if (other->origin() != Package::File)
-                {
-                    pdlsize += other->downloadSize();
-                }
-                
+                pdlsize += other->downloadSize();
                 pinstsize = other->installSize() - pkg->installSize();
             }
         }
