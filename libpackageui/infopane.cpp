@@ -52,6 +52,8 @@ InfoPane::InfoPane(QWidget* parent): QTabWidget(parent)
     
     // Icônes
     d->ui->btnFlags->setIcon(QIcon::fromTheme("flag"));
+    
+    connect(d->ui->btnFlags, SIGNAL(clicked(bool)), this, SLOT(showFlags()));
 }
 
 InfoPane::~InfoPane()
