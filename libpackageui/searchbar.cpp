@@ -22,6 +22,7 @@
 
 #include "searchbar.h"
 #include "filterinterface.h"
+#include "ui_searchbar.h"
 
 #include <QIcon>
 
@@ -30,43 +31,45 @@ using namespace LogramUi;
 struct SearchBar::Private
 {
     FilterInterface *interface;
+    Ui_searchBar *ui;
 };
 
 SearchBar::SearchBar(FilterInterface* interface, QWidget* parent): QWidget(parent)
 {
     d = new Private;
     d->interface = interface;
+    d->ui = new Ui_searchBar;
     
-    setupUi(this);
+    d->ui->setupUi(this);
     
     // Signaux
-    connect(cboFilter, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFilter()));
-    connect(txtSearch, SIGNAL(returnPressed()), this, SLOT(updateFilter()));
-    connect(btnSearch, SIGNAL(clicked(bool)), this, SLOT(updateFilter()));
+    connect(d->ui->cboFilter, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFilter()));
+    connect(d->ui->txtSearch, SIGNAL(returnPressed()), this, SLOT(updateFilter()));
+    connect(d->ui->btnSearch, SIGNAL(clicked(bool)), this, SLOT(updateFilter()));
     
     // Icônes
-    btnSearch->setIcon(QIcon::fromTheme("edit-find"));
+    d->ui->btnSearch->setIcon(QIcon::fromTheme("edit-find"));
     
-    for (int i=0; i<cboFilter->count(); ++i)
+    for (int i=0; i<d->ui->cboFilter->count(); ++i)
     {
         FilterInterface::StatusFilter filter = (FilterInterface::StatusFilter)i;
         
         switch (filter)
         {
             case FilterInterface::NoFilter:
-                cboFilter->setItemIcon(i, QIcon::fromTheme("view-filter"));
+                d->ui->cboFilter->setItemIcon(i, QIcon::fromTheme("view-filter"));
                 break;
             case FilterInterface::Installed:
-                cboFilter->setItemIcon(i, QIcon(":/images/pkg-install.png"));
+                d->ui->cboFilter->setItemIcon(i, QIcon(":/images/pkg-install.png"));
                 break;
             case FilterInterface::NotInstalled:
-                cboFilter->setItemIcon(i, QIcon(":/images/package.png"));
+                d->ui->cboFilter->setItemIcon(i, QIcon(":/images/package.png"));
                 break;    
             case FilterInterface::Updateable:
-                cboFilter->setItemIcon(i, QIcon(":/images/pkg-update.png"));
+                d->ui->cboFilter->setItemIcon(i, QIcon(":/images/pkg-update.png"));
                 break;
             case FilterInterface::Orphan:
-                cboFilter->setItemIcon(i, QIcon(":/images/pkg-purge.png"));
+                d->ui->cboFilter->setItemIcon(i, QIcon(":/images/pkg-purge.png"));
                 break;
         }
     }
@@ -74,18 +77,19 @@ SearchBar::SearchBar(FilterInterface* interface, QWidget* parent): QWidget(paren
 
 SearchBar::~SearchBar()
 {
+    delete d->ui;
     delete d;
 }
 
 void SearchBar::setFocus()
 {
-    txtSearch->setFocus();
+    d->ui->txtSearch->setFocus();
 }
 
 void SearchBar::updateFilter()
 {
-    d->interface->setNamePattern(txtSearch->text());
-    d->interface->setStatusFilter((FilterInterface::StatusFilter)cboFilter->currentIndex());
+    d->interface->setNamePattern(d->ui->txtSearch->text());
+    d->interface->setStatusFilter((FilterInterface::StatusFilter)d->ui->cboFilter->currentIndex());
     
     d->interface->updateViews();
 }

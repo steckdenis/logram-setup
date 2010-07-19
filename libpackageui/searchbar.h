@@ -24,14 +24,15 @@
 #define __SEARCHBAR_H__
 
 #include <QWidget>
-#include "ui_searchbar.h"
+
+class Ui_searchBar;
 
 namespace LogramUi
 {
 
 class FilterInterface;
 
-class SearchBar : public QWidget, private Ui_searchBar
+class SearchBar : public QWidget
 {
     Q_OBJECT
     

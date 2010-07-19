@@ -21,9 +21,10 @@
  */
 
 #include "mainwindow.h"
-#include "installwizard.h"
+#include <installwizard.h>
 
 using namespace Logram;
+using namespace LogramUi;
 
 static DatabasePackage *itemPackage(QTreeWidget *treePackages, PackageItem **item)
 {
@@ -187,9 +188,11 @@ void MainWindow::deselectPackage()
 
 void MainWindow::applyList()
 {
-    InstallWizard wizard(this);
+    InstallWizard wizard(ps, this);
     
+    disableProgressions();
     wizard.exec();
+    enableProgressions();
     
     // Liste appliquée, fini
     cancelList();

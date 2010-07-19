@@ -43,7 +43,7 @@ class CategoryView : public QTreeWidget
         CategoryView(Logram::PackageSystem *ps, FilterInterface *interface, QWidget* parent = 0);
         ~CategoryView();
         
-        void reset();
+        void reload();
         
     private slots:
         void updateFilter();

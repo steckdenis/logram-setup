@@ -21,9 +21,6 @@
  */
 
 #include "mainwindow.h"
-#include "progressdialog.h"
-#include "communicationdialog.h"
-#include "markdown/markdown.h"
 
 #include <QIcon>
 #include <QMessageBox>
@@ -31,10 +28,18 @@
 #include <communication.h>
 #include <packagemetadata.h>
 
+#include <progressdialog.h>
+#include <communicationdialog.h>
+#include <infopane.h>
+#include <searchbar.h>
+#include <categoryview.h>
+#include <filterinterface.h>
+
 #include <string>
 #include <sstream>
 
 using namespace Logram;
+using namespace LogramUi;
 
 MainWindow::MainWindow() : QMainWindow(0)
 {
@@ -43,9 +48,38 @@ MainWindow::MainWindow() : QMainWindow(0)
     ps = 0;
     setupUi(this);
     
+    // Initialiser la gestion des paquets
+    ps = new PackageSystem(this);
+    
+    ps->loadConfig();
+    connect(ps, SIGNAL(communication(Logram::Package *, Logram::Communication *)), 
+            this, SLOT(communication(Logram::Package *, Logram::Communication *)));
+    connect(ps, SIGNAL(progress(Logram::Progress *)),
+            this, SLOT(progress(Logram::Progress *)));
+    
+    if (!ps->init())
+    {
+        // TODO psError();
+        _error = true;
+        return;
+    }
+    
     // Progressions
     progressDialog = new ProgressDialog(this);
     progressDialog->setModal(true);
+    
+    // Ajouter les contrôles LogramUi à la fenêtre
+    filterInterface = new FilterInterface(this);
+    connect(filterInterface, SIGNAL(dataChanged()), this, SLOT(searchPackages()));
+    
+    searchBar = new SearchBar(filterInterface, this);
+    mainLayout->insertWidget(0, searchBar);
+    
+    infoPane = new InfoPane(this);
+    docInfos->setWidget(infoPane);
+    
+    sections = new CategoryView(ps, filterInterface, this);
+    docSections->setWidget(sections);
     
     // Définir les icônes
     setWindowIcon(QIcon(":/images/icon.svg"));
@@ -63,35 +97,8 @@ MainWindow::MainWindow() : QMainWindow(0)
     
     btnListApply->setIcon(QIcon::fromTheme("dialog-ok-apply"));
     btnListClean->setIcon(QIcon::fromTheme("dialog-cancel"));
-    btnSearch->setIcon(QIcon::fromTheme("edit-find"));
-    btnFlags->setIcon(QIcon::fromTheme("flag"));
     
-    txtSearch->setFocus();
-    
-    // Icônes de la liste des filtres de paquets
-    for (int i=0; i<cboFilter->count(); ++i)
-    {
-        PackageFilter filter = (PackageFilter)i;
-        
-        switch (filter)
-        {
-            case NoFilter:
-                cboFilter->setItemIcon(i, QIcon::fromTheme("view-filter"));
-                break;
-            case Installed:
-                cboFilter->setItemIcon(i, QIcon(":/images/pkg-install.png"));
-                break;
-            case NotInstalled:
-                cboFilter->setItemIcon(i, QIcon(":/images/package.png"));
-                break;    
-            case Updateable:
-                cboFilter->setItemIcon(i, QIcon(":/images/pkg-update.png"));
-                break;
-            case Orphan:
-                cboFilter->setItemIcon(i, QIcon(":/images/pkg-purge.png"));
-                break;
-        }
-    }
+    searchBar->setFocus();
         
     // Ajouter les actions
     treePackages->addAction(actInstallPackage);
@@ -99,47 +106,14 @@ MainWindow::MainWindow() : QMainWindow(0)
     treePackages->addAction(actPurge);
     treePackages->addAction(actDeselect);
     
-    // Initialiser la gestion des paquets
-    ps = new PackageSystem(this);
-    
-    ps->loadConfig();
-    connect(ps, SIGNAL(communication(Logram::Package *, Logram::Communication *)), 
-            this, SLOT(communication(Logram::Package *, Logram::Communication *)));
-    connect(ps, SIGNAL(progress(Logram::Progress *)),
-            this, SLOT(progress(Logram::Progress *)));
-    
-    if (!ps->init())
-    {
-        psError();
-        _error = true;
-        return;
-    }
-    
-    // Remplir les sections
-    populateSections();
-    
     // Remplir la liste des paquets
-    displayPackages(NoFilter, QString());
+    searchPackages();
     
     // Connexion des signaux
     connect(actAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(actQuit, SIGNAL(triggered(bool)), this, SLOT(close()));
     connect(treePackages, SIGNAL(itemActivated(QTreeWidgetItem *, int)), 
             this,         SLOT(itemActivated(QTreeWidgetItem *)));
-    connect(lblTitle, SIGNAL(linkActivated(const QString &)),
-            this,       SLOT(websiteActivated(const QString &)));
-    connect(lblLicense, SIGNAL(linkActivated(const QString &)),
-            this,         SLOT(licenseActivated(const QString &)));
-    connect(btnFlags, SIGNAL(clicked(bool)),
-            this,       SLOT(showFlags()));
-    connect(btnSearch, SIGNAL(clicked(bool)),
-            this,        SLOT(searchPackages()));
-    connect(txtSearch, SIGNAL(returnPressed()),
-            this,        SLOT(searchPackages()));
-    connect(cboFilter, SIGNAL(currentIndexChanged(int)),
-            this,        SLOT(searchPackages()));
-    connect(treeSections, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)),
-            this,           SLOT(searchPackages()));
     connect(actInstallPackage, SIGNAL(triggered(bool)),
             this,                SLOT(installPackage()));
     connect(actRemovePackage, SIGNAL(triggered(bool)),
@@ -229,50 +203,27 @@ void MainWindow::enableProgressions()
     _progresses = true;
 }
 
-PackageSystem* MainWindow::packageSystem() const
-{
-    return ps;
-}
-
 void MainWindow::databaseUpdate()
 {
     if (!ps->update())
     {
-        psError();
+        // TODO psError();
         return;
     }
     
     if (!ps->reset())
     {
-        psError();
+        // TODO psError();
         return;
     }
     
-    populateSections();
+    sections->reload();
     searchPackages();
     
     QMessageBox::information(this, tr("Mise à jour de la base de donnée"), tr("La base de donnée a été mise à jour avec succès."));
 }
 
-QPixmap MainWindow::pixmapFromData(const QByteArray &data, int width, int height)
-{
-    QImage img = QImage::fromData(data);
-    return QPixmap::fromImage(img).scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-}
-
-QString MainWindow::markdown(const QString &source)
-{
-    std::string s = source.toStdString();
-    
-    markdown::Document doc(4);
-    doc.read(s);
-    
-    std::stringstream str;
-    doc.write(str);
-    
-    return QString::fromStdString(str.str());
-}
-
+/*
 void MainWindow::psError()
 {
     PackageError *err = ps->lastError();
@@ -354,6 +305,7 @@ void MainWindow::psError()
     
     QMessageBox::critical(this, tr("Erreur"), s);
 }
+*/
 
 void MainWindow::communication(Logram::Package *sender, Logram::Communication *comm)
 {

@@ -24,19 +24,21 @@
 #define __INFOPANE_H__
 
 #include <QTabWidget>
-#include "ui_infopane.h"
+
+class Ui_infoPane;
 
 namespace LogramUi
 {
 
 class PackageDataProviderInterface;
 
-class InfoPane : public QTabWidget, private Ui_infoPane
+class InfoPane : public QTabWidget
 {
     Q_OBJECT
     
     public:
         InfoPane(QWidget *parent);
+        ~InfoPane();
         
         void displayData(PackageDataProviderInterface *data);
         

@@ -53,7 +53,7 @@ LogramUi::CategoryView::CategoryView(Logram::PackageSystem* ps, FilterInterface*
     connect(this, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updateFilter()));
     
     // Peupler la vue
-    reset();
+    reload();
 }
 
 LogramUi::CategoryView::~CategoryView()
@@ -83,7 +83,7 @@ void CategoryView::updateFilter()
     d->interface->updateViews();
 }
 
-void LogramUi::CategoryView::reset()
+void LogramUi::CategoryView::reload()
 {
     clear();
     

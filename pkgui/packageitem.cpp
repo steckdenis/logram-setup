@@ -26,27 +26,12 @@
 #include <databasereader.h>
 #include <databasepackage.h>
 
+#include <utils.h>
+
 #include <QTreeWidget>
 
 using namespace Logram;
-
-static QString actionNameInf(Solver::Action act)
-{   
-    switch (act)
-    {
-        case Solver::Install:
-            return MainWindow::tr("Installer");
-            break;
-        case Solver::Remove:
-            return MainWindow::tr("Supprimer");
-            break;
-        case Solver::Purge:
-            return MainWindow::tr("Supprimer totalement");
-            break;
-        default:
-            break;
-    }
-}
+using namespace LogramUi;
 
 PackageItem::PackageItem(DatabasePackage* pkg, QTreeWidget* parent, PackageItem::Type type, bool expand) : QTreeWidgetItem(parent, QTreeWidgetItem::Type)
 {
@@ -131,16 +116,8 @@ void PackageItem::updateText(bool subElements)
     
     if (_type == SmallActionList)
     {
-        setText(1, actionNameInf(_pkg->action()));
+        setText(1, Utils::actionNameInf(_pkg->action()));
         setText(2, PackageSystem::fileSizeFormat(_pkg->downloadSize()) + "/" + PackageSystem::fileSizeFormat(_pkg->installSize()));
-    }
-    else if (_type == LargeActionList)
-    {
-        setText(1, _pkg->version());
-        setText(2, actionNameInf(_pkg->action()));
-        setText(3, PackageSystem::fileSizeFormat(_pkg->downloadSize()));
-        setText(4, PackageSystem::fileSizeFormat(_pkg->installSize()));
-        setText(5, _pkg->shortDesc());
     }
     else
     {

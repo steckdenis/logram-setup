@@ -26,7 +26,6 @@
 #include <QString>
 #include <QByteArray>
 #include <QVector>
-#include <package.h>
 
 namespace Logram
 {
@@ -42,7 +41,7 @@ class PackageDataProviderInterface
 {
     public:
         PackageDataProviderInterface() {}
-        virtual ~PackageDataProviderInterface() = 0;
+        virtual ~PackageDataProviderInterface() {};
         
         virtual QString name() const = 0;
         virtual QString version() const = 0;

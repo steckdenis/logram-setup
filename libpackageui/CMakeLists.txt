@@ -33,6 +33,7 @@ set(lgrpkgui_SRCS
         progresslist.cpp
         communicationdialog.cpp
         progressdialog.cpp
+        packagedataprovider.cpp
         markdown/markdown.cpp
         markdown/markdown-tokens.cpp
 )
@@ -56,6 +57,7 @@ set(lgrpkgui_HEADERS
         categoryview.h
         infopane.h
         packagedataproviderinterface.h
+        packagedataprovider.h
         installwizard.h
         progresslist.h
         communicationdialog.h

@@ -24,6 +24,7 @@
 #include "packagedataproviderinterface.h"
 #include "utils.h"
 #include "ui_flags.h"
+#include "ui_infopane.h"
 
 #include <package.h>
 #include <packagesystem.h>
@@ -39,50 +40,70 @@ using namespace LogramUi;
 struct InfoPane::Private
 {
     PackageDataProviderInterface *data;
+    Ui_infoPane *ui;
 };
 
-LogramUi::InfoPane::InfoPane(QWidget* parent): QTabWidget(parent)
+InfoPane::InfoPane(QWidget* parent): QTabWidget(parent)
 {
-    setupUi(this);
+    d = new Private;
+    d->data = 0;
+    d->ui = new Ui_infoPane;
+    d->ui->setupUi(this);
     
     // Icônes
-    btnFlags->setIcon(QIcon::fromTheme("flag"));
+    d->ui->btnFlags->setIcon(QIcon::fromTheme("flag"));
+}
+
+InfoPane::~InfoPane()
+{
+    if (d->data)
+    {
+        delete d->data;
+    }
+    
+    delete d->ui;
+    delete d;
 }
 
 void InfoPane::displayData(PackageDataProviderInterface* data)
 {
+    if (d->data)
+    {
+        delete d->data;
+    }
+    
     d->data = data;
     
     // Infos de base
-    lblTitle->setText("<a href=\"" + data->website() + "\">" + data->title() + "</a>");
-    lblShortDesc->setText(data->shortDesc());
-    lblSection->setText(data->section());
-    lblRepo->setText(data->repository() + "»" + data->distribution());
-    lblDownload->setText(PackageSystem::fileSizeFormat(data->downloadSize()));
-    lblInstall->setText(PackageSystem::fileSizeFormat(data->installSize()));
-    lblLicense->setText("<a href=\"" + data->license() + "\">" + data->license() + "</a>");
+    d->ui->lblTitle->setText("<a href=\"" + data->website() + "\">" + data->title() + "</a>");
+    d->ui->lblShortDesc->setText(data->shortDesc());
+    d->ui->lblSection->setText(data->section());
+    d->ui->lblRepo->setText(data->repository() + "»" + data->distribution());
+    d->ui->lblDownload->setText(PackageSystem::fileSizeFormat(data->downloadSize()));
+    d->ui->lblInstall->setText(PackageSystem::fileSizeFormat(data->installSize()));
+    d->ui->lblLicense->setText("<a href=\"" + data->license() + "\">" + data->license() + "</a>");
     
     // Icône
     QByteArray iconData = (data->iconData());
     
     if (iconData.isNull())
     {
-        lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(48, 48));
+        d->ui->lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(48, 48));
     }
     else
     {
-        lblIcon->setPixmap(Utils::pixmapFromData(iconData, 48, 48));
+        d->ui->lblIcon->setPixmap(Utils::pixmapFromData(iconData, 48, 48));
     }
     
     // Liste des versions
     QVector<PackageDataProviderInterface *> versions = data->versions();
-    listVersions->clear();
+    d->ui->listVersions->clear();
     
     for (int i=0; i<versions.count(); ++i)
     {
         PackageDataProviderInterface *version = versions.at(i);
         
-        QListWidgetItem *mitem = new QListWidgetItem(version->version(), listVersions);
+        QListWidgetItem *mitem = new QListWidgetItem(version->version(), d->ui->listVersions);
         
         if (version->flags() & PACKAGE_FLAG_INSTALLED)
         {
@@ -100,7 +121,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
             mitem->setFont(fnt);
         }
         
-        listVersions->addItem(mitem);
+        d->ui->listVersions->addItem(mitem);
         
         delete version;     // Plus besoin
     }
@@ -110,18 +131,18 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
     QPixmap starOn = QIcon::fromTheme("kde").pixmap(22, 22);
     QPixmap starOff = QIcon::fromTheme("kde").pixmap(22, 22, QIcon::Disabled);
     
-    lblStar1->setPixmap(kdeintegration > 0 ? starOn : starOff);
-    lblStar2->setPixmap(kdeintegration > 1 ? starOn : starOff);
-    lblStar3->setPixmap(kdeintegration > 2 ? starOn : starOff);
+    d->ui->lblStar1->setPixmap(kdeintegration > 0 ? starOn : starOff);
+    d->ui->lblStar2->setPixmap(kdeintegration > 1 ? starOn : starOff);
+    d->ui->lblStar3->setPixmap(kdeintegration > 2 ? starOn : starOff);
     
     // Description
-    txtDescr->setText(data->longDesc());
+    d->ui->txtDescr->setText(data->longDesc());
     
     // Dépendances
     QVector<Depend *> deps = data->depends();
     QHash<int, QTreeWidgetItem *> typeItems;
     
-    treeDepends->clear();
+    d->ui->treeDepends->clear();
     
     for (int i=0; i<deps.count(); ++i)
     {
@@ -130,7 +151,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
         
         if (parent == 0)
         {
-            parent = new QTreeWidgetItem(treeDepends);
+            parent = new QTreeWidgetItem(d->ui->treeDepends);
             parent->setIcon(0, QIcon::fromTheme("folder"));
             QString s;
             
@@ -157,7 +178,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
             }
             
             parent->setText(0, s);
-            treeDepends->addTopLevelItem(parent);
+            d->ui->treeDepends->addTopLevelItem(parent);
             typeItems.insert(dep->type(), parent);
         }
         
@@ -171,7 +192,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
     }
     
     // Historique
-    listChangelog->clear();
+    d->ui->listChangelog->clear();
     
     QVector<ChangeLogEntry *> entries = data->changelog();
     
@@ -179,8 +200,8 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
     {
         ChangeLogEntry *entry = entries.at(i);
         
-        QListWidgetItem *mitem = new QListWidgetItem(QString(), listChangelog);
-        listChangelog->addItem(mitem);
+        QListWidgetItem *mitem = new QListWidgetItem(QString(), d->ui->listChangelog);
+        d->ui->listChangelog->addItem(mitem);
         
         // Créer le widget
         // ----------------------------------------------------------------------------------
@@ -189,13 +210,13 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
         // |    | texte                                                                     |
         // ----------------------------------------------------------------------------------
         
-        QWidget *widget = new QWidget(listChangelog);
+        QWidget *widget = new QWidget(d->ui->listChangelog);
         widget->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
         QVBoxLayout *vlayout = new QVBoxLayout(widget);
         QHBoxLayout *hlayout = new QHBoxLayout();
         QHBoxLayout *hboxlayout2 = new QHBoxLayout();
         
-        QLabel *lblText = new QLabel(listChangelog);
+        QLabel *lblText = new QLabel(d->ui->listChangelog);
         lblText->setText(tr("<b>%1</b> (par <a href=\"mailto:%2\">%3</a> le %4 dans %5)")
             .arg(entry->version)
             .arg(entry->email)
@@ -205,11 +226,11 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
         
         connect(lblText, SIGNAL(linkActivated(const QString &)), this, SLOT(websiteActivated(const QString &)));
         
-        QLabel *lblIconType = new QLabel(listChangelog);
+        QLabel *lblIconType = new QLabel(d->ui->listChangelog);
         lblIconType->resize(22, 22);
         lblIconType->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
         
-        QLabel *lblType = new QLabel(listChangelog);
+        QLabel *lblType = new QLabel(d->ui->listChangelog);
         
         switch (entry->type)
         {
@@ -231,8 +252,8 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
                 break;
         }
         
-        QLabel *lblDescr = new QLabel(listChangelog);
-        lblDescr->setText(entry->text);
+        QLabel *lblDescr = new QLabel(d->ui->listChangelog);
+        lblDescr->setText(Utils::markdown(entry->text));
         
         // Peupler les layouts
         hlayout->addWidget(lblText);
@@ -240,7 +261,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
         hlayout->addWidget(lblIconType);
         hlayout->addWidget(lblType);
         
-        QFrame *line = new QFrame(listChangelog);
+        QFrame *line = new QFrame(d->ui->listChangelog);
         line->setFrameShape(QFrame::VLine);
         
         hboxlayout2->addSpacing(30);
@@ -252,7 +273,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
         
         widget->setLayout(vlayout);
         mitem->setSizeHint(widget->minimumSizeHint());
-        listChangelog->setItemWidget(mitem, widget);
+        d->ui->listChangelog->setItemWidget(mitem, widget);
     }
     
     // Fichiers
@@ -263,7 +284,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
     QStringList curParts, parts;
     int level;
     
-    treeFiles->clear();
+    d->ui->treeFiles->clear();
     
     for (int i=0; i<files.count(); ++i)
     {
@@ -295,8 +316,8 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
             
             if (i == 0)
             {
-                titem = new QTreeWidgetItem(treeFiles);
-                treeFiles->addTopLevelItem(titem);
+                titem = new QTreeWidgetItem(d->ui->treeFiles);
+                d->ui->treeFiles->addTopLevelItem(titem);
             }
             else
             {

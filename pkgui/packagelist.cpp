@@ -30,35 +30,25 @@
 #include <packagesystem.h>
 #include <databasereader.h>
 #include <databasepackage.h>
+#include <filterinterface.h>
 
 using namespace Logram;
+using namespace LogramUi;
 
 bool MainWindow::addPackage(DatabasePackage *pkg, bool expand)
 {
     // Filtrer en fonction de la section
-    QTreeWidgetItem *currentItem = treeSections->currentItem();
-    
-    if (currentItem != 0 && currentItem != noSectionFilterItem)
+    if (!filterInterface->repository().isNull() && pkg->repo() != filterInterface->repository() ||
+        !filterInterface->distribution().isNull() && pkg->distribution() != filterInterface->distribution() ||
+        !filterInterface->section().isNull() && pkg->section() != filterInterface->section())
     {
-        if (pkg->repo() != currentItem->data(0, Qt::UserRole).toString() || pkg->distribution() != currentItem->data(0, Qt::UserRole + 1).toString())
-        {
-            delete pkg;
-            return false;
-        }
-        
-        if (currentItem->parent() != 0)
-        {
-            // Filtrage également avec la section
-            SectionItem *i = static_cast<SectionItem *>(currentItem);
-            
-            if (pkg->section() != i->section())
-            {
-                delete pkg;
-                return false;
-            }
-        }
-        
-        // On ne peut n'avoir qu'une version par dépôt et distro, donc pas besoin de déployer
+        delete pkg;
+        return false;
+    }
+    
+    if (!filterInterface->distribution().isNull())
+    {
+        // Une seule version du paquet par distro
         expand = false;
     }
     
@@ -91,7 +81,7 @@ bool MainWindow::addPackage(DatabasePackage *pkg, bool expand)
     return true;    // Paquet inséré
 }
 
-void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
+void MainWindow::searchPackages()
 {
     QVector<int> ids, newids;
     DatabaseReader *dr = ps->databaseReader();
@@ -99,12 +89,15 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
     // Vider la vue
     treePackages->clear();
     
+    FilterInterface::StatusFilter filter = filterInterface->statusFilter();
+    QRegExp regex = filterInterface->regex();
+    
     // Si on ne prend que les paquets qu'on peut mettre à jour, c'est facile
-    if (filter == Updateable || filter == Orphan)
+    if (filter == FilterInterface::Updateable || filter == FilterInterface::Orphan)
     {
         QVector<DatabasePackage *> pkgs;
         
-        if (filter == Updateable)
+        if (filter == FilterInterface::Updateable)
         {
             pkgs = ps->upgradePackages();
         }
@@ -114,24 +107,22 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
         }
         
         // Filtrer en fonction de pattern
-        if (pattern.isEmpty())
+        if (regex.isEmpty())
         {
             for (int i=0; i<pkgs.count(); ++i)
             {
-                addPackage(pkgs.at(i), (filter == Updateable));
+                addPackage(pkgs.at(i), (filter == FilterInterface::Updateable));
             }
         }
         else
         {
-            QRegExp regex(pattern, Qt::CaseSensitive, QRegExp::Wildcard);
-            
             for (int i=0; i<pkgs.count(); ++i)
             {
                 DatabasePackage *pkg = pkgs.at(i);
                 
                 if (regex.exactMatch(pkg->name()))
                 {
-                    addPackage(pkg, (filter == Updateable));
+                    addPackage(pkg, (filter == FilterInterface::Updateable));
                 }
                 else
                 {
@@ -146,7 +137,7 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
     }
     
     // Trouver les IDs en fonction de ce qu'on demande
-    if (pattern.isEmpty())
+    if (regex.isEmpty())
     {
         // Tous les paquets
         ids.reserve(ps->packages());
@@ -158,25 +149,25 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
     }
     else
     {
-        if (!ps->packagesByName(QRegExp(pattern, Qt::CaseSensitive, QRegExp::Wildcard), ids))
+        if (!ps->packagesByName(regex, ids))
         {
             return;
         }
     }
     
     // Filtrer les paquets
-    if (filter == Installed || filter == NotInstalled)
+    if (filter == FilterInterface::Installed || filter == FilterInterface::NotInstalled)
     {
         for (int i=0; i<ids.count(); ++i)
         {
             int index = ids.at(i);
             _Package *pkg = dr->package(index);
             
-            if (filter == Installed && (pkg->flags & PACKAGE_FLAG_INSTALLED) != 0)
+            if (filter == FilterInterface::Installed && (pkg->flags & PACKAGE_FLAG_INSTALLED) != 0)
             {
                 newids.append(index);
             }
-            else if (filter == NotInstalled && (pkg->flags & PACKAGE_FLAG_INSTALLED) == 0)
+            else if (filter == FilterInterface::NotInstalled && (pkg->flags & PACKAGE_FLAG_INSTALLED) == 0)
             {
                 newids.append(index);
             }
@@ -200,7 +191,7 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
         
         // Ajouter ce paquet aux listes
         DatabasePackage *dpkg = ps->package(index);
-        if (!addPackage(dpkg, (filter != Installed))) continue;
+        if (!addPackage(dpkg, (filter != FilterInterface::Installed))) continue;
         
         // Trouver les paquets ayant le même nom, donc des versions différentes
         _Package *pkg = dr->package(index);
@@ -219,16 +210,4 @@ void MainWindow::displayPackages(PackageFilter filter, const QString &pattern)
     }
     
     treePackages->expandAll();
-}
-
-void MainWindow::searchPackages()
-{
-    QString pattern = txtSearch->text();
-    
-    if (!pattern.contains('*'))
-    {
-        pattern = "*" + pattern + "*";
-    }
-    
-    displayPackages((PackageFilter)cboFilter->currentIndex(), pattern);
 }

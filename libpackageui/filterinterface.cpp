@@ -35,6 +35,8 @@ struct FilterInterface::Private
 FilterInterface::FilterInterface(QObject* parent): QObject(parent)
 {
     d = new Private;
+    d->nameSyntax = QRegExp::Wildcard;
+    d->statusFilter = NoFilter;
 }
 
 FilterInterface::~FilterInterface()

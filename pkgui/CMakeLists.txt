@@ -12,6 +12,7 @@ add_definitions(
 include_directories(
         ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/libpackage
+        ${CMAKE_SOURCE_DIR}/libpackageui
         ${QT_QTCORE_INCLUDE_DIR}
         ${QT_QTGUI_INCLUDE_DIR}
         ${QT_QTXML_INCLUDE_DIR}
@@ -24,36 +25,16 @@ set(pkgui_SRCS
         main.cpp
         mainwindow.cpp
         packagelist.cpp
-        packageinfo.cpp
-        packagesection.cpp
-        actionlist.cpp
-        progressdialog.cpp
-        progresslist.cpp
         packageitem.cpp
-        installwizard.cpp
-        actionpage.cpp
-        branchepage.cpp
-        licensepage.cpp
-        installpage.cpp
-        donepage.cpp
-        communicationdialog.cpp
-        markdown/markdown.cpp
-        markdown/markdown-tokens.cpp
+        packageinfo.cpp
+        actionlist.cpp
 )
 
 set(pkgui_UIS
         mainwindow.ui
-        flags.ui
-        actionpage.ui
-        branchepage.ui
-        licensepage.ui
-        installpage.ui
-        donepage.ui
-        communicationdialog.ui
 )       
 
 qt4_automoc(${pkgui_SRCS})
-qt4_add_resources(pkgui_resources pkgui.qrc)
 qt4_wrap_ui(pkgui_ui ${pkgui_UIS})
 
 add_executable(pkgui ${pkgui_SRCS} ${pkgui_resources} ${pkgui_ui})
@@ -64,6 +45,7 @@ target_link_libraries(pkgui
         ${QT_QTXML_LIBRARY}
         ${Boost_LIBRARIES}
         lgrpkg
+        lgrpkgui
 )
 
 install(TARGETS pkgui DESTINATION /usr/bin)

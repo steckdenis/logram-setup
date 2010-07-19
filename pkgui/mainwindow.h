@@ -32,8 +32,14 @@
 
 #include "ui_mainwindow.h"
 
-class PackagesModel;
-class ProgressDialog;
+namespace LogramUi
+{
+    class ProgressDialog;
+    class InfoPane;
+    class SearchBar;
+    class CategoryView;
+    class FilterInterface;
+}
 
 class PackageItem : public QTreeWidgetItem
 {
@@ -42,7 +48,6 @@ class PackageItem : public QTreeWidgetItem
         {
             PackageList,        // Liste des paquets, fenêtre principale
             SmallActionList,    // Liste des actions, petite fenêtre à gauche
-            LargeActionList     // Liste des actions, quand on applique les changements
         };
         
         PackageItem(Logram::DatabasePackage *pkg, QTreeWidget *parent, Type type, bool expand);
@@ -82,27 +87,10 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         void psError();
         void enableProgressions();
         void disableProgressions();
-        Logram::PackageSystem *packageSystem() const;
         
         static Logram::DatabasePackage *duplicatePackage(Logram::PackageSystem *ps, Logram::DatabasePackage *pkg);
-        static QPixmap pixmapFromData(const QByteArray &data, int width, int height);
-        static QString markdown(const QString &source);
-        
-    public slots:
-        void progress(Logram::Progress *progress);
         
     private:
-        enum PackageFilter
-        {
-            NoFilter = 0,
-            Installed = 1,
-            NotInstalled = 2,
-            Updateable = 3,
-            Orphan = 4
-        };
-        
-        void displayPackages(PackageFilter filter, const QString &pattern);
-        void populateSections();
         bool addPackage(Logram::DatabasePackage* pkg, bool expand);
         void actionsForPackage(Logram::DatabasePackage *pkg);
         
@@ -110,12 +98,10 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         void removePackageFromList(Logram::DatabasePackage *pkg, QTreeWidget *treeActions);
         
     private slots:
+        void progress(Logram::Progress *progress);
         void communication(Logram::Package *sender, Logram::Communication *comm);
         
         void itemActivated(QTreeWidgetItem *item);
-        void licenseActivated(const QString &url);
-        void websiteActivated(const QString &url);
-        void showFlags();
         void searchPackages();
         
         void installPackage();
@@ -129,11 +115,14 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         
     private:
         Logram::PackageSystem *ps;
-        PackagesModel *model;
         bool _error, _progresses;
         QVector<Logram::DatabasePackage *> actionPackages;
-        ProgressDialog *progressDialog;
-        QTreeWidgetItem *noSectionFilterItem;
+        
+        LogramUi::ProgressDialog *progressDialog;
+        LogramUi::SearchBar *searchBar;
+        LogramUi::InfoPane *infoPane;
+        LogramUi::CategoryView *sections;
+        LogramUi::FilterInterface *filterInterface;
 };
 
 #endif
