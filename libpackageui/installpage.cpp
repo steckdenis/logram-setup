@@ -23,6 +23,7 @@
 #include "installpage.h"
 #include "installwizard.h"
 #include "progresslist.h"
+#include "utils.h"
 
 #include <packagesystem.h>
 #include <packagelist.h>
@@ -70,7 +71,7 @@ void InstallPage::initializePage()
     // Installer les paquets
     if (!packageList->process())
     {
-        // TODO win->psError();
+        Utils::packageSystemError(ps);
         
         delete packageList;
         delete wizard->solver();

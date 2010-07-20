@@ -29,6 +29,11 @@
 
 #include <solver.h>
 
+namespace Logram
+{
+    class PackageSystem;
+}
+
 namespace LogramUi
 {
 
@@ -38,6 +43,7 @@ class Utils
         static QPixmap pixmapFromData(const QByteArray &data, int width, int height);
         static QString markdown(const QString &source);
         static QString actionNameInf(Logram::Solver::Action action);
+        static void packageSystemError(Logram::PackageSystem *ps);
         
     private:
         Utils(){}

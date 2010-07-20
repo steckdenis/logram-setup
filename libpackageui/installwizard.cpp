@@ -21,6 +21,7 @@
  */
 
 #include "installwizard.h"
+#include "utils.h"
 
 #include "actionpage.h"
 #include "branchepage.h"
@@ -152,7 +153,7 @@ void LogramUi::InstallWizard::solverError()
         
         if (err != 0)
         {
-            // TODO win->psError();
+            Utils::packageSystemError(d->ps);
             return;
         }
         else
@@ -205,7 +206,7 @@ void LogramUi::InstallWizard::solverError()
         
             if (perr != 0)
             {
-                // TODO win->psError();
+                Utils::packageSystemError(d->ps);
                 return;
             }
             else

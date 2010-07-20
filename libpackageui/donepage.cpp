@@ -91,7 +91,7 @@ void DonePage::initializePage()
         
         if (md == 0)
         {
-            // TODO wizard->mainWindow()->psError();
+            Utils::packageSystemError(wizard->packageSystem());
             continue;
         }
         

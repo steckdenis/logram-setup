@@ -29,6 +29,7 @@ namespace Logram
 {
     class DatabasePackage;
     class PackageMetaData;
+    class PackageSystem;
 }
 
 namespace LogramUi
@@ -37,7 +38,7 @@ namespace LogramUi
 class PackageDataProvider : public PackageDataProviderInterface
 {
     public:
-        PackageDataProvider(Logram::DatabasePackage *package);
+        PackageDataProvider(Logram::DatabasePackage *package, Logram::PackageSystem *_ps);
         ~PackageDataProvider();
         
         virtual QString name() const;
@@ -69,6 +70,7 @@ class PackageDataProvider : public PackageDataProviderInterface
     private:
         Logram::DatabasePackage *pkg;
         Logram::PackageMetaData *md;
+        Logram::PackageSystem *ps;
 };
 
 }

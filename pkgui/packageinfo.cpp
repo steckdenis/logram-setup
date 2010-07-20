@@ -47,21 +47,11 @@ void MainWindow::itemActivated(QTreeWidgetItem *item)
     
     // Remplir les informations sur le paquet
     DatabasePackage *pkg = pitem->package();
-    PackageMetaData *md = pkg->metadata();
-    
-    if (md == 0)
-    {
-        // TODO psError();
-        
-        // Ne pas quitter, ça permet de garder Pkgui utilisable sans Internet
-    }
-    
-    if (md) md->setCurrentPackage(pkg->name());
     
     // Gérer les actions possibles avec ce paquet
     actionsForPackage(pkg);
     
-    PackageDataProvider *provider = new PackageDataProvider(pkg);
+    PackageDataProvider *provider = new PackageDataProvider(pkg, ps);
     infoPane->displayData(provider);
     
     docInfos->setWindowTitle(QString("%1 %2").arg(pkg->name(), pkg->version()));

@@ -34,6 +34,7 @@
 #include <searchbar.h>
 #include <categoryview.h>
 #include <filterinterface.h>
+#include <utils.h>
 
 #include <string>
 #include <sstream>
@@ -59,7 +60,7 @@ MainWindow::MainWindow() : QMainWindow(0)
     
     if (!ps->init())
     {
-        // TODO psError();
+        Utils::packageSystemError(ps);
         _error = true;
         return;
     }
@@ -207,13 +208,13 @@ void MainWindow::databaseUpdate()
 {
     if (!ps->update())
     {
-        // TODO psError();
+        Utils::packageSystemError(ps);
         return;
     }
     
     if (!ps->reset())
     {
-        // TODO psError();
+        Utils::packageSystemError(ps);
         return;
     }
     
@@ -222,90 +223,6 @@ void MainWindow::databaseUpdate()
     
     QMessageBox::information(this, tr("Mise à jour de la base de donnée"), tr("La base de donnée a été mise à jour avec succès."));
 }
-
-/*
-void MainWindow::psError()
-{
-    PackageError *err = ps->lastError();
-    QString s;
-    
-    if (err == 0)
-    {
-        s = tr("Pas d'erreur ou erreur inconnue");
-    }
-    else
-    {
-        switch (err->type)
-        {
-            case PackageError::OpenFileError:
-                s = tr("Impossible d'ouvrir le fichier ");
-                break;
-
-            case PackageError::MapFileError:
-                s = tr("Impossible de mapper le fichier ");
-                break;
-
-            case PackageError::ProcessError:
-                s = tr("Erreur dans la commande ");
-                break;
-
-            case PackageError::DownloadError:
-                s = tr("Impossible de télécharger ");
-                break;
-
-            case PackageError::ScriptException:
-                s = tr("Erreur dans le QtScript ");
-                break;
-                
-            case PackageError::SignatureError:
-                s = tr("Mauvaise signature GPG du fichier ");
-                break;
-
-            case PackageError::SHAError:
-                s = tr("Mauvaise somme SHA1, fichier corrompu : ");
-                break;
-
-            case PackageError::PackageNotFound:
-                s = tr("Paquet inexistant : ");
-                break;
-
-            case PackageError::BadDownloadType:
-                s = tr("Mauvais type de téléchargement, vérifier sources.list : ");
-                break;
-
-            case PackageError::OpenDatabaseError:
-                s = tr("Impossible d'ouvrir la base de donnée : ");
-                break;
-
-            case PackageError::QueryError:
-                s = tr("Erreur dans la requête : ");
-                break;
-
-            case PackageError::SignError:
-                s = tr("Impossible de vérifier la signature : ");
-                break;
-                
-            case PackageError::InstallError:
-                s = tr("Impossible d'installer le paquet ");
-                break;
-
-            case PackageError::ProgressCanceled:
-                s = tr("Opération annulée : ");
-                break;
-        }
-    }
-    
-    s += err->info;
-    
-    if (!err->more.isEmpty())
-    {
-        s += "<br /><br />";
-        s += err->more;
-    }
-    
-    QMessageBox::critical(this, tr("Erreur"), s);
-}
-*/
 
 void MainWindow::communication(Logram::Package *sender, Logram::Communication *comm)
 {

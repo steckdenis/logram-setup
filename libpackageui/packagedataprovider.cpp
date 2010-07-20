@@ -21,6 +21,7 @@
  */
 
 #include "packagedataprovider.h"
+#include "utils.h"
 
 #include <databasepackage.h>
 #include <packagemetadata.h>
@@ -28,14 +29,15 @@
 using namespace Logram;
 using namespace LogramUi;
 
-PackageDataProvider::PackageDataProvider(DatabasePackage* package)
+PackageDataProvider::PackageDataProvider(DatabasePackage* package, PackageSystem* _ps)
 {
     pkg = package;
     md = pkg->metadata();
+    ps = _ps;
     
     if (md == 0)
     {
-        // TODO: psError
+        Utils::packageSystemError(ps);
     }
     else
     {
@@ -165,14 +167,14 @@ QVector<PackageDataProviderInterface *> PackageDataProvider::versions() const
         
         for (int i=0; i<v.count(); ++i)
         {
-            PackageDataProvider *provider = new PackageDataProvider(v.at(i));
+            PackageDataProvider *provider = new PackageDataProvider(v.at(i), ps);
             
             rs.append(provider);
         }
     }
     else
     {
-        PackageDataProvider *provider = new PackageDataProvider(pkg);
+        PackageDataProvider *provider = new PackageDataProvider(pkg, ps);
         
         rs.append(provider);
     }

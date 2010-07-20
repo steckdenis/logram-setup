@@ -25,6 +25,9 @@
 
 #include <QImage>
 #include <QApplication>
+#include <QMessageBox>
+
+#include <packagesystem.h>
 
 #include <string>
 #include <sstream>
@@ -67,4 +70,86 @@ QString Utils::actionNameInf(Logram::Solver::Action action)
         default:
             break;
     }
+}
+
+void Utils::packageSystemError(PackageSystem* ps)
+{
+    PackageError *err = ps->lastError();
+    QString s;
+    
+    if (err == 0)
+    {
+        s = QApplication::translate("Utils", "Pas d'erreur ou erreur inconnue");
+    }
+    else
+    {
+        switch (err->type)
+        {
+            case PackageError::OpenFileError:
+                s = QApplication::translate("Utils", "Impossible d'ouvrir le fichier ");
+                break;
+
+            case PackageError::MapFileError:
+                s = QApplication::translate("Utils", "Impossible de mapper le fichier ");
+                break;
+
+            case PackageError::ProcessError:
+                s = QApplication::translate("Utils", "Erreur dans la commande ");
+                break;
+
+            case PackageError::DownloadError:
+                s = QApplication::translate("Utils", "Impossible de télécharger ");
+                break;
+
+            case PackageError::ScriptException:
+                s = QApplication::translate("Utils", "Erreur dans le QtScript ");
+                break;
+                
+            case PackageError::SignatureError:
+                s = QApplication::translate("Utils", "Mauvaise signature GPG du fichier ");
+                break;
+
+            case PackageError::SHAError:
+                s = QApplication::translate("Utils", "Mauvaise somme SHA1, fichier corrompu : ");
+                break;
+
+            case PackageError::PackageNotFound:
+                s = QApplication::translate("Utils", "Paquet inexistant : ");
+                break;
+
+            case PackageError::BadDownloadType:
+                s = QApplication::translate("Utils", "Mauvais type de téléchargement, vérifier sources.list : ");
+                break;
+
+            case PackageError::OpenDatabaseError:
+                s = QApplication::translate("Utils", "Impossible d'ouvrir la base de donnée : ");
+                break;
+
+            case PackageError::QueryError:
+                s = QApplication::translate("Utils", "Erreur dans la requête : ");
+                break;
+
+            case PackageError::SignError:
+                s = QApplication::translate("Utils", "Impossible de vérifier la signature : ");
+                break;
+                
+            case PackageError::InstallError:
+                s = QApplication::translate("Utils", "Impossible d'installer le paquet ");
+                break;
+
+            case PackageError::ProgressCanceled:
+                s = QApplication::translate("Utils", "Opération annulée : ");
+                break;
+        }
+    }
+    
+    s += err->info;
+    
+    if (!err->more.isEmpty())
+    {
+        s += "<br /><br />";
+        s += err->more;
+    }
+    
+    QMessageBox::critical(QApplication::activeWindow(), QApplication::translate("Utils", "Erreur"), s);
 }
