@@ -1273,8 +1273,10 @@ bool DatabaseWriter::rebuild()
             {
                 QString reponame = parts.at(0);
                 QString distroname = parts.at(1);
+                QString filename = QString("/var/cache/lgrpkg/db/%1_%2.sections").arg(reponame, distroname);
                 
-                QFile::rename(fname, parent->varRoot() + QString("/var/cache/lgrpkg/db/%1_%2.sections").arg(reponame, distroname));
+                QFile::remove(parent->varRoot() + filename);
+                QFile::rename(fname, parent->varRoot() + filename);
             }
             else
             {
