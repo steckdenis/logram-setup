@@ -111,6 +111,7 @@ void LogramUi::CategoryView::reload()
 {
     d->sections->clear();
     d->distros->clear();
+    d->sectionItems.clear();
     
     QDir dir(d->ps->varRoot() + "/var/cache/lgrpkg/db");
     QStringList files = dir.entryList(QDir::Files);
