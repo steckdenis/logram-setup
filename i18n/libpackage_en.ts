@@ -558,7 +558,7 @@ Options (case insensitive):
         <translation>Manually installed       : </translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+41"/>
         <source>Supprimé</source>
         <translation>Deleted</translation>
     </message>
@@ -583,7 +583,7 @@ Options (case insensitive):
         <translation>Version             : </translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Titre               : </source>
         <translation>Title               : </translation>
     </message>
@@ -671,12 +671,12 @@ Options (case insensitive):
         <translation>Short description   : </translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Description longue : </source>
         <translation>Long description    : </translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Dépendances :</source>
         <translation>Dependencies        : </translation>
     </message>
@@ -1138,7 +1138,7 @@ Options (case insensitive):
 <context>
     <name>BranchePage</name>
     <message>
-        <location filename="../pkgui/branchepage.cpp" line="+268"/>
+        <location filename="../libpackageui/branchepage.cpp" line="+267"/>
         <source>Téléchargement de %1, suppression de %2, %3 licence(s) à accepter</source>
         <translation>Downloading of %1, deletion of %2, %3 license(s) to accept</translation>
     </message>
@@ -1170,35 +1170,30 @@ Options (case insensitive):
 <context>
     <name>CommunicationDialog</name>
     <message>
-        <location filename="../pkgui/communicationdialog.cpp" line="+82"/>
         <source>Entrez une chaîne de caractère :</source>
-        <translation>Enter a character string :</translation>
+        <translation type="obsolete">Enter a character string :</translation>
     </message>
     <message>
-        <location line="+14"/>
         <source>Entrez un nombre entier :</source>
-        <translation>Enter a number :</translation>
+        <translation type="obsolete">Enter a number :</translation>
     </message>
     <message>
-        <location line="+15"/>
         <source>Entrez un nombre décimal :</source>
-        <translation>Enter a decimal number :</translation>
+        <translation type="obsolete">Enter a decimal number :</translation>
     </message>
     <message>
-        <location line="+21"/>
         <source>Sélectionner un choix :</source>
-        <translation>Select one choice :</translation>
+        <translation type="obsolete">Select one choice :</translation>
     </message>
     <message>
-        <location line="+5"/>
         <source>Sélectionner un ou plusieurs choix :</source>
-        <translation>Select one or more choices :</translation>
+        <translation type="obsolete">Select one or more choices :</translation>
     </message>
 </context>
 <context>
     <name>DonePage</name>
     <message>
-        <location filename="../pkgui/donepage.cpp" line="+72"/>
+        <location filename="../libpackageui/donepage.cpp" line="+73"/>
         <source>&lt;b&gt;Redémarrage de l&apos;ordinateur&lt;/b&gt;</source>
         <translation>&lt;b&gt;Reboot of the computer&lt;/b&gt;</translation>
     </message>
@@ -1247,7 +1242,7 @@ Options (case insensitive):
 <context>
     <name>Flags</name>
     <message>
-        <location filename="../pkgui/flags.ui" line="+6"/>
+        <location filename="../libpackageui/flags.ui" line="+6"/>
         <source>Drapeaux du paquet</source>
         <translation>Flags of the package</translation>
     </message>
@@ -1320,7 +1315,7 @@ Options (case insensitive):
 <context>
     <name>InstallPage</name>
     <message>
-        <location filename="../pkgui/installpage.cpp" line="+138"/>
+        <location filename="../libpackageui/installpage.cpp" line="+141"/>
         <source>Téléchargement de %1</source>
         <translation>Downloading of %1</translation>
     </message>
@@ -1348,123 +1343,98 @@ Options (case insensitive):
 <context>
     <name>InstallWizard</name>
     <message>
-        <location filename="../pkgui/branchepage.cpp" line="+69"/>
         <source>Installation de &lt;b&gt;%1&lt;/b&gt;~%2</source>
-        <translation>Installation of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+        <translation type="obsolete">Installation of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
     </message>
     <message>
-        <location line="+4"/>
         <source>Suppression de &lt;b&gt;%1&lt;/b&gt;~%2</source>
-        <translation>Deletion of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+        <translation type="obsolete">Deletion of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
     </message>
     <message>
-        <location line="+4"/>
         <source>Suppression totale de &lt;b&gt;%1&lt;/b&gt;~%2</source>
-        <translation>Total deletion of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+        <translation type="obsolete">Total deletion of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
     </message>
     <message>
-        <location line="+4"/>
         <source>Mise à jour de &lt;b&gt;%1&lt;/b&gt;~%2 vers %3</source>
-        <translation>Updating of &lt;b&gt;%1&lt;/b&gt;~%2 to %3</translation>
+        <translation type="obsolete">Updating of &lt;b&gt;%1&lt;/b&gt;~%2 to %3</translation>
     </message>
     <message>
-        <location line="+41"/>
         <source>Redémarrage</source>
-        <translation>Reboot</translation>
+        <translation type="obsolete">Reboot</translation>
     </message>
     <message>
-        <location line="+15"/>
         <source>Licence à approuver</source>
-        <translation>License to accept</translation>
+        <translation type="obsolete">License to accept</translation>
     </message>
     <message>
-        <location filename="../pkgui/installwizard.cpp" line="+60"/>
         <source>Installer et supprimer des paquets</source>
-        <translation>Install and remove packages</translation>
+        <translation type="obsolete">Install and remove packages</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>« &amp;Précédant</source>
-        <translation>« &amp;Previous</translation>
+        <translation type="obsolete">« &amp;Previous</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>&amp;Suivant »</source>
-        <translation>&amp;Next »</translation>
+        <translation type="obsolete">&amp;Next »</translation>
     </message>
     <message>
-        <location line="+94"/>
-        <location line="+12"/>
-        <location line="+41"/>
-        <location line="+31"/>
         <source>Erreur lors de la résolution des dépendances</source>
-        <translation>Error when solving the dependencies</translation>
+        <translation type="obsolete">Error when solving the dependencies</translation>
     </message>
     <message>
-        <location line="-84"/>
         <source>Impossible de résoudre les dépendances, mais le problème n&apos;est pas spécifié par la gestion des paquets de Logram. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Le message suivant pourrait les aider : «errorNode = 0»</source>
-        <translation>Unable to solve the dependencies, but the problem isn&apos;t specified by the Logram&apos;s package management. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). The following message could help them : “errorNode = 0”</translation>
+        <translation type="obsolete">Unable to solve the dependencies, but the problem isn&apos;t specified by the Logram&apos;s package management. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). The following message could help them : “errorNode = 0”</translation>
     </message>
     <message>
-        <location line="+12"/>
         <source>Impossible de résoudre les dépendances, la structure interne de la gestion des paquets semble cassée. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Si vous avez les connaissances nécessaires, essayez de lancer «lpm add -G &lt;les paquets que vous installiez, ou préfixés de &quot;-&quot; si vous les supprimiez&gt;» dans une console, et postez la sortie complète de cette commande dans le rapport de bug</source>
-        <translation>Unable to solve the dependencies, the internal structure of the package management is broken. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). If you have the necessary skills, please try to launch “lpm add -G &lt;the packages you were installing, or prefixed by &quot;-&quot; if you were removing them&gt;” in a console, and post the entire output of this command in your bug report</translation>
+        <translation type="obsolete">Unable to solve the dependencies, the internal structure of the package management is broken. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). If you have the necessary skills, please try to launch “lpm add -G &lt;the packages you were installing, or prefixed by &quot;-&quot; if you were removing them&gt;” in a console, and post the entire output of this command in your bug report</translation>
     </message>
     <message>
-        <location line="+28"/>
         <source>Impossible de trouver la dépendance correspondant à %1</source>
-        <translation>Unable to find the dependency matching %1</translation>
+        <translation type="obsolete">Unable to find the dependency matching %1</translation>
     </message>
     <message>
-        <location line="+13"/>
         <source>Impossible de résoudre les dépendances, mais le problème n&apos;est pas spécifié par la gestion des paquets de Logram. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Le message suivant pourrait les aider : «InternalError, ps-&gt;lastError() = 0»</source>
-        <translation>Unable to solve the dependencies, but the problem isn&apos;t specified by the Logram&apos;s package management. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). The following message could help them : “InternalError, ps-&gt;lastError() = 0”</translation>
+        <translation type="obsolete">Unable to solve the dependencies, but the problem isn&apos;t specified by the Logram&apos;s package management. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). The following message could help them : “InternalError, ps-&gt;lastError() = 0”</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>Aucun des choix nécessaires à l&apos;installation de %1 n&apos;est possible</source>
-        <translation>No choice needed to install %1 is available</translation>
+        <translation type="obsolete">No choice needed to install %1 is available</translation>
     </message>
     <message>
-        <location line="+5"/>
         <source>Aucun des choix permettant d&apos;effectuer l&apos;opération que vous demandez n&apos;est possible</source>
-        <translation>No choice allowing to perform the operation you want is possible</translation>
+        <translation type="obsolete">No choice allowing to perform the operation you want is possible</translation>
     </message>
     <message>
-        <location line="+4"/>
         <source>Le paquet %1 devrait être installé et supprimé en même temps</source>
-        <translation>The package %1 wants to be installed and removed at the same time</translation>
+        <translation type="obsolete">The package %1 wants to be installed and removed at the same time</translation>
     </message>
     <message>
-        <location line="+3"/>
         <source>Les paquets %1 et %2 devraient être installés en même temps</source>
-        <translation>The packages %1 and %2 want to be installed at the same time</translation>
+        <translation type="obsolete">The packages %1 and %2 want to be installed at the same time</translation>
     </message>
     <message>
-        <location line="+3"/>
         <source>Le paquet %1 ne peut être installé mais devrait être installé</source>
-        <translation>The package %1 cannot be install but wants to be installed</translation>
+        <translation type="obsolete">The package %1 cannot be install but wants to be installed</translation>
     </message>
     <message>
-        <location line="+3"/>
         <source>Le paquet %1 ne peut être supprimé mais devrait être supprimé</source>
-        <translation>The package %1 cannot be removed but wants to be removed</translation>
+        <translation type="obsolete">The package %1 cannot be removed but wants to be removed</translation>
     </message>
     <message>
-        <location line="+3"/>
         <source>Le paquet %1 ne peut être mis à jour mais devrait être mis à jour</source>
-        <translation>The package %1 cannot be updated but wants to be updated</translation>
+        <translation type="obsolete">The package %1 cannot be updated but wants to be updated</translation>
     </message>
     <message>
-        <location line="+3"/>
         <source>Impossible de résoudre les dépendances : %1. Si cette erreur est survenue juste après que vous ayiez choisi un choix dans la liste, essayez de cliquer sur le bouton «Remonter»</source>
-        <translation>Unable to solve the dependencies : %1. If this error was raised just after you have selected a choice in the list, try to click on the button “Go up” and choose another choice</translation>
+        <translation type="obsolete">Unable to solve the dependencies : %1. If this error was raised just after you have selected a choice in the list, try to click on the button “Go up” and choose another choice</translation>
     </message>
 </context>
 <context>
     <name>LicensePage</name>
     <message>
-        <location filename="../pkgui/licensepage.cpp" line="+74"/>
+        <location filename="../libpackageui/licensepage.cpp" line="+75"/>
         <source>Accepter la licence</source>
         <translation>Accept the license</translation>
     </message>
@@ -1492,7 +1462,7 @@ Options (case insensitive):
         <translation>Reading of the lists</translation>
     </message>
     <message>
-        <location line="+895"/>
+        <location line="+897"/>
         <source>Génération de la liste des paquets</source>
         <translation>Generation of the list of the packages</translation>
     </message>
@@ -1606,6 +1576,334 @@ Options (case insensitive):
     </message>
 </context>
 <context>
+    <name>LogramUi::CategoryView</name>
+    <message>
+        <location filename="../libpackageui/categoryview.cpp" line="+70"/>
+        <source>Sections</source>
+        <translation>Sections</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Distributions</source>
+        <translation>Distributions</translation>
+    </message>
+    <message>
+        <location line="+50"/>
+        <location line="+4"/>
+        <source>Tout afficher</source>
+        <translation>Show all</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Dépôt %1</source>
+        <translation>%1 repository</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Distribution %1</source>
+        <translation>%1 distribution</translation>
+    </message>
+    <message>
+        <location line="+76"/>
+        <source>Section %1</source>
+        <translation>Section %1</translation>
+    </message>
+</context>
+<context>
+    <name>LogramUi::CommunicationDialog</name>
+    <message>
+        <location filename="../libpackageui/communicationdialog.cpp" line="+94"/>
+        <source>Entrez une chaîne de caractère :</source>
+        <translation>Enter a character string :</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Entrez un nombre entier :</source>
+        <translation>Enter a number :</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Entrez un nombre décimal :</source>
+        <translation>Enter a decimal number :</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Sélectionner un choix :</source>
+        <translation>Select one choice :</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Sélectionner un ou plusieurs choix :</source>
+        <translation>Select one or more choices :</translation>
+    </message>
+</context>
+<context>
+    <name>LogramUi::InfoPane</name>
+    <message>
+        <location filename="../libpackageui/infopane.cpp" line="+163"/>
+        <source>Dépendances</source>
+        <translation>Dependencies</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Conflict</source>
+        <translation>Conflict</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Fournit</source>
+        <translation>Provide</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Suggère</source>
+        <translation>Suggest</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Requis par</source>
+        <translation>Needed by</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remplace</source>
+        <translation>Replace</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>&lt;b&gt;%1&lt;/b&gt; (par &lt;a href=&quot;mailto:%2&quot;&gt;%3&lt;/a&gt; le %4 dans %5)</source>
+        <translation>&lt;b&gt;%1&lt;/b&gt; (by &lt;a href=&quot;mailto:%2&quot;&gt;%3&lt;/a&gt; on %4 in %5)</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Faible priorité</source>
+        <translation>Low priority</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Fonctionnalité</source>
+        <translation>Feature</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Correction de bug</source>
+        <translation>Bug fix</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Sécurité</source>
+        <translation>Security</translation>
+    </message>
+    <message>
+        <location line="+83"/>
+        <source>Dossier</source>
+        <translation>Directory</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Installé</source>
+        <translation>Installed</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ne pas supprimer</source>
+        <translation>Don&apos;t remove</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ne pas purger</source>
+        <translation>Don&apos;t purge</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sauvegarder</source>
+        <translation>Save</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Sauvegarder si modifié</source>
+        <translation>Save if modified</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Écraser</source>
+        <translation>Overwrite</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Virtuel</source>
+        <translation>Virtual</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>Pas intégré</source>
+        <translation>Not integrated</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Utilisable</source>
+        <translation>Usable</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Bien intégré</source>
+        <translation>Well integrated</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Parfaitement intégré</source>
+        <translation>Perfectly integrated</translation>
+    </message>
+</context>
+<context>
+    <name>LogramUi::InstallWizard</name>
+    <message>
+        <location filename="../libpackageui/branchepage.cpp" line="+69"/>
+        <source>Installation de &lt;b&gt;%1&lt;/b&gt;~%2</source>
+        <translation>Installation of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Suppression de &lt;b&gt;%1&lt;/b&gt;~%2</source>
+        <translation>Deletion of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Suppression totale de &lt;b&gt;%1&lt;/b&gt;~%2</source>
+        <translation>Total deletion of &lt;b&gt;%1&lt;/b&gt;~%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mise à jour de &lt;b&gt;%1&lt;/b&gt;~%2 vers %3</source>
+        <translation>Updating of &lt;b&gt;%1&lt;/b&gt;~%2 to %3</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Redémarrage</source>
+        <translation>Reboot</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Licence à approuver</source>
+        <translation>License to accept</translation>
+    </message>
+    <message>
+        <location filename="../libpackageui/installwizard.cpp" line="+63"/>
+        <source>Installer et supprimer des paquets</source>
+        <translation>Install and remove packages</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>« &amp;Précédant</source>
+        <translation>« &amp;Previous</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Suivant »</source>
+        <translation>&amp;Next »</translation>
+    </message>
+    <message>
+        <location line="+88"/>
+        <location line="+12"/>
+        <location line="+41"/>
+        <location line="+31"/>
+        <source>Erreur lors de la résolution des dépendances</source>
+        <translation>Error when solving the dependencies</translation>
+    </message>
+    <message>
+        <location line="-84"/>
+        <source>Impossible de résoudre les dépendances, mais le problème n&apos;est pas spécifié par la gestion des paquets de Logram. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Le message suivant pourrait les aider : «errorNode = 0»</source>
+        <translation>Unable to solve the dependencies, but the problem isn&apos;t specified by the Logram&apos;s package management. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). The following message could help them : “errorNode = 0”</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Impossible de résoudre les dépendances, la structure interne de la gestion des paquets semble cassée. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Si vous avez les connaissances nécessaires, essayez de lancer «lpm add -G &lt;les paquets que vous installiez, ou préfixés de &quot;-&quot; si vous les supprimiez&gt;» dans une console, et postez la sortie complète de cette commande dans le rapport de bug</source>
+        <translation>Unable to solve the dependencies, the internal structure of the package management is broken. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). If you have the necessary skills, please try to launch “lpm add -G &lt;the packages you were installing, or prefixed by &quot;-&quot; if you were removing them&gt;” in a console, and post the entire output of this command in your bug report</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Impossible de trouver la dépendance correspondant à %1</source>
+        <translation>Unable to find the dependency matching %1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Impossible de résoudre les dépendances, mais le problème n&apos;est pas spécifié par la gestion des paquets de Logram. Veuillez rapporter le bug à l&apos;équipe de Logram en précisant ce que vous faisiez (ainsi que les paquets que vous installiez, les dépôts activés, la version de Pkgui, etc). Le message suivant pourrait les aider : «InternalError, ps-&gt;lastError() = 0»</source>
+        <translation>Unable to solve the dependencies, but the problem isn&apos;t specified by the Logram&apos;s package management. Please report the bug to the Logram&apos;s staff, providing informations about what you did (and also the packages you were installing, the enabled repositories, the Pkgui&apos;s version, etc). The following message could help them : “InternalError, ps-&gt;lastError() = 0”</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Aucun des choix nécessaires à l&apos;installation de %1 n&apos;est possible</source>
+        <translation>No choice needed to install %1 is available</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Aucun des choix permettant d&apos;effectuer l&apos;opération que vous demandez n&apos;est possible</source>
+        <translation>No choice allowing to perform the operation you want is possible</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Le paquet %1 devrait être installé et supprimé en même temps</source>
+        <translation>The package %1 wants to be installed and removed at the same time</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Les paquets %1 et %2 devraient être installés en même temps</source>
+        <translation>The packages %1 and %2 want to be installed at the same time</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Le paquet %1 ne peut être installé mais devrait être installé</source>
+        <translation>The package %1 cannot be install but wants to be installed</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Le paquet %1 ne peut être supprimé mais devrait être supprimé</source>
+        <translation>The package %1 cannot be removed but wants to be removed</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Le paquet %1 ne peut être mis à jour mais devrait être mis à jour</source>
+        <translation>The package %1 cannot be updated but wants to be updated</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Impossible de résoudre les dépendances : %1. Si cette erreur est survenue juste après que vous ayiez choisi un choix dans la liste, essayez de cliquer sur le bouton «Remonter»</source>
+        <translation>Unable to solve the dependencies : %1. If this error was raised just after you have selected a choice in the list, try to click on the button “Go up” and choose another choice</translation>
+    </message>
+</context>
+<context>
+    <name>LogramUi::ProgressDialog</name>
+    <message>
+        <location filename="../libpackageui/progressdialog.cpp" line="+58"/>
+        <source>&amp;Annuler</source>
+        <translation>&amp;Cancel</translation>
+    </message>
+</context>
+<context>
+    <name>LogramUi::ProgressList</name>
+    <message>
+        <location filename="../libpackageui/progresslist.cpp" line="+101"/>
+        <source>Progression : </source>
+        <translation>Progression: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+4"/>
+        <source>Téléchargement de </source>
+        <translation>Downloading of </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mise à jour de la base de donnée : </source>
+        <translation>Updating of the database: </translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Exécution du trigger </source>
+        <translation>Executing trigger </translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <location filename="../pkgui/mainwindow.ui" line="+14"/>
@@ -1613,48 +1911,40 @@ Options (case insensitive):
         <translation>Package management</translation>
     </message>
     <message>
-        <location line="+13"/>
         <source>Tous les paquets</source>
-        <translation>All the packages</translation>
+        <translation type="obsolete">All the packages</translation>
     </message>
     <message>
-        <location line="+5"/>
         <source>Paquets installés</source>
-        <translation>Installed packages</translation>
+        <translation type="obsolete">Installed packages</translation>
     </message>
     <message>
-        <location line="+5"/>
         <source>Paquets non-installés</source>
-        <translation>Non-installed packages</translation>
+        <translation type="obsolete">Non-installed packages</translation>
     </message>
     <message>
-        <location line="+5"/>
         <source>Paquets pouvant être mis à jour</source>
-        <translation>Updateable packages</translation>
+        <translation type="obsolete">Updateable packages</translation>
     </message>
     <message>
-        <location line="+5"/>
         <source>Paquets orphelins</source>
-        <translation>Orphan packages</translation>
+        <translation type="obsolete">Orphan packages</translation>
     </message>
     <message>
-        <location line="+11"/>
         <source>&amp;Rechercher</source>
-        <translation>&amp;Search</translation>
+        <translation type="obsolete">&amp;Search</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>&amp;Simplifié</source>
-        <translation>&amp;Simplified</translation>
+        <translation type="obsolete">&amp;Simplified</translation>
     </message>
     <message>
-        <location line="+22"/>
-        <location line="+399"/>
+        <location line="+17"/>
         <source>Nom</source>
         <translation>Name</translation>
     </message>
     <message>
-        <location line="-394"/>
+        <location line="+5"/>
         <source>Version</source>
         <translation>Version</translation>
     </message>
@@ -1670,12 +1960,11 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+5"/>
-        <location line="+323"/>
         <source>Description</source>
         <translation>Description</translation>
     </message>
     <message>
-        <location line="-305"/>
+        <location line="+18"/>
         <source>&amp;?</source>
         <translation>&amp;?</translation>
     </message>
@@ -1685,48 +1974,40 @@ Options (case insensitive):
         <translation>&amp;Packages</translation>
     </message>
     <message>
-        <location line="+37"/>
         <source>Informations de base</source>
-        <translation>Base informations</translation>
+        <translation type="obsolete">Base informations</translation>
     </message>
     <message>
-        <location line="+32"/>
         <source>Titre</source>
-        <translation>Title</translation>
+        <translation type="obsolete">Title</translation>
     </message>
     <message>
-        <location line="+57"/>
         <source>Description courte</source>
-        <translation>Short description</translation>
+        <translation type="obsolete">Short description</translation>
     </message>
     <message>
-        <location line="+32"/>
         <source>Section :</source>
-        <translation>Section :</translation>
+        <translation type="obsolete">Section :</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Dépôt :</source>
-        <translation>Repository :</translation>
+        <translation type="obsolete">Repository :</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Téléchargement :</source>
-        <translation>Downloading :</translation>
+        <translation type="obsolete">Downloading :</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Installation :</source>
-        <translation>Installation :</translation>
+        <translation type="obsolete">Installation :</translation>
     </message>
     <message>
         <source>Site web :</source>
         <translation type="obsolete">Website :</translation>
     </message>
     <message>
-        <location line="+29"/>
         <source>Licence :</source>
-        <translation>License :</translation>
+        <translation type="obsolete">License :</translation>
     </message>
     <message>
         <source>Drapeaux :</source>
@@ -1737,48 +2018,41 @@ Options (case insensitive):
         <translation type="obsolete">&amp;View and modify</translation>
     </message>
     <message>
-        <location line="+66"/>
         <source>Versions disponibles :</source>
-        <translation>Available versions :</translation>
+        <translation type="obsolete">Available versions :</translation>
     </message>
     <message>
-        <location line="+32"/>
-        <location filename="../pkgui/packageinfo.cpp" line="+143"/>
         <source>Dépendances</source>
-        <translation>Dependencies</translation>
+        <translation type="obsolete">Dependencies</translation>
     </message>
     <message>
-        <location line="+22"/>
         <source>Historique</source>
-        <translation>History</translation>
+        <translation type="obsolete">History</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Fichiers</source>
-        <translation>Files</translation>
+        <translation type="obsolete">Files</translation>
     </message>
     <message>
-        <location line="+12"/>
         <source>Attributs</source>
-        <translation>Attributes</translation>
+        <translation type="obsolete">Attributes</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+105"/>
         <source>Sections</source>
         <translation>Sections</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-79"/>
         <source>Actions à effectuer</source>
         <translation>Pending actions</translation>
     </message>
     <message>
-        <location line="-144"/>
         <source>&amp;Gérer les drapeaux</source>
-        <translation>&amp;Manage the flags</translation>
+        <translation type="obsolete">&amp;Manage the flags</translation>
     </message>
     <message>
-        <location line="+158"/>
+        <location line="+20"/>
         <source>Paquet</source>
         <translation>Package</translation>
     </message>
@@ -1813,7 +2087,7 @@ Options (case insensitive):
         <translation>&amp;Clean</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+29"/>
         <source>Sélectionner pour &amp;installation</source>
         <translation>Select to &amp;install</translation>
     </message>
@@ -1863,7 +2137,7 @@ Options (case insensitive):
         <translation>&amp;Update the list of the packages...</translation>
     </message>
     <message>
-        <location filename="../pkgui/mainwindow.cpp" line="+254"/>
+        <location filename="../pkgui/mainwindow.cpp" line="+224"/>
         <source>Mise à jour de la base de donnée</source>
         <translation>Updating of the database</translation>
     </message>
@@ -1873,7 +2147,249 @@ Options (case insensitive):
         <translation>The database was successfully updated.</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <source>Pas d&apos;erreur ou erreur inconnue</source>
+        <translation type="obsolete">No error or unknown error</translation>
+    </message>
+    <message>
+        <source>Impossible d&apos;ouvrir le fichier </source>
+        <translation type="obsolete">Unable to open the file </translation>
+    </message>
+    <message>
+        <source>Impossible de mapper le fichier </source>
+        <translation type="obsolete">Unable to map the file </translation>
+    </message>
+    <message>
+        <source>Erreur dans la commande </source>
+        <translation type="obsolete">Error in the command </translation>
+    </message>
+    <message>
+        <source>Impossible de télécharger </source>
+        <translation type="obsolete">Unable to download </translation>
+    </message>
+    <message>
+        <source>Erreur dans le QtScript </source>
+        <translation type="obsolete">Error in the QtScript </translation>
+    </message>
+    <message>
+        <source>Mauvaise signature GPG du fichier </source>
+        <translation type="obsolete">Bad GPG signature of the file </translation>
+    </message>
+    <message>
+        <source>Mauvaise somme SHA1, fichier corrompu : </source>
+        <translation type="obsolete">Bad SHA1 sum, file corrupted: </translation>
+    </message>
+    <message>
+        <source>Paquet inexistant : </source>
+        <translation type="obsolete">Package not found:</translation>
+    </message>
+    <message>
+        <source>Mauvais type de téléchargement, vérifier sources.list : </source>
+        <translation type="obsolete">Bad download type, please check sources.list: </translation>
+    </message>
+    <message>
+        <source>Impossible d&apos;ouvrir la base de donnée : </source>
+        <translation type="obsolete">Unable to open the database: </translation>
+    </message>
+    <message>
+        <source>Erreur dans la requête : </source>
+        <translation type="obsolete">Error in the query: </translation>
+    </message>
+    <message>
+        <source>Impossible de vérifier la signature : </source>
+        <translation type="obsolete">Unable to check the signature: </translation>
+    </message>
+    <message>
+        <source>Impossible d&apos;installer le paquet </source>
+        <translation type="obsolete">Unable to install the package </translation>
+    </message>
+    <message>
+        <source>Opération annulée : </source>
+        <translation type="obsolete">Operation canceled: </translation>
+    </message>
+    <message>
+        <source>Erreur</source>
+        <translation type="obsolete">Error</translation>
+    </message>
+    <message>
+        <source>Conflict</source>
+        <translation type="obsolete">Conflict</translation>
+    </message>
+    <message>
+        <source>Fournit</source>
+        <translation type="obsolete">Provide</translation>
+    </message>
+    <message>
+        <source>Suggère</source>
+        <translation type="obsolete">Suggest</translation>
+    </message>
+    <message>
+        <source>Requis par</source>
+        <translation type="obsolete">Needed by</translation>
+    </message>
+    <message>
+        <source>Remplace</source>
+        <translation type="obsolete">Replace</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;%1&lt;/b&gt; (par &lt;a href=&quot;mailto:%2&quot;&gt;%3&lt;/a&gt; le %4 dans %5)</source>
+        <translation type="obsolete">&lt;b&gt;%1&lt;/b&gt; (by &lt;a href=&quot;mailto:%2&quot;&gt;%3&lt;/a&gt; on %4 in %5)</translation>
+    </message>
+    <message>
+        <source>Faible priorité</source>
+        <translation type="obsolete">Low priority</translation>
+    </message>
+    <message>
+        <source>Fonctionnalité</source>
+        <translation type="obsolete">Feature</translation>
+    </message>
+    <message>
+        <source>Correction de bug</source>
+        <translation type="obsolete">Bug fix</translation>
+    </message>
+    <message>
+        <source>Sécurité</source>
+        <translation type="obsolete">Security</translation>
+    </message>
+    <message>
+        <source>Dossier</source>
+        <translation type="obsolete">Directory</translation>
+    </message>
+    <message>
+        <source>Installé</source>
+        <translation type="obsolete">Installed</translation>
+    </message>
+    <message>
+        <source>Ne pas supprimer</source>
+        <translation type="obsolete">Don&apos;t remove</translation>
+    </message>
+    <message>
+        <source>Ne pas purger</source>
+        <translation type="obsolete">Don&apos;t purge</translation>
+    </message>
+    <message>
+        <source>Sauvegarder</source>
+        <translation type="obsolete">Save</translation>
+    </message>
+    <message>
+        <source>Sauvegarder si modifié</source>
+        <translation type="obsolete">Save if modified</translation>
+    </message>
+    <message>
+        <source>Écraser</source>
+        <translation type="obsolete">Overwrite</translation>
+    </message>
+    <message>
+        <source>Virtuel</source>
+        <translation type="obsolete">Virtual</translation>
+    </message>
+    <message>
+        <source>Pas intégré</source>
+        <translation type="obsolete">Not integrated</translation>
+    </message>
+    <message>
+        <source>Utilisable</source>
+        <translation type="obsolete">Useable</translation>
+    </message>
+    <message>
+        <source>Bien intégré</source>
+        <translation type="obsolete">Well integrated</translation>
+    </message>
+    <message>
+        <source>Parfaitement intégré</source>
+        <translation type="obsolete">Perfectly integrated</translation>
+    </message>
+    <message>
+        <source>Installer</source>
+        <translation type="obsolete">Install</translation>
+    </message>
+    <message>
+        <source>Supprimer</source>
+        <translation type="obsolete">Remove</translation>
+    </message>
+    <message>
+        <source>Supprimer totalement</source>
+        <translation type="obsolete">Completely remove</translation>
+    </message>
+    <message>
+        <source>Tout afficher</source>
+        <translation type="obsolete">Show all</translation>
+    </message>
+    <message>
+        <source>Distribution %1 du dépôt %2</source>
+        <translation type="obsolete">Distribution %1 of the %2 repository</translation>
+    </message>
+</context>
+<context>
+    <name>NoInfoDir</name>
+    <message>
+        <location filename="../libpackage/plugins/noinfodir/noinfodir.cpp" line="+70"/>
+        <source>Le fichier /usr/share/info/dir a été trouvé alors qu&apos;il ne peut être présent. Supprimé.</source>
+        <translation>The file /usr/share/info/dir was found while it cannot be present. Removed.</translation>
+    </message>
+</context>
+<context>
+    <name>ProgressDialog</name>
+    <message>
+        <source>&amp;Annuler</source>
+        <translation type="obsolete">&amp;Cancel</translation>
+    </message>
+</context>
+<context>
+    <name>ProgressList</name>
+    <message>
+        <source>Progression : </source>
+        <translation type="obsolete">Progression: </translation>
+    </message>
+    <message>
+        <source>Téléchargement de </source>
+        <translation type="obsolete">Downloading of </translation>
+    </message>
+    <message>
+        <source>Mise à jour de la base de donnée : </source>
+        <translation type="obsolete">Updating of the database: </translation>
+    </message>
+    <message>
+        <source>Exécution du trigger </source>
+        <translation type="obsolete">Executing trigger </translation>
+    </message>
+</context>
+<context>
+    <name>ShLibDeps</name>
+    <message>
+        <location filename="../libpackage/plugins/shlibdeps/shlibdeps.cpp" line="+271"/>
+        <source>Impossible d&apos;initialiser la gestion des paquets pour trouver les dépendances automatiques</source>
+        <translation>Unable to initialize the package management to find the automatic dependencies</translation>
+    </message>
+    <message>
+        <location line="+115"/>
+        <source>Impossible de trouver le paquet contenant %1</source>
+        <translation>Unable to find the package containing %1</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Ajout de %1%2%3 comme dépendance automatique</source>
+        <translation>Adding of %1%2%3 as automatic dependency</translation>
+    </message>
+</context>
+<context>
+    <name>Utils</name>
+    <message>
+        <location filename="../libpackageui/utils.cpp" line="+62"/>
+        <source>Installer</source>
+        <translation>Install</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Supprimer</source>
+        <translation>Remove</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Supprimer totalement</source>
+        <translation>Completely remove</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Pas d&apos;erreur ou erreur inconnue</source>
         <translation>No error or unknown error</translation>
     </message>
@@ -1952,204 +2468,11 @@ Options (case insensitive):
         <source>Erreur</source>
         <translation>Error</translation>
     </message>
-    <message>
-        <location filename="../pkgui/packageinfo.cpp" line="+3"/>
-        <source>Conflict</source>
-        <translation>Conflict</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Fournit</source>
-        <translation>Provide</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Suggère</source>
-        <translation>Suggest</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Requis par</source>
-        <translation>Needed by</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Remplace</source>
-        <translation>Replace</translation>
-    </message>
-    <message>
-        <location line="+43"/>
-        <source>&lt;b&gt;%1&lt;/b&gt; (par &lt;a href=&quot;mailto:%2&quot;&gt;%3&lt;/a&gt; le %4 dans %5)</source>
-        <translation>&lt;b&gt;%1&lt;/b&gt; (by &lt;a href=&quot;mailto:%2&quot;&gt;%3&lt;/a&gt; on %4 in %5)</translation>
-    </message>
-    <message>
-        <location line="+18"/>
-        <source>Faible priorité</source>
-        <translation>Low priority</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Fonctionnalité</source>
-        <translation>Feature</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Correction de bug</source>
-        <translation>Bug fix</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Sécurité</source>
-        <translation>Security</translation>
-    </message>
-    <message>
-        <location line="+83"/>
-        <source>Dossier</source>
-        <translation>Directory</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>Installé</source>
-        <translation>Installed</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Ne pas supprimer</source>
-        <translation>Don&apos;t remove</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Ne pas purger</source>
-        <translation>Don&apos;t purge</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sauvegarder</source>
-        <translation>Save</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Sauvegarder si modifié</source>
-        <translation>Save if modified</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Écraser</source>
-        <translation>Overwrite</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Virtuel</source>
-        <translation>Virtual</translation>
-    </message>
-    <message>
-        <location line="+45"/>
-        <source>Pas intégré</source>
-        <translation>Not integrated</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Utilisable</source>
-        <translation>Useable</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Bien intégré</source>
-        <translation>Well integrated</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Parfaitement intégré</source>
-        <translation>Perfectly integrated</translation>
-    </message>
-    <message>
-        <location filename="../pkgui/packageitem.cpp" line="+38"/>
-        <source>Installer</source>
-        <translation>Install</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Supprimer</source>
-        <translation>Remove</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Supprimer totalement</source>
-        <translation>Completely remove</translation>
-    </message>
-    <message>
-        <location filename="../pkgui/packagesection.cpp" line="+57"/>
-        <source>Tout afficher</source>
-        <translation>Show all</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>Distribution %1 du dépôt %2</source>
-        <translation>Distribution %1 of the %2 repository</translation>
-    </message>
-</context>
-<context>
-    <name>NoInfoDir</name>
-    <message>
-        <location filename="../libpackage/plugins/noinfodir/noinfodir.cpp" line="+70"/>
-        <source>Le fichier /usr/share/info/dir a été trouvé alors qu&apos;il ne peut être présent. Supprimé.</source>
-        <translation>The file /usr/share/info/dir was found while it cannot be present. Removed.</translation>
-    </message>
-</context>
-<context>
-    <name>ProgressDialog</name>
-    <message>
-        <location filename="../pkgui/progressdialog.cpp" line="+44"/>
-        <source>&amp;Annuler</source>
-        <translation>&amp;Cancel</translation>
-    </message>
-</context>
-<context>
-    <name>ProgressList</name>
-    <message>
-        <location filename="../pkgui/progresslist.cpp" line="+90"/>
-        <source>Progression : </source>
-        <translation>Progression: </translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <location line="+4"/>
-        <source>Téléchargement de </source>
-        <translation>Downloading of </translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Mise à jour de la base de donnée : </source>
-        <translation>Updating of the database: </translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Exécution du trigger </source>
-        <translation>Executing trigger </translation>
-    </message>
-</context>
-<context>
-    <name>ShLibDeps</name>
-    <message>
-        <location filename="../libpackage/plugins/shlibdeps/shlibdeps.cpp" line="+271"/>
-        <source>Impossible d&apos;initialiser la gestion des paquets pour trouver les dépendances automatiques</source>
-        <translation>Unable to initialize the package management to find the automatic dependencies</translation>
-    </message>
-    <message>
-        <location line="+115"/>
-        <source>Impossible de trouver le paquet contenant %1</source>
-        <translation>Unable to find the package containing %1</translation>
-    </message>
-    <message>
-        <location line="+38"/>
-        <source>Ajout de %1%2%3 comme dépendance automatique</source>
-        <translation>Adding of %1%2%3 as automatic dependency</translation>
-    </message>
 </context>
 <context>
     <name>actionPage</name>
     <message>
-        <location filename="../pkgui/actionpage.ui" line="+6"/>
+        <location filename="../libpackageui/actionpage.ui" line="+6"/>
         <source>Validation de la liste des paquets</source>
         <translation>Validation of the list of the packages</translation>
     </message>
@@ -2202,7 +2525,7 @@ Options (case insensitive):
 <context>
     <name>branchePage</name>
     <message>
-        <location filename="../pkgui/branchepage.ui" line="+6"/>
+        <location filename="../libpackageui/branchepage.ui" line="+6"/>
         <source>Sélection des dépendances</source>
         <translation>Selection of the dependencies</translation>
     </message>
@@ -2230,7 +2553,7 @@ Options (case insensitive):
 <context>
     <name>donePage</name>
     <message>
-        <location filename="../pkgui/donepage.ui" line="+6"/>
+        <location filename="../libpackageui/donepage.ui" line="+6"/>
         <source>WizardPage</source>
         <translation>WizardPage</translation>
     </message>
@@ -2251,9 +2574,92 @@ Options (case insensitive):
     </message>
 </context>
 <context>
+    <name>infoPane</name>
+    <message>
+        <location filename="../libpackageui/infopane.ui" line="+13"/>
+        <source>Informations de base</source>
+        <translation>Base informations</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Titre</source>
+        <translation>Title</translation>
+    </message>
+    <message>
+        <location line="+57"/>
+        <source>Description courte</source>
+        <translation>Short description</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Section :</source>
+        <translation>Section :</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Dépôt :</source>
+        <translation>Repository :</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Téléchargement :</source>
+        <translation>Downloading :</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Installation :</source>
+        <translation>Installation :</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Licence :</source>
+        <translation>License :</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>&amp;Gérer les drapeaux</source>
+        <translation>&amp;Manage the flags</translation>
+    </message>
+    <message>
+        <location line="+54"/>
+        <source>Versions disponibles :</source>
+        <translation>Available versions :</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Description</source>
+        <translation>Description</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Dépendances</source>
+        <translation>Dependencies</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Historique</source>
+        <translation>History</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Fichiers</source>
+        <translation>Files</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Nom</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Attributs</source>
+        <translation>Attributes</translation>
+    </message>
+</context>
+<context>
     <name>installPage</name>
     <message>
-        <location filename="../pkgui/installpage.ui" line="+6"/>
+        <location filename="../libpackageui/installpage.ui" line="+6"/>
         <source>Installation</source>
         <translation>Installation</translation>
     </message>
@@ -2281,7 +2687,7 @@ Options (case insensitive):
 <context>
     <name>licensePage</name>
     <message>
-        <location filename="../pkgui/licensepage.ui" line="+6"/>
+        <location filename="../libpackageui/licensepage.ui" line="+6"/>
         <source>Licences des paquets</source>
         <translation>Licenses of the packages</translation>
     </message>
@@ -2294,6 +2700,39 @@ Options (case insensitive):
         <location line="+6"/>
         <source>Licences à accepter :</source>
         <translation>Licenses to accept :</translation>
+    </message>
+</context>
+<context>
+    <name>searchBar</name>
+    <message>
+        <location filename="../libpackageui/searchbar.ui" line="+10"/>
+        <source>Tous les paquets</source>
+        <translation>All the packages</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paquets installés</source>
+        <translation>Installed packages</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paquets non-installés</source>
+        <translation>Non-installed packages</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paquets pouvant être mis à jour</source>
+        <translation>Updateable packages</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Paquets orphelins</source>
+        <translation>Orphan packages</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>&amp;Rechercher</source>
+        <translation>&amp;Search</translation>
     </message>
 </context>
 </TS>
