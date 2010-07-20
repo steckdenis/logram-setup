@@ -23,7 +23,7 @@
 #ifndef __CATEGORYVIEW_H__
 #define __CATEGORYVIEW_H__
 
-#include <QTreeWidget>
+#include <QToolBox>
 
 namespace Logram
 {
@@ -35,7 +35,7 @@ namespace LogramUi
 
 class FilterInterface;
 
-class CategoryView : public QTreeWidget
+class CategoryView : public QToolBox
 {
     Q_OBJECT
     
