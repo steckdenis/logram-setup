@@ -1682,6 +1682,8 @@ bool RepositoryManager::exp(const QStringList &distros)
             sql = " SELECT \
                     section.name, \
                     section.icon, \
+                    section.primarylang, \
+                    section.weight, \
                     string.long_name, \
                     string.`desc`, \
                     string.lang \
@@ -1713,9 +1715,9 @@ bool RepositoryManager::exp(const QStringList &distros)
                 QString sectname, sectlongname, sectdesc, secticon, sectlang;
                 sectname = query.value(0).toString();
                 secticon = query.value(1).toString();
-                sectlongname = query.value(2).toString();
-                sectdesc = query.value(3).toString();
-                sectlang = query.value(4).toString();
+                sectlongname = query.value(4).toString();
+                sectdesc = query.value(5).toString();
+                sectlang = query.value(6).toString();
                 
                 if (lastSection.attribute("name") != sectname)
                 {
@@ -1723,6 +1725,8 @@ bool RepositoryManager::exp(const QStringList &distros)
                     rootElement.appendChild(lastSection);
                     
                     lastSection.setAttribute("name", sectname);
+                    lastSection.setAttribute("primarylang", query.value(2).toString());
+                    lastSection.setAttribute("weight", query.value(3).toInt());
                     
                     // Icône de la section
                     QFile fl(d->set->value("SectionsIconBaseDir").toString() + secticon);

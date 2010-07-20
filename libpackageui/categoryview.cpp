@@ -200,8 +200,10 @@ void LogramUi::CategoryView::reload()
             // Si on a déjà cette section, la sauter si elle est de poids plus faible
             if (d->sectionItems.contains(name))
             {
-                int weight = section.attribute("weight").toInt();
+                int weight = section.attribute("weight", "1").toInt();
                 int otherWeight = d->sectionItems.value(name)->data(0, Qt::UserRole + 1).toInt();
+                
+                qDebug() << weight << otherWeight;
                 
                 if (weight > otherWeight)
                 {
@@ -267,7 +269,7 @@ void LogramUi::CategoryView::reload()
             }
             
             item->setData(0, Qt::UserRole, section.attribute("name"));
-            item->setData(0, Qt::UserRole + 1, section.attribute("weight", 0));
+            item->setData(0, Qt::UserRole + 1, section.attribute("weight", "1").toInt());
             item->setText(0, PackageMetaData::stringOfKey(section.firstChildElement("title"), section.attribute("primarylang")));
             item->setToolTip(0, PackageMetaData::stringOfKey(section.firstChildElement("description"), section.attribute("primarylang")));;
             
