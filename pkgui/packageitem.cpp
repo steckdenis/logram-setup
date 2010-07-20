@@ -103,6 +103,11 @@ void PackageItem::updateText(bool subElements)
             {
                 DatabasePackage *pkg = pkgs.at(i);
                 
+                if (pkg->index() == _pkg->index())
+                {
+                    pkg->setAction(_pkg->action());
+                }
+                
                 PackageItem *item = new PackageItem(pkg, this, PackageList);
                 addChild(item);
             }
