@@ -1374,7 +1374,7 @@ Options (case insensitive):
         <translation>%1 distribution</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+76"/>
         <source>Section %1</source>
         <translation>Section %1</translation>
     </message>
@@ -1671,6 +1671,24 @@ Options (case insensitive):
         <location line="+4"/>
         <source>Exécution du trigger </source>
         <translation>Executing trigger </translation>
+    </message>
+</context>
+<context>
+    <name>LogramUi::SearchBar</name>
+    <message>
+        <location filename="../libpackageui/searchbar.cpp" line="+84"/>
+        <source>Nom exact</source>
+        <translation>Exact name</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Format simple</source>
+        <translation>Simple format</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Expression régulière</source>
+        <translation>Regular expression</translation>
     </message>
 </context>
 <context>
@@ -2181,7 +2199,7 @@ Options (case insensitive):
 <context>
     <name>searchBar</name>
     <message>
-        <location filename="../libpackageui/searchbar.ui" line="+10"/>
+        <location filename="../libpackageui/searchbar.ui" line="+18"/>
         <source>Tous les paquets</source>
         <translation>All the packages</translation>
     </message>

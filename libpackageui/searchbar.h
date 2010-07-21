@@ -26,6 +26,7 @@
 #include <QWidget>
 
 class Ui_searchBar;
+class QAction;
 
 namespace LogramUi
 {
@@ -44,6 +45,7 @@ class SearchBar : public QWidget
         
     private slots:
         void updateFilter();
+        void actionTriggered(QAction *action);
         
     private:
         struct Private;

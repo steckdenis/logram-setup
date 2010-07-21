@@ -203,8 +203,6 @@ void LogramUi::CategoryView::reload()
                 int weight = section.attribute("weight", "1").toInt();
                 int otherWeight = d->sectionItems.value(name)->data(0, Qt::UserRole + 1).toInt();
                 
-                qDebug() << weight << otherWeight;
-                
                 if (weight > otherWeight)
                 {
                     // On mettra à jour cette section

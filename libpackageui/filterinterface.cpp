@@ -92,6 +92,16 @@ QRegExp FilterInterface::regex() const
     }
 }
 
+QString FilterInterface::namePattern() const
+{
+    return d->nameFilter;
+}
+
+QRegExp::PatternSyntax FilterInterface::nameSyntax() const
+{
+    return d->nameSyntax;
+}
+
 FilterInterface::StatusFilter FilterInterface::statusFilter() const
 {
     return d->statusFilter;

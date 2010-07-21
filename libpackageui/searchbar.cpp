@@ -25,6 +25,7 @@
 #include "ui_searchbar.h"
 
 #include <QIcon>
+#include <QMenu>
 
 using namespace LogramUi;
 
@@ -32,6 +33,10 @@ struct SearchBar::Private
 {
     FilterInterface *interface;
     Ui_searchBar *ui;
+    
+    QAction *actFixed;
+    QAction *actWildcard;
+    QAction *actRegExp;
 };
 
 SearchBar::SearchBar(FilterInterface* interface, QWidget* parent): QWidget(parent)
@@ -73,6 +78,20 @@ SearchBar::SearchBar(FilterInterface* interface, QWidget* parent): QWidget(paren
                 break;
         }
     }
+    
+    // Menu du bouton de recherche
+    QMenu *menu = new QMenu(d->ui->btnSearch);
+    d->actFixed = new QAction(tr("Nom exact"), menu);
+    d->actWildcard = new QAction(tr("Format simple"), menu);
+    d->actRegExp = new QAction(tr("Expression régulière"), menu);
+    
+    menu->addAction(d->actFixed);
+    menu->addAction(d->actWildcard);
+    menu->addAction(d->actRegExp);
+    
+    d->ui->btnSearch->setMenu(menu);
+    
+    connect(menu, SIGNAL(triggered(QAction*)), this, SLOT(actionTriggered(QAction*)));
 }
 
 SearchBar::~SearchBar()
@@ -88,10 +107,37 @@ void SearchBar::setFocus()
 
 void SearchBar::updateFilter()
 {
-    d->interface->setNamePattern(d->ui->txtSearch->text());
+    QString pattern = d->ui->txtSearch->text();
+    
+    if (!pattern.isNull() && d->interface->nameSyntax() == QRegExp::Wildcard && !pattern.contains('*'))
+    {
+        // Si l'utilisateur n'a entré qu'un nom, rechercher les paquets qui le contiennent
+        pattern = "*" + pattern + "*";
+    }
+    
+    d->interface->setNamePattern(pattern);
     d->interface->setStatusFilter((FilterInterface::StatusFilter)d->ui->cboFilter->currentIndex());
     
     d->interface->updateViews();
+}
+
+void SearchBar::actionTriggered(QAction* action)
+{
+    if (action == d->actFixed)
+    {
+        d->interface->setNameSyntax(QRegExp::FixedString);
+    }
+    else if (action == d->actWildcard)
+    {
+        d->interface->setNameSyntax(QRegExp::Wildcard);
+    }
+    else if (action == d->actRegExp)
+    {
+        d->interface->setNameSyntax(QRegExp::RegExp2);
+    }
+    
+    // Actualiser la vue
+    updateFilter();
 }
 
 #include "searchbar.moc"

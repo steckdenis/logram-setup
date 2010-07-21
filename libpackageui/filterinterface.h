@@ -56,6 +56,8 @@ class FilterInterface : public QObject
         void updateViews();
         
         QRegExp regex() const;
+        QRegExp::PatternSyntax nameSyntax() const;
+        QString namePattern() const;
         StatusFilter statusFilter() const;
         QString repository() const;
         QString distribution() const;
