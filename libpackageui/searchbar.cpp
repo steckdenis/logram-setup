@@ -85,6 +85,10 @@ SearchBar::SearchBar(FilterInterface* interface, QWidget* parent): QWidget(paren
     d->actWildcard = new QAction(tr("Format simple"), menu);
     d->actRegExp = new QAction(tr("Expression régulière"), menu);
     
+    d->actFixed->setStatusTip(tr("Tous les paquets dont le nom est exactement ce que vous avez entré."));
+    d->actWildcard->setStatusTip(tr("Tous les paquets dont le nom contient ce que vous avez entré (? remplace un caractère, * plusieurs)."));
+    d->actRegExp->setStatusTip(tr("Tous les paquets correspondant à une expression régulière (utilisateurs avancés)."));
+    
     menu->addAction(d->actFixed);
     menu->addAction(d->actWildcard);
     menu->addAction(d->actRegExp);

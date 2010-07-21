@@ -13,6 +13,9 @@
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
     <widget class="QComboBox" name="cboFilter">
+     <property name="statusTip">
+      <string>Filtre les paquets en fonction de leur état (installé, supprimé, etc).</string>
+     </property>
      <item>
       <property name="text">
        <string>Tous les paquets</string>
@@ -41,10 +44,17 @@
     </widget>
    </item>
    <item>
-    <widget class="QLineEdit" name="txtSearch"/>
+    <widget class="QLineEdit" name="txtSearch">
+     <property name="statusTip">
+      <string>Permet de rechercher un paquet par son nom (ou tous ceux dont le nom contiennent une chaîne).</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QToolButton" name="btnSearch">
+     <property name="statusTip">
+      <string>Recherche les paquets en fonction du filtre et de la zone de texte.</string>
+     </property>
      <property name="text">
       <string>&amp;Rechercher</string>
      </property>
