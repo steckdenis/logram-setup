@@ -58,10 +58,12 @@ LogramUi::CategoryView::CategoryView(Logram::PackageSystem* ps, FilterInterface*
     d->sections = new QTreeWidget(this);
     d->sections->setIconSize(QSize(32, 32));
     d->sections->setHeaderHidden(true);
+    d->sections->setMouseTracking(true);
     
     d->distros = new QTreeWidget(this);
     d->distros->setIconSize(QSize(32, 32));
     d->distros->setHeaderHidden(true);
+    d->distros->setMouseTracking(true);
     
     connect(d->sections, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updateFilter()));
     connect(d->distros,  SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updateFilter()));
@@ -119,10 +121,12 @@ void LogramUi::CategoryView::reload()
     d->noSectionFilterItem = new QTreeWidgetItem(d->sections);
     d->noSectionFilterItem->setIcon(0, QIcon::fromTheme("edit-select-all"));
     d->noSectionFilterItem->setText(0, tr("Tout afficher"));
+    d->noSectionFilterItem->setStatusTip(0, tr("Ne filtre plus les paquets par section."));
     
     d->noDistroFilterItem = new QTreeWidgetItem(d->distros);
     d->noDistroFilterItem->setIcon(0, QIcon::fromTheme("edit-select-all"));
     d->noDistroFilterItem->setText(0, tr("Tout afficher"));
+    d->noDistroFilterItem->setStatusTip(0, tr("Ne filtre plus les paquets par distribution et dépôt"));
     
     foreach (const QString &file, files)
     {
@@ -172,6 +176,7 @@ void LogramUi::CategoryView::reload()
             
             distroParent->setData(0, Qt::UserRole, repo);
             distroParent->setIcon(0, QIcon(":/images/repository.png"));
+            distroParent->setStatusTip(0, tr("N'affiche que les paquets en provenance du dépôt «%1».").arg(repo));
         }
         
         QTreeWidgetItem *distroItem = new QTreeWidgetItem(distroParent);
@@ -180,6 +185,7 @@ void LogramUi::CategoryView::reload()
         distroItem->setData(0, Qt::UserRole + 1, distro);
         distroItem->setIcon(0, QIcon(":/images/repository.png"));
         distroItem->setText(0, tr("Distribution %1").arg(distro));
+        distroItem->setStatusTip(0, tr("N'affiche que les paquets en provenace du dépôt «%1» et de la distribution «%2»").arg(repo, distro));
         
         // Ajouter les sections
         QDomDocument doc;
@@ -266,10 +272,13 @@ void LogramUi::CategoryView::reload()
                 item = lastParent;
             }
             
+            QString stitle = PackageMetaData::stringOfKey(section.firstChildElement("title"), section.attribute("primarylang"));
+            
             item->setData(0, Qt::UserRole, section.attribute("name"));
             item->setData(0, Qt::UserRole + 1, section.attribute("weight", "1").toInt());
-            item->setText(0, PackageMetaData::stringOfKey(section.firstChildElement("title"), section.attribute("primarylang")));
+            item->setText(0, stitle);
             item->setToolTip(0, PackageMetaData::stringOfKey(section.firstChildElement("description"), section.attribute("primarylang")));;
+            item->setStatusTip(0, tr("N'affiche que les paquets appartenant à la section «%1»").arg(stitle));
             
             // Trouver l'icône
             QDomElement iconElement = section.firstChildElement("icon");
