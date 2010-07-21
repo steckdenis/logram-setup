@@ -1348,7 +1348,7 @@ Options (case insensitive):
 <context>
     <name>LogramUi::CategoryView</name>
     <message>
-        <location filename="../libpackageui/categoryview.cpp" line="+70"/>
+        <location filename="../libpackageui/categoryview.cpp" line="+72"/>
         <source>Sections</source>
         <translation>Sections</translation>
     </message>
@@ -1359,9 +1359,19 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+50"/>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Tout afficher</source>
         <translation>Show all</translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <source>Ne filtre plus les paquets par section.</source>
+        <translation>Don&apos;t filter the packages by section.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Ne filtre plus les paquets par distribution et dépôt.</source>
+        <translation>Don&apos;t filter the packages by distribution and repository.</translation>
     </message>
     <message>
         <location line="+45"/>
@@ -1369,14 +1379,29 @@ Options (case insensitive):
         <translation>%1 repository</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+5"/>
+        <source>N&apos;affiche que les paquets en provenance du dépôt «%1».</source>
+        <translation>Show only the packages coming from the “%1“ repository.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Distribution %1</source>
         <translation>%1 distribution</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>N&apos;affiche que les paquets en provenace du dépôt «%1» et de la distribution «%2».</source>
+        <translation>Show only the packages coming from the “%1“ repository and the “%2” distribution.</translation>
     </message>
     <message>
         <location line="+76"/>
         <source>Section %1</source>
         <translation>Section %1</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>N&apos;affiche que les paquets appartenant à la section «%1».</source>
+        <translation>Show only the packages belonging to the “%1“ section.</translation>
     </message>
 </context>
 <context>
@@ -1690,6 +1715,21 @@ Options (case insensitive):
         <source>Expression régulière</source>
         <translation>Regular expression</translation>
     </message>
+    <message>
+        <location line="+2"/>
+        <source>Tous les paquets dont le nom est exactement ce que vous avez entré.</source>
+        <translation>All the packages whose name is exactly what you entered.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tous les paquets dont le nom contient ce que vous avez entré (? remplace un caractère, * plusieurs).</source>
+        <translation>All the packages whose name contains what you entered (? replaces one character, * many characters).</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tous les paquets correspondant à une expression régulière (utilisateurs avancés).</source>
+        <translation>All the packages matching a regular expression (advanced users).</translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -1734,7 +1774,7 @@ Options (case insensitive):
         <translation>&amp;Packages</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+50"/>
         <source>Actions à effectuer</source>
         <translation>Pending actions</translation>
     </message>
@@ -1765,23 +1805,45 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+13"/>
+        <location line="+52"/>
+        <source>Applique la liste des changements (installations et suppressions).</source>
+        <translation>Apply the list of the changes (installations and deletions).</translation>
+    </message>
+    <message>
+        <location line="-49"/>
         <source>&amp;Appliquer</source>
         <translation>&amp;Apply</translation>
     </message>
     <message>
         <location line="+10"/>
+        <location line="+50"/>
+        <source>Vide la liste des changements.</source>
+        <translation>Empty the list of the changes.</translation>
+    </message>
+    <message>
+        <location line="-47"/>
         <source>&amp;Vider</source>
         <translation>&amp;Clean</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+95"/>
+        <source>Télécharge la description des paquets disponible et actualise la liste avec ces informations à jour.</source>
+        <translation>Download the description of the available packages and refresh the list with these updated informations.</translation>
+    </message>
+    <message>
+        <location line="-172"/>
         <source>Filtrer</source>
         <translation>Filter</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+91"/>
         <source>Sélectionner pour &amp;installation</source>
         <translation>Select to &amp;install</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Sélectionne le paquet pour installation.</source>
+        <translation>Select the package for installation.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1789,19 +1851,29 @@ Options (case insensitive):
         <translation>Select to &amp;remove</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Sélectionne le paquet pour suppression.</source>
+        <translation>Select the package for removal.</translation>
+    </message>
+    <message>
         <location line="+8"/>
         <source>&amp;Appliquer les changements</source>
         <translation>&amp;Apply the changes</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+11"/>
         <source>Abandonner les &amp;changements</source>
         <translation>Cancel the &amp;changes</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+8"/>
         <source>&amp;Quitter</source>
         <translation>&amp;Quit</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Quitte le gestionnaire de paquets.</source>
+        <translation>Quit the package manager.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1809,9 +1881,19 @@ Options (case insensitive):
         <translation>&amp;About PkgUi</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Affiche des informations sur le gestionnaire de paquets.</source>
+        <translation>Show informations about the package manager.</translation>
+    </message>
+    <message>
         <location line="+5"/>
         <source>À propos de &amp;Qt</source>
         <translation>About &amp;Qt</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Affiche des informations sur la bibliothèque Qt utilisée par ce programme.</source>
+        <translation>Show informations about the Qt library, used by this program.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1819,9 +1901,19 @@ Options (case insensitive):
         <translation>Select for complete &amp;removing</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Sélectionne le paquet pour suppression complète.</source>
+        <translation>Select the package for complete removal.</translation>
+    </message>
+    <message>
         <location line="+5"/>
         <source>&amp;Désélectionner</source>
         <translation>&amp;Deselect</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Désélectionne le paquet.</source>
+        <translation>Deselect the package.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1829,7 +1921,7 @@ Options (case insensitive):
         <translation>&amp;Update the list of the packages...</translation>
     </message>
     <message>
-        <location filename="../pkgui/mainwindow.cpp" line="+224"/>
+        <location filename="../pkgui/mainwindow.cpp" line="+244"/>
         <source>Mise à jour de la base de donnée</source>
         <translation>Updating of the database</translation>
     </message>
@@ -2070,7 +2162,7 @@ Options (case insensitive):
 <context>
     <name>infoPane</name>
     <message>
-        <location filename="../libpackageui/infopane.ui" line="+13"/>
+        <location filename="../libpackageui/infopane.ui" line="+24"/>
         <source>Informations de base</source>
         <translation>Base informations</translation>
     </message>
@@ -2111,6 +2203,11 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+12"/>
+        <source>Affiche et permet de modifier les drapeaux du paquet.</source>
+        <translation>Show and allows to change the flags of this package.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>&amp;Gérer les drapeaux</source>
         <translation>&amp;Manage the flags</translation>
     </message>
@@ -2199,7 +2296,12 @@ Options (case insensitive):
 <context>
     <name>searchBar</name>
     <message>
-        <location filename="../libpackageui/searchbar.ui" line="+18"/>
+        <location filename="../libpackageui/searchbar.ui" line="+17"/>
+        <source>Filtre les paquets en fonction de leur état (installé, supprimé, etc).</source>
+        <translation>Filter the packages by their state (installed, removed, etc).</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Tous les paquets</source>
         <translation>All the packages</translation>
     </message>
@@ -2224,7 +2326,17 @@ Options (case insensitive):
         <translation>Orphan packages</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
+        <source>Permet de rechercher un paquet par son nom (ou tous ceux dont le nom contiennent une chaîne).</source>
+        <translation>Search a package by its name (or all of the packages whose name contains a string).</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Recherche les paquets en fonction du filtre et de la zone de texte.</source>
+        <translation>Search the packages using the contents of the text input.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>&amp;Rechercher</source>
         <translation>&amp;Search</translation>
     </message>
