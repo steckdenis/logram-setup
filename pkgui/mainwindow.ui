@@ -178,7 +178,7 @@
     </sizepolicy>
    </property>
    <property name="windowTitle">
-    <string>Sections</string>
+    <string>Filtrer</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>

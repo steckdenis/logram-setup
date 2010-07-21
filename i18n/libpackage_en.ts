@@ -1320,7 +1320,7 @@ Options (case insensitive):
         <translation>Unable to add the key %1 for the signature</translation>
     </message>
     <message>
-        <location line="+421"/>
+        <location line="+425"/>
         <source>Impossible de créer le tampon mémoire pour la signature.</source>
         <translation>Unable to create the memory buffer for the signature.</translation>
     </message>
@@ -1374,7 +1374,7 @@ Options (case insensitive):
         <translation>%1 distribution</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+78"/>
         <source>Section %1</source>
         <translation>Section %1</translation>
     </message>
@@ -1716,12 +1716,7 @@ Options (case insensitive):
         <translation>&amp;Packages</translation>
     </message>
     <message>
-        <location line="+105"/>
-        <source>Sections</source>
-        <translation>Sections</translation>
-    </message>
-    <message>
-        <location line="-79"/>
+        <location line="+26"/>
         <source>Actions à effectuer</source>
         <translation>Pending actions</translation>
     </message>
@@ -1761,7 +1756,12 @@ Options (case insensitive):
         <translation>&amp;Clean</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+20"/>
+        <source>Filtrer</source>
+        <translation>Filter</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Sélectionner pour &amp;installation</source>
         <translation>Select to &amp;install</translation>
     </message>
