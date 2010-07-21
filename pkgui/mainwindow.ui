@@ -171,6 +171,9 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="statusTip">
+          <string>Applique la liste des changements (installations et suppressions).</string>
+         </property>
          <property name="text">
           <string>&amp;Appliquer</string>
          </property>
@@ -180,6 +183,9 @@
         <widget class="QPushButton" name="btnListClean">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="statusTip">
+          <string>Vide la liste des changements.</string>
          </property>
          <property name="text">
           <string>&amp;Vider</string>
@@ -198,10 +204,16 @@
    <property name="text">
     <string>Sélectionner pour &amp;installation</string>
    </property>
+   <property name="statusTip">
+    <string>Sélectionne le paquet pour installation.</string>
+   </property>
   </action>
   <action name="actRemovePackage">
    <property name="text">
     <string>Sélectionner pour &amp;suppression</string>
+   </property>
+   <property name="statusTip">
+    <string>Sélectionne le paquet pour suppression.</string>
    </property>
   </action>
   <action name="actApplyChanges">
@@ -211,6 +223,9 @@
    <property name="text">
     <string>&amp;Appliquer les changements</string>
    </property>
+   <property name="statusTip">
+    <string>Applique la liste des changements (installations et suppressions).</string>
+   </property>
   </action>
   <action name="actCancelChanges">
    <property name="enabled">
@@ -219,35 +234,56 @@
    <property name="text">
     <string>Abandonner les &amp;changements</string>
    </property>
+   <property name="statusTip">
+    <string>Vide la liste des changements.</string>
+   </property>
   </action>
   <action name="actQuit">
    <property name="text">
     <string>&amp;Quitter</string>
+   </property>
+   <property name="statusTip">
+    <string>Quitte le gestionnaire de paquets.</string>
    </property>
   </action>
   <action name="actAboutPkgui">
    <property name="text">
     <string>À &amp;propos de PkgUi</string>
    </property>
+   <property name="statusTip">
+    <string>Affiche des informations sur le gestionnaire de paquets.</string>
+   </property>
   </action>
   <action name="actAboutQt">
    <property name="text">
     <string>À propos de &amp;Qt</string>
+   </property>
+   <property name="statusTip">
+    <string>Affiche des informations sur la bibliothèque Qt utilisée par ce programme.</string>
    </property>
   </action>
   <action name="actPurge">
    <property name="text">
     <string>Sélectionner pour suppression &amp;totale</string>
    </property>
+   <property name="statusTip">
+    <string>Sélectionne le paquet pour suppression complète.</string>
+   </property>
   </action>
   <action name="actDeselect">
    <property name="text">
     <string>&amp;Désélectionner</string>
    </property>
+   <property name="statusTip">
+    <string>Désélectionne le paquet.</string>
+   </property>
   </action>
   <action name="actUpdate">
    <property name="text">
     <string>&amp;Mettre à jour la liste des paquets...</string>
+   </property>
+   <property name="statusTip">
+    <string>Télécharge la description des paquets disponible et actualise la liste avec ces informations à jour.</string>
    </property>
   </action>
  </widget>

@@ -2,8 +2,19 @@
 <ui version="4.0">
  <class>infoPane</class>
  <widget class="QTabWidget" name="infoPane">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>635</width>
+    <height>314</height>
+   </rect>
+  </property>
   <property name="tabPosition">
    <enum>QTabWidget::South</enum>
+  </property>
+  <property name="currentIndex">
+   <number>4</number>
   </property>
   <property name="documentMode">
    <bool>true</bool>
@@ -201,6 +212,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="btnFlags">
+              <property name="statusTip">
+               <string>Affiche et permet de modifier les drapeaux du paquet.</string>
+              </property>
               <property name="text">
                <string>&amp;Gérer les drapeaux</string>
               </property>
