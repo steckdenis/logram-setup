@@ -24,6 +24,7 @@
 
 #include <QIcon>
 #include <QMessageBox>
+#include <QSettings>
 
 #include <communication.h>
 #include <packagemetadata.h>
@@ -137,6 +138,12 @@ MainWindow::MainWindow() : QMainWindow(0)
     connect(actUpdate, SIGNAL(triggered(bool)),
             this,        SLOT(databaseUpdate()));
     
+    // Restaurer l'état de la fenêtre
+    QSettings settings("Logram", "Pkgui");
+    
+    restoreGeometry(settings.value("geometry").toByteArray());
+    restoreState(settings.value("windowState").toByteArray());
+    
 #if 0
     // Envoyer des progressions
     int p1 = ps->startProgress(Progress::Download, 1024*1024);      // 1Mio
@@ -180,6 +187,15 @@ MainWindow::MainWindow() : QMainWindow(0)
         usleep(50000);
     }
 #endif
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    QSettings settings("Logram", "Pkgui");
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("windowState", saveState());
+    
+    QMainWindow::closeEvent(event);
 }
 
 MainWindow::~MainWindow()

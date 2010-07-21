@@ -84,7 +84,6 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         ~MainWindow();
         
         bool error() const;
-        void psError();
         void enableProgressions();
         void disableProgressions();
         
@@ -112,6 +111,9 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         void applyList();
         void cancelList();
         void databaseUpdate();
+        
+    protected:
+        void closeEvent(QCloseEvent *event);
         
     private:
         Logram::PackageSystem *ps;
