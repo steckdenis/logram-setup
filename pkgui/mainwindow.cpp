@@ -104,6 +104,7 @@ MainWindow::MainWindow() : QMainWindow(0)
     btnListClean->setIcon(QIcon::fromTheme("dialog-cancel"));
     
     searchBar->setFocus();
+    treePackages->setMouseTracking(true);
         
     // Ajouter les actions
     treePackages->addAction(actInstallPackage);

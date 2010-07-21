@@ -56,6 +56,17 @@ PackageItem::~PackageItem()
     delete _pkg;
 }
 
+QVariant PackageItem::data(int column, int role) const
+{
+    if (role == Qt::StatusTipRole)
+    {
+        // Même status tip pour toutes les colonnes
+        return _pkg->shortDesc();
+    }
+    
+    return QTreeWidgetItem::data(column, role);
+}
+
 void PackageItem::updateIcon()
 {
     if (_pkg->action() == Solver::Install)

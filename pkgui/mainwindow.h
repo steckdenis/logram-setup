@@ -54,6 +54,8 @@ class PackageItem : public QTreeWidgetItem
         PackageItem(Logram::DatabasePackage *pkg, QTreeWidgetItem *parent, Type type);
         virtual ~PackageItem();
         
+        QVariant data(int column, int role) const;
+        
         void setPackage(Logram::DatabasePackage *pkg);
         Logram::DatabasePackage *package();
         void updateIcon();
