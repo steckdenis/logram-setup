@@ -429,6 +429,12 @@ QVector<ChangeLogEntry *> PackageMetaData::changelog() const
         e->distribution = entry.attribute("distribution");
         e->text = stringOfKey(entry);
         
+        // Si le paquet est un paquet de développement, utiliser la vraie version
+        if (documentElement().firstChildElement("source").attribute("devel", "false") == "true")
+        {
+            e->version = entry.attribute("realversion");
+        }
+        
         // Trouver la date
         e->date = QDateTime(QDate::fromString(entry.attribute("date"), "yyyy-MM-dd"),
                             QTime::fromString(entry.attribute("time"), "hh:mm:ss"));
