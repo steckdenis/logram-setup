@@ -234,6 +234,52 @@ QString PackageMetaData::upstreamUrl() const
     return documentElement().firstChildElement("source").attribute("upstreamurl");
 }
 
+QStringList PackageMetaData::primaryPackages() const
+{
+    QStringList rs;
+    QDomElement package = documentElement().firstChildElement("package");
+    bool firstPackageCanBePrimary = true;
+    bool first = true;
+    
+    // Explorer les paquets
+    while (!package.isNull())
+    {
+        QDomElement el = package.firstChildElement("flag");
+        
+        while (!el.isNull())
+        {
+            if (el.attribute("name") == "primary")
+            {
+                // On a trouvé un paquet
+                if (el.attribute("value", "1") == "1")
+                {
+                    rs.append(package.attribute("name"));
+                }
+                else if (first)
+                {
+                    // Le premier paquet ne veut pas être primaire. Si on n'a aucun autre paquet primaire,
+                    // cette source n'en construit simplement aucun.
+                    firstPackageCanBePrimary = false;
+                }
+            }
+            
+            el = el.nextSiblingElement("flag");
+        }
+        
+        package = package.nextSiblingElement("package");
+        first = false;
+    }
+    
+    // Aucun paquet n'a ce flag, retourner le premier (il est très courant de mettre le paquet principal en premier)
+    if (rs.count() == 0 && firstPackageCanBePrimary)
+    {
+        package = documentElement().firstChildElement("package");
+        rs.append(package.attribute("name"));
+    }
+    
+    return rs;
+}
+
 QStringList PackageMetaData::triggers() const
 {
     QStringList rs;

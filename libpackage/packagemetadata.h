@@ -230,6 +230,7 @@ class PackageMetaData : public QObject, public QDomDocument
         QString packageEula() const;            /*!< @brief License utilisateur finale du paquet courant */
         QString packageExecutable() const;      /*!< @brief Exécutable principal du paquet (/usr/bin/firefox) */
         QString currentPackage() const;         /*!< @brief Nom du paquet courant, un paquet binaire construit par ce paquet source */
+        QStringList primaryPackages() const;    /*!< @brief Nom des paquet primaires (par exemple : bash, firefox, etc) */
         QString upstreamUrl() const;            /*!< @brief Url du site web de l'auteur du paquet source (gcc.gnu.org, etc) */
         QStringList triggers() const;           /*!< @brief Liste des triggers lancés par le paquet courant */
         
