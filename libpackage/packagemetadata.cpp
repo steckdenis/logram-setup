@@ -430,9 +430,11 @@ QVector<ChangeLogEntry *> PackageMetaData::changelog() const
         e->text = stringOfKey(entry);
         
         // Si le paquet est un paquet de développement, utiliser la vraie version
-        if (documentElement().firstChildElement("source").attribute("devel", "false") == "true")
+        QString realver = entry.attribute("realversion");
+        
+        if (!realver.isNull() && documentElement().firstChildElement("source").attribute("devel", "false") == "true")
         {
-            e->version = entry.attribute("realversion");
+            e->version = realver;
         }
         
         // Trouver la date
