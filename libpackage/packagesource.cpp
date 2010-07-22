@@ -49,7 +49,6 @@ struct PackageSource::Private
     PackageSystem *ps;
     PackageMetaData *md;
     PackageSource *src;
-    QString metaFileName;
     
     QHash<Option, QVariant> options;
     QHash<QString, PackageSourceInterface *> plugins;
@@ -143,7 +142,6 @@ bool PackageSource::setMetaData(const QString &fileName)
     
     d->md->loadFile(fileName, QByteArray(), false);
     d->md->setTemplatable(this);
-    d->metaFileName = fileName;
     
     return !d->md->error();
 }
@@ -153,9 +151,6 @@ bool PackageSource::setMetaData(const QByteArray &data)
     d->md = new PackageMetaData(d->ps);
     
     d->md->loadData(data);
-    d->metaFileName = "/tmp/metadata_" + d->md->documentElement()
-                                         .firstChildElement("source")
-                                         .attribute("name");
 
     return !d->md->error();
 }
@@ -313,14 +308,10 @@ bool PackageSource::binaries()
         it.value()->init(d->md, this);
     }
     
-    // Explorer les paquets
+    // Première passe d'exploration des paquets : trouver les fichiers et lancer les plugins
+    QList<QStringList> packageFiles;
     QDomElement package = d->md->documentElement()
                             .firstChildElement();
-    
-    int curPkg = 0;
-    int totPkg = d->md->documentElement().elementsByTagName("package").count() + 1; // Aussi la source
-    
-    int progress = d->ps->startProgress(Progress::GlobalCompressing, totPkg);
     
     while (!package.isNull())
     {
@@ -337,41 +328,8 @@ bool PackageSource::binaries()
         }
         
         QString packageName = package.attribute("name");
-        QStringList okFiles;
-        
-        // Obenir la version
-        QString arch;
-        
-        if (isSource)
-        {
-            arch = "src";
-        }
-        else
-        {
-            arch = package.attribute("arch", "any");
-            
-            if (arch == "any")
-            {
-                arch = SETUP_ARCH;
-            }
-            else if (arch != "all" && arch != SETUP_ARCH)
-            {
-                // On ne doit pas construire ce paquet
-                package = package.nextSiblingElement();
-                continue;
-            }
-        }
-        
-        // Obtenir le nom de fichier
-        QString packageFile = packageName + "~" + version + "." + arch + ".lpk";
-        
-        // Envoyer le signal de progression
-        if (!d->ps->sendProgress(progress, curPkg, packageFile))
-        {
-            return false;
-        }
-        
-        curPkg++;
+        packageFiles.append(QStringList());
+        QStringList &okFiles = packageFiles.last();
         
         // Explorer les <files pattern="" /> et ajouter à okFiles les fichiers qui conviennent
         // Si source, alors on a juste besoin du metadata.xml et du dossier control, s'il existe
@@ -481,18 +439,78 @@ bool PackageSource::binaries()
             }
         }
         
-        // Écrire les métadonnées
-        {
-            QFile fl(metaFileName);
-        
-            if (!fl.open(QIODevice::WriteOnly))
-            {
-                return false;
-            }
+        package = package.nextSiblingElement();
+    }
+    
+    // Écrire les métadonnées
+    QFile fl(metaFileName);
 
-            fl.write(d->md->toByteArray(4));
-            fl.close();
+    if (!fl.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+
+    fl.write(d->md->toByteArray(4));
+    fl.close();
+    
+    // Deuxième passe : compression des paquets
+    int curPkg = 0;
+    int totPkg = d->md->documentElement().elementsByTagName("package").count() + 1; // Aussi la source
+    
+    int progress = d->ps->startProgress(Progress::GlobalCompressing, totPkg);
+    
+    package = d->md->documentElement().firstChildElement();
+    
+    while (!package.isNull())
+    {
+        bool isSource = false;
+        
+        if (package.tagName() == "source")
+        {
+            isSource = true;
         }
+        else if (package.tagName() != "package")
+        {
+            package = package.nextSiblingElement();
+            continue;
+        }
+        
+        QString packageName = package.attribute("name");
+        const QStringList &okFiles = packageFiles.at(curPkg);
+        
+        // Obenir la version
+        QString arch;
+        
+        if (isSource)
+        {
+            arch = "src";
+        }
+        else
+        {
+            arch = package.attribute("arch", "any");
+            
+            if (arch == "any")
+            {
+                arch = SETUP_ARCH;
+            }
+            else if (arch != "all" && arch != SETUP_ARCH)
+            {
+                // On ne doit pas construire ce paquet
+                package = package.nextSiblingElement();
+                continue;
+            }
+        }
+        
+        // Obtenir le nom de fichier
+        QString packageFile = packageName + "~" + version + "." + arch + ".lpk";
+        
+        // Envoyer le signal de progression
+        if (!d->ps->sendProgress(progress, curPkg, packageFile))
+        {
+            return false;
+        }
+        
+        curPkg++;
         
         // Créer la liste des _PackageFiles permettant de créer l'archive
         QVector<_PackageFile> packageFiles;
@@ -541,6 +559,7 @@ bool PackageSource::binaries()
                 pf.from = fname;
                 pf.to = fname;
             }
+            
             packageFiles.append(pf);
         }
         
