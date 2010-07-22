@@ -107,7 +107,29 @@ QString PackageDataProvider::license() const
 QByteArray PackageDataProvider::iconData() const
 {
     if (md)
-        return md->packageIconData();
+    {
+        QByteArray rs = md->packageIconData();
+        
+        if (rs.isNull())
+        {
+            QStringList primaryPackages = md->primaryPackages();
+            
+            for (int i=0; i<primaryPackages.count(); ++i)
+            {
+                md->setCurrentPackage(primaryPackages.at(i));
+                rs = md->packageIconData();
+                
+                if (!rs.isNull())
+                {
+                    break;
+                }
+            }
+            
+            md->setCurrentPackage(pkg->name());
+        }
+        
+        return rs;
+    }
     else
         return QByteArray();
 }
