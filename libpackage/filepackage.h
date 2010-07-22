@@ -106,7 +106,6 @@ class FilePackage : public Package
         void registerState(int idate, int iby, int flags);
         
         QByteArray metadataContents();              /*!< @brief Contenu du fichier de métadonnées */
-        QByteArray iconContents();                  /*!< @brief Données brutes de l'icône (fichier PNG valide par exemple) */
         QVector<PackageFile *> files();             /*!< @brief Liste des fichiers du paquet */
 
     signals:

@@ -328,11 +328,52 @@ bool PackageSource::binaries()
         }
         
         QString packageName = package.attribute("name");
-        packageFiles.append(QStringList());
-        QStringList &okFiles = packageFiles.last();
+        
+        // Include l'icône du paquet (si existante) dans les métadonnées
+        QDomElement iconElement = package.firstChildElement("icon");
+        
+        if (!iconElement.isNull())
+        {
+            QString iconFileName = templateString(iconElement.attribute("file"));
+            
+            if (!iconFileName.isEmpty())
+            {
+                QFile iconFile(iconFileName);
+                
+                if (iconFile.open(QIODevice::ReadOnly))
+                {
+                    QDomCDATASection section;
+                    QDomNode node = iconElement.firstChild();
+                        
+                    while (!node.isNull())
+                    {
+                        if (node.isCDATASection())
+                        {
+                            section = node.toCDATASection();
+                        }
+                        
+                        node = node.nextSibling();
+                    }
+                    
+                    if (section.isNull())
+                    {
+                        section = d->md->createCDATASection(QByteArray());
+                        iconElement.appendChild(section);
+                    }
+                    
+                    // Inclure l'icône
+                    section.setData(iconFile.readAll().toBase64());
+                    
+                    iconFile.close();
+                }
+            }
+        }
         
         // Explorer les <files pattern="" /> et ajouter à okFiles les fichiers qui conviennent
         // Si source, alors on a juste besoin du metadata.xml et du dossier control, s'il existe
+        packageFiles.append(QStringList());
+        QStringList &okFiles = packageFiles.last();
+        
         if (isSource)
         {
             if (QFile::exists("control"))

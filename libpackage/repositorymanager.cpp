@@ -743,48 +743,6 @@ bool RepositoryManager::includePackage(const QString &fileName)
     QString download_url = lpkFileName(fpkg->name(), fpkg->version(), fpkg->arch());
     QString metadata_url = metaFileName(fpkg->name(), fpkg->version());
     
-    // Insérer l'icône dans les métadonnées
-    QByteArray icon = fpkg->iconContents();
-    
-    if (!icon.isNull())
-    {
-        // Trouver un éventuel enregistrement <icon /> existant déjà dans les métadonnées
-        QDomElement iconElement = package.firstChildElement("icon");
-        
-        if (iconElement.isNull())
-        {
-            iconElement = md->createElement("icon");
-            package.appendChild(iconElement);
-        }
-        
-        // S'assurer qu'il n'y a pas déjà une section CDATA
-        QDomCDATASection section;
-        QDomNode node = iconElement.firstChild();
-            
-        while (!node.isNull())
-        {
-            if (node.isCDATASection())
-            {
-                section = node.toCDATASection();
-            }
-            
-            node = node.nextSibling();
-        }
-        
-        if (section.isNull())
-        {
-            section = md->createCDATASection(QByteArray());
-            iconElement.appendChild(section);
-        }
-        
-        // Inclure l'icône
-        section.setData(icon.toBase64());
-    }
-    
-    // Hash des métadonnées
-    QByteArray metadataData = md->toByteArray(0);
-    QByteArray metadataHash = QCryptographicHash::hash(metadataData, QCryptographicHash::Sha1).toHex();
-    
     // Mettre à jour la base de donnée
     QString sql;
     QSqlQuery query(d->db);
@@ -952,7 +910,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
             .arg(e(fpkg->license()))
             .arg(fpkg->flags())
             .arg(e(QString(fpkg->packageHash())))
-            .arg(e(QString(metadataHash)))
+            .arg(e(QString(fpkg->metadataHash())))
             .arg(e(download_url))
             .arg(e(fpkg->upstreamUrl()))
             .arg(source_id)
@@ -1508,7 +1466,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
         return false;
     }
     
-    if (!d->writeXZ(metadata_url, metadataData))
+    if (!d->writeXZ(metadata_url, fpkg->metadataContents()))
     {
         return false;
     }
