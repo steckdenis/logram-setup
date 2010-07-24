@@ -386,6 +386,30 @@ QByteArray PackageMetaData::packageIconData() const
     }
 }
 
+QString PackageMetaData::packageIconOrigFileName() const
+{
+    return d->currentPackage.firstChildElement("icon").attribute("file");
+}
+
+PackageMetaData::IconType PackageMetaData::packageIconType() const
+{
+    QDomElement iconElement = d->currentPackage.firstChildElement("icon");
+    
+    if (iconElement.isNull())
+    {
+        return None;
+    }
+    
+    QString type = iconElement.attribute("type", "image");
+    
+    if (type == "image")
+        return Image;
+    else if (type == "svg")
+        return SVG;
+    else
+        return None;
+}
+
 QString PackageMetaData::currentPackage() const
 {
     return d->currentPackage.attribute("name");

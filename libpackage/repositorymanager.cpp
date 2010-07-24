@@ -681,38 +681,37 @@ static QString wikiBody(const WikiPage &wikiPage, FilePackage *fpkg)
     return rs;
 }
 
-static QString lpkFileName(const QString &name, const QString &version, const QString &arch)
+static QString libPrefix(const QString &name)
 {
-    QString rs = "pool/%1/%2/%3~%4.%5.lpk";
-    QString dd;
-    
     if (name.startsWith("lib"))
     {
-        dd = name.left(4);
+        return name.left(4);
     }
     else
     {
-        dd = name.left(1);
+        return name.left(1);
     }
+}
+
+static QString lpkFileName(const QString &name, const QString &version, const QString &arch)
+{
+    QString rs = "pool/%1/%2/%3~%4.%5.lpk";
     
-    return rs.arg(dd, name, name, version, arch);
+    return rs.arg(libPrefix(name), name, name, version, arch);
 }
 
 static QString metaFileName(const QString &name, const QString &version)
 {
     QString rs = "metadata/%1/%2~%3.metadata.xml.xz";
-    QString dd;
     
-    if (name.startsWith("lib"))
-    {
-        dd = name.left(4);
-    }
-    else
-    {
-        dd = name.left(1);
-    }
+    return rs.arg(libPrefix(name), name, version);
+}
+
+static QString iconFileName(const QString &name, const QString &version, const QString &extension)
+{
+    QString rs = "metadata/%1/%2~%3.icon.%4";
     
-    return rs.arg(dd, name, version);
+    return rs.arg(libPrefix(name), name, version, extension);
 }
 
 bool RepositoryManager::includePackage(const QString &fileName)
@@ -742,6 +741,53 @@ bool RepositoryManager::includePackage(const QString &fileName)
     // Obtenir l'url du paquet
     QString download_url = lpkFileName(fpkg->name(), fpkg->version(), fpkg->arch());
     QString metadata_url = metaFileName(fpkg->name(), fpkg->version());
+    QString icon_url;
+    
+    // Si le paquet a une icône, l'enregistrer
+    QByteArray iconData = md->packageIconData();
+    
+    if (!iconData.isNull())
+    {
+        // Enregistrer l'icône dans un fichier, en se servant des attributs de la balise <icon />
+        QString extension = md->packageIconOrigFileName().section('.', -1, -1);
+        
+        if (extension.isEmpty()) extension = "png";
+        
+        icon_url = iconFileName(fpkg->name(), fpkg->version(), extension);
+        
+        // Écrire l'icône
+        QFile fl(icon_url);
+        
+        if (fl.open(QIODevice::WriteOnly))
+        {
+            fl.write(iconData);
+            fl.close();
+        }
+    }
+    else
+    {
+        // Voir si un paquet principal de cette source a une icône. Si c'est le cas, utiliser son icône
+        QStringList primaryPackages = md->primaryPackages();
+            
+        for (int i=0; i<primaryPackages.count(); ++i)
+        {
+            md->setCurrentPackage(primaryPackages.at(i));
+            
+            if (md->packageIconType() != PackageMetaData::None)
+            {
+                QString extension = md->packageIconOrigFileName().section('.', -1, -1);
+                icon_url = iconFileName(md->currentPackage(), fpkg->version(), extension);
+                break;
+            }
+        }
+        
+        if (icon_url.isNull())
+        {
+            icon_url = "NULL";
+        }
+        
+        md->setCurrentPackage(fpkg->name());
+    }
     
     // Mettre à jour la base de donnée
     QString sql;
@@ -854,8 +900,8 @@ bool RepositoryManager::includePackage(const QString &fileName)
     if (!update)
     {
         sql = " INSERT INTO \
-                packages_package(name, maintainer, section_id, version, arch_id, distribution_id, primarylang, download_size, install_size, date, depends, suggests, conflicts, provides, replaces, source, license, flags, packageHash, metadataHash, download_url, upstream_url, sourcepkg_id) \
-                VALUES ('%1', '%2', %3, '%4', %5, %6, '%7', %8, %9, NOW(), '%10', '%11', '%12', '%13', '%14', '%15', '%16', %17, '%18', '%19', '%20', '%21', %22);";
+                packages_package(name, maintainer, section_id, version, arch_id, distribution_id, primarylang, download_size, install_size, date, depends, suggests, conflicts, provides, replaces, source, license, flags, packageHash, metadataHash, download_url, upstream_url, sourcepkg_id, icon) \
+                VALUES ('%1', '%2', %3, '%4', %5, %6, '%7', %8, %9, NOW(), '%10', '%11', '%12', '%13', '%14', '%15', '%16', %17, '%18', '%19', '%20', '%21', %22, '%23');";
     }
     else
     {
@@ -882,7 +928,8 @@ bool RepositoryManager::includePackage(const QString &fileName)
                 metadataHash='%19', \
                 download_url='%20', \
                 upstream_url='%21', \
-                sourcepkg_id=%22 \
+                sourcepkg_id=%22, \
+                icon='%23' \
                 \
                 WHERE id=") + QString::number(package_id) + ";";
         
@@ -914,6 +961,7 @@ bool RepositoryManager::includePackage(const QString &fileName)
             .arg(e(download_url))
             .arg(e(fpkg->upstreamUrl()))
             .arg(source_id)
+            .arg(e(icon_url))
             ))
     {
         PackageError *err = new PackageError;

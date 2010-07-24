@@ -248,6 +248,19 @@ class PackageMetaData : public QObject, public QDomDocument
         QByteArray packageIconData() const;
         
         /**
+         * @brief Type de l'icône d'un paquet
+         */
+        enum IconType
+        {
+            None,   /*!< @brief Pas d'icône */
+            Image,  /*!< @brief Image (PNG, JPG, etc) */
+            SVG     /*!< @brief Fichier SVN (packageIconData() renvoie du texte) */
+        };
+        
+        IconType packageIconType() const;        /*!< @brief Type de l'icône du paquet */
+        QString packageIconOrigFileName() const; /*!< @brief Nom du fichier de l'icône original (pour retrouver son extension) */
+        
+        /**
          * @brief Définit le paquet courant
          * 
          * Les fonctions du type packageDescription() ne s'occupent que du
