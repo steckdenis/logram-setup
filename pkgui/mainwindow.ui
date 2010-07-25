@@ -23,6 +23,9 @@
       <property name="contextMenuPolicy">
        <enum>Qt::ActionsContextMenu</enum>
       </property>
+      <property name="sortingEnabled">
+       <bool>true</bool>
+      </property>
       <property name="animated">
        <bool>false</bool>
       </property>
