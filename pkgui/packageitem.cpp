@@ -116,17 +116,12 @@ void PackageItem::updateText(bool subElements)
                 
                 if (pkg->index() == _pkg->index())
                 {
-                    pkg->setAction(_pkg->action());
+                    continue;
                 }
                 
                 PackageItem *item = new PackageItem(pkg, this, PackageList);
                 addChild(item);
             }
-            
-            // Changer l'icône
-            setIcon(0, QIcon(":/images/package.png"));
-            
-            return;
         }
     }
     
