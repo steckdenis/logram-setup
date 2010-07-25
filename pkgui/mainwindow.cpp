@@ -53,6 +53,8 @@ MainWindow::MainWindow() : QMainWindow(0)
     // Changer comment les docks se placent.
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     
+    treePackages->sortByColumn(0, Qt::AscendingOrder);
+    
     // Initialiser la gestion des paquets
     ps = new PackageSystem(this);
     
