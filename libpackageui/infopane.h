@@ -42,10 +42,14 @@ class InfoPane : public QTabWidget
         
         void displayData(PackageDataProviderInterface *data);
         
+    signals:
+        void versionSelected(const QString &version);
+        
     private slots:
         void websiteActivated(const QString &url);
         void licenseActivated(const QString &url);
         void showFlags();
+        void versionIndexChanged();
         
     private:
         struct Private;

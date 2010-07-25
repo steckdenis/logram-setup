@@ -54,6 +54,7 @@ InfoPane::InfoPane(QWidget* parent): QTabWidget(parent)
     d->ui->btnFlags->setIcon(QIcon::fromTheme("flag"));
     
     connect(d->ui->btnFlags, SIGNAL(clicked(bool)), this, SLOT(showFlags()));
+    connect(d->ui->listVersions, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(versionIndexChanged()));
 }
 
 InfoPane::~InfoPane()
@@ -386,6 +387,15 @@ void LogramUi::InfoPane::licenseActivated(const QString& url)
 void LogramUi::InfoPane::websiteActivated(const QString& url)
 {
     QDesktopServices::openUrl(QUrl(url));
+}
+
+void InfoPane::versionIndexChanged()
+{
+    QListWidgetItem *item = d->ui->listVersions->currentItem();
+    
+    if (item == 0) return;
+    
+    emit versionSelected(item->text());
 }
 
 void LogramUi::InfoPane::showFlags()
