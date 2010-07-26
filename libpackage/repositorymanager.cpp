@@ -1522,6 +1522,12 @@ bool RepositoryManager::includePackage(const QString &fileName)
     return true;
 }
 
+struct LangContent
+{
+    QByteArray shortdesc;
+    QString title;
+};
+
 bool RepositoryManager::exp(const QStringList &distros)
 {
     QSqlQuery query(d->db);
@@ -1560,7 +1566,7 @@ bool RepositoryManager::exp(const QStringList &distros)
     // QByteArrays nécessaires à l'écriture
     QList<QByteArray> streams;
     
-    for (int i=0; i<=langs.count()+2; ++i)
+    for (int i=0; i<=langs.count()+3; ++i)
     {
         // deux tours en plus, parce qu'on a aussi la liste des paquets et des sections à écrire
         streams.append(QByteArray());
@@ -1569,6 +1575,7 @@ bool RepositoryManager::exp(const QStringList &distros)
     QByteArray &pkgstream = streams[langs.count()];
     QByteArray &filestream = streams[langs.count()+1];
     QByteArray &sectionstream = streams[langs.count()+2];
+    QByteArray &metastream = streams[langs.count()+3];
 
 #ifdef GPGME_FOUND
     // Initialiser GPGME
@@ -1644,16 +1651,17 @@ bool RepositoryManager::exp(const QStringList &distros)
             arch_id = query.value(0).toInt();
             
             // Obtenir les traductions
-            QHash<int, QByteArray> trads;
+            QHash<int, LangContent> trads;
             
             sql = " SELECT \
                     package_id, \
                     language, \
-                    content \
+                    content, \
+                    type \
                     \
                     FROM packages_string \
                     \
-                    WHERE type = 1;";
+                    WHERE type = 1 OR type = 0;";
                     
             if (!query.exec(sql))
             {
@@ -1666,18 +1674,21 @@ bool RepositoryManager::exp(const QStringList &distros)
                 return false;
             }
             
-            int lindex;
-            
             while (query.next())
             {
-                lindex = langs.indexOf(query.value(1).toString());
+                int lindex = langs.indexOf(query.value(1).toString());
+                int ltype = query.value(3).toInt();
                 
                 if (lindex != -1)
                 {
-                    trads.insert(
-                        LANGPKGKEY(query.value(0).toInt(), lindex),
-                        query.value(2).toByteArray()
-                    );
+                    if (ltype == 0)
+                    {
+                        trads[LANGPKGKEY(query.value(0).toInt(), lindex)].title = query.value(2).toString();
+                    }
+                    else
+                    {
+                        trads[LANGPKGKEY(query.value(0).toInt(), lindex)].shortdesc = query.value(2).toByteArray();
+                    }
                 }
             }
             
@@ -1881,6 +1892,9 @@ bool RepositoryManager::exp(const QStringList &distros)
                     pkg.packageHash, \
                     pkg.metadataHash, \
                     pkg.upstream_url, \
+                    pkg.icon, \
+                    pkg.votes, \
+                    pkg.total_votes, \
                     \
                     section.name, \
                     pkg.id \
@@ -1909,11 +1923,16 @@ bool RepositoryManager::exp(const QStringList &distros)
             QByteArray rs, pkname, pkprimlang, trad;
             int i, key, pkid, primlangid;
             
+            QDomDocument metaDoc;
+            QDomElement packageElement, packageTitleElement;
+            rootElement = metaDoc.createElement("packages");
+            metaDoc.appendChild(rootElement);
+            
             while (query.next())
             {
                 pkname = query.value(0).toByteArray();
                 pkprimlang = query.value(5).toByteArray();
-                pkid = query.value(18).toInt();
+                pkid = query.value(21).toInt();
                 primlangid = -1;
                 
                 rs = '[' + pkname + "]\n";
@@ -1922,10 +1941,9 @@ bool RepositoryManager::exp(const QStringList &distros)
                 rs += "Source=" + query.value(2).toByteArray() + '\n';
                 rs += "UpstreamUrl=" + query.value(16).toByteArray() + '\n';
                 rs += "Maintainer=" + query.value(3).toByteArray() + '\n';
-                rs += "Section=" + query.value(17).toByteArray() + '\n';
+                rs += "Section=" + query.value(20).toByteArray() + '\n';
                 rs += "Distribution=" + distro + '\n';
                 rs += "License=" + query.value(4).toByteArray() + '\n';
-                rs += "PrimaryLang=" + pkprimlang + '\n';
                 rs += "Flags=" + query.value(6).toByteArray() + '\n';
                 rs += "Depends=" + query.value(7).toByteArray() + '\n';
                 rs += "Provides=" + query.value(8).toByteArray() + '\n';
@@ -1949,6 +1967,33 @@ bool RepositoryManager::exp(const QStringList &distros)
                 
                 pkgstream += rs;
                 
+                // Métadonnées du paquet extraites dans une liste
+                if (query.value(6).toInt() & PACKAGE_FLAG_PRIMARY)
+                {
+                    packageElement = metaDoc.createElement("package");
+                    rootElement.appendChild(packageElement);
+                    
+                    packageElement.setAttribute("name", QString(pkname));
+                    packageElement.setAttribute("primarylang", QString(pkprimlang));
+                    packageElement.setAttribute("votes", QString::number(query.value(18).toInt()));
+                    packageElement.setAttribute("totalvotes", QString::number(query.value(19).toInt()));
+                    
+                    packageTitleElement = metaDoc.createElement("title");
+                    packageElement.appendChild(packageTitleElement);
+                    
+                    // Icône
+                    QFile fl(query.value(17).toString());
+                    
+                    if (fl.open(QIODevice::ReadOnly))
+                    {
+                        QDomElement packageIcon = metaDoc.createElement("icon");
+                        packageElement.appendChild(packageIcon);
+                        
+                        QDomCDATASection cdata = metaDoc.createCDATASection(fl.readAll().toBase64());
+                        packageIcon.appendChild(cdata);
+                    }
+                }
+                
                 // Enregistrer les traductions
                 for (i=0; i<langs.count(); ++i)
                 {
@@ -1956,7 +2001,17 @@ bool RepositoryManager::exp(const QStringList &distros)
                     
                     if (trads.contains(key))
                     {
-                        trad = trads.value(key);
+                        const LangContent &l = trads.value(key);
+                        trad = l.shortdesc;
+                        
+                        if (query.value(6).toInt() & PACKAGE_FLAG_PRIMARY)
+                        {
+                            QDomElement langAttr = metaDoc.createElement(langs.at(i));
+                            packageTitleElement.appendChild(langAttr);
+                            
+                            QDomText txt = metaDoc.createTextNode(l.title);
+                            langAttr.appendChild(txt);
+                        }
                     }
                     else
                     {
@@ -1966,12 +2021,14 @@ bool RepositoryManager::exp(const QStringList &distros)
                             primlangid = langs.indexOf(pkprimlang);
                         }
                         
-                        trad = trads.value(LANGPKGKEY(pkid, primlangid));
+                        trad = trads.value(LANGPKGKEY(pkid, primlangid)).shortdesc;
                     }
                     
                     streams[i] += pkname + ':' + trad + '\n';
                 }
             }
+            
+            metastream = metaDoc.toByteArray(0);
             
             // Écrire les flux
             QString fileName, filePath;
@@ -1996,9 +2053,13 @@ bool RepositoryManager::exp(const QStringList &distros)
                 {
                     fileName = filePath + "/files.xz";
                 }
-                else
+                else if (i == langs.count() + 2)
                 {
                     fileName = filePath + "/sections.xz";
+                }
+                else
+                {
+                    fileName = filePath + "/metadata.xz";
                 }
                 
                 // Créer le dossier s'il le fait
