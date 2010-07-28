@@ -25,6 +25,8 @@
 
 #include <QToolBox>
 
+class QTreeWidget;
+
 namespace Logram
 {
     class PackageSystem;
@@ -44,6 +46,9 @@ class CategoryView : public QToolBox
         ~CategoryView();
         
         void reload();
+        
+        QTreeWidget *sections();
+        QTreeWidget *distributions();
         
     private slots:
         void updateFilter();

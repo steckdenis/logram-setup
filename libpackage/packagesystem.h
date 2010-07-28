@@ -366,11 +366,39 @@ class PackageSystem : public QObject
         int packages();                                 /*!< @brief Nombre de paquets dans la base de donnée */
         
         /**
+         * @brief Filtres de mise à jour
+         * @sa update
+         */
+        enum UpdateFilter
+        {
+            Minimal = 1,                                /*!< @brief Minimum (packages.xz, files.xz, translate.xz) */
+            Sections = 2,                               /*!< @brief Liste des sections (sections.xz) */
+            Metadata = 4                                /*!< @brief Métadonnées exportées (metadata.xz) */
+        };
+        
+        /**
          * @brief Met à jour la base de donnée, fonction bloquante
+         * 
+         * Télécharge depuis les dépôts actifs les fichiers nécessaires et
+         * reconstruit la base de donnée binaire.
+         * 
+         * Le paramètre @p filter permet de sélectionner les différentes
+         * parties de la base de donnée à mettre à jour, sachant que
+         * Minimal est obligatoire.
+         * 
+         * Ceci permet par exemple à la commande @b lpm de ne mettre à jour que
+         * ce dont elle a besoin, en téléchargement moins. Pkgui a également
+         * besoin des sections (qui viennent avec des icônes, fichier un peu
+         * lourd). SoftwareCenter, lui, a besoin d'un dump des métadonnées pour
+         * afficher le titre, la note et l'icône des paquets principaux qu'il
+         * affiche.
+         * 
+         * @param Filter Filtre des parties à télécharger
          * @return True si tout s'est bien passé
          * @sa reset
+         * @sa UpdateFilter
          */
-        bool update();
+        bool update(int filter = Minimal);
         
         QVector<DatabasePackage *> upgradePackages();     /*!< @brief Liste des paquets pouvant être mis à jour */
         QVector<DatabasePackage *> orphans();             /*!< @brief Liste des paquets orphelins */

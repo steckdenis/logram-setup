@@ -31,7 +31,6 @@
 #include <QTreeWidget>
 
 #include <QtXml>
-#include <boost/iterator/iterator_concepts.hpp>
 
 using namespace Logram;
 using namespace LogramUi;
@@ -59,14 +58,13 @@ LogramUi::CategoryView::CategoryView(Logram::PackageSystem* ps, FilterInterface*
     d->sections->setIconSize(QSize(32, 32));
     d->sections->setHeaderHidden(true);
     d->sections->setMouseTracking(true);
+    d->sections->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     
     d->distros = new QTreeWidget(this);
     d->distros->setIconSize(QSize(32, 32));
     d->distros->setHeaderHidden(true);
     d->distros->setMouseTracking(true);
-    
-    connect(d->sections, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updateFilter()));
-    connect(d->distros,  SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updateFilter()));
+    d->distros->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     
     // Insérer les pages
     addItem(d->sections, QIcon::fromTheme("applications-other"), tr("Sections"));
@@ -74,11 +72,24 @@ LogramUi::CategoryView::CategoryView(Logram::PackageSystem* ps, FilterInterface*
     
     // Peupler la vue
     reload();
+    
+    connect(d->sections, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updateFilter()));
+    connect(d->distros,  SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(updateFilter()));
 }
 
 LogramUi::CategoryView::~CategoryView()
 {
     delete d;
+}
+
+QTreeWidget* CategoryView::sections()
+{
+    return d->sections;
+}
+
+QTreeWidget* CategoryView::distributions()
+{
+    return d->distros;
 }
 
 void CategoryView::updateFilter()

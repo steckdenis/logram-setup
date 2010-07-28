@@ -228,7 +228,7 @@ void MainWindow::enableProgressions()
 
 void MainWindow::databaseUpdate()
 {
-    if (!ps->update())
+    if (!ps->update(PackageSystem::Minimal | PackageSystem::Sections))
     {
         Utils::packageSystemError(ps);
         return;

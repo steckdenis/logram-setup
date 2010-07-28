@@ -106,7 +106,8 @@ class DatabaseWriter : public QObject
             PackagesList,   /*!< @brief Liste des paquets (packages.xz) */
             Translations,   /*!< @brief Traductions (transtale.lang.xz) */
             FilesList,      /*!< @brief Liste des fichiers (files.xz) */
-            SectionsList    /*!< @brief Liste des sections (sections.xz) */
+            SectionsList,   /*!< @brief Liste des sections (sections.xz) */
+            Metadata        /*!< @brief Métadonnées exportées du dépôt (metadata.xz) */
         };
 
         /**

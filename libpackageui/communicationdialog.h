@@ -25,7 +25,6 @@
 
 #include <QDialog>
 #include <QVector>
-#include "ui_communicationdialog.h"
 
 class QAbstractButton;
 
@@ -38,7 +37,7 @@ namespace Logram
 namespace LogramUi
 {
 
-class CommunicationDialog : public QDialog, private Ui_CommunicationDialog
+class CommunicationDialog : public QDialog
 {
     Q_OBJECT
     

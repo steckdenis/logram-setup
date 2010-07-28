@@ -22,6 +22,7 @@
 
 #include "communicationdialog.h"
 #include "utils.h"
+#include "ui_communicationdialog.h"
 
 #include <QIcon>
 #include <QCheckBox>
@@ -46,6 +47,8 @@ struct CommunicationDialog::Private
     QVector<QAbstractButton *> listWidgets;
     QWidget *inputWidget;
     const char *inputProperty;
+    
+    Ui_CommunicationDialog *ui;
 };
 
 CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QWidget* parent): QDialog(parent)
@@ -53,8 +56,9 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
     d = new Private;
     d->comm = _comm;
     d->pkg = _pkg;
+    d->ui = new Ui_CommunicationDialog();
     
-    setupUi(this);
+    d->ui->setupUi(this);
     
     // Propriétés
     if (_pkg != 0)
@@ -71,31 +75,31 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
         
         if (md == 0 || (iconData = md->packageIconData()).isNull())
         {
-            lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(32, 32));
+            d->ui->lblIcon->setPixmap(QIcon(":/images/package.png").pixmap(32, 32));
         }
         else
         {
-            lblIcon->setPixmap(Utils::pixmapFromData(iconData, 32, 32));
+            d->ui->lblIcon->setPixmap(Utils::pixmapFromData(iconData, 32, 32));
         }
     }
     else
     {
         setWindowTitle(_comm->title());
-        lblIcon->setPixmap(QIcon(":/images/icon.svg").pixmap(48, 48));
+        d->ui->lblIcon->setPixmap(QIcon(":/images/icon.svg").pixmap(48, 48));
     }
     
-    lblDescription->setText(_comm->description());
-    buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
+    d->ui->lblDescription->setText(_comm->description());
+    d->ui->buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
     
     switch (_comm->returnType())
     {
         case Communication::String:
         {
-            lblChoiceType->setText(tr("Entrez une chaîne de caractère :"));
+            d->ui->lblChoiceType->setText(tr("Entrez une chaîne de caractère :"));
             
             QLineEdit *edit = new QLineEdit(this);
             edit->setText(_comm->defaultString());
-            verticalLayout->insertWidget(2, edit);
+            d->ui->verticalLayout->insertWidget(2, edit);
             
             connect(edit, SIGNAL(textChanged(QString)), this, SLOT(updateValues()));
             
@@ -105,12 +109,12 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
             break;
         case Communication::Integer:
         {
-            lblChoiceType->setText(tr("Entrez un nombre entier :"));
+            d->ui->lblChoiceType->setText(tr("Entrez un nombre entier :"));
             
             QSpinBox *spinBox = new QSpinBox(this);
             spinBox->setMaximum(INT_MAX);
             spinBox->setValue(_comm->defaultInt());
-            verticalLayout->insertWidget(2, spinBox);
+            d->ui->verticalLayout->insertWidget(2, spinBox);
             
             connect(spinBox, SIGNAL(valueChanged(int)), this, SLOT(updateValues()));
             
@@ -120,11 +124,11 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
             break;
         case Communication::Float:
         {
-            lblChoiceType->setText(tr("Entrez un nombre décimal :"));
+            d->ui->lblChoiceType->setText(tr("Entrez un nombre décimal :"));
             
             QDoubleSpinBox *doubleSpinBox = new QDoubleSpinBox(this);
             doubleSpinBox->setValue(_comm->defaultDouble());
-            verticalLayout->insertWidget(2, doubleSpinBox);
+            d->ui->verticalLayout->insertWidget(2, doubleSpinBox);
             
             connect(doubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(updateValues()));
             
@@ -141,12 +145,12 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
                 
                 if (_comm->returnType() == Communication::SingleChoice)
                 {
-                    lblChoiceType->setText(tr("Sélectionner un choix :"));
+                    d->ui->lblChoiceType->setText(tr("Sélectionner un choix :"));
                     btn = new QRadioButton(this);
                 }
                 else
                 {
-                    lblChoiceType->setText(tr("Sélectionner un ou plusieurs choix :"));
+                    d->ui->lblChoiceType->setText(tr("Sélectionner un ou plusieurs choix :"));
                     btn = new QCheckBox(this);
                 }
                 
@@ -160,7 +164,7 @@ CommunicationDialog::CommunicationDialog(Package *_pkg, Communication* _comm, QW
             
             for (int i=d->listWidgets.count() - 1; i >= 0; --i)
             {
-                verticalLayout->insertWidget(2, d->listWidgets.at(i));
+                d->ui->verticalLayout->insertWidget(2, d->listWidgets.at(i));
             }
             
             break;
@@ -206,13 +210,13 @@ void CommunicationDialog::updateValues()
     
     if (!d->comm->isEntryValid())
     {
-        buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
-        lblError->setText(QString("<span style=\"color: #ff0000\">%1</span>").arg(d->comm->entryValidationErrorString()));
+        d->ui->buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
+        d->ui->lblError->setText(QString("<span style=\"color: #ff0000\">%1</span>").arg(d->comm->entryValidationErrorString()));
     }
     else
     {
-        buttons->button(QDialogButtonBox::Ok)->setEnabled(true);
-        lblError->setText(QString());
+        d->ui->buttons->button(QDialogButtonBox::Ok)->setEnabled(true);
+        d->ui->lblError->setText(QString());
     }
 }
 

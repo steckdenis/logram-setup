@@ -47,11 +47,6 @@ SearchBar::SearchBar(FilterInterface* interface, QWidget* parent): QWidget(paren
     
     d->ui->setupUi(this);
     
-    // Signaux
-    connect(d->ui->cboFilter, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFilter()));
-    connect(d->ui->txtSearch, SIGNAL(returnPressed()), this, SLOT(updateFilter()));
-    connect(d->ui->btnSearch, SIGNAL(clicked(bool)), this, SLOT(updateFilter()));
-    
     // Icônes
     d->ui->btnSearch->setIcon(QIcon::fromTheme("edit-find"));
     
@@ -95,7 +90,11 @@ SearchBar::SearchBar(FilterInterface* interface, QWidget* parent): QWidget(paren
     
     d->ui->btnSearch->setMenu(menu);
     
+    // Signaux
     connect(menu, SIGNAL(triggered(QAction*)), this, SLOT(actionTriggered(QAction*)));
+    connect(d->ui->cboFilter, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFilter()));
+    connect(d->ui->txtSearch, SIGNAL(returnPressed()), this, SLOT(updateFilter()));
+    connect(d->ui->btnSearch, SIGNAL(clicked(bool)), this, SLOT(updateFilter()));
 }
 
 SearchBar::~SearchBar()

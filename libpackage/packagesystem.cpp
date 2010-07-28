@@ -241,7 +241,7 @@ QSettings *Logram::PackageSystem::installedPackagesList() const
     return d->ipackages;
 }
 
-bool Logram::PackageSystem::update()
+bool Logram::PackageSystem::update(int filter)
 {
     // Explorer la liste des mirroirs dans /etc/lgrpkg/sources.list, format QSettings
     QString lang = d->set->value("Language", tr("fr", "Langue par défaut pour les paquets")).toString();
@@ -278,7 +278,22 @@ bool Logram::PackageSystem::update()
 
     // Explorer les enregistrements et les télécharger
     int count = enrgs.count();
-    int progress = startProgress(Progress::GlobalDownload, count*4);
+    int multiplied;
+    
+    if (filter & Minimal)
+    {
+        multiplied = 3;
+    }
+    else
+    {
+        qDebug() << "Attempt to update without PackageSystem::Minimal";
+        return false;
+    }
+    
+    if (filter & Sections) multiplied++;
+    if (filter & Metadata) multiplied++;
+    
+    int progress = startProgress(Progress::GlobalDownload, count*multiplied);
     
     for (int i=0; i<count; ++i)
     {
@@ -287,7 +302,7 @@ bool Logram::PackageSystem::update()
         QString path = enrg->url + "/dists/" + enrg->distroName + "/" + enrg->arch;
         QString u = path + "/packages.xz";
         
-        if (!sendProgress(progress, i*4, u))
+        if (!sendProgress(progress, i * multiplied, u))
         {
             return false;
         }
@@ -300,7 +315,7 @@ bool Logram::PackageSystem::update()
         // Traductions
         u = path + "/translate." + lang + ".xz";
         
-        if (!sendProgress(progress, i*4+1, u))
+        if (!sendProgress(progress, i * multiplied + 1, u))
         {
             return false;
         }
@@ -313,7 +328,7 @@ bool Logram::PackageSystem::update()
         // Liste des fichiers
         u = path + "/files.xz";
         
-        if (!sendProgress(progress, i*4+2, u))
+        if (!sendProgress(progress, i * multiplied + 2, u))
         {
             return false;
         }
@@ -324,18 +339,34 @@ bool Logram::PackageSystem::update()
         }
         
         // Sections
-        u = path + "/sections.xz";
-        ManagedDownload *unused;
-        
-        if (!sendProgress(progress, i*4+3, u))
+        if (filter & Sections)
         {
-            return false;
+            u = path + "/sections.xz";
+            
+            if (!sendProgress(progress, i * multiplied + 3, u))
+            {
+                return false;
+            }
+            
+            if (!db->download(enrg->sourceName, u, enrg->type, DatabaseWriter::SectionsList, enrg->gpgCheck))
+            {
+                return false;
+            }
         }
         
-        //if (!download(enrg->type, u, varRoot() + "/var/cache/lgrpkg/download/sections.xz", true, unused))
-        if (!db->download(enrg->sourceName, u, enrg->type, DatabaseWriter::SectionsList, enrg->gpgCheck))
+        if (filter & Metadata)
         {
-            return false;
+            u = path + "/metadata.xz";
+            
+            if (!sendProgress(progress, i * multiplied + (filter & Sections ? 4 : 3), u))
+            {
+                return false;
+            }
+            
+            if (!db->download(enrg->sourceName, u, enrg->type, DatabaseWriter::Metadata, enrg->gpgCheck))
+            {
+                return false;
+            }
         }
         
         delete enrg;

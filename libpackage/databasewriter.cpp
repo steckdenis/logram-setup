@@ -220,7 +220,6 @@ int DatabaseWriter::stringIndex(const QByteArray &str, int pkg, bool isTr, bool 
     
     if (isTr)
     {
-        // TODO: Optimisation (voir fileStringIndex)
         if (translateIndexes.contains(str))
         {
             rs = translateIndexes.value(str);
@@ -481,10 +480,11 @@ bool DatabaseWriter::rebuild()
             }
             
             // On ne fait que décompresser sections.list
-            if (datatype == SectionsList)
+            if (datatype == SectionsList || datatype == Metadata)
             {
                 if (pass != 0) continue;
-                
+
+#ifdef GPGME_FOUND
                 // Vérifier la signature de ce fichier
                 bool signvalid;
             
@@ -528,6 +528,7 @@ bool DatabaseWriter::rebuild()
                         return false;
                     }
                 }
+#endif
             }
 
             // Pas de passe 1 pour translate et filelist
@@ -1269,11 +1270,21 @@ bool DatabaseWriter::rebuild()
             QStringList parts = file.section('/', -1, -1).split('.');
             FileDataType datatype = (FileDataType)parts.at(3).toInt();
 
-            if (datatype == SectionsList)
+            if (datatype == SectionsList || datatype == Metadata)
             {
                 QString reponame = parts.at(0);
                 QString distroname = parts.at(1);
-                QString filename = QString("/var/cache/lgrpkg/db/%1_%2.sections").arg(reponame, distroname);
+                QString filename;
+                
+                if (datatype == SectionsList)
+                { 
+                    filename = QString("/var/cache/lgrpkg/db/%1_%2.sections").arg(reponame, distroname);
+                }
+                else
+                {
+                    QString arch = parts.at(2);
+                    filename = QString("/var/cache/lgrpkg/db/%1_%2_%3.metadata").arg(reponame, distroname, arch);
+                }
                 
                 QFile::remove(parent->varRoot() + filename);
                 QFile::rename(fname, parent->varRoot() + filename);

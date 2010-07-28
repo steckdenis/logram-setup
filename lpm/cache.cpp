@@ -36,7 +36,7 @@ using namespace Logram;
 void App::update()
 {
     // Mettre à jour la base de donnée
-    if (!ps->update())
+    if (!ps->update(PackageSystem::Minimal))
     {
         error();
     }

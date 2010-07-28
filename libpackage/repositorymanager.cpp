@@ -1982,15 +1982,20 @@ bool RepositoryManager::exp(const QStringList &distros)
                     packageElement.appendChild(packageTitleElement);
                     
                     // Icône
-                    QFile fl(query.value(17).toString());
+                    QString fname = query.value(17).toString();
                     
-                    if (fl.open(QIODevice::ReadOnly))
+                    if (!fname.isEmpty())
                     {
-                        QDomElement packageIcon = metaDoc.createElement("icon");
-                        packageElement.appendChild(packageIcon);
+                        QFile fl(fname);
                         
-                        QDomCDATASection cdata = metaDoc.createCDATASection(fl.readAll().toBase64());
-                        packageIcon.appendChild(cdata);
+                        if (fl.open(QIODevice::ReadOnly))
+                        {
+                            QDomElement packageIcon = metaDoc.createElement("icon");
+                            packageElement.appendChild(packageIcon);
+                            
+                            QDomCDATASection cdata = metaDoc.createCDATASection(fl.readAll().toBase64());
+                            packageIcon.appendChild(cdata);
+                        }
                     }
                 }
                 

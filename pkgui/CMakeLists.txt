@@ -1,8 +1,5 @@
 project(pkgui)
 
-set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.36.0 COMPONENTS regex REQUIRED)
-
 configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_definitions(
@@ -18,7 +15,6 @@ include_directories(
         ${QT_QTXML_INCLUDE_DIR}
         ${QT_INCLUDE_DIR}
         ${QT_QT_INCLUDE_DIR}
-        ${Boost_INCLUDE_DIRS}
 )
 
 set(pkgui_SRCS
@@ -43,7 +39,6 @@ target_link_libraries(pkgui
         ${QT_QTCORE_LIBRARY}
         ${QT_QTGUI_LIBRARY}
         ${QT_QTXML_LIBRARY}
-        ${Boost_LIBRARIES}
         lgrpkg
         lgrpkgui
 )
