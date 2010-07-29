@@ -1,0 +1,317 @@
+<!ENTITY % language "aa|ab|ae|af|ak|am|an|ar|as|av|ay|az|ba|be|bg|bh|bi|bm|bn|bo|br|bs|ca|ce|ch|co|cr|cs|cu|cv|cy|da|de|dv|dz|ee|el|en|eo|es|et|eu|fa|ff|fi|fj|fo|fr|fy|ga|gd|gl|gn|gu|gv|ha|he|hi|ho|hr|ht|hu|hy|hz|ia|id|ie|ig|ii|ik|in|io|is|it|iu|iw|ja|ji|jv|jw|ka|kg|ki|kj|kk|kl|km|kn|ko|kr|ks|ku|kv|kw|ky|la|lb|lg|li|ln|lo|lt|lu|lv|mg|mh|mi|mk|ml|mn|mo|mr|ms|mt|my|na|nb|nd|ne|ng|nl|nn|no|nr|nv|ny|oc|oj|om|or|os|pa|pi|pl|ps|pt|qu|rm|rn|ro|ru|rw|ry|sa|sc|sd|se|sg|sh|si|sk|sl|sm|sn|so|sq|sr|ss|st|su|sv|sw|ta|te|tg|th|ti|tk|tl|tn|to|tr|ts|tt|tw|ty|ug|uk|ur|uz|ve|vi|vo|wa|wo|xh|yi|yo|za">
+
+<!ELEMENT metadata (source, package+, communication*, changelog)>
+    <!ATTLIST metadata 
+        primarylang (%language;) #REQUIRED
+    >
+
+    <!-- Source package -->
+    <!ELEMENT source (maintainer, depend*, script+)>
+        <!ATTLIST source 
+            license CDATA #REQUIRED
+            devel CDATA "false"
+            name CDATA #REQUIRED
+            upstreamurl CDATA #REQUIRED
+        >
+        
+        <!ELEMENT maintainer EMPTY>
+            <!ATTLIST maintainer
+                email CDATA #REQUIRED
+                name CDATA #REQUIRED
+            >
+            
+        <!ELEMENT depend EMPTY>
+            <!ATTLIST depend
+                string CDATA #REQUIRED
+                type (depend | conflict | suggest | provide | replace) #REQUIRED
+            >
+            
+        <!ELEMENT script (#PCDATA)>
+            <!ATTLIST script
+                type (header | download | build | version | preinst | postinst | prerm | postrm | preupd | postupd) #REQUIRED
+            >
+        
+    <!-- Package entries -->
+    <!ELEMENT package (depend*, flag*, plugin*, files*, embed*, eula?, title, shortdesc, description, icon?, executable?, script*)>
+        <!ATTLIST package
+            section CDATA #REQUIRED
+            arch CDATA #REQUIRED
+            name CDATA #REQUIRED
+        >
+
+        <!ELEMENT flag EMPTY>
+            <!ATTLIST flag
+                value CDATA "1"
+                name (kdeintegration | gui | eula | needsreboot | primary) #REQUIRED
+            >
+            
+        <!ELEMENT plugin EMPTY>
+            <!ATTLIST plugin
+                name CDATA #REQUIRED
+                enable CDATA "true"
+            >
+            
+        <!ELEMENT files EMPTY>
+            <!ATTLIST files
+                pattern CDATA "*"
+                exclude CDATA "false"
+            >
+            
+        <!ELEMENT embed EMPTY>
+            <!ATTLIST embed
+                from CDATA #REQUIRED
+                to CDATA #REQUIRED
+            >
+            
+        <!ELEMENT eula (%language;)+>
+        <!ELEMENT title (%language;)+>
+        <!ELEMENT shortdesc (%language;)+>
+        <!ELEMENT description (%language;)+>
+        
+        <!ELEMENT icon (#PCDATA)>
+            <!ATTLIST icon
+                file CDATA #IMPLIED
+                type (image | svg) "image"
+            >
+            
+        <!ELEMENT executable EMPTY>
+            <!ATTLIST executable
+                path CDATA #REQUIRED
+                root CDATA "false"
+            >
+            
+    <!-- Communications -->
+    <!ELEMENT communication (title, description, return?)>
+        <!ATTLIST communication
+            type (message | question) #REQUIRED
+            name CDATA #REQUIRED
+        >
+        
+        <!ELEMENT return (validate?, choice*)>
+            <!ATTLIST return
+                type (string | int | float | singlechoice | multichoice) #REQUIRED
+                default CDATA #IMPLIED
+            >
+            
+            <!ELEMENT validate (rule*, errormessage)>
+                
+                <!ELEMENT rule (#PCDATA)>
+                    <!ATTLIST rule
+                        type (regex | limit) #REQUIRED
+                        min CDATA #IMPLIED
+                        max CDATA #IMPLIED
+                    >
+                    
+                <!ELEMENT errormessage (%language;)+>
+                
+            <!ELEMENT choice (%language;)+>
+                <!ATTLIST choice
+                    value CDATA #REQUIRED
+                    selected CDATA "false"
+                >
+                
+    <!-- Changelog -->
+    <!ELEMENT changelog (entry+)>
+        
+        <!ELEMENT entry (%language;)+>
+            <!ATTLIST entry
+                version CDATA #REQUIRED
+                realversion CDATA #IMPLIED
+                distribution CDATA #REQUIRED
+                author CDATA #REQUIRED
+                email CDATA #REQUIRED
+                type (lowprio | security | bugfix | feature) #REQUIRED
+                date CDATA #REQUIRED
+                time CDATA #REQUIRED
+            >
+            
+<!-- Langues (FIXME) -->
+<!ELEMENT aa (#PCDATA)>
+<!ELEMENT ab (#PCDATA)>
+<!ELEMENT ae (#PCDATA)>
+<!ELEMENT af (#PCDATA)>
+<!ELEMENT ak (#PCDATA)>
+<!ELEMENT am (#PCDATA)>
+<!ELEMENT an (#PCDATA)>
+<!ELEMENT ar (#PCDATA)>
+<!ELEMENT as (#PCDATA)>
+<!ELEMENT av (#PCDATA)>
+<!ELEMENT ay (#PCDATA)>
+<!ELEMENT az (#PCDATA)>
+<!ELEMENT ba (#PCDATA)>
+<!ELEMENT be (#PCDATA)>
+<!ELEMENT bg (#PCDATA)>
+<!ELEMENT bh (#PCDATA)>
+<!ELEMENT bi (#PCDATA)>
+<!ELEMENT bm (#PCDATA)>
+<!ELEMENT bn (#PCDATA)>
+<!ELEMENT bo (#PCDATA)>
+<!ELEMENT br (#PCDATA)>
+<!ELEMENT bs (#PCDATA)>
+<!ELEMENT ca (#PCDATA)>
+<!ELEMENT ce (#PCDATA)>
+<!ELEMENT ch (#PCDATA)>
+<!ELEMENT co (#PCDATA)>
+<!ELEMENT cr (#PCDATA)>
+<!ELEMENT cs (#PCDATA)>
+<!ELEMENT cu (#PCDATA)>
+<!ELEMENT cv (#PCDATA)>
+<!ELEMENT cy (#PCDATA)>
+<!ELEMENT da (#PCDATA)>
+<!ELEMENT de (#PCDATA)>
+<!ELEMENT dv (#PCDATA)>
+<!ELEMENT dz (#PCDATA)>
+<!ELEMENT ee (#PCDATA)>
+<!ELEMENT el (#PCDATA)>
+<!ELEMENT en (#PCDATA)>
+<!ELEMENT eo (#PCDATA)>
+<!ELEMENT es (#PCDATA)>
+<!ELEMENT et (#PCDATA)>
+<!ELEMENT eu (#PCDATA)>
+<!ELEMENT fa (#PCDATA)>
+<!ELEMENT ff (#PCDATA)>
+<!ELEMENT fi (#PCDATA)>
+<!ELEMENT fj (#PCDATA)>
+<!ELEMENT fo (#PCDATA)>
+<!ELEMENT fr (#PCDATA)>
+<!ELEMENT fy (#PCDATA)>
+<!ELEMENT ga (#PCDATA)>
+<!ELEMENT gd (#PCDATA)>
+<!ELEMENT gl (#PCDATA)>
+<!ELEMENT gn (#PCDATA)>
+<!ELEMENT gu (#PCDATA)>
+<!ELEMENT gv (#PCDATA)>
+<!ELEMENT ha (#PCDATA)>
+<!ELEMENT he (#PCDATA)>
+<!ELEMENT hi (#PCDATA)>
+<!ELEMENT ho (#PCDATA)>
+<!ELEMENT hr (#PCDATA)>
+<!ELEMENT ht (#PCDATA)>
+<!ELEMENT hu (#PCDATA)>
+<!ELEMENT hy (#PCDATA)>
+<!ELEMENT hz (#PCDATA)>
+<!ELEMENT ia (#PCDATA)>
+<!ELEMENT id (#PCDATA)>
+<!ELEMENT ie (#PCDATA)>
+<!ELEMENT ig (#PCDATA)>
+<!ELEMENT ii (#PCDATA)>
+<!ELEMENT ik (#PCDATA)>
+<!ELEMENT in (#PCDATA)>
+<!ELEMENT io (#PCDATA)>
+<!ELEMENT is (#PCDATA)>
+<!ELEMENT it (#PCDATA)>
+<!ELEMENT iu (#PCDATA)>
+<!ELEMENT iw (#PCDATA)>
+<!ELEMENT ja (#PCDATA)>
+<!ELEMENT ji (#PCDATA)>
+<!ELEMENT jv (#PCDATA)>
+<!ELEMENT jw (#PCDATA)>
+<!ELEMENT ka (#PCDATA)>
+<!ELEMENT kg (#PCDATA)>
+<!ELEMENT ki (#PCDATA)>
+<!ELEMENT kj (#PCDATA)>
+<!ELEMENT kk (#PCDATA)>
+<!ELEMENT kl (#PCDATA)>
+<!ELEMENT km (#PCDATA)>
+<!ELEMENT kn (#PCDATA)>
+<!ELEMENT ko (#PCDATA)>
+<!ELEMENT kr (#PCDATA)>
+<!ELEMENT ks (#PCDATA)>
+<!ELEMENT ku (#PCDATA)>
+<!ELEMENT kv (#PCDATA)>
+<!ELEMENT kw (#PCDATA)>
+<!ELEMENT ky (#PCDATA)>
+<!ELEMENT la (#PCDATA)>
+<!ELEMENT lb (#PCDATA)>
+<!ELEMENT lg (#PCDATA)>
+<!ELEMENT li (#PCDATA)>
+<!ELEMENT ln (#PCDATA)>
+<!ELEMENT lo (#PCDATA)>
+<!ELEMENT lt (#PCDATA)>
+<!ELEMENT lu (#PCDATA)>
+<!ELEMENT lv (#PCDATA)>
+<!ELEMENT mg (#PCDATA)>
+<!ELEMENT mh (#PCDATA)>
+<!ELEMENT mi (#PCDATA)>
+<!ELEMENT mk (#PCDATA)>
+<!ELEMENT ml (#PCDATA)>
+<!ELEMENT mn (#PCDATA)>
+<!ELEMENT mo (#PCDATA)>
+<!ELEMENT mr (#PCDATA)>
+<!ELEMENT ms (#PCDATA)>
+<!ELEMENT mt (#PCDATA)>
+<!ELEMENT my (#PCDATA)>
+<!ELEMENT na (#PCDATA)>
+<!ELEMENT nb (#PCDATA)>
+<!ELEMENT nd (#PCDATA)>
+<!ELEMENT ne (#PCDATA)>
+<!ELEMENT ng (#PCDATA)>
+<!ELEMENT nl (#PCDATA)>
+<!ELEMENT nn (#PCDATA)>
+<!ELEMENT no (#PCDATA)>
+<!ELEMENT nr (#PCDATA)>
+<!ELEMENT nv (#PCDATA)>
+<!ELEMENT ny (#PCDATA)>
+<!ELEMENT oc (#PCDATA)>
+<!ELEMENT oj (#PCDATA)>
+<!ELEMENT om (#PCDATA)>
+<!ELEMENT or (#PCDATA)>
+<!ELEMENT os (#PCDATA)>
+<!ELEMENT pa (#PCDATA)>
+<!ELEMENT pi (#PCDATA)>
+<!ELEMENT pl (#PCDATA)>
+<!ELEMENT ps (#PCDATA)>
+<!ELEMENT pt (#PCDATA)>
+<!ELEMENT qu (#PCDATA)>
+<!ELEMENT rm (#PCDATA)>
+<!ELEMENT rn (#PCDATA)>
+<!ELEMENT ro (#PCDATA)>
+<!ELEMENT ru (#PCDATA)>
+<!ELEMENT rw (#PCDATA)>
+<!ELEMENT ry (#PCDATA)>
+<!ELEMENT sa (#PCDATA)>
+<!ELEMENT sc (#PCDATA)>
+<!ELEMENT sd (#PCDATA)>
+<!ELEMENT se (#PCDATA)>
+<!ELEMENT sg (#PCDATA)>
+<!ELEMENT sh (#PCDATA)>
+<!ELEMENT si (#PCDATA)>
+<!ELEMENT sk (#PCDATA)>
+<!ELEMENT sl (#PCDATA)>
+<!ELEMENT sm (#PCDATA)>
+<!ELEMENT sn (#PCDATA)>
+<!ELEMENT so (#PCDATA)>
+<!ELEMENT sq (#PCDATA)>
+<!ELEMENT sr (#PCDATA)>
+<!ELEMENT ss (#PCDATA)>
+<!ELEMENT st (#PCDATA)>
+<!ELEMENT su (#PCDATA)>
+<!ELEMENT sv (#PCDATA)>
+<!ELEMENT sw (#PCDATA)>
+<!ELEMENT ta (#PCDATA)>
+<!ELEMENT te (#PCDATA)>
+<!ELEMENT tg (#PCDATA)>
+<!ELEMENT th (#PCDATA)>
+<!ELEMENT ti (#PCDATA)>
+<!ELEMENT tk (#PCDATA)>
+<!ELEMENT tl (#PCDATA)>
+<!ELEMENT tn (#PCDATA)>
+<!ELEMENT to (#PCDATA)>
+<!ELEMENT tr (#PCDATA)>
+<!ELEMENT ts (#PCDATA)>
+<!ELEMENT tt (#PCDATA)>
+<!ELEMENT tw (#PCDATA)>
+<!ELEMENT ty (#PCDATA)>
+<!ELEMENT ug (#PCDATA)>
+<!ELEMENT uk (#PCDATA)>
+<!ELEMENT ur (#PCDATA)>
+<!ELEMENT uz (#PCDATA)>
+<!ELEMENT ve (#PCDATA)>
+<!ELEMENT vi (#PCDATA)>
+<!ELEMENT vo (#PCDATA)>
+<!ELEMENT wa (#PCDATA)>
+<!ELEMENT wo (#PCDATA)>
+<!ELEMENT xh (#PCDATA)>
+<!ELEMENT yi (#PCDATA)>
+<!ELEMENT yo (#PCDATA)>
+<!ELEMENT za (#PCDATA)>
