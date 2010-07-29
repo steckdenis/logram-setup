@@ -67,7 +67,7 @@ bool DatabaseReader::init()
 bool DatabaseReader::reset()
 {
     closeFiles();
-    init();
+    return init();
 }
 
 void DatabaseReader::closeFiles()

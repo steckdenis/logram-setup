@@ -220,6 +220,8 @@ static void weightChildren(Solver::Node *node, Solver::Node *mainNode, bool weig
                 case Solver::Purge:
                     mainNode->minInstSize -= node->package->installSize();
                     break;
+                default:
+                    break;
             }
         }
     }
@@ -238,6 +240,8 @@ static void weightChildren(Solver::Node *node, Solver::Node *mainNode, bool weig
                 case Solver::Remove:
                 case Solver::Purge:
                     mainNode->maxInstSize -= node->package->installSize();
+                    break;
+                default:
                     break;
             }
         }

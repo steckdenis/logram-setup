@@ -174,7 +174,7 @@ QAbstractButton* Breadcrumb::Private::button(const QString& text, const QIcon& i
 
 /////////////////////////////////////////
 
-#define GRADLENGTH 6
+#define GRADLENGTH 8
 
 QSize Separator::sizeHint() const
 {
@@ -226,7 +226,7 @@ void Separator::paintEvent(QPaintEvent* event)
     grad.setFinalStop(GRADLENGTH, 0.0);
     
     grad.setColorAt(0.0, mid);
-    grad.setColorAt(1.0, transp);
+    grad.setColorAt(0.8, transp);
     
     painter.setPen(transp);
     painter.setBrush(grad);

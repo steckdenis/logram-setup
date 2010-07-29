@@ -21,6 +21,8 @@ set(appmanager_SRCS
         main.cpp
         mainwindow.cpp
         breadcrumb.cpp
+        introdisplay.cpp
+        categorydrawer.cpp
 )
 
 set(appmanager_UIS

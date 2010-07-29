@@ -22,6 +22,7 @@
 
 #include "mainwindow.h"
 #include "breadcrumb.h"
+#include "introdisplay.h"
 
 #include <categoryview.h>
 #include <utils.h>
@@ -116,8 +117,8 @@ MainWindow::MainWindow() : QMainWindow(0)
     QScrollArea *scrollIntro = new QScrollArea(this);
     scrollIntro->setWidgetResizable(true);
     
-    //display = new IntroDisplay(this);
-    //scroll->setWidget(display);
+    display = new IntroDisplay(this);
+    scrollIntro->setWidget(display);
     
     stack->addWidget(scrollIntro);
     
@@ -141,7 +142,7 @@ MainWindow::MainWindow() : QMainWindow(0)
     restoreState(settings.value("windowState").toByteArray());
     
     // Mettre à jour la base de donnée si nécessaire
-    QTimer::singleShot(0, this, SLOT(checkUpdate()));
+    QTimer::singleShot(0, this, SLOT(delayedInit()));
     
     // Signaux
     connect(filterInterface, SIGNAL(dataChanged()), this, SLOT(searchPackages()));
@@ -172,8 +173,14 @@ bool MainWindow::error() const
     return _error;
 }
 
-void MainWindow::checkUpdate()
+QVector <MainWindow::RatedPackage> &MainWindow::ratedPackages()
 {
+    return highestRated;
+}
+
+void MainWindow::delayedInit()
+{
+    // Vérifier s'il y a des choses à mettre à jour.
     QSettings settings("Logram", "AppManager");
     QDate lastUpdate = settings.value("LastUpdateDate").toDate();
     
@@ -186,6 +193,9 @@ void MainWindow::checkUpdate()
     {
         readPackages();
     }
+    
+    // Afficher l'intro
+    display->populate();
 }
 
 void MainWindow::setMode(bool packageList)
@@ -212,6 +222,8 @@ void MainWindow::readPackages()
     
     QDir dir(ps->varRoot() + "/var/cache/lgrpkg/db");
     QStringList files = dir.entryList(QDir::Files);
+    
+    float minRated = 0.0;
     
     foreach (const QString &file, files)
     {
@@ -276,10 +288,69 @@ void MainWindow::readPackages()
                 pkg.icon = Utils::pixmapFromData(iconData, 32, 32);
             }
             
+            // Insérer dans la liste globale
             packages.insert(key, pkg);
+            
+            // Voir si c'est un paquet qui a le meilleur score
+            float score (pkg.total_votes == 0 ? 0 : float(pkg.votes) / float(pkg.total_votes));
+            
+            if (highestRated.count() < 5)
+            {
+                RatedPackage r;
+                
+                r.inf = pkg;
+                r.repo = repo;
+                r.distro = distro;
+                r.score = score;
+                
+                highestRated.append(r);
+                
+                minRated = (minRated > score ? minRated : score);
+            }
+            else
+            {
+                if (score > minRated)
+                {
+                    // Éliminer de la liste le paquet avec le score le plus faible
+                    int minIndex = 0;
+                    float minScore;
+                    
+                    for (int i=0; i<highestRated.count(); ++i)
+                    {
+                        const RatedPackage &inf = highestRated.at(i);
+                        
+                        if (minIndex == -1)
+                        {
+                            minIndex = i;
+                            minScore = inf.score;
+                        }
+                        else if (inf.score < minScore)
+                        {
+                            minIndex = i;
+                            minScore = inf.score;
+                        }
+                    }
+                    
+                    RatedPackage r;
+                    
+                    r.inf = pkg;
+                    r.repo = repo;
+                    r.distro = distro;
+                    r.score = score;
+                    
+                    highestRated.replace(minIndex, r);
+                    minRated = score;
+                }
+            }
             
             package = package.nextSiblingElement();
         }
+    }
+    
+    // DEBUG
+    foreach (const RatedPackage &r, highestRated)
+    {
+        qDebug() << r.repo << r.distro << r.inf.title;
     }
 }
 

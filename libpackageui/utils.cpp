@@ -70,6 +70,8 @@ QString Utils::actionNameInf(Logram::Solver::Action action)
         default:
             break;
     }
+
+    return QString();
 }
 
 void Utils::packageSystemError(PackageSystem* ps)

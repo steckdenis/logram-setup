@@ -110,7 +110,6 @@ class Solver : public QObject
             enum Type
             {
                 NoDeps,                             /*!< @brief Dépendance manquante */
-                Conflict,                           /*!< @brief Conflit présent */
                 InternalError,                      /*!< @brief Erreur dans PackageSystem. Utilisez PackageSystem::lastError pour voir */
                 ChildError,                         /*!< @brief Un enfant du noeud a une erreur, ce qui le rend invalide. @b other est cet enfant */
                 SameNameSameVersionDifferentAction, /*!< @brief Deux actions différentes pour un même paquet */

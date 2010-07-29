@@ -94,7 +94,6 @@ void ProgressList::addProgress(Logram::Progress* progress)
     data->lblMore->setWordWrap(true);
     
     // Chaîne du type
-    Package *pkg;
     switch (progress->type)
     {
         case Progress::Other:

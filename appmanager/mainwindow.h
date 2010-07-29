@@ -44,7 +44,7 @@ namespace Logram
     class DatabasePackage;
 }
 
-//class IntroDisplay;
+class IntroDisplay;
 class MainWindow;
 class Breadcrumb;
 
@@ -66,11 +66,20 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
             int votes, total_votes;
         };
         
+        struct RatedPackage
+        {
+            PackageInfo inf;
+            QString repo, distro;
+            float score;
+        };
+        
+        QVector<RatedPackage> &ratedPackages();
+        
     private slots:
         void progress(Logram::Progress *progress);
         void communication(Logram::Package *sender, Logram::Communication *comm);
         void updateDatabase();
-        void checkUpdate();
+        void delayedInit();
         void readPackages();
         
     private:
@@ -90,11 +99,12 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         LogramUi::InfoPane *infoPane;
         LogramUi::SearchBar *searchBar;
         
-        //IntroDisplay *display;
+        IntroDisplay *display;
         //PackageList *listPackages;
         Breadcrumb *breadcrumb;
         
         QHash<QString, PackageInfo> packages;
+        QVector<RatedPackage> highestRated;
         QHash<Logram::DatabasePackage *, int> packageActions;
 };
 
