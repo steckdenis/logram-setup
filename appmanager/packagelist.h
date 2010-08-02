@@ -1,5 +1,5 @@
 /*
- * mainwindow.h
+ * packagelist.h
  * This file is part of Logram
  *
  * Copyright (C) 2010 - Denis Steckelmacher <steckdenis@logram-project.org>
@@ -20,44 +20,27 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __BREADCRUMB_H__
-#define __BREADCRUMB_H__
+#ifndef __PACKAGELIST_H__
+#define __PACKAGELIST_H__
 
 #include <QWidget>
-#include <QIcon>
-#include <QString>
+#include <QPixmap>
 
-class QAbstractButton;
+class MainWindow;
 
-class Breadcrumb : public QWidget
+class PackageList : public QWidget
 {
     Q_OBJECT
     
     public:
-        Breadcrumb(QWidget *parent);
-        ~Breadcrumb();
+        PackageList(MainWindow *parent);
         
-        void addButton(const QString &text);
-        void addButton(const QIcon &icon, const QString &text);
-        void addButton(QAbstractButton *button);
-        
-        void insertButton(int index, const QString &text);
-        void insertButton(int index, const QIcon &icon, const QString &text);
-        void insertButton(int index, QAbstractButton *button);
-        
-        void removeButton(int index);
-        QAbstractButton *button(int index) const;
-        int count() const;
-        
-    private slots:
-        void buttonTriggered();
-        
-    signals:
-        void buttonPressed(int index);
+    protected:
+        void paintEvent(QPaintEvent *event);
         
     private:
-        struct Private;
-        Private *d;
+        MainWindow *win;
+        QPixmap pix;
 };
 
 #endif

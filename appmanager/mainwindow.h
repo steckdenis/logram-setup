@@ -47,6 +47,7 @@ namespace Logram
 class IntroDisplay;
 class MainWindow;
 class Breadcrumb;
+class PackageList;
 
 class QListWidget;
 
@@ -81,6 +82,8 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         void updateDatabase();
         void delayedInit();
         void readPackages();
+        void searchPackages();
+        void breadcrumbPressed(int index);
         
     private:
         void setMode(bool packageList);
@@ -100,7 +103,7 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         LogramUi::SearchBar *searchBar;
         
         IntroDisplay *display;
-        //PackageList *listPackages;
+        PackageList *listPackages;
         Breadcrumb *breadcrumb;
         
         QHash<QString, PackageInfo> packages;

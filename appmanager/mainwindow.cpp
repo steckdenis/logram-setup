@@ -23,6 +23,7 @@
 #include "mainwindow.h"
 #include "breadcrumb.h"
 #include "introdisplay.h"
+#include "packagelist.h"
 
 #include <categoryview.h>
 #include <utils.h>
@@ -106,12 +107,9 @@ MainWindow::MainWindow() : QMainWindow(0)
     // Fil d'ariane
     breadcrumb = new Breadcrumb(this);
     
-    breadcrumbLayout->insertWidget(2, breadcrumb);
+    breadcrumb->addButton(QIcon::fromTheme("go-home"), tr("Accueil"));
     
-    // TEST
-    breadcrumb->addButton(QIcon::fromTheme("kde"), "KDE !");
-    breadcrumb->addButton("Oh lala, un bouton");
-    breadcrumb->insertButton(1, new QCheckBox("Cochez ceci"));
+    breadcrumbLayout->insertWidget(2, breadcrumb);
     
     // Affichage de l'introduction
     QScrollArea *scrollIntro = new QScrollArea(this);
@@ -126,8 +124,8 @@ MainWindow::MainWindow() : QMainWindow(0)
     QScrollArea *scrollPackages = new QScrollArea(this);
     scrollPackages->setWidgetResizable(true);
     
-    //listPackages = new PackageList(this);
-    //scrollPackages->setWidget(listPackages);
+    listPackages = new ::PackageList(this);
+    scrollPackages->setWidget(listPackages);
     
     stack->addWidget(scrollPackages);
     
@@ -148,8 +146,10 @@ MainWindow::MainWindow() : QMainWindow(0)
     connect(filterInterface, SIGNAL(dataChanged()), this, SLOT(searchPackages()));
     //connect(listPackages, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(updateInfos()));
     connect(btnUpdate, SIGNAL(clicked(bool)), this, SLOT(updateDatabase()));
+    connect(breadcrumb, SIGNAL(buttonPressed(int)), this, SLOT(breadcrumbPressed(int)));
     
     setMode(false);
+    searchBar->setFocus();
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
@@ -163,7 +163,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 MainWindow::~MainWindow()
 {
-    //delete listPackages;
+    delete listPackages;
     delete ps;
     delete progressDialog;
 }
@@ -206,13 +206,44 @@ void MainWindow::setMode(bool packageList)
         stack->setCurrentIndex(0);
         docInfos->hide();
         btnChanges->hide();
-        //display->populate();
     }
     else
     {
         stack->setCurrentIndex(1);
         docInfos->show();
         btnChanges->show();
+    }
+}
+
+void MainWindow::searchPackages()
+{
+    setMode(true);
+    
+    if (breadcrumb->count() == 1)
+    {
+        // Première recherche de l'utilisateur, lui ajouter un bouton pour dire où il est
+        breadcrumb->addButton(QIcon(":/images/package.png"), tr("Recherche de paquets"));
+    }
+    else
+    {
+        // Prendre le bouton à l'index 1 et s'assurer qu'il affiche la bonne chose
+        QAbstractButton *btn = breadcrumb->button(1);
+        btn->setText(tr("Recherche de paquets"));
+        btn->setIcon(QIcon(":/images/package.png"));
+    }
+}
+
+void MainWindow::breadcrumbPressed(int index)
+{
+    if (index == 0)
+    {
+        // On revient à la page d'accueil
+        setMode(false);
+    }
+    else if (index == 1)
+    {
+        // On affiche la dernière recherche de paquets
+        setMode(true);
     }
 }
 
@@ -345,12 +376,6 @@ void MainWindow::readPackages()
             
             package = package.nextSiblingElement();
         }
-    }
-    
-    // DEBUG
-    foreach (const RatedPackage &r, highestRated)
-    {
-        qDebug() << r.repo << r.distro << r.inf.title;
     }
 }
 

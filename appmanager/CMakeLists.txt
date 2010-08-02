@@ -23,6 +23,8 @@ set(appmanager_SRCS
         breadcrumb.cpp
         introdisplay.cpp
         categorydrawer.cpp
+        packagelist.cpp
+        packageentry.cpp
 )
 
 set(appmanager_UIS

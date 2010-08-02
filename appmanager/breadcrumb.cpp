@@ -106,9 +106,14 @@ void Breadcrumb::insertButton(int index, QAbstractButton* button)
     d->insertButton(index, button);
 }
 
-QAbstractButton* Breadcrumb::button(int index)
+QAbstractButton* Breadcrumb::button(int index) const
 {
     return d->buttons.at(index);
+}
+
+int Breadcrumb::count() const
+{
+    return d->buttons.count();
 }
 
 void Breadcrumb::removeButton(int index)
@@ -124,6 +129,19 @@ void Breadcrumb::removeButton(int index)
     }
     
     d->separators.remove(index);
+}
+
+void Breadcrumb::buttonTriggered()
+{
+    QAbstractButton *btn = qobject_cast<QAbstractButton *>(sender());
+    int index;
+    
+    if (btn == 0 || (index = d->buttons.indexOf(btn)) == -1)
+    {
+        return;
+    }
+    
+    emit buttonPressed(index);
 }
 
 void Breadcrumb::Private::appendButton(QAbstractButton* btn)
@@ -168,6 +186,8 @@ QAbstractButton* Breadcrumb::Private::button(const QString& text, const QIcon& i
     if (!icon.isNull()) rs->setIcon(icon);
     
     rs->setFlat(true);
+    
+    QObject::connect(rs, SIGNAL(clicked(bool)), b, SLOT(buttonTriggered()));
     
     return rs;
 }

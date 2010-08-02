@@ -74,7 +74,7 @@ void IntroDisplay::populate()
         "<p>Pour commencer à choisir des applications, cliquez sur une des catégories à gauche de ce "
         "texte. Ensuite, choisissez les applications voulues dans la liste qui s'affichera. Cliquez "
         "dessus pour les installer ou les supprimer. Une fois terminé, cliquez sur <strong>Appliquer "
-        "les changements</strong>."
+        "les changements</strong>.</p>"
     ));
     
     lay->addWidget(lblWelcome, 1, 0, 1, 2);
@@ -92,6 +92,11 @@ void IntroDisplay::populate()
     listRated->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     listRated->setIconSize(QSize(32, 32));
     listRated->setTextElideMode(Qt::ElideMiddle);
+    listRated->setFrameShape(QFrame::NoFrame);
+    
+    QPalette pal = listRated->palette();
+    pal.setColor(QPalette::Base, Qt::transparent);
+    listRated->setPalette(pal);
     
     QVector<MainWindow::RatedPackage> ratedPackages = win->ratedPackages();
     
@@ -123,6 +128,13 @@ void IntroDisplay::populate()
     cat->setText(tr("Derniers paquets"));
     
     lay->addWidget(cat, 2, 1);
+    
+    // Ajouter la liste des news Logram
+    cat = new CategoryDrawer(this);
+    cat->setIcon(QIcon(":/images/logologram.svg"));
+    cat->setText(tr("Dernières nouvelles de Logram"));
+    
+    lay->addWidget(cat, 4, 0, 1, 2);
     
     // Ajouter un stretch
     QWidget *stretch = new QWidget(this);

@@ -1,5 +1,6 @@
 <RCC>
   <qresource>
     <file>images/logologram.png</file>
+    <file>images/logologram.svg</file>
   </qresource>
 </RCC>
