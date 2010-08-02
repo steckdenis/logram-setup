@@ -122,4 +122,23 @@ QString FilterInterface::section() const
     return d->section;
 }
 
+QString FilterInterface::statusName(FilterInterface::StatusFilter status) const
+{
+    switch (status)
+    {
+        case NoFilter:
+            return tr("Tous les paquets");
+        case Installed:
+            return tr("Paquets installés");
+        case NotInstalled:
+            return tr("Paquets non-installés");
+        case Updateable:
+            return tr("Paquets pouvant être mis à jour");
+        case Orphan:
+            return tr("Paquets orphelins");
+    }
+    
+    return QString();
+}
+
 #include "filterinterface.moc"

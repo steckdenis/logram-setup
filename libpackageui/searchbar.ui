@@ -16,31 +16,6 @@
      <property name="statusTip">
       <string>Filtre les paquets en fonction de leur état (installé, supprimé, etc).</string>
      </property>
-     <item>
-      <property name="text">
-       <string>Tous les paquets</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Paquets installés</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Paquets non-installés</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Paquets pouvant être mis à jour</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Paquets orphelins</string>
-      </property>
-     </item>
     </widget>
    </item>
    <item>

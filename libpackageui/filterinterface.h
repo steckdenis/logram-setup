@@ -62,6 +62,7 @@ class FilterInterface : public QObject
         QString repository() const;
         QString distribution() const;
         QString section() const;
+        QString statusName(StatusFilter status) const;
         
     signals:
         void dataChanged();

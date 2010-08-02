@@ -50,6 +50,10 @@ class CategoryView : public QToolBox
         QTreeWidget *sections();
         QTreeWidget *distributions();
         
+        QString sectionTitle(const QString &name) const;
+        QString sectionDescription(const QString &name) const;
+        QIcon sectionIcon(const QString &name) const;
+        
     private slots:
         void updateFilter();
         

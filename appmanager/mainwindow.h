@@ -109,6 +109,13 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         QHash<QString, PackageInfo> packages;
         QVector<RatedPackage> highestRated;
         QHash<Logram::DatabasePackage *, int> packageActions;
+        
+        enum FilterAction
+        {
+            RemoveSearch = 1,
+            RemoveStatus = 2,
+            RemoveSection = 4
+        };
 };
 
 #endif

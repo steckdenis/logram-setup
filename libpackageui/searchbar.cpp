@@ -50,28 +50,31 @@ SearchBar::SearchBar(FilterInterface* interface, QWidget* parent): QWidget(paren
     // Icônes
     d->ui->btnSearch->setIcon(QIcon::fromTheme("edit-find"));
     
-    for (int i=0; i<d->ui->cboFilter->count(); ++i)
+    for (int i=0; i<=4; ++i)
     {
         FilterInterface::StatusFilter filter = (FilterInterface::StatusFilter)i;
+        QIcon icon;
         
         switch (filter)
         {
             case FilterInterface::NoFilter:
-                d->ui->cboFilter->setItemIcon(i, QIcon::fromTheme("view-filter"));
+                icon = QIcon::fromTheme("view-filter");
                 break;
             case FilterInterface::Installed:
-                d->ui->cboFilter->setItemIcon(i, QIcon(":/images/pkg-install.png"));
+                icon = QIcon(":/images/pkg-install.png");
                 break;
             case FilterInterface::NotInstalled:
-                d->ui->cboFilter->setItemIcon(i, QIcon(":/images/package.png"));
+                icon = QIcon(":/images/package.png");
                 break;    
             case FilterInterface::Updateable:
-                d->ui->cboFilter->setItemIcon(i, QIcon(":/images/pkg-update.png"));
+                icon = QIcon(":/images/pkg-update.png");
                 break;
             case FilterInterface::Orphan:
-                d->ui->cboFilter->setItemIcon(i, QIcon(":/images/pkg-purge.png"));
+                icon = QIcon(":/images/pkg-purge.png");
                 break;
         }
+        
+        d->ui->cboFilter->addItem(icon, interface->statusName(filter));
     }
     
     // Menu du bouton de recherche
@@ -112,7 +115,7 @@ void SearchBar::updateFilter()
 {
     QString pattern = d->ui->txtSearch->text();
     
-    if (!pattern.isNull() && d->interface->nameSyntax() == QRegExp::Wildcard && !pattern.contains('*'))
+    if (!pattern.isEmpty() && d->interface->nameSyntax() == QRegExp::Wildcard && !pattern.contains('*'))
     {
         // Si l'utilisateur n'a entré qu'un nom, rechercher les paquets qui le contiennent
         pattern = "*" + pattern + "*";

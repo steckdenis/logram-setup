@@ -118,14 +118,14 @@ int Breadcrumb::count() const
 
 void Breadcrumb::removeButton(int index)
 {
-    d->layout->removeWidget(d->buttons.at(index));
+    delete d->buttons.at(index);
     d->buttons.remove(index);
     
     Separator *sep = d->separators.at(index);
     
     if (sep != 0)
     {
-        d->layout->removeWidget(d->separators.at(index));
+        delete sep;
     }
     
     d->separators.remove(index);

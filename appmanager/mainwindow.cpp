@@ -219,17 +219,68 @@ void MainWindow::searchPackages()
 {
     setMode(true);
     
-    if (breadcrumb->count() == 1)
+    // Effacer tous les boutons sauf le premier
+    while (breadcrumb->count() > 1)
     {
-        // Première recherche de l'utilisateur, lui ajouter un bouton pour dire où il est
-        breadcrumb->addButton(QIcon(":/images/package.png"), tr("Recherche de paquets"));
+        breadcrumb->removeButton(breadcrumb->count() - 1);
     }
-    else
+    
+    // Si on n'affiche que le contenu d'une distro, l'indiquer
+    if (!filterInterface->repository().isNull() || !filterInterface->distribution().isNull())
     {
-        // Prendre le bouton à l'index 1 et s'assurer qu'il affiche la bonne chose
-        QAbstractButton *btn = breadcrumb->button(1);
-        btn->setText(tr("Recherche de paquets"));
-        btn->setIcon(QIcon(":/images/package.png"));
+        QString s;
+        
+        if (filterInterface->repository().isNull())
+        {
+            s = tr("Distribution %1").arg(filterInterface->distribution());
+        }
+        else if (filterInterface->distribution().isNull())
+        {
+            s = tr("Dépôt %1").arg(filterInterface->repository());
+        }
+        else
+        {
+            s = tr("Distribution %1/%2").arg(filterInterface->repository(), filterInterface->distribution());
+        }
+        
+        breadcrumb->addButton(QIcon(":/images/repository.png"), s);
+        breadcrumb->button(breadcrumb->count() - 1)->setProperty("lgr_filteraction", RemoveSearch | RemoveSection | RemoveStatus);
+    }
+    
+    // Si on n'affiche que le contenu d'une section, l'indiquer
+    if (!filterInterface->section().isNull())
+    {
+        QString s = filterInterface->section();
+        QStringList parts = s.split('/');
+        QString tot;
+        
+        foreach (const QString &part, parts)
+        {
+            if (!tot.isNull())
+            {
+                tot += '/';
+            }
+            
+            tot += part;
+            
+            breadcrumb->addButton(sections->sectionIcon(tot), sections->sectionTitle(tot));
+            breadcrumb->button(breadcrumb->count() - 1)->setProperty("lgr_filteraction", RemoveSearch | RemoveStatus);
+            breadcrumb->button(breadcrumb->count() - 1)->setProperty("lgr_setsection", tot);
+        }
+    }
+    
+    // Si on filtre en fonction d'un status, l'ajouter
+    if (filterInterface->statusFilter() != FilterInterface::NoFilter)
+    {
+        breadcrumb->addButton(QIcon::fromTheme("view-filter"), filterInterface->statusName(filterInterface->statusFilter()));
+        breadcrumb->button(breadcrumb->count() - 1)->setProperty("lgr_filteraction", RemoveSearch);
+    }
+    
+    // Si on effectue une recherche, l'ajouter
+    if (!filterInterface->namePattern().isEmpty())
+    {
+        breadcrumb->addButton(QIcon::fromTheme("edit-find"), tr("Recherche"));
+        breadcrumb->button(breadcrumb->count() - 1)->setProperty("lgr_filteraction", 0);
     }
 }
 
@@ -240,10 +291,31 @@ void MainWindow::breadcrumbPressed(int index)
         // On revient à la page d'accueil
         setMode(false);
     }
-    else if (index == 1)
+    else
     {
-        // On affiche la dernière recherche de paquets
-        setMode(true);
+        // Effectuer ce qu'il demande
+        int actions = breadcrumb->button(index)->property("lgr_filteraction").toInt();
+        QString s;
+        
+        if (actions & RemoveSearch)
+        {
+            filterInterface->setNamePattern(QString());
+        }
+        if (actions & RemoveStatus)
+        {
+            filterInterface->setStatusFilter(LogramUi::FilterInterface::NoFilter);
+        }
+        if (actions & RemoveSection)
+        {
+            filterInterface->setSection(QString());
+        }
+        
+        if (!(s = breadcrumb->button(index)->property("lgr_setsection").toString()).isNull())
+        {
+            filterInterface->setSection(s);
+        }
+        
+        filterInterface->updateViews();
     }
 }
 

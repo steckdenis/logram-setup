@@ -92,6 +92,33 @@ QTreeWidget* CategoryView::distributions()
     return d->distros;
 }
 
+QString CategoryView::sectionTitle(const QString& name) const
+{
+    QTreeWidgetItem *item = d->sectionItems.value(name);
+    
+    if (item != 0) return item->text(0);
+    
+    return QString();
+}
+
+QString CategoryView::sectionDescription(const QString& name) const
+{
+    QTreeWidgetItem *item = d->sectionItems.value(name);
+    
+    if (item != 0) return item->toolTip(0);
+    
+    return QString();
+}
+
+QIcon CategoryView::sectionIcon(const QString& name) const
+{
+    QTreeWidgetItem *item = d->sectionItems.value(name);
+    
+    if (item != 0) return item->icon(0);
+    
+    return QIcon();
+}
+
 void CategoryView::updateFilter()
 {
     QTreeWidgetItem *sectionItem = d->sections->currentItem();
