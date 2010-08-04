@@ -140,11 +140,13 @@ void MainWindow::searchPackages()
     if (regex.isEmpty())
     {
         // Tous les paquets
-        ids.reserve(ps->packages());
+        int tot = ps->packages();
         
-        for (int i=0; i<ps->packages(); ++i)
+        ids.resize(tot);
+        
+        for (int i=0; i<tot; ++i)
         {
-            ids.append(i);
+            ids[i] = i;
         }
     }
     else

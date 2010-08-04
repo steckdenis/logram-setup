@@ -47,7 +47,7 @@ namespace Logram
 class IntroDisplay;
 class MainWindow;
 class Breadcrumb;
-class PackageList;
+class PackageDisplay;
 
 class QListWidget;
 
@@ -84,10 +84,13 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         void readPackages();
         void searchPackages();
         void breadcrumbPressed(int index);
+        void itemSelected(int index);
         
     private:
         void setMode(bool packageList);
         bool addPackage(Logram::DatabasePackage *pkg);
+        QVector<Logram::DatabasePackage *> packages();
+        bool checkPackage(Logram::DatabasePackage *pkg);
         
     protected:
         void closeEvent(QCloseEvent *event);
@@ -103,10 +106,10 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         LogramUi::SearchBar *searchBar;
         
         IntroDisplay *display;
-        PackageList *listPackages;
+        PackageDisplay *listPackages;
         Breadcrumb *breadcrumb;
         
-        QHash<QString, PackageInfo> packages;
+        QHash<QString, PackageInfo> packageInfos;
         QVector<RatedPackage> highestRated;
         QHash<Logram::DatabasePackage *, int> packageActions;
         

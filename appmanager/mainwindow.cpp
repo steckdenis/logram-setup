@@ -23,7 +23,7 @@
 #include "mainwindow.h"
 #include "breadcrumb.h"
 #include "introdisplay.h"
-#include "packagelist.h"
+#include "packagedisplay.h"
 
 #include <categoryview.h>
 #include <utils.h>
@@ -32,9 +32,12 @@
 #include <searchbar.h>
 #include <communicationdialog.h>
 #include <progressdialog.h>
+#include <packagedataprovider.h>
 
 #include <communication.h>
 #include <packagemetadata.h>
+#include <databasereader.h>
+#include <databasepackage.h>
 
 #include <QIcon>
 #include <QVBoxLayout>
@@ -124,7 +127,7 @@ MainWindow::MainWindow() : QMainWindow(0)
     QScrollArea *scrollPackages = new QScrollArea(this);
     scrollPackages->setWidgetResizable(true);
     
-    listPackages = new ::PackageList(this);
+    listPackages = new ::PackageDisplay(this);
     scrollPackages->setWidget(listPackages);
     
     stack->addWidget(scrollPackages);
@@ -144,7 +147,7 @@ MainWindow::MainWindow() : QMainWindow(0)
     
     // Signaux
     connect(filterInterface, SIGNAL(dataChanged()), this, SLOT(searchPackages()));
-    //connect(listPackages, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(updateInfos()));
+    connect(listPackages, SIGNAL(currentIndexChanged(int)), this, SLOT(itemSelected(int)));
     connect(btnUpdate, SIGNAL(clicked(bool)), this, SLOT(updateDatabase()));
     connect(breadcrumb, SIGNAL(buttonPressed(int)), this, SLOT(breadcrumbPressed(int)));
     
@@ -205,14 +208,169 @@ void MainWindow::setMode(bool packageList)
         // Cacher ce qu'il faut
         stack->setCurrentIndex(0);
         docInfos->hide();
-        btnChanges->hide();
     }
     else
     {
         stack->setCurrentIndex(1);
         docInfos->show();
-        btnChanges->show();
     }
+}
+
+void MainWindow::itemSelected(int index)
+{
+    if (index == -1)
+    {
+        docInfos->hide();
+        return;
+    }
+    
+    docInfos->show();
+    
+    DatabasePackage *pkg = listPackages->package(index);
+    
+    PackageDataProvider *provider = new PackageDataProvider(pkg, ps);
+    infoPane->displayData(provider);
+    
+    docInfos->setWindowTitle(tr("Informations sur %1 %2").arg(pkg->name(), pkg->version()));
+}
+
+bool MainWindow::checkPackage(DatabasePackage* pkg)
+{
+    if ((pkg->flags() & PACKAGE_FLAG_PRIMARY) == 0)
+    {
+        return false;
+    }
+    
+    if ((!filterInterface->repository().isNull() && pkg->repo() != filterInterface->repository()) ||
+        (!filterInterface->distribution().isNull() && pkg->distribution() != filterInterface->distribution()) ||
+        (!filterInterface->section().isNull() && pkg->section() != filterInterface->section()))
+    {
+        return false;
+    }
+    
+    return true;    // Paquet inséré
+}
+
+QVector<DatabasePackage *> MainWindow::packages()
+{
+    QVector<int> ids, newids;
+    DatabaseReader *dr = ps->databaseReader();
+    QVector<DatabasePackage *> rs;
+    
+    FilterInterface::StatusFilter filter = filterInterface->statusFilter();
+    QRegExp regex = filterInterface->regex();
+    
+    // Si on ne prend que les paquets qu'on peut mettre à jour, c'est facile
+    if (filter == FilterInterface::Updateable || filter == FilterInterface::Orphan)
+    {
+        QVector<DatabasePackage *> pkgs;
+        
+        if (filter == FilterInterface::Updateable)
+        {
+            pkgs = ps->upgradePackages();
+        }
+        else
+        {
+            pkgs = ps->orphans();
+        }
+        
+        // Filtrer en fonction de pattern
+        if (regex.isEmpty())
+        {
+            for (int i=0; i<pkgs.count(); ++i)
+            {
+                DatabasePackage *pkg = pkgs.at(i);
+                
+                if (checkPackage(pkg))
+                {
+                    rs.append(pkg);
+                }
+                else
+                {
+                    delete pkg;
+                }
+            }
+        }
+        else
+        {
+            for (int i=0; i<pkgs.count(); ++i)
+            {
+                DatabasePackage *pkg = pkgs.at(i);
+                
+                if (checkPackage(pkgs.at(i)) && regex.exactMatch(pkg->name()))
+                {
+                    rs.append(pkg);
+                }
+                else
+                {
+                    delete pkg;
+                }
+            }
+        }
+        
+        // Fini
+        return rs;
+    }
+    
+    // Trouver les IDs en fonction de ce qu'on demande
+    if (regex.isEmpty())
+    {
+        // Tous les paquets
+        int tot = ps->packages();
+        
+        ids.resize(tot);
+        
+        for (int i=0; i<tot; ++i)
+        {
+            ids[i] = i;
+        }
+    }
+    else
+    {
+        if (!ps->packagesByName(regex, ids))
+        {
+            return rs;
+        }
+    }
+    
+    // Filtrer les paquets
+    if (filter == FilterInterface::Installed || filter == FilterInterface::NotInstalled)
+    {
+        for (int i=0; i<ids.count(); ++i)
+        {
+            int index = ids.at(i);
+            _Package *pkg = dr->package(index);
+            
+            if (filter == FilterInterface::Installed && (pkg->flags & PACKAGE_FLAG_INSTALLED) != 0)
+            {
+                newids.append(index);
+            }
+            else if (filter == FilterInterface::NotInstalled && (pkg->flags & PACKAGE_FLAG_INSTALLED) == 0)
+            {
+                newids.append(index);
+            }
+        }
+        
+        ids = newids;
+    }
+    
+    // Créer l'arbre des paquets
+    for (int i=0; i<ids.count(); ++i)
+    {
+        int index = ids.at(i);
+        
+        // Ajouter ce paquet aux listes
+        DatabasePackage *pkg = ps->package(index);
+        if (!checkPackage(pkg))
+        {
+            delete pkg;
+            continue;
+        }
+        
+        rs.append(pkg);
+    }
+    
+    return rs;
 }
 
 void MainWindow::searchPackages()
@@ -281,6 +439,28 @@ void MainWindow::searchPackages()
     {
         breadcrumb->addButton(QIcon::fromTheme("edit-find"), tr("Recherche"));
         breadcrumb->button(breadcrumb->count() - 1)->setProperty("lgr_filteraction", 0);
+    }
+    
+    // Actualiser la vue
+    QVector<DatabasePackage *> pkgs = packages();
+    
+    listPackages->clear();
+    
+    for (int i=0; i<pkgs.count(); ++i)
+    {
+        DatabasePackage *pkg = pkgs.at(i);
+        PackageInfo inf = packageInfos.value(pkg->repo() + '/' + pkg->distribution() + '/' + pkg->name());
+        
+        listPackages->addPackage(pkg, inf);
+    }
+    
+    if (listPackages->count() > 0)
+    {
+        itemSelected(0);
+    }
+    else
+    {
+        itemSelected(-1);
     }
 }
 
@@ -392,7 +572,7 @@ void MainWindow::readPackages()
             }
             
             // Insérer dans la liste globale
-            packages.insert(key, pkg);
+            packageInfos.insert(key, pkg);
             
             // Voir si c'est un paquet qui a le meilleur score
             float score (pkg.total_votes == 0 ? 0 : float(pkg.votes) / float(pkg.total_votes));

@@ -23,13 +23,14 @@ set(appmanager_SRCS
         breadcrumb.cpp
         introdisplay.cpp
         categorydrawer.cpp
-        packagelist.cpp
+        packagedisplay.cpp
         packageentry.cpp
 )
 
 set(appmanager_UIS
         appmanager.ui
         entry.ui
+        entrymoreinfo.ui
 )
 
 qt4_automoc(${appmanager_SRCS})

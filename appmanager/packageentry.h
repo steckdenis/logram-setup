@@ -19,3 +19,50 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301  USA
  */
+
+#ifndef __PACKAGEENTRY_H__
+#define __PACKAGEENTRY_H__
+
+#include <QWidget>
+#include <QPixmap>
+
+#include "ui_entry.h"
+
+#include "mainwindow.h"
+
+namespace Logram
+{
+    class DatabasePackage;
+}
+
+class Ui_EntryMoreInfo;
+
+class Entry : public QWidget, private Ui_Entry
+{
+    Q_OBJECT
+    
+    public:
+        Entry(Logram::DatabasePackage *pkg, const MainWindow::PackageInfo &inf, QWidget *parent);
+        ~Entry();
+        
+        Logram::DatabasePackage *package() const;
+        
+    private:
+        QPixmap packageIcon(const MainWindow::PackageInfo &inf);
+        
+    protected:
+        void enterEvent(QEvent *event);
+        void leaveEvent(QEvent *event);
+        void paintEvent(QPaintEvent *event);
+        void mousePressEvent(QMouseEvent *event);
+        
+    signals:
+        void clicked();
+        
+    private:
+        Logram::DatabasePackage *_pkg;
+        Ui_EntryMoreInfo *more;
+        bool containsMouse;
+};
+
+#endif

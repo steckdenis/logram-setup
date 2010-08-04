@@ -20,27 +20,52 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __PACKAGELIST_H__
-#define __PACKAGELIST_H__
+#ifndef __PACKAGEDISPLAY_H__
+#define __PACKAGEDISPLAY_H__
 
 #include <QWidget>
 #include <QPixmap>
 
-class MainWindow;
+#include "mainwindow.h"
 
-class PackageList : public QWidget
+namespace Logram
+{
+    class DatabasePackage;
+}
+
+class QVBoxLayout;
+class Entry;
+
+class PackageDisplay : public QWidget
 {
     Q_OBJECT
     
     public:
-        PackageList(MainWindow *parent);
+        PackageDisplay(MainWindow *parent);
+        
+        void clear();
+        void addPackage(Logram::DatabasePackage *pkg, const MainWindow::PackageInfo &inf);
+        
+        int currentIndex() const;
+        int count() const;
+        Logram::DatabasePackage *package(int index);
         
     protected:
         void paintEvent(QPaintEvent *event);
         
+    private slots:
+        void elementClicked();
+        
+    signals:
+        void currentIndexChanged(int index);
+        
     private:
         MainWindow *win;
         QPixmap pix;
+        QVBoxLayout *l;
+        
+        QVector<Entry *> entries;
+        int curIndex;
 };
 
 #endif

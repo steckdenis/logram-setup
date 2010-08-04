@@ -19,3 +19,148 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301  USA
  */
+
+#include "packageentry.h"
+
+#include <databasepackage.h>
+#include <packagesystem.h>
+
+#include <QIcon>
+#include <QPixmap>
+#include <QPixmapCache>
+#include <QStyle>
+#include <QPainter>
+#include <QApplication>
+#include <QStyleOption>
+
+using namespace Logram;
+
+Entry::Entry(DatabasePackage* pkg, const MainWindow::PackageInfo& inf, QWidget *parent): QWidget(parent)
+{
+    _pkg = pkg;
+    containsMouse = false;
+    
+    setupUi(this);
+    
+    // Peupler le contrôle
+    lblIcon->setPixmap(packageIcon(inf));
+    lblTitle->setText("<b>" + inf.title + "</b> " + pkg->version());
+    lblShortDesc->setText(pkg->shortDesc());
+    
+    lblDownload->setText(
+        PackageSystem::fileSizeFormat(pkg->downloadSize()) + '/' +
+        PackageSystem::fileSizeFormat(pkg->installSize())
+    );
+    
+    QPixmap starOn, starOff;
+    QIcon icon;
+    
+    if (!QPixmapCache::find("lgr_staron", &starOn))
+    {
+        icon = QIcon::fromTheme("rating");
+        starOn = icon.pixmap(22, 22);
+        
+        QPixmapCache::insert("lgr_staron", starOn);
+    }
+    
+    if (!QPixmapCache::find("lgr_staroff", &starOff))
+    {
+        if (icon.isNull())
+        {
+            icon = QIcon::fromTheme("rating");
+        }
+        
+        starOff = icon.pixmap(22, 22, QIcon::Disabled);
+        
+        QPixmapCache::insert("lgr_staroff", starOff);
+    }
+    
+    float score = 0.0;
+    
+    if (inf.total_votes > 0)
+    {
+        score = inf.votes * 5 / inf.total_votes;
+    }
+    
+    lblStar1->setPixmap(score > 0.5 ? starOn : starOff);
+    lblStar2->setPixmap(score > 1.5 ? starOn : starOff);
+    lblStar3->setPixmap(score > 2.5 ? starOn : starOff);
+    lblStar4->setPixmap(score > 3.5 ? starOn : starOff);
+    lblStar5->setPixmap(score > 4.5 ? starOn : starOff);
+}
+
+Entry::~Entry()
+{
+
+}
+
+DatabasePackage* Entry::package() const
+{
+    return _pkg;
+}
+
+QPixmap Entry::packageIcon(const MainWindow::PackageInfo& inf)
+{
+    QPixmap rs(inf.icon);
+    
+    if (rs.isNull())
+    {
+        if (!QPixmapCache::find("lgr_pkicon", &rs))
+        {
+            rs = QIcon(":/images/package.png").pixmap(32, 32);
+            
+            QPixmapCache::insert("lgr_pkicon", rs);
+        }
+    }
+    
+    // TODO: Emblème en fonction de l'état
+    
+    return rs;
+}
+
+void Entry::enterEvent(QEvent* event)
+{
+    QWidget::enterEvent(event);
+    
+    containsMouse = true;
+    
+    repaint();
+}
+
+void Entry::leaveEvent(QEvent* event)
+{
+    QWidget::leaveEvent(event);
+    
+    containsMouse = false;
+    
+    repaint();
+}
+
+void Entry::mousePressEvent(QMouseEvent* event)
+{
+    QWidget::mousePressEvent(event);
+    
+    emit clicked();
+}
+
+void Entry::paintEvent(QPaintEvent* event)
+{
+    QWidget::paintEvent(event);
+    
+    QPainter painter(this);
+    QStyleOptionViewItemV4 option;
+    
+    option.initFrom(this);
+    option.state = QStyle::State_Active | QStyle::State_Enabled;
+    option.checkState = Qt::Unchecked;
+    option.viewItemPosition = QStyleOptionViewItemV4::OnlyOne;
+    
+    if (containsMouse)
+    {
+        option.state |= QStyle::State_MouseOver;
+    }
+    
+    QApplication::style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &option, &painter, this);
+}
+
+#include "packageentry.moc"
