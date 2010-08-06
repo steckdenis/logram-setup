@@ -2,5 +2,9 @@
   <qresource>
     <file>images/logologram.png</file>
     <file>images/logologram.svg</file>
+    <file>images/pkg-install-emb.png</file>
+    <file>images/pkg-remove-emb.png</file>
+    <file>images/pkg-purge-emb.png</file>
+    <file>images/pkg-update-emb.png</file>
   </qresource>
 </RCC>

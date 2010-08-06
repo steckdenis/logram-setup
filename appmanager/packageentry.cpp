@@ -113,7 +113,51 @@ QPixmap Entry::packageIcon(const MainWindow::PackageInfo& inf)
         }
     }
     
-    // TODO: Emblème en fonction de l'état
+    // Emblème en fonction de l'état
+    QPixmap emblem;
+    const char *key = 0, *filename = 0;
+    
+    if (_pkg->action() == Solver::Install)
+    {
+        key = "lgr_embleminstall";
+        filename = ":/images/pkg-install-emb.png";
+    }
+    else if (_pkg->action() == Solver::Remove)
+    {
+        key = "lgr_emblemremove";
+        filename = ":/images/pkg-remove-emb.png";
+    }
+    else if (_pkg->action() == Solver::Purge)
+    {
+        key = "lgr_emblempurge";
+        filename = ":/images/pkg-purge-emb.png";
+    }
+    else if (_pkg->action() == Solver::Update)
+    {
+        key = "lgr_emblemremove";
+        filename = ":/images/pkg-update-emb.png";
+    }
+    else if (_pkg->flags() & PACKAGE_FLAG_INSTALLED)
+    {
+        emblem = QIcon::fromTheme("user-online").pixmap(16, 16);
+    }
+    
+    if (key != 0 && filename != 0)
+    {
+        if (!QPixmapCache::find(key, &emblem))
+        {
+            emblem = QPixmap(filename);
+            
+            QPixmapCache::insert(key, emblem);
+        }
+    }
+    
+    if (!emblem.isNull())
+    {
+        QPainter painter(&rs);
+        
+        painter.drawPixmap(rs.width() - emblem.width(), rs.height() - emblem.height(), emblem);
+    }
     
     return rs;
 }
