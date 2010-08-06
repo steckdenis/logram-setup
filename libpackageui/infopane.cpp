@@ -413,12 +413,16 @@ void LogramUi::InfoPane::showFlags()
     {
         case 0:
             s = tr("Pas intégré");
+            break;
         case 1:
             s = tr("Utilisable");
+            break;
         case 2:
             s = tr("Bien intégré");
+            break;
         case 3:
             s = tr("Parfaitement intégré");
+            break;
     }
     
     flags.lblKDEIntegration->setText(s);
