@@ -57,7 +57,7 @@ class PackageDisplay : public QWidget
         void elementClicked();
         
     signals:
-        void currentIndexChanged(int index);
+        void currentIndexChanged(int index, int previous);
         
     private:
         MainWindow *win;

@@ -21,6 +21,7 @@
  */
 
 #include "packageentry.h"
+#include "ui_entrymoreinfo.h"
 
 #include <databasepackage.h>
 #include <packagesystem.h>
@@ -38,12 +39,28 @@ using namespace Logram;
 Entry::Entry(DatabasePackage* pkg, const MainWindow::PackageInfo& inf, QWidget *parent): QWidget(parent)
 {
     _pkg = pkg;
+    more = 0;
+    moreWidget = 0;
+    expanded = false;
     containsMouse = false;
     
     setupUi(this);
     
+    // Icône du paquet
+    baseIcon = inf.icon;
+    
+    if (baseIcon.isNull())
+    {
+        if (!QPixmapCache::find("lgr_pkicon", &baseIcon))
+        {
+            baseIcon = QIcon(":/images/package.png").pixmap(32, 32);
+            
+            QPixmapCache::insert("lgr_pkicon", baseIcon);
+        }
+    }
+    
     // Peupler le contrôle
-    lblIcon->setPixmap(packageIcon(inf));
+    updateIcon();
     lblTitle->setText("<b>" + inf.title + "</b> " + pkg->version());
     lblShortDesc->setText(pkg->shortDesc());
     
@@ -91,7 +108,7 @@ Entry::Entry(DatabasePackage* pkg, const MainWindow::PackageInfo& inf, QWidget *
 
 Entry::~Entry()
 {
-
+    delete _pkg;
 }
 
 DatabasePackage* Entry::package() const
@@ -99,20 +116,95 @@ DatabasePackage* Entry::package() const
     return _pkg;
 }
 
-QPixmap Entry::packageIcon(const MainWindow::PackageInfo& inf)
+bool Entry::isExpanded() const
 {
-    QPixmap rs(inf.icon);
-    
-    if (rs.isNull())
+    return expanded;
+}
+
+void Entry::expand()
+{
+    if (moreWidget != 0)
     {
-        if (!QPixmapCache::find("lgr_pkicon", &rs))
-        {
-            rs = QIcon(":/images/package.png").pixmap(32, 32);
-            
-            QPixmapCache::insert("lgr_pkicon", rs);
-        }
+        return;
     }
     
+    expanded = true;
+    
+    moreWidget = new QWidget(this);
+    more = new Ui_EntryMoreInfos();
+    
+    more->setupUi(moreWidget);
+    
+    // Signaux des boutons
+    connect(more->btnInstall, SIGNAL(clicked(bool)), this, SLOT(btnInstallClicked(bool)));
+    connect(more->btnRemove, SIGNAL(clicked(bool)), this, SLOT(btnRemoveClicked(bool)));
+    connect(more->btnUpdate, SIGNAL(clicked(bool)), this, SLOT(btnUpdateClicked(bool)));
+    
+    // Icônes des boutons
+    more->btnInstall->setIcon(QIcon(":/images/pkg-install.png"));
+    more->btnRemove->setIcon(QIcon(":/images/pkg-remove.png"));
+    more->btnUpdate->setIcon(QIcon(":/images/pkg-update.png"));
+    
+    // Afficher ou pas les boutons
+    more->btnInstall->setVisible((_pkg->flags() & PACKAGE_FLAG_INSTALLED) == 0);
+    more->btnRemove->setVisible((_pkg->flags() & PACKAGE_FLAG_INSTALLED) != 0);
+    more->btnUpdate->setVisible(false); // TODO
+    
+    // Statut des boutons
+    more->btnInstall->setChecked(_pkg->action() == Solver::Install);
+    more->btnRemove->setChecked(_pkg->action() == Solver::Remove || _pkg->action() == Solver::Purge);
+    more->btnUpdate->setChecked(_pkg->action() == Solver::Update);
+    
+    // TODO: Liste des paquets suggérés
+    
+    // Ajouter le widget au layout
+    mainLayout->addWidget(moreWidget);
+}
+
+void Entry::collapse()
+{
+    if (moreWidget == 0)
+    {
+        return;
+    }
+    
+    expanded = false;
+    
+    delete moreWidget;
+    delete more;
+    
+    moreWidget = 0;
+    more = 0;
+}
+
+void Entry::btnInstallClicked(bool checked)
+{
+    _pkg->setAction(checked ? Solver::Install : Solver::None);
+    
+    updateIcon();
+}
+
+void Entry::btnRemoveClicked(bool checked)
+{
+    if (QApplication::keyboardModifiers() & Qt::ShiftModifier)
+    {
+        _pkg->setAction(checked ? Solver::Purge : Solver::None);
+    }
+    else
+    {
+        _pkg->setAction(checked ? Solver::Remove : Solver::None);
+    }
+    
+    updateIcon();
+}
+
+void Entry::btnUpdateClicked(bool checked)
+{
+    // TODO
+}
+
+void Entry::updateIcon()
+{
     // Emblème en fonction de l'état
     QPixmap emblem;
     const char *key = 0, *filename = 0;
@@ -152,14 +244,16 @@ QPixmap Entry::packageIcon(const MainWindow::PackageInfo& inf)
         }
     }
     
+    QPixmap newIcon(baseIcon);
+    
     if (!emblem.isNull())
     {
-        QPainter painter(&rs);
+        QPainter painter(&newIcon);
         
-        painter.drawPixmap(rs.width() - emblem.width(), rs.height() - emblem.height(), emblem);
+        painter.drawPixmap(newIcon.width() - emblem.width(), newIcon.height() - emblem.height(), emblem);
     }
     
-    return rs;
+    lblIcon->setPixmap(newIcon);
 }
 
 void Entry::enterEvent(QEvent* event)
@@ -202,6 +296,11 @@ void Entry::paintEvent(QPaintEvent* event)
     if (containsMouse)
     {
         option.state |= QStyle::State_MouseOver;
+    }
+    
+    if (expanded)
+    {
+        option.state |= QStyle::State_Selected;
     }
     
     QApplication::style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &option, &painter, this);

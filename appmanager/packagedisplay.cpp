@@ -60,6 +60,8 @@ void PackageDisplay::clear()
     }
     
     entries.clear();
+    
+    curIndex = -1;
 }
 
 void PackageDisplay::addPackage(Logram::DatabasePackage* pkg, const MainWindow::PackageInfo& inf)
@@ -91,9 +93,21 @@ DatabasePackage* PackageDisplay::package(int index)
 
 void PackageDisplay::elementClicked()
 {
+    int prev = curIndex;
+    Entry *entry = static_cast<Entry *>(sender());
     curIndex = entries.indexOf(static_cast<Entry *>(sender()));
     
-    emit currentIndexChanged(curIndex);
+    // Fermer l'ancien index
+    if (prev != -1)
+    {
+        Entry *e = entries.at(prev);
+        e->collapse();
+    }
+    
+    // Ouvrir la nouvelle
+    entry->expand();
+    
+    emit currentIndexChanged(curIndex, prev);
 }
 
 void PackageDisplay::paintEvent(QPaintEvent* event)

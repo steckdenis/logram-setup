@@ -147,7 +147,7 @@ MainWindow::MainWindow() : QMainWindow(0)
     
     // Signaux
     connect(filterInterface, SIGNAL(dataChanged()), this, SLOT(searchPackages()));
-    connect(listPackages, SIGNAL(currentIndexChanged(int)), this, SLOT(itemSelected(int)));
+    connect(listPackages, SIGNAL(currentIndexChanged(int, int)), this, SLOT(itemSelected(int)));
     connect(btnUpdate, SIGNAL(clicked(bool)), this, SLOT(updateDatabase()));
     connect(breadcrumb, SIGNAL(buttonPressed(int)), this, SLOT(breadcrumbPressed(int)));
     

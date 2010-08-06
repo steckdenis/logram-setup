@@ -35,7 +35,7 @@ namespace Logram
     class DatabasePackage;
 }
 
-class Ui_EntryMoreInfo;
+class Ui_EntryMoreInfos;
 
 class Entry : public QWidget, private Ui_Entry
 {
@@ -46,9 +46,19 @@ class Entry : public QWidget, private Ui_Entry
         ~Entry();
         
         Logram::DatabasePackage *package() const;
+        bool isExpanded() const;
+        
+    public slots:
+        void expand();
+        void collapse();
+        
+    private slots:
+        void btnInstallClicked(bool checked);
+        void btnRemoveClicked(bool checked);
+        void btnUpdateClicked(bool checked);
         
     private:
-        QPixmap packageIcon(const MainWindow::PackageInfo &inf);
+        void updateIcon();
         
     protected:
         void enterEvent(QEvent *event);
@@ -61,8 +71,10 @@ class Entry : public QWidget, private Ui_Entry
         
     private:
         Logram::DatabasePackage *_pkg;
-        Ui_EntryMoreInfo *more;
-        bool containsMouse;
+        Ui_EntryMoreInfos *more;
+        QWidget *moreWidget;
+        bool containsMouse, expanded;
+        QPixmap baseIcon;
 };
 
 #endif
