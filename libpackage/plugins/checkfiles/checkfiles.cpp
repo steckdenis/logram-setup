@@ -89,6 +89,22 @@ void CheckFiles::processPackage(const QString& name, QStringList& files, bool is
                 break;
             }
         }
+        
+        // Supprimer les fichiers en trop (NOTE: Après la population de builtfiles car les éventuels .removeAt invalident file.
+        if (file == "/usr/share/info/dir")
+        {
+            PackageRemark *remark = new PackageRemark;
+            
+            remark->severity = PackageRemark::Warning;
+            remark->packageName = name;
+            remark->message = tr("Le fichier /usr/share/info/dir a été trouvé alors qu'il ne peut être présent. Supprimé.");
+            
+            src->addRemark(remark);
+            
+            // Supprimer ce fichier de la liste
+            files.removeAt(i);
+            i--;
+        }
     }
 }
 
