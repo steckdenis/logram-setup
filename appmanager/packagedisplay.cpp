@@ -64,14 +64,16 @@ void PackageDisplay::clear()
     curIndex = -1;
 }
 
-void PackageDisplay::addPackage(Logram::DatabasePackage* pkg, const MainWindow::PackageInfo& inf)
+void PackageDisplay::addPackage(DatabasePackage* pkg, bool expandable)
 {
-    Entry *entry = new Entry(pkg, inf, this);
+    Entry *entry = new Entry(pkg, win, expandable, this);
     entries.append(entry);
     
     connect(entry, SIGNAL(clicked()), this, SLOT(elementClicked()));
     
     l->insertWidget(0, entry);
+    
+    if (curIndex == -1) curIndex = 0;
 }
 
 int PackageDisplay::currentIndex() const
@@ -84,11 +86,11 @@ int PackageDisplay::count() const
     return entries.count();
 }
 
-DatabasePackage* PackageDisplay::package(int index)
+DatabasePackage* PackageDisplay::currentPackage(int index)
 {
     if (index == -1) return 0;
     
-    return entries.at(index)->package();
+    return entries.at(index)->currentPackage();
 }
 
 void PackageDisplay::elementClicked()

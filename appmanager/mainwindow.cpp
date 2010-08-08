@@ -99,6 +99,7 @@ MainWindow::MainWindow() : QMainWindow(0)
     // Informations
     infoPane = new InfoPane(this);
     
+    infoPane->setShowVersions(false);
     docInfos->setWidget(infoPane);
     
     // Recherche
@@ -226,7 +227,7 @@ void MainWindow::itemSelected(int index)
     
     docInfos->show();
     
-    DatabasePackage *pkg = listPackages->package(index);
+    DatabasePackage *pkg = listPackages->currentPackage(index);
     
     PackageDataProvider *provider = new PackageDataProvider(pkg, ps);
     infoPane->displayData(provider);
@@ -251,7 +252,7 @@ bool MainWindow::checkPackage(DatabasePackage* pkg)
     return true;    // Paquet inséré
 }
 
-QVector<DatabasePackage *> MainWindow::packages()
+QVector<DatabasePackage *> MainWindow::packages(bool &expandable)
 {
     QVector<int> ids, newids;
     DatabaseReader *dr = ps->databaseReader();
@@ -309,6 +310,7 @@ QVector<DatabasePackage *> MainWindow::packages()
         }
         
         // Fini
+        expandable = false;
         return rs;
     }
     
@@ -354,22 +356,40 @@ QVector<DatabasePackage *> MainWindow::packages()
         ids = newids;
     }
     
-    // Créer l'arbre des paquets
+    // Liste des paquets
+    QHash<int, bool> subVersions;       // Permet de n'avoir qu'un paquet par nom
+    
     for (int i=0; i<ids.count(); ++i)
     {
         int index = ids.at(i);
         
         // Ajouter ce paquet aux listes
-        DatabasePackage *pkg = ps->package(index);
-        if (!checkPackage(pkg))
+        DatabasePackage *dpkg = ps->package(index);
+        if (subVersions.contains(index) || !checkPackage(dpkg))
         {
-            delete pkg;
+            delete dpkg;
             continue;
         }
         
-        rs.append(pkg);
+        // Trouver les paquets ayant le même nom, donc des versions différentes
+        _Package *pkg = dr->package(index);
+        QVector<int> otherVersions = dr->packagesOfString(0, pkg->name, DEPEND_OP_NOVERSION);
+        
+        for (int j=0; j<otherVersions.count(); ++j)
+        {
+            _Package *opkg = dr->package(otherVersions.at(j));
+            
+            // Vérifier qu'il a le même nom, donc pas un provide
+            if (opkg && pkg->version != opkg->version && pkg->name == opkg->name)
+            {
+                subVersions.insert(otherVersions.at(j), true);
+            }
+        }
+        
+        rs.append(dpkg);
     }
     
+    expandable = true;
     return rs;
 }
 
@@ -442,16 +462,16 @@ void MainWindow::searchPackages()
     }
     
     // Actualiser la vue
-    QVector<DatabasePackage *> pkgs = packages();
+    bool expandable = true;
+    QVector<DatabasePackage *> pkgs = packages(expandable);
     
     listPackages->clear();
     
     for (int i=0; i<pkgs.count(); ++i)
     {
         DatabasePackage *pkg = pkgs.at(i);
-        PackageInfo inf = packageInfos.value(pkg->repo() + '/' + pkg->distribution() + '/' + pkg->name());
         
-        listPackages->addPackage(pkg, inf);
+        listPackages->addPackage(pkg, expandable);
     }
     
     if (listPackages->count() > 0)
@@ -653,12 +673,65 @@ void MainWindow::updateDatabase()
     
     if (stack->currentIndex() == 1)
     {
-        // Réactualiser l'affichage (TODO)
+        searchPackages();
     }
     
     // Mise à jour effectuée
     QSettings settings("Logram", "AppManager");
     settings.setValue("LastUpdateDate", QDate::currentDate());
+}
+
+const MainWindow::PackageInfo MainWindow::packageInfo(DatabasePackage* pkg) const
+{
+    return packageInfos.value(pkg->repo() + '/' + pkg->distribution() + '/' + pkg->name());
+}
+
+int MainWindow::bestPackageIndex(const QVector <DatabasePackage *> &packages, DatabasePackage* ref)
+{
+    if (packages.count() == 1) return 0;
+    
+    int maxAll = -1, maxNoExperimental = -1, maxSameDistro = -1;
+    QByteArray maxAllVersion, maxNoExperimentalVersion, maxSameDistroVersion;
+    QByteArray ver;
+    
+    for (int i=0; i<packages.count(); ++i)
+    {
+        DatabasePackage *pkg = packages.at(i);
+        ver = pkg->version().toLatin1();
+        
+        // Global
+        if (maxAllVersion.isNull() || PackageSystem::compareVersions(ver, maxAllVersion) == 1)
+        {
+            maxAll = i;
+            maxAllVersion = ver;
+        }
+        
+        // Seulement dans experimental
+        if (pkg->distribution() != "experimental")
+        {
+            if (maxNoExperimentalVersion.isNull() || PackageSystem::compareVersions(ver, maxNoExperimentalVersion) == 1)
+            {
+                maxNoExperimental = i;
+                maxNoExperimentalVersion = ver;
+            }
+        }
+        
+        // Si on a une référence, la prendre en compte
+        if (ref != 0 && pkg->distribution() == ref->distribution())
+        {
+            if (maxSameDistroVersion.isNull() || PackageSystem::compareVersions(ver, maxSameDistroVersion) == 1)
+            {
+                maxSameDistro = i;
+                maxSameDistroVersion = ver;
+            }
+        }
+    }
+    
+    if (maxSameDistro != -1) return maxSameDistro;
+    if (maxNoExperimental != -1) return maxNoExperimental;
+    if (maxAll != -1) return maxAll;
+    
+    return -1;
 }
 
 void MainWindow::communication(Logram::Package *sender, Logram::Communication *comm)

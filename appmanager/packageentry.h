@@ -25,10 +25,9 @@
 
 #include <QWidget>
 #include <QPixmap>
+#include <QVector>
 
 #include "ui_entry.h"
-
-#include "mainwindow.h"
 
 namespace Logram
 {
@@ -36,16 +35,18 @@ namespace Logram
 }
 
 class Ui_EntryMoreInfos;
+class MainWindow;
 
 class Entry : public QWidget, private Ui_Entry
 {
     Q_OBJECT
     
     public:
-        Entry(Logram::DatabasePackage *pkg, const MainWindow::PackageInfo &inf, QWidget *parent);
+        Entry(Logram::DatabasePackage *pkg, MainWindow *mainWindow, bool expandable, QWidget *parent);
         ~Entry();
         
-        Logram::DatabasePackage *package() const;
+        QVector<Logram::DatabasePackage *> packages() const;
+        Logram::DatabasePackage *currentPackage() const;
         bool isExpanded() const;
         
     public slots:
@@ -59,6 +60,7 @@ class Entry : public QWidget, private Ui_Entry
         
     private:
         void updateIcon();
+        void setCurrentPackage(int index);
         
     protected:
         void enterEvent(QEvent *event);
@@ -70,10 +72,13 @@ class Entry : public QWidget, private Ui_Entry
         void clicked();
         
     private:
-        Logram::DatabasePackage *_pkg;
+        QVector<Logram::DatabasePackage *> pkgs;
+        Logram::DatabasePackage *curpkg, *mainpkg;
+        MainWindow *win;
+        
         Ui_EntryMoreInfos *more;
         QWidget *moreWidget;
-        bool containsMouse, expanded;
+        bool containsMouse, expanded, exp;
         QPixmap baseIcon;
 };
 

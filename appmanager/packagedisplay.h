@@ -44,11 +44,11 @@ class PackageDisplay : public QWidget
         PackageDisplay(MainWindow *parent);
         
         void clear();
-        void addPackage(Logram::DatabasePackage *pkg, const MainWindow::PackageInfo &inf);
+        void addPackage(Logram::DatabasePackage *pkg, bool expandable);
         
         int currentIndex() const;
         int count() const;
-        Logram::DatabasePackage *package(int index);
+        Logram::DatabasePackage *currentPackage(int index);
         
     protected:
         void paintEvent(QPaintEvent *event);

@@ -22,6 +22,7 @@
 
 #include "packageentry.h"
 #include "ui_entrymoreinfo.h"
+#include "mainwindow.h"
 
 #include <databasepackage.h>
 #include <packagesystem.h>
@@ -36,15 +37,55 @@
 
 using namespace Logram;
 
-Entry::Entry(DatabasePackage* pkg, const MainWindow::PackageInfo& inf, QWidget *parent): QWidget(parent)
+Entry::Entry(DatabasePackage* pkg, MainWindow* mainWindow, bool expandable, QWidget* parent): QWidget(parent)
 {
-    _pkg = pkg;
+    mainpkg = pkg;
+    exp = expandable;
+    win = mainWindow;
+    
     more = 0;
     moreWidget = 0;
     expanded = false;
     containsMouse = false;
     
     setupUi(this);
+    
+    if (expandable)
+    {
+        pkgs = pkg->versions();
+        
+        // Trouver le meilleur index des paquets
+        int bestIndex = mainWindow->bestPackageIndex(pkgs, 0);
+        
+        // Afficher ce paquet
+        setCurrentPackage(bestIndex);
+    }
+    else
+    {
+        pkgs.append(mainpkg);
+        setCurrentPackage(0);
+    }
+}
+
+Entry::~Entry()
+{
+    delete mainpkg;
+}
+
+DatabasePackage* Entry::currentPackage() const
+{
+    return curpkg;
+}
+
+QVector <DatabasePackage *> Entry::packages() const
+{
+    return pkgs;
+}
+
+void Entry::setCurrentPackage(int index)
+{
+    curpkg = pkgs.at(index);
+    MainWindow::PackageInfo inf = win->packageInfo(curpkg);
     
     // Icône du paquet
     baseIcon = inf.icon;
@@ -61,12 +102,12 @@ Entry::Entry(DatabasePackage* pkg, const MainWindow::PackageInfo& inf, QWidget *
     
     // Peupler le contrôle
     updateIcon();
-    lblTitle->setText("<b>" + inf.title + "</b> " + pkg->version());
-    lblShortDesc->setText(pkg->shortDesc());
+    lblTitle->setText("<b>" + inf.title + "</b> " + curpkg->version());
+    lblShortDesc->setText(curpkg->shortDesc());
     
     lblDownload->setText(
-        PackageSystem::fileSizeFormat(pkg->downloadSize()) + '/' +
-        PackageSystem::fileSizeFormat(pkg->installSize())
+        PackageSystem::fileSizeFormat(curpkg->downloadSize()) + '/' +
+        PackageSystem::fileSizeFormat(curpkg->installSize())
     );
     
     QPixmap starOn, starOff;
@@ -104,16 +145,13 @@ Entry::Entry(DatabasePackage* pkg, const MainWindow::PackageInfo& inf, QWidget *
     lblStar3->setPixmap(score > 2.5 ? starOn : starOff);
     lblStar4->setPixmap(score > 3.5 ? starOn : starOff);
     lblStar5->setPixmap(score > 4.5 ? starOn : starOff);
-}
-
-Entry::~Entry()
-{
-    delete _pkg;
-}
-
-DatabasePackage* Entry::package() const
-{
-    return _pkg;
+    
+    // Synchroniser l'affichage
+    if (isExpanded())
+    {
+        collapse();
+        expand();
+    }
 }
 
 bool Entry::isExpanded() const
@@ -146,14 +184,33 @@ void Entry::expand()
     more->btnUpdate->setIcon(QIcon(":/images/pkg-update.png"));
     
     // Afficher ou pas les boutons
-    more->btnInstall->setVisible((_pkg->flags() & PACKAGE_FLAG_INSTALLED) == 0);
-    more->btnRemove->setVisible((_pkg->flags() & PACKAGE_FLAG_INSTALLED) != 0);
+    more->btnInstall->setVisible((curpkg->flags() & PACKAGE_FLAG_INSTALLED) == 0);
+    more->btnRemove->setVisible((curpkg->flags() & PACKAGE_FLAG_INSTALLED) != 0);
     more->btnUpdate->setVisible(false); // TODO
     
     // Statut des boutons
-    more->btnInstall->setChecked(_pkg->action() == Solver::Install);
-    more->btnRemove->setChecked(_pkg->action() == Solver::Remove || _pkg->action() == Solver::Purge);
-    more->btnUpdate->setChecked(_pkg->action() == Solver::Update);
+    more->btnInstall->setChecked(curpkg->action() == Solver::Install);
+    more->btnRemove->setChecked(curpkg->action() == Solver::Remove || curpkg->action() == Solver::Purge);
+    more->btnUpdate->setChecked(curpkg->action() == Solver::Update);
+    
+    if (exp)
+    {
+        // Construire la liste des petits liens permettant de sélectionner les versions
+        QHBoxLayout *hlayout = new QHBoxLayout(0);
+        
+        more->verticalLayout->insertLayout(0, hlayout);
+        hlayout->addStretch();
+        
+        for (int i=0; i<pkgs.count(); ++i)
+        {
+            QLabel *lbl = new QLabel(moreWidget);
+            lbl->setText("<em><a href=\"" + QString::number(i) + "\">" + pkgs.at(i)->version() + "</a></em>");
+            
+            connect(lbl, SIGNAL(linkActivated(QString)), this, SLOT(changeVersion()));
+            
+            hlayout->addWidget(lbl);
+        }
+    }
     
     // TODO: Liste des paquets suggérés
     
@@ -179,7 +236,7 @@ void Entry::collapse()
 
 void Entry::btnInstallClicked(bool checked)
 {
-    _pkg->setAction(checked ? Solver::Install : Solver::None);
+    curpkg->setAction(checked ? Solver::Install : Solver::None);
     
     updateIcon();
 }
@@ -188,11 +245,11 @@ void Entry::btnRemoveClicked(bool checked)
 {
     if (QApplication::keyboardModifiers() & Qt::ShiftModifier)
     {
-        _pkg->setAction(checked ? Solver::Purge : Solver::None);
+        curpkg->setAction(checked ? Solver::Purge : Solver::None);
     }
     else
     {
-        _pkg->setAction(checked ? Solver::Remove : Solver::None);
+        curpkg->setAction(checked ? Solver::Remove : Solver::None);
     }
     
     updateIcon();
@@ -209,27 +266,27 @@ void Entry::updateIcon()
     QPixmap emblem;
     const char *key = 0, *filename = 0;
     
-    if (_pkg->action() == Solver::Install)
+    if (curpkg->action() == Solver::Install)
     {
         key = "lgr_embleminstall";
         filename = ":/images/pkg-install-emb.png";
     }
-    else if (_pkg->action() == Solver::Remove)
+    else if (curpkg->action() == Solver::Remove)
     {
         key = "lgr_emblemremove";
         filename = ":/images/pkg-remove-emb.png";
     }
-    else if (_pkg->action() == Solver::Purge)
+    else if (curpkg->action() == Solver::Purge)
     {
         key = "lgr_emblempurge";
         filename = ":/images/pkg-purge-emb.png";
     }
-    else if (_pkg->action() == Solver::Update)
+    else if (curpkg->action() == Solver::Update)
     {
         key = "lgr_emblemremove";
         filename = ":/images/pkg-update-emb.png";
     }
-    else if (_pkg->flags() & PACKAGE_FLAG_INSTALLED)
+    else if (curpkg->flags() & PACKAGE_FLAG_INSTALLED)
     {
         emblem = QIcon::fromTheme("user-online").pixmap(16, 16);
     }

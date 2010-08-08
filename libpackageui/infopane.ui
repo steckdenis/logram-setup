@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>infoPane</class>
  <widget class="QTabWidget" name="infoPane">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>635</width>
+    <height>314</height>
+   </rect>
+  </property>
   <property name="tabPosition">
    <enum>QTabWidget::South</enum>
   </property>
@@ -124,7 +132,7 @@
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <layout class="QHBoxLayout" name="infoHorizontalLayout">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_10">
         <item>
@@ -245,7 +253,7 @@
        </layout>
       </item>
       <item>
-       <spacer name="horizontalSpacer_2">
+       <spacer name="spacerVersions">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>

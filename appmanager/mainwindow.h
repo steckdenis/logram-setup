@@ -75,6 +75,8 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         };
         
         QVector<RatedPackage> &ratedPackages();
+        const PackageInfo packageInfo(Logram::DatabasePackage *pkg) const;
+        static int bestPackageIndex(const QVector<Logram::DatabasePackage *> &packages, Logram::DatabasePackage *ref = 0);
         
     private slots:
         void progress(Logram::Progress *progress);
@@ -89,7 +91,7 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
     private:
         void setMode(bool packageList);
         bool addPackage(Logram::DatabasePackage *pkg);
-        QVector<Logram::DatabasePackage *> packages();
+        QVector<Logram::DatabasePackage *> packages(bool &expandable);
         bool checkPackage(Logram::DatabasePackage *pkg);
         
     protected:
