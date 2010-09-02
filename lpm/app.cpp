@@ -80,6 +80,7 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
     depsTree = false;
     confirmMessages = true;
     installSuggests = false;
+    verbose = false;
 
     while (opt.startsWith('-'))
     {
@@ -97,6 +98,10 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         else if (opt == "-w")
         {
             colored = false;
+        }
+        else if (opt == "-v")
+        {
+            verbose = true;
         }
         else if (opt == "-i")
         {
@@ -492,6 +497,7 @@ void App::help()
             "\n"
             "Options (insensible à la casse) :\n"
             "    -S                 Active l'installation des suggestions.\n"
+            "    -V                 Mode verbeux : affiche la sortie des scripts lancés\n"
             "    -nD                Ignorer les dépendances : installer les paquets demandés\n"
             "                       et uniquement eux.\n"
             "    -nI                Ignorer les paquets installés, générer tout l'arbre de\n"
@@ -827,6 +833,10 @@ void App::progress(Progress *progress)
     if (progress->type == Progress::Download || progress->type == Progress::Compressing)
     {
         updatePgs(progress);
+        return;
+    }
+    else if (progress->type == Progress::ProcessOut && !verbose)
+    {
         return;
     }
     
