@@ -91,6 +91,7 @@
             <!ATTLIST return
                 type (string | int | float | singlechoice | multichoice) #REQUIRED
                 default CDATA #IMPLIED
+                dynchoicestart CDATA #IMPLIED
             >
             
             <!ELEMENT validate (rule*, errormessage)>

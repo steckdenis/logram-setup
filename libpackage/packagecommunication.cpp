@@ -287,6 +287,41 @@ int PackageCommunication::choicesCount()
         c = c.nextSiblingElement("choice");
     }
     
+    // Explorer les clefs du templatable, il se pourrait que des clefs du genre Choice0Value et Choice0Title soient présentes.
+    int i = ret.attribute("dynchoicestart", "0").toInt();
+    
+    while (true)
+    {
+        QString value = getKey("Choice" + QString::number(i) + "Value");
+        QString title = getKey("Choice" + QString::number(i) + "Title");
+        
+        if (value.isNull()) break;
+        
+        if (i < d->choices.count())
+        {
+            Choice &choice = d->choices[i];
+            
+            if (!title.isNull())
+            {
+                choice.title = title;
+            }
+            
+            choice.value = value;
+        }
+        else
+        {
+            Choice choice;
+            
+            choice.title = title;
+            choice.value = value;
+            choice.selected = false;
+            
+            d->choices.append(choice);
+        }
+        
+        ++i;
+    }
+    
     d->choicesFetched = true;
     return d->choices.count();
 }
