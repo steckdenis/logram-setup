@@ -29,7 +29,7 @@
 using namespace Logram;
 using namespace LogramUi;
 
-PackageDataProvider::PackageDataProvider(DatabasePackage* package, PackageSystem* _ps)
+PackageDataProvider::PackageDataProvider(Package* package, PackageSystem* _ps)
 {
     pkg = package;
     md = pkg->metadata();
@@ -67,7 +67,16 @@ int PackageDataProvider::flags() const
 
 void PackageDataProvider::setFlags(int flags)
 {
-    pkg->setFlags(flags);
+    if (pkg->origin() == Package::Database)
+    {
+        DatabasePackage *dpkg = (DatabasePackage *)pkg;
+        dpkg->setFlags(flags);
+    }
+}
+
+bool PackageDataProvider::flagsEditable() const
+{
+    return (pkg->origin() == Package::Database);
 }
 
 QString PackageDataProvider::website() const

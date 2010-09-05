@@ -27,7 +27,7 @@
 
 namespace Logram
 {
-    class DatabasePackage;
+    class Package;
     class PackageMetaData;
     class PackageSystem;
 }
@@ -38,7 +38,7 @@ namespace LogramUi
 class PackageDataProvider : public PackageDataProviderInterface
 {
     public:
-        PackageDataProvider(Logram::DatabasePackage *package, Logram::PackageSystem *_ps);
+        PackageDataProvider(Logram::Package *package, Logram::PackageSystem *_ps);
         ~PackageDataProvider();
         
         virtual QString name() const;
@@ -46,6 +46,7 @@ class PackageDataProvider : public PackageDataProviderInterface
         
         virtual int flags() const;
         virtual void setFlags(int flags);
+        virtual bool flagsEditable() const;
         
         virtual QString website() const;
         virtual QString title() const;
@@ -68,7 +69,7 @@ class PackageDataProvider : public PackageDataProviderInterface
         virtual QVector<Logram::PackageFile *> files() const;
         
     private:
-        Logram::DatabasePackage *pkg;
+        Logram::Package *pkg;
         Logram::PackageMetaData *md;
         Logram::PackageSystem *ps;
 };

@@ -436,8 +436,17 @@ void LogramUi::InfoPane::showFlags()
     flags.chkWanted->setChecked(mflags & PACKAGE_FLAG_WANTED);
     flags.chkPrimary->setChecked(mflags & PACKAGE_FLAG_PRIMARY);
     
+    if (!d->data->flagsEditable())
+    {
+        // Ne pas autoriser l'utilisateur à changer les flags
+        flags.chkDontInstall->setEnabled(false);
+        flags.chkDontRemove->setEnabled(false);
+        flags.chkDontUpdate->setEnabled(false);
+        flags.chkWanted->setEnabled(false);
+    }
+    
     // Afficher la boîte de dialogue
-    if (dialog.exec() == QDialog::Accepted)
+    if (dialog.exec() == QDialog::Accepted && d->data->flagsEditable())
     {
         // Définir les nouveaux flags
         #define APPLY_FLAG(flag, object) \

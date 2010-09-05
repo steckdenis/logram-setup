@@ -48,6 +48,7 @@ class PackageDataProviderInterface
         
         virtual int flags() const = 0;
         virtual void setFlags(int flags) = 0;
+        virtual bool flagsEditable() const = 0;
         
         virtual QString website() const = 0;
         virtual QString title() const = 0;
