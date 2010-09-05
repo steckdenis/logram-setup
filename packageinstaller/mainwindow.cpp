@@ -110,6 +110,7 @@ MainWindow::MainWindow() : QWidget(0)
     
     // Définir les icônes
     setWindowIcon(QIcon(":/images/package.png"));
+    setWindowTitle(tr("Installer un paquet hors des dépôts"));
     
     // Connexion des signaux
     connect(btnOk, SIGNAL(clicked(bool)),
