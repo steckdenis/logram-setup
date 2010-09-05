@@ -28,6 +28,7 @@
 #include <QPushButton>
 #include <QApplication>
 #include <QMessageBox>
+#include <QFileDialog>
 
 #include <communication.h>
 #include <packagemetadata.h>
@@ -52,11 +53,15 @@ MainWindow::MainWindow() : QWidget(0)
     resize(600, 300);
     
     // Vérifier qu'on a les bons paramètres
+    QString filename;
+    
     if (qApp->arguments().count() != 2)
     {
-        QMessageBox::critical(0, tr("Arguments manquants"), tr("Cette application doit être lancée avec pour seul argument le nom du fichier contenant un paquet à installer"));
-        _error = true;
-        return;
+        filename = QFileDialog::getOpenFileName(this, tr("Installer un paquet"), QString(), tr("Paquets Logram (*.lpk)"));
+    }
+    else
+    {
+        filename = qApp->arguments().at(1);
     }
     
     // Initialiser la gestion des paquets
@@ -113,7 +118,7 @@ MainWindow::MainWindow() : QWidget(0)
             this,      SLOT(close()));
     
     // Peupler la page d'infos
-    displayPackage(qApp->arguments().at(1));
+    displayPackage(filename);
 }
 
 MainWindow::~MainWindow()
