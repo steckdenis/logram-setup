@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-logram-package">
+    <sub-class-of type="application/x-xz"/>
+    <comment>Logram package</comment>
+    <comment xml:lang="fr">Paquet Logram</comment>
+    <generic-icon name="application-x-logram-package"/>
+    <glob pattern="*.lpk"/>
+  </mime-type>
+</mime-info>

@@ -33,3 +33,6 @@ target_link_libraries(packageinstaller
 )
 
 install(TARGETS packageinstaller DESTINATION /usr/bin)
+install(FILES PackageInstaller.desktop DESTINATION /usr/share/applications)
+install(FILES packageinstaller.png DESTINATION /usr/share/pixmaps)
+install(FILES setup-mime.xml DESTINATION /usr/share/mime/packages)

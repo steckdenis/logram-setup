@@ -44,3 +44,5 @@ target_link_libraries(pkgui
 )
 
 install(TARGETS pkgui DESTINATION /usr/bin)
+install(FILES Pkgui.desktop DESTINATION /usr/share/applications)
+install(FILES pkgui.svg DESTINATION /usr/share/pixmaps)

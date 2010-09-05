@@ -1,0 +1,13 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Exec=packageinstaller %u
+Icon=/usr/share/pixmaps/packageinstaller.png
+Type=Application
+Terminal=false
+Name=Package installer
+Name[fr]=Installateur de paquets
+GenericName=Package installer
+GenericName[fr]=Installateur de paquets
+StartupNotify=false
+MimeType=application/x-logram-package;
+Categories=System;

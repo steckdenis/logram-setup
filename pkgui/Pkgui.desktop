@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Exec=pkgui
+Icon=/usr/share/pixmaps/pkgui.svg
+Type=Application
+Terminal=false
+Name=Logram Package Manager
+Name[fr]=Gestionnaire de paquets Logram
+GenericName=Package manager
+GenericName[fr]=Gestionnaire de paquets
+StartupNotify=false
+Categories=System;
