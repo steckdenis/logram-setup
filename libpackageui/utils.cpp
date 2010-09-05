@@ -21,11 +21,11 @@
  */
 
 #include "utils.h"
-#include "markdown/markdown.h"
 
 #include <QImage>
 #include <QApplication>
 #include <QMessageBox>
+#include <QProcess>
 
 #include <packagesystem.h>
 
@@ -43,15 +43,24 @@ QPixmap Utils::pixmapFromData(const QByteArray &data, int width, int height)
 
 QString Utils::markdown(const QString &source)
 {
-    std::string s = source.toStdString();
+    QProcess mdown;
     
-    markdown::Document doc(4);
-    doc.read(s);
+    mdown.start("markdown", QStringList() << "/dev/stdin");
     
-    std::stringstream str;
-    doc.write(str);
+    if (!mdown.waitForStarted())
+    {
+        return source;
+    }
     
-    return QString::fromStdString(str.str());
+    mdown.write(source.toUtf8());
+    mdown.closeWriteChannel();
+    
+    if (!mdown.waitForFinished())
+    {
+        return source;
+    }
+    
+    return QString::fromUtf8(mdown.readAll());
 }
 
 QString Utils::actionNameInf(Logram::Solver::Action action)

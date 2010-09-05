@@ -1,8 +1,5 @@
 project(lgrpkgui)
 
-set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.36.0 COMPONENTS regex REQUIRED)
-
 add_definitions(
     -D_FILE_OFFSET_BITS=64
 )
@@ -15,7 +12,6 @@ include_directories(
         ${QT_QTXML_INCLUDE_DIR}
         ${QT_INCLUDE_DIR}
         ${QT_QT_INCLUDE_DIR}
-        ${Boost_INCLUDE_DIRS}
 )
 
 set(lgrpkgui_SRCS
@@ -34,8 +30,6 @@ set(lgrpkgui_SRCS
         communicationdialog.cpp
         progressdialog.cpp
         packagedataprovider.cpp
-        markdown/markdown.cpp
-        markdown/markdown-tokens.cpp
 )
 
 set(lgrpkgui_UIS
@@ -74,7 +68,6 @@ target_link_libraries(lgrpkgui
         ${QT_QTCORE_LIBRARY}
         ${QT_QTGUI_LIBRARY}
         ${QT_QTXML_LIBRARY}
-        ${Boost_LIBRARIES}
         lgrpkg
 )
 
