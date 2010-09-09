@@ -18,4 +18,10 @@ La documentation essaie d'être la plus riche possible, illustrée d'exemples. C
 
 Une description détaillée du fonctionnement interne de Setup est disponible à l'adresse http://logram-project.org/wiki-setup-technical.html .
 
+@section begin Aborder la gestion des paquets Logram
+
+La gestion des paquets Logram est divisée en deux bibliothèques : @b libpackage, pour la gestion des paquets proprement dite, et @b libpackageui, pour l'interface graphique. Les deux espaces des noms respectifs sont Logram et LogramUi.
+
+Pour commencer à utiliser la gestion des paquets Logram, consultez la documentation de Logram::PackageSystem.
+
  **/
