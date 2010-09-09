@@ -23,6 +23,11 @@
 #ifndef __SEARCHBAR_H__
 #define __SEARCHBAR_H__
 
+/**
+ * @file searchbar.h
+ * @brief Barre de recherche
+ */
+
 #include <QWidget>
 
 class Ui_searchBar;
@@ -33,14 +38,34 @@ namespace LogramUi
 
 class FilterInterface;
 
+/**
+ * @brief Barre de recherche
+ * 
+ * Ce widget permet à l'utilisateur d'entrer un mot ou une expression régulière
+ * ainsi que de filtrer les paquets suivant leur état.
+ * 
+ * Il s'utilise avec un objet de type FilterInterface.
+ */
 class SearchBar : public QWidget
 {
     Q_OBJECT
     
     public:
+        /**
+         * @brief Constructeur
+         * @param interface Interface de recherche utilisée
+         * @param parent Parent
+         */
         SearchBar(FilterInterface *interface, QWidget *parent);
+        
+        /**
+         * @brief Destructeur
+         */
         ~SearchBar();
         
+        /**
+         * @brief Place le focus clavier sur la zone de saisie du mot
+         */
         void setFocus();
         
     private slots:
