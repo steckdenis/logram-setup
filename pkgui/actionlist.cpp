@@ -209,7 +209,10 @@ void MainWindow::applyList()
     enableProgressions();
     
     // Liste appliquée, fini
-    cancelList();
+    if (wizard.result() == QDialog::Accepted)
+    {
+        cancelList();
+    }
 }
 
 void MainWindow::cancelList()
