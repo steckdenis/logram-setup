@@ -97,6 +97,8 @@ MainWindow::MainWindow() : QWidget(0)
     btnQuit->setIcon(QIcon::fromTheme("application-exit"));
     
     infoPane = new InfoPane(this);
+    infoPane->setShowVersions(false);
+    infoPane->setTabPosition(QTabWidget::North);
     
     setLayout(mainLayout);
     
