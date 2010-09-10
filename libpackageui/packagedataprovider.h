@@ -23,6 +23,11 @@
 #ifndef __PACKAGEDATAPROVIDER_H__
 #define __PACKAGEDATAPROVIDER_H__
 
+/**
+ * @file packagedataprovider.h
+ * @brief Fournisseur d'informations pour les paquets LPM
+ */
+
 #include <packagedataproviderinterface.h>
 
 namespace Logram
@@ -35,9 +40,24 @@ namespace Logram
 namespace LogramUi
 {
 
+/**
+ * @brief Fournisseur d'informations sur les paquets LPM
+ * 
+ * La classe PackageDataProviderInterface est virtuelle pure et ne sert que
+ * d'interface. Sachant qu'il est très courant d'afficher des informations sur
+ * les paquets en provenance de la base de donnée LPM, cette classe fournit
+ * l'implémentation remplissant ce rôle.
+ * 
+ * @sa PackageDataProviderInterface
+ */
 class PackageDataProvider : public PackageDataProviderInterface
 {
     public:
+        /**
+         * @brief Constructeur
+         * @param package Paquet pour lequel afficher des informations
+         * @param _ps PackageSystem courant
+         */
         PackageDataProvider(Logram::Package *package, Logram::PackageSystem *_ps);
         ~PackageDataProvider();
         
