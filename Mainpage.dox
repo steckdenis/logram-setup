@@ -24,4 +24,9 @@ La gestion des paquets Logram est divisée en deux bibliothèques : @b libpackag
 
 Pour commencer à utiliser la gestion des paquets Logram, consultez la documentation de Logram::PackageSystem.
 
- **/
+**/
+
+/**
+ * @namespace LogramUi
+ * @brief Espace des noms conteneur des fonctions graphiques de LPM
+ */

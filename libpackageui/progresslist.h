@@ -49,6 +49,8 @@ namespace LogramUi
  * 
  * Pour les téléchargements, la vitesse de téléchargement et la taille
  * téléchargée/restante est affichée.
+ * 
+ * @sa ProgressDialog
  */
 class ProgressList : public QWidget
 {
@@ -74,15 +76,15 @@ class ProgressList : public QWidget
          * @code
          * if (progress->action == Progress::Create)
          * {
-         *     progressDialog->addProgress(progress);
+         *     progressList->addProgress(progress);
          * }
          * else if (progress->action == Progress::Update)
          * {
-         *     progressDialog->updateProgress(progress);
+         *     progressList->updateProgress(progress);
          * }
          * else
          * {
-         *     progressDialog->endProgress(progress);
+         *     progressList->endProgress(progress);
          * }
          * @endcode
          * 

@@ -23,6 +23,11 @@
 #ifndef __PROGRESSDIALOG_H__
 #define __PROGRESSDIALOG_H__
 
+/**
+ * @file progressdialog.h
+ * @brief Boîte de dialogue des progressions
+ */
+
 #include <QHash>
 #include <QDialog>
 
@@ -37,19 +42,72 @@ namespace LogramUi
 
 class ProgressList;
 
+/**
+ * @brief Affichage des progressions
+ * 
+ * Cette classe permet d'afficher les progressions envoyées par PackageSystem
+ * dans une boîte de dialogue, affichée seulement quand nécessaire.
+ * 
+ * @sa ProgressList
+ */
 class ProgressDialog : public QDialog
 {
     Q_OBJECT
     
     public:
+        /**
+         * @brief Constructeur
+         * @param parent Parent
+         */
         ProgressDialog(QWidget *parent);
+        
+        /**
+         * @brief Destructeur
+         */
         ~ProgressDialog();
         
+        /**
+         * @brief Ajoute une progression
+         * 
+         * Cette fonction peut être appelée pour ajouter toute progression
+         * que vous décidez de faire gérer par cette classe.
+         * 
+         * @code
+         * if (progress->action == Progress::Create)
+         * {
+         *     progressDialog->addProgress(progress);
+         * }
+         * else if (progress->action == Progress::Update)
+         * {
+         *     progressDialog->updateProgress(progress);
+         * }
+         * else
+         * {
+         *     progressDialog->endProgress(progress);
+         * }
+         * @endcode
+         * 
+         * @warning Toute progression qui sera passée comme paramètre à
+         *          updateProgress() ou endProgress() doit d'abord avoir
+         *          été envoyée à cette fonction.
+         * 
+         * @param progress Progression à ajouter
+         */
         void addProgress(Logram::Progress *progress);
+        
+        /**
+         * @brief Mettre à jour une progression
+         * @param progress Progression
+         */
         void updateProgress(Logram::Progress *progress);
+        
+        /**
+         * @brief Termine une progression
+         * @param progress Progression
+         */
         void endProgress(Logram::Progress *progress);
         
-        bool canceled();
+        bool canceled();        /*!< @brief Retourne true si le bouton «Annuler» a été pressé */
         
     private slots:
         void cancelClicked();
