@@ -114,6 +114,8 @@ class MainWindow : public QMainWindow, public Ui_MainWindow
         void cancelList();
         void databaseUpdate();
         
+        void aboutPkgui();
+        
     protected:
         void closeEvent(QCloseEvent *event);
         

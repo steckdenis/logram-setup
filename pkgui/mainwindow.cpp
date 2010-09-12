@@ -21,6 +21,7 @@
  */
 
 #include "mainwindow.h"
+#include "config.h"
 
 #include <QIcon>
 #include <QMessageBox>
@@ -140,6 +141,8 @@ MainWindow::MainWindow() : QMainWindow(0)
             this,           SLOT(cancelList()));
     connect(actUpdate, SIGNAL(triggered(bool)),
             this,        SLOT(databaseUpdate()));
+    connect(actAboutPkgui, SIGNAL(triggered(bool)),
+            this,            SLOT(aboutPkgui()));
     
     // Restaurer l'état de la fenêtre
     QSettings settings("Logram", "Pkgui");
@@ -224,6 +227,20 @@ void MainWindow::disableProgressions()
 void MainWindow::enableProgressions()
 {
     _progresses = true;
+}
+
+void MainWindow::aboutPkgui()
+{
+    QMessageBox::information(
+        this,
+        tr("À propos de Pkgui"),
+        tr(
+            "<p>Pkgui <b>" VERSION "</b> est le programme de gestion des paquets avancé de Logram.</p>"
+            "<p>Pkgui est un Logiciel Libre; vous pouvez le redistribuer et/ou le modifier en respectant les termes"
+            "de la Licence Générale Publique GNU (GNU GPL), publiée par la Free Software Foundation; à la version"
+            "3 de cette licence, ou (si vous le souhaitez) n'importe quelle version supérieure.</p>"
+        )
+    );
 }
 
 void MainWindow::databaseUpdate()
