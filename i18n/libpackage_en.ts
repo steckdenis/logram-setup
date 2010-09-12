@@ -5,7 +5,7 @@
 <context>
     <name>App</name>
     <message>
-        <location filename="../lpm/app.cpp" line="+457"/>
+        <location filename="../lpm/app.cpp" line="+462"/>
         <source>Utilisation : lpm [options] &lt;action&gt; [arguments]
     help               Afficher l&apos;aide
     version            Afficher la version
@@ -44,6 +44,7 @@ Commandes pour la gestion des dépôts :
 
 Options (insensible à la casse) :
     -S                 Active l&apos;installation des suggestions.
+    -V                 Mode verbeux : affiche la sortie des scripts lancés
     -nD                Ignorer les dépendances : installer les paquets demandés
                        et uniquement eux.
     -nI                Ignorer les paquets installés, générer tout l&apos;arbre de
@@ -102,6 +103,7 @@ Commands to manage repositories:
 
 Options (case insensitive):
     -S                 Enable the installation of the suggestions.
+    -V                 Verbose mode : display the output of the sub-processes.
     -nD                Ignore the dependencies, only install the packages specified
                        on the command line.
     -nI                Ingore the installed packages, re-install all the dependencies
@@ -118,11 +120,10 @@ Options (case insensitive):
     -C                 Show the package history when used with &quot;showpkg&quot;.
     -L                 Show the package license when used with &quot;showpkg&quot;.
     -T                 Disable the execution of the triggers.
-    -W                 Disable the colored output of LPM.
-</translation>
+    -W                 Disable the colored output of LPM.</translation>
     </message>
     <message>
-        <location line="+66"/>
+        <location line="+67"/>
         <source>Logram Package Manager </source>
         <translation>Logram Package Manager </translation>
     </message>
@@ -209,7 +210,7 @@ Options (case insensitive):
         <translation>No error or unknown error</translation>
     </message>
     <message>
-        <location line="+238"/>
+        <location line="+242"/>
         <source>Progression : </source>
         <translation>Progression: </translation>
     </message>
@@ -1050,6 +1051,11 @@ Options (case insensitive):
         <source>Le fichier %1 ne se trouve dans aucun paquet</source>
         <translation>The file %1 was not found in any package</translation>
     </message>
+    <message>
+        <location line="+36"/>
+        <source>Le fichier /usr/share/info/dir a été trouvé alors qu&apos;il ne peut être présent. Supprimé.</source>
+        <translation>The file /usr/share/info/dir was found while it cannot be present. Removed.</translation>
+    </message>
 </context>
 <context>
     <name>DonePage</name>
@@ -1227,12 +1233,12 @@ Options (case insensitive):
         <translation>Unable to check the signature.</translation>
     </message>
     <message>
-        <location line="+241"/>
+        <location line="+240"/>
         <source>Lecture des listes</source>
         <translation>Reading of the lists</translation>
     </message>
     <message>
-        <location line="+897"/>
+        <location line="+909"/>
         <source>Génération de la liste des paquets</source>
         <translation>Generation of the list of the packages</translation>
     </message>
@@ -1265,7 +1271,7 @@ Options (case insensitive):
 <context>
     <name>Logram::PackageSource</name>
     <message>
-        <location filename="../libpackage/packagesource.cpp" line="+474"/>
+        <location filename="../libpackage/packagesource.cpp" line="+473"/>
         <source>Le plugin %1 est activé pour ce paquet mais n&apos;existe pas</source>
         <translation>The plugin %1 is enabled for this package but doesn&apos;t exist</translation>
     </message>
@@ -1310,7 +1316,7 @@ Options (case insensitive):
 <context>
     <name>Logram::RepositoryManager</name>
     <message>
-        <location filename="../libpackage/repositorymanager.cpp" line="+1590"/>
+        <location filename="../libpackage/repositorymanager.cpp" line="+1603"/>
         <source>Impossible de trouver la clef %1</source>
         <translation>Unable to find the key %1</translation>
     </message>
@@ -1320,7 +1326,7 @@ Options (case insensitive):
         <translation>Unable to add the key %1 for the signature</translation>
     </message>
     <message>
-        <location line="+425"/>
+        <location line="+484"/>
         <source>Impossible de créer le tampon mémoire pour la signature.</source>
         <translation>Unable to create the memory buffer for the signature.</translation>
     </message>
@@ -1348,7 +1354,7 @@ Options (case insensitive):
 <context>
     <name>LogramUi::CategoryView</name>
     <message>
-        <location filename="../libpackageui/categoryview.cpp" line="+72"/>
+        <location filename="../libpackageui/categoryview.cpp" line="+70"/>
         <source>Sections</source>
         <translation>Sections</translation>
     </message>
@@ -1358,7 +1364,7 @@ Options (case insensitive):
         <translation>Distributions</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+90"/>
         <location line="+5"/>
         <source>Tout afficher</source>
         <translation>Show all</translation>
@@ -1407,7 +1413,7 @@ Options (case insensitive):
 <context>
     <name>LogramUi::CommunicationDialog</name>
     <message>
-        <location filename="../libpackageui/communicationdialog.cpp" line="+94"/>
+        <location filename="../libpackageui/communicationdialog.cpp" line="+98"/>
         <source>Entrez une chaîne de caractère :</source>
         <translation>Enter a character string :</translation>
     </message>
@@ -1433,9 +1439,37 @@ Options (case insensitive):
     </message>
 </context>
 <context>
+    <name>LogramUi::FilterInterface</name>
+    <message>
+        <location filename="../libpackageui/filterinterface.cpp" line="+130"/>
+        <source>Tous les paquets</source>
+        <translation>All the packages</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Paquets installés</source>
+        <translation>Installed packages</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Paquets non-installés</source>
+        <translation>Non-installed packages</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Paquets pouvant être mis à jour</source>
+        <translation>Updateable packages</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Paquets orphelins</source>
+        <translation>Orphan packages</translation>
+    </message>
+</context>
+<context>
     <name>LogramUi::InfoPane</name>
     <message>
-        <location filename="../libpackageui/infopane.cpp" line="+163"/>
+        <location filename="../libpackageui/infopane.cpp" line="+170"/>
         <source>Dépendances</source>
         <translation>Dependencies</translation>
     </message>
@@ -1535,17 +1569,17 @@ Options (case insensitive):
         <translation>Not integrated</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Utilisable</source>
         <translation>Usable</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Bien intégré</source>
         <translation>Well integrated</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Parfaitement intégré</source>
         <translation>Perfectly integrated</translation>
     </message>
@@ -1677,7 +1711,7 @@ Options (case insensitive):
 <context>
     <name>LogramUi::ProgressList</name>
     <message>
-        <location filename="../libpackageui/progresslist.cpp" line="+101"/>
+        <location filename="../libpackageui/progresslist.cpp" line="+100"/>
         <source>Progression : </source>
         <translation>Progression: </translation>
     </message>
@@ -1701,7 +1735,7 @@ Options (case insensitive):
 <context>
     <name>LogramUi::SearchBar</name>
     <message>
-        <location filename="../libpackageui/searchbar.cpp" line="+84"/>
+        <location filename="../libpackageui/searchbar.cpp" line="+82"/>
         <source>Nom exact</source>
         <translation>Exact name</translation>
     </message>
@@ -1739,7 +1773,7 @@ Options (case insensitive):
         <translation>Package management</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+20"/>
         <source>Nom</source>
         <translation>Name</translation>
     </message>
@@ -1867,6 +1901,7 @@ Options (case insensitive):
     </message>
     <message>
         <location line="+8"/>
+        <location filename="../packageinstaller/mainwindow.cpp" line="+96"/>
         <source>&amp;Quitter</source>
         <translation>&amp;Quit</translation>
     </message>
@@ -1921,7 +1956,17 @@ Options (case insensitive):
         <translation>&amp;Update the list of the packages...</translation>
     </message>
     <message>
-        <location filename="../pkgui/mainwindow.cpp" line="+244"/>
+        <location filename="../pkgui/mainwindow.cpp" line="+236"/>
+        <source>À propos de Pkgui</source>
+        <translation>About Pkgui</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;p&gt;Pkgui &lt;b&gt;%1&lt;/b&gt; est le programme de gestion des paquets avancé de Logram.&lt;/p&gt;&lt;p&gt;Pkgui est un Logiciel Libre; vous pouvez le redistribuer et/ou le modifier en respectant les termesde la Licence Générale Publique GNU (GNU GPL), publiée par la Free Software Foundation; à la version3 de cette licence, ou (si vous le souhaitez) n&apos;importe quelle version supérieure.&lt;/p&gt;</source>
+        <translation>&lt;p&gt;Pkgui &lt;b&gt;%1&lt;/b&gt; is the Logram&apos;s advanced package management tool.&lt;/p&gt;&lt;p&gt;Pkgui is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.&lt;/p&gt;</translation>
+    </message>
+    <message>
+        <location line="+26"/>
         <source>Mise à jour de la base de donnée</source>
         <translation>Updating of the database</translation>
     </message>
@@ -1930,13 +1975,25 @@ Options (case insensitive):
         <source>La base de donnée a été mise à jour avec succès.</source>
         <translation>The database was successfully updated.</translation>
     </message>
-</context>
-<context>
-    <name>NoInfoDir</name>
     <message>
-        <location filename="../libpackage/plugins/noinfodir/noinfodir.cpp" line="+70"/>
-        <source>Le fichier /usr/share/info/dir a été trouvé alors qu&apos;il ne peut être présent. Supprimé.</source>
-        <translation>The file /usr/share/info/dir was found while it cannot be present. Removed.</translation>
+        <location filename="../packageinstaller/mainwindow.cpp" line="-36"/>
+        <source>Installer un paquet</source>
+        <translation>Install a package</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Paquets Logram (*.lpk)</source>
+        <translation>Logram packages (*.lpk)</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>&amp;Installer</source>
+        <translation>&amp;Install</translation>
+    </message>
+    <message>
+        <location line="+72"/>
+        <source>Installer %1 depuis un fichier</source>
+        <translation>Install %1 from a file</translation>
     </message>
 </context>
 <context>
@@ -1960,7 +2017,7 @@ Options (case insensitive):
 <context>
     <name>Utils</name>
     <message>
-        <location filename="../libpackageui/utils.cpp" line="+62"/>
+        <location filename="../libpackageui/utils.cpp" line="+71"/>
         <source>Installer</source>
         <translation>Install</translation>
     </message>
@@ -1975,7 +2032,7 @@ Options (case insensitive):
         <translation>Completely remove</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Pas d&apos;erreur ou erreur inconnue</source>
         <translation>No error or unknown error</translation>
     </message>
@@ -2162,7 +2219,7 @@ Options (case insensitive):
 <context>
     <name>infoPane</name>
     <message>
-        <location filename="../libpackageui/infopane.ui" line="+24"/>
+        <location filename="../libpackageui/infopane.ui" line="+16"/>
         <source>Informations de base</source>
         <translation>Base informations</translation>
     </message>
@@ -2177,7 +2234,7 @@ Options (case insensitive):
         <translation>Short description</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+28"/>
         <source>Section :</source>
         <translation>Section :</translation>
     </message>
@@ -2197,7 +2254,7 @@ Options (case insensitive):
         <translation>Installation :</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+42"/>
         <source>Licence :</source>
         <translation>License :</translation>
     </message>
@@ -2212,12 +2269,12 @@ Options (case insensitive):
         <translation>&amp;Manage the flags</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+40"/>
         <source>Versions disponibles :</source>
         <translation>Available versions :</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+18"/>
         <source>Description</source>
         <translation>Description</translation>
     </message>
@@ -2301,32 +2358,7 @@ Options (case insensitive):
         <translation>Filter the packages by their state (installed, removed, etc).</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Tous les paquets</source>
-        <translation>All the packages</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Paquets installés</source>
-        <translation>Installed packages</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Paquets non-installés</source>
-        <translation>Non-installed packages</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Paquets pouvant être mis à jour</source>
-        <translation>Updateable packages</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Paquets orphelins</source>
-        <translation>Orphan packages</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <source>Permet de rechercher un paquet par son nom (ou tous ceux dont le nom contiennent une chaîne).</source>
         <translation>Search a package by its name (or all of the packages whose name contains a string).</translation>
     </message>

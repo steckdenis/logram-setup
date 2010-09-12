@@ -235,11 +235,11 @@ void MainWindow::aboutPkgui()
         this,
         tr("À propos de Pkgui"),
         tr(
-            "<p>Pkgui <b>" VERSION "</b> est le programme de gestion des paquets avancé de Logram.</p>"
+            "<p>Pkgui <b>%1</b> est le programme de gestion des paquets avancé de Logram.</p>"
             "<p>Pkgui est un Logiciel Libre; vous pouvez le redistribuer et/ou le modifier en respectant les termes"
             "de la Licence Générale Publique GNU (GNU GPL), publiée par la Free Software Foundation; à la version"
             "3 de cette licence, ou (si vous le souhaitez) n'importe quelle version supérieure.</p>"
-        )
+        ).arg(VERSION)
     );
 }
 
