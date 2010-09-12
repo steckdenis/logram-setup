@@ -6,9 +6,11 @@ include(FindPackageHandleStandardArgs)
 project(packagemanagement)
 
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 0)
-set(VERSION_PATCH 70)
-set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+set(VERSION_MINOR 71)
+set(VERSION_PATCH 98)
+set(VERSION_NAME "Setup 1.0 pre-Alpha 2")
+set(VERSION_NUMBER "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} (${VERSION_NAME})")
 
 # All what we built here depends on Qt
 find_package(Qt4 REQUIRED)

@@ -72,7 +72,7 @@ target_link_libraries(lgrpkgui
 )
 
 set_target_properties(lgrpkgui
-        PROPERTIES VERSION ${VERSION_STRING} SOVERSION ${VERSION_MAJOR}
+        PROPERTIES VERSION ${VERSION_NUMBER} SOVERSION ${VERSION_MAJOR}
 ) 
 
 install(TARGETS lgrpkgui DESTINATION /usr/lib)

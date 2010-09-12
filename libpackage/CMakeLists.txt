@@ -83,7 +83,7 @@ target_link_libraries(lgrpkg
 )
 
 set_target_properties(lgrpkg
-        PROPERTIES VERSION ${VERSION_STRING} SOVERSION ${VERSION_MAJOR}
+        PROPERTIES VERSION ${VERSION_NUMBER} SOVERSION ${VERSION_MAJOR}
 )
 
 install(TARGETS lgrpkg LIBRARY DESTINATION /usr/lib)
