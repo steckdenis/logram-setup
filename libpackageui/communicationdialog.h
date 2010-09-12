@@ -23,6 +23,11 @@
 #ifndef __COMMUNICATIONDIALOG_H__
 #define __COMMUNICATIONDIALOG_H__
 
+/**
+ * @file communicationdialog.h
+ * @brief Affiche une communication
+ */
+
 #include <QDialog>
 #include <QVector>
 
@@ -37,12 +42,47 @@ namespace Logram
 namespace LogramUi
 {
 
+/**
+ * @brief Affiche une communication
+ * 
+ * Les communications de LPM peuvent être compliquées à gérer, surtout
+ * graphiquement.
+ * 
+ * Cette boîte de dialogue se charge d'afficher à l'utilisateur la
+ * communication devant être de type Logram::Communication::Question .
+ * 
+ * @code
+ * void communication(Logram::Package *sender, Logram::Communication *comm)
+ * {
+ *     if (comm->type() != Communication::Question)
+ *     {
+ *         return;
+ *     }
+ *     
+ *     CommunicationDialog dialog(sender, comm, this);
+ *     
+ *     dialog.exec();
+ * }
+ * @endcode
+ * 
+ * @note CommunicationDialog se charge d'appeler Logram::Communication::setValue.
+ */
 class CommunicationDialog : public QDialog
 {
     Q_OBJECT
     
     public:
+        /**
+         * @brief Constructeur
+         * @param _pkg Paquet de la communication, celui passé en paramètre au slot @b communication
+         * @param _comm Communication à afficher
+         * @param parent Widget parent de la boîte de dialogue
+         */
         CommunicationDialog(Logram::Package *_pkg, Logram::Communication *_comm, QWidget* parent = 0);
+        
+        /**
+         * @brief Destructeur
+         */
         ~CommunicationDialog();
         
     private slots:
