@@ -124,112 +124,50 @@
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="infoHorizontalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_10">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <layout class="QGridLayout" name="gridLayout">
-            <item row="0" column="0">
-             <widget class="QLabel" name="lblTitleSection">
-              <property name="text">
-               <string>Section :</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="lblSection"/>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="lblTileRepo">
-              <property name="text">
-               <string>Dépôt :</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLabel" name="lblRepo"/>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="lblTitleDownload">
-              <property name="text">
-               <string>Téléchargement :</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="lblDownload"/>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="lblTitleInstall">
-              <property name="text">
-               <string>Installation :</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="lblInstall"/>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_9">
-            <item>
-             <layout class="QGridLayout" name="gridLayout_2">
-              <item row="0" column="0">
-               <widget class="QLabel" name="lblTitleLicense">
-                <property name="text">
-                 <string>Licence :</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="lblLicense"/>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btnFlags">
-              <property name="statusTip">
-               <string>Affiche et permet de modifier les drapeaux du paquet.</string>
-              </property>
-              <property name="text">
-               <string>&amp;Gérer les drapeaux</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>18</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-         </layout>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="lblTitleSection">
+          <property name="text">
+           <string>Section :</string>
+          </property>
+         </widget>
         </item>
-        <item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="lblSection"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="lblTileRepo">
+          <property name="text">
+           <string>Dépôt :</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="lblRepo"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="lblTitleDownload">
+          <property name="text">
+           <string>Téléchargement :</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="lblDownload"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="lblTitleInstall">
+          <property name="text">
+           <string>Installation :</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="lblInstall"/>
+        </item>
+        <item row="4" column="0">
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -245,7 +183,7 @@
        </layout>
       </item>
       <item>
-       <spacer name="spacerVersions">
+       <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -258,18 +196,78 @@
        </spacer>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_8">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
         <item>
-         <widget class="QLabel" name="lblVersions">
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="lblTitleLicense">
+            <property name="text">
+             <string>Licence :</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="lblLicense"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnFlags">
+          <property name="statusTip">
+           <string>Affiche et permet de modifier les drapeaux du paquet.</string>
+          </property>
           <property name="text">
-           <string>Versions disponibles :</string>
+           <string>&amp;Gérer les drapeaux</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QListWidget" name="listVersions"/>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>18</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
+      </item>
+      <item>
+       <widget class="QWidget" name="wgVersions" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <spacer name="spacerVersions">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_8">
+           <item>
+            <widget class="QLabel" name="lblVersions">
+             <property name="text">
+              <string>Versions disponibles :</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QListWidget" name="listVersions"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
       </item>
      </layout>
     </item>

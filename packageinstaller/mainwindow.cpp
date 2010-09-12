@@ -50,7 +50,7 @@ MainWindow::MainWindow() : QWidget(0)
     _error = false;
     ps = 0;
     
-    resize(600, 300);
+    resize(600, 250);
     
     // Vérifier qu'on a les bons paramètres
     QString filename;
@@ -112,7 +112,6 @@ MainWindow::MainWindow() : QWidget(0)
     
     // Définir les icônes
     setWindowIcon(QIcon(":/images/package.png"));
-    setWindowTitle(tr("Installer un paquet hors des dépôts"));
     
     // Connexion des signaux
     connect(btnOk, SIGNAL(clicked(bool)),
@@ -162,6 +161,8 @@ void MainWindow::displayPackage(const QString& filename)
     
     PackageDataProvider *provider = new PackageDataProvider(fpkg, ps);
     infoPane->displayData(provider);
+    
+    setWindowTitle(tr("Installer %1 depuis un fichier").arg(pkg->name()));
 }
 
 void MainWindow::btnInstallClicked()

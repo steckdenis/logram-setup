@@ -71,8 +71,7 @@ InfoPane::~InfoPane()
 
 void InfoPane::setShowVersions(bool show)
 {
-    d->ui->listVersions->setVisible(show);
-    d->ui->lblVersions->setVisible(show);
+    d->ui->wgVersions->setVisible(show);
 }
 
 void InfoPane::displayData(PackageDataProviderInterface* data)
