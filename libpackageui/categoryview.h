@@ -23,6 +23,11 @@
 #ifndef __CATEGORYVIEW_H__
 #define __CATEGORYVIEW_H__
 
+/**
+ * @file categoryview.h
+ * @brief Affichage des catégories et distributions
+ */
+
 #include <QToolBox>
 
 class QTreeWidget;
@@ -37,22 +42,53 @@ namespace LogramUi
 
 class FilterInterface;
 
+
+/**
+ * @brief Affichage des catégories et distributions
+ * 
+ * Ce widget, découpé en deux parties, permet de filtrer les paquets en
+ * fonction de leur section et de leur distribution.
+ * 
+ * La liste des sections est affichée avec leur icône, titre et
+ * description.
+ * 
+ * Ces informations sont obtenues à partir des fichiers de métadonnées
+ * des dépôts. Appelez Logram::PackageSystem::update() avec comme paramètre
+ * Logram::PackageSystem::Sections en plus de Logram::PackageSystem::Minimal.
+ */
 class CategoryView : public QToolBox
 {
     Q_OBJECT
     
     public:
+        /**
+         * @brief Constructeur
+         * @param ps PackageSystem utilisé
+         * @param interface Interface de filtrage
+         * @param parent QWidget parent
+         */
         CategoryView(Logram::PackageSystem *ps, FilterInterface *interface, QWidget* parent = 0);
+        
+        /**
+         * @brief Destructeur
+         */
         ~CategoryView();
         
+        /**
+         * @brief Efface le contenu des listes et relit les fichiers de métadonnées
+         * 
+         * Cette fonction doit être appelée après Logram::PackageSystem::update,
+         * si votre application appelle cette fonction. Cela permet de garder
+         * le widget synchronisé avec les dépôts.
+         */
         void reload();
         
-        QTreeWidget *sections();
-        QTreeWidget *distributions();
+        QTreeWidget *sections();        /*!< @brief Arbre des sections */
+        QTreeWidget *distributions();   /*!< @brief Arbre des distributions */
         
-        QString sectionTitle(const QString &name) const;
-        QString sectionDescription(const QString &name) const;
-        QIcon sectionIcon(const QString &name) const;
+        QString sectionTitle(const QString &name) const;        /*!< @brief Titre de la section donnée */
+        QString sectionDescription(const QString &name) const;  /*!< @brief Description de la section donnée */
+        QIcon sectionIcon(const QString &name) const;           /*!< @brief Icône de la section donnée */
         
     private slots:
         void updateFilter();
