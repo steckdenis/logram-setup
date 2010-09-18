@@ -1,6 +1,6 @@
 #!/usr/bin/env xdg-open
 [Desktop Entry]
-Exec=packageinstaller %u
+Exec=packageinstaller %f
 Icon=/usr/share/pixmaps/packageinstaller.png
 Type=Application
 Terminal=false

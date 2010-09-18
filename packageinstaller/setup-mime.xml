@@ -7,4 +7,11 @@
     <generic-icon name="application-x-logram-package"/>
     <glob pattern="*.lpk"/>
   </mime-type>
+  <mime-type type="application/x-catalog">
+    <sub-class-of type="text/plain"/>
+    <comment>Package catalog</comment>
+    <comment xml:lang="fr">Catalogue de paquets</comment>
+    <generic-icon name="application-x-catalog"/>
+    <glob pattern="*.catalog"/>
+  </mime-type>
 </mime-info>

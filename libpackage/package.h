@@ -412,18 +412,18 @@ class PackageFile
          * @param ps PackageSystem utilisé
          */
         PackageFile(PackageSystem *ps);
-        virtual ~PackageFile();             /** @brief Destructeur */
+        virtual ~PackageFile();             /*!< @brief Destructeur */
         
-        virtual QString path() = 0;         /** @brief Chemin */
-        virtual int flags() = 0;            /** @brief Flags (PACKAGE_FILE*) */
-        virtual uint installTime() = 0;     /** @brief Timestamp UNIX de la date d'installation */
-        virtual Package *package() = 0;     /** @brief Paquet auquel le fichier appartient */
+        virtual QString path() = 0;         /*!< @brief Chemin */
+        virtual int flags() = 0;            /*!< @brief Flags (PACKAGE_FILE*) */
+        virtual uint installTime() = 0;     /*!< @brief Timestamp UNIX de la date d'installation */
+        virtual Package *package() = 0;     /*!< @brief Paquet auquel le fichier appartient */
         
-        virtual void setFlags(int flags) = 0;   /** @brief Modifie les flags du fichier */
-        virtual void setInstallTime(uint timestamp) = 0;    /** @brief Définit la date d'installation */
+        virtual void setFlags(int flags) = 0;   /*!< @brief Modifie les flags du fichier */
+        virtual void setInstallTime(uint timestamp) = 0;    /*!< @brief Définit la date d'installation */
         
     protected:
-        void saveFile();                    /** @brief Enregistre ce fichier comme devant être écrit dans installed_files.list */
+        void saveFile();                    /*!< @brief Enregistre ce fichier comme devant être écrit dans installed_files.list */
         
     private:
         struct Private;

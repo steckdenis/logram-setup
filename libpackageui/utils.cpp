@@ -26,8 +26,14 @@
 #include <QApplication>
 #include <QMessageBox>
 #include <QProcess>
+#include <QIcon>
+#include <QFrame>
+#include <QGridLayout>
+#include <QLabel>
 
 #include <packagesystem.h>
+#include <installwizard.h>
+#include <package.h>
 
 #include <string>
 #include <sstream>
@@ -163,4 +169,140 @@ void Utils::packageSystemError(PackageSystem* ps)
     }
     
     QMessageBox::critical(QApplication::activeWindow(), QApplication::translate("Utils", "Erreur"), s);
+}
+
+QWidget *Utils::choiceWidget(QWidget *parent, 
+                             bool first, 
+                             const QString &downloadString, 
+                             const QString &installString, 
+                             const QString &shortDesc, 
+                             const QString &name, 
+                             const QString &version, 
+                             const QString &updateVersion, 
+                             Solver::Action action, 
+                             int flags)
+{
+    QWidget *widget = new QWidget(parent);
+    QLabel *lblActionIcon = new QLabel(widget);
+    QLabel *lblActionString = new QLabel(widget);
+    QFrame *vline = new QFrame(widget);
+    QLabel *lblShortDesc = new QLabel(widget);
+    QLabel *dlIcon = new QLabel(widget);
+    QLabel *dlString = new QLabel(widget);
+    QLabel *instIcon = new QLabel(widget);
+    QLabel *instString = new QLabel(widget);
+    
+    QGridLayout *layout = new QGridLayout(widget);
+    widget->setLayout(layout);
+    
+    // Propriétés
+    lblActionIcon->resize(22, 22);
+    lblActionIcon->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    
+    lblActionString->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+    
+    dlIcon->resize(22, 22);
+    dlIcon->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    dlIcon->setPixmap(QIcon::fromTheme("download").pixmap(22, 22));
+    
+    dlString->setText(downloadString);
+    dlString->setMinimumSize(QSize(100, 0));
+    
+    instIcon->resize(22, 22);
+    instIcon->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    instIcon->setPixmap(QIcon(":/images/repository.png").pixmap(22, 22));
+    
+    instString->setText(installString);
+    instString->setMinimumSize(QSize(100, 0));
+    
+    vline->setFrameShape(QFrame::VLine);
+    
+    lblShortDesc->setText(shortDesc);
+    lblShortDesc->setWordWrap(true);
+    lblShortDesc->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+    
+    switch (action)
+    {
+        case Solver::Install:
+            lblActionIcon->setPixmap(QIcon(":/images/pkg-install.png").pixmap(22, 22));
+            lblActionString->setText(InstallWizard::tr("Installation de <b>%1</b>~%2").arg(name, version));
+            break;
+        case Solver::Remove:
+            lblActionIcon->setPixmap(QIcon(":/images/pkg-remove.png").pixmap(22, 22));
+            lblActionString->setText(InstallWizard::tr("Suppression de <b>%1</b>~%2").arg(name, version));
+            break;
+        case Solver::Purge:
+            lblActionIcon->setPixmap(QIcon(":/images/pkg-purge.png").pixmap(22, 22));
+            lblActionString->setText(InstallWizard::tr("Suppression totale de <b>%1</b>~%2").arg(name, version));
+            break;
+        case Solver::Update:
+            lblActionIcon->setPixmap(QIcon(":/images/pkg-update.png").pixmap(22, 22));
+            lblActionString->setText(InstallWizard::tr("Mise à jour de <b>%1</b>~%2 vers %3").arg(name, version, updateVersion));
+            break;
+        default:
+            break;
+    }
+    
+    // Ajouter les widgets au layout
+    int c = 0;
+    
+    if (first)
+    {
+        // On aura des choix en-dessous, bien les séparer pour que l'utilisateur le voie
+        QFrame *hline = new QFrame(widget);
+        hline->setFrameShape(QFrame::HLine);
+        layout->addWidget(hline, 0, 0, 1, 7);
+        
+        c++;
+    }
+    
+    layout->addWidget(lblActionIcon, c, 0);
+    layout->addWidget(lblActionString, c, 2);
+    layout->addWidget(dlIcon, c, 3);
+    layout->addWidget(dlString, c, 4);
+    layout->addWidget(instIcon, c, 5);
+    layout->addWidget(instString, c, 6);
+    
+    layout->addWidget(vline, c + 1, 1);
+    
+    if (flags & PACKAGE_FLAG_NEEDSREBOOT || flags & PACKAGE_FLAG_EULA)
+    {
+        layout->addWidget(lblShortDesc, c + 1, 2);
+        
+        if (flags & PACKAGE_FLAG_NEEDSREBOOT)
+        {
+            QLabel *lblRebootIcon = new QLabel(widget);
+            QLabel *lblRebootString = new QLabel(widget);
+            
+            lblRebootIcon->resize(22, 22);
+            lblRebootIcon->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+            lblRebootIcon->setPixmap(QIcon::fromTheme("system-reboot").pixmap(22, 22));
+            
+            lblRebootString->setText(InstallWizard::tr("Redémarrage"));
+            
+            layout->addWidget(lblRebootIcon, c + 1, 3, Qt::AlignTop);
+            layout->addWidget(lblRebootString, c + 1, 4, Qt::AlignTop);
+        }
+        
+        if (flags & PACKAGE_FLAG_EULA)
+        {
+            QLabel *lblEulaIcon = new QLabel(widget);
+            QLabel *lblEulaString = new QLabel(widget);
+            
+            lblEulaIcon->resize(22, 22);
+            lblEulaIcon->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+            lblEulaIcon->setPixmap(QIcon::fromTheme("mail-signed").pixmap(22, 22));
+            
+            lblEulaString->setText(InstallWizard::tr("Licence à approuver"));
+            
+            layout->addWidget(lblEulaIcon, c + 1, 5, Qt::AlignTop);
+            layout->addWidget(lblEulaString, c + 1, 6, Qt::AlignTop);
+        }
+    }
+    else
+    {
+        layout->addWidget(lblShortDesc, c + 1, 2, 1, 5);
+    }
+    
+    return widget;
 }

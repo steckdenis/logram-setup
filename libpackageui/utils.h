@@ -102,6 +102,68 @@ class Utils
          */
         static void packageSystemError(Logram::PackageSystem *ps);
         
+        /**
+         * @brief Délégué permettant d'afficher une liste de paquets
+         * 
+         * Cette fonction construit un QWidget pouvant servir de délégué dans
+         * une liste de paquets (QListWidget::setItemWidget()).
+         * 
+         * Ce widget est de la forme :
+         * 
+         * @code
+         * [Icône]   Installation de *paquet*~version    [1] 1,98Mio     [2] 7,87 Mio
+         *         | Description courte                  [3] Redémarrage [4] Licence à approuver
+         * @endcode
+         * 
+         *  - 1 Icône de téléchargement
+         *  - 2 Icône d'installation. Ces deux champs peuvent être négatifs (préfixés de "-" et en rouge)
+         *  - 3 Icône de redémarrage
+         *  - 4 Icône d'approbation de licence
+         * 
+         * Exemple d'utilisation :
+         * 
+         * @code
+         * QListWidgetItem *item = new QListWidgetItem(listPackages);
+         * listPackages->addItem(item);
+         * 
+         * QWidget *widget = choiceWidget(this,
+         *                                false, 
+         *                                sDlSize,
+         *                                sInstSize, 
+         *                                pkg->shortDesc(),
+         *                                pkg->name(),
+         *                                pkg->version(),
+         *                                (pkg->action() == Solver::Update ? pkg->upgradePackage()->version() : QString()),
+         *                                pkg->action(), 
+         *                                pkg->flags());
+         *
+         * item->setSizeHint(widget->minimumSizeHint());
+         * listPackages->setItemWidget(item, widget);
+         * @endcode
+         * 
+         * @param parent QWidget parent
+         * @param first true s'il faut placer une ligne horizontale en haut du widget (utilisé par BranchePage, classe cachée)
+         * @param downloadString Taille à télécharger
+         * @param installString Taille à installer
+         * @param shortDesc Description courte
+         * @param name Nom
+         * @param version Version
+         * @param updateVersion Si actions = Logram::Solver::Update, version vers laquelle on met à jour
+         * @param action Action du paquet
+         * @param flags Flags du paquet
+         * @return QWidget layouté permettant d'afficher des informations sur ce paquet
+         */
+        static QWidget *choiceWidget(QWidget *parent, 
+                                     bool first, 
+                                     const QString &downloadString, 
+                                     const QString &installString, 
+                                     const QString &shortDesc, 
+                                     const QString &name, 
+                                     const QString &version, 
+                                     const QString &updateVersion, 
+                                     Logram::Solver::Action action, 
+                                     int flags);
+        
     private:
         Utils(){}
 };

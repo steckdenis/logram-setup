@@ -1,0 +1,14 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Exec=cataloginstaller %f
+Icon=/usr/share/pixmaps/pkgui.svg
+Type=Application
+Terminal=false
+Name=Catalog installer
+Name[fr]=Installateur de catalogues
+Comment=Install list of packages
+Comment[fr]=Installer une liste de paquets
+StartupNotify=false
+MimeType=application/x-catalog;
+Categories=System;
+NoDisplay=true
