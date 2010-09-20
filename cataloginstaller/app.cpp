@@ -33,6 +33,7 @@
 
 #include <communication.h>
 #include <packagesystem.h>
+#include <databasereader.h>
 
 #include <communicationdialog.h>
 #include <installwizard.h>
@@ -234,10 +235,22 @@ bool App::launch()
             }
             else if (type == Provides)
             {
-                // TODO:
-                // dr = ps->databaseReader();
-                // int str = dr->string(element);
-                // QList<int> packages = dr->packagesOfString(0, str, DEPEND_OP_NOVERSION);
+                DatabaseReader *dr = ps->databaseReader();
+                
+                // Traitement O(1) dans la base de donnée, peut être long
+                int str = dr->string(false, element);
+                QVector<int> packages = dr->packagesOfString(0, str, DEPEND_OP_NOVERSION);
+                
+                if (packages.count() == 0)
+                {
+                    QMessageBox::critical(0, tr("Impossible de trouver un paquet"), tr("Impossible de trouver le paquet fournissant %1").arg(QString::fromLatin1(element)));
+                    return false;
+                }
+                
+                foreach (int i, packages)
+                {
+                    pkgs.append(ps->package(i));
+                }
             }
             
             // Si pkgs.count() > 1, proposer le choix
