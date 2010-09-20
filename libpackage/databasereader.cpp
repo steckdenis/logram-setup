@@ -29,6 +29,8 @@
 #include <QRegExp>
 #include <QDebug>
 
+#include <string.h>
+
 using namespace Logram;
 
 DatabaseReader::DatabaseReader(PackageSystem *_ps)
@@ -550,6 +552,23 @@ const char *DatabaseReader::string(bool translate, int index)
     ptr += (count * sizeof(_String));   // Sauter la table des chaînes
 
     return ptr;
+}
+
+int DatabaseReader::string(bool translate, const QByteArray& s)
+{
+    int *count = (int *)(translate ? m_translate : m_strings);
+    const char *str = s.data();
+    int len = s.length();
+    
+    for (int i=0; i<*count; ++i)
+    {
+        if (strncmp(str, string(translate, i), len) == 0)
+        {
+            return i;
+        }
+    }
+    
+    return -1;
 }
 
 bool DatabaseReader::mapFile(const QString &file, QFile **ptr, uchar **map)

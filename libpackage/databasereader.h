@@ -376,6 +376,21 @@ class DatabaseReader
         const char *string(bool translate, int index);
         
         /**
+         * @brief Index d'une certaine chaîne
+         * 
+         * Retourne l'index de la chaîne spécifiée. Permet par exemple de
+         * trouver la liste des paquets fournissant quelque-chose.
+         * 
+         * @warning Cette fonction a une complexité de 0(n), où n est le
+         *          nombre de chaînes gérées. Elle peut être très lente !
+         *
+         * @param s Chaîne de caractère
+         * @param translate True pour chercher la chaîne dans le fichier de traductions
+         * @return Index de la chaîne
+         */
+        int string(bool translate, const QByteArray &s);
+        
+        /**
             @brief Nom d'un fichier dont on a le pointeur
             
             Retourne un pointeur sur la chaîne dans le fichier @b files, 
