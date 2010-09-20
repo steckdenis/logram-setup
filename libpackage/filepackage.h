@@ -88,7 +88,7 @@ class FilePackage : public Package
         QString arch();
         QByteArray packageHash();
         QByteArray metadataHash();
-        int flags();
+        Flag flags();
         
         QDateTime installedDate();
         int installedBy();
@@ -103,7 +103,7 @@ class FilePackage : public Package
 
         QVector<Depend *> depends();
         
-        void registerState(int idate, int iby, int flags);
+        void registerState(int idate, int iby, Flag flags);
         
         QByteArray metadataContents();              /*!< @brief Contenu du fichier de métadonnées */
         QVector<PackageFile *> files();             /*!< @brief Liste des fichiers du paquet */
@@ -126,13 +126,13 @@ class FilePackage : public Package
 class FileDepend : public Depend
 {
     public:
-        FileDepend(int8_t type, int8_t op, const QString &name, const QString &version);
+        FileDepend(Type type, Op op, const QString &name, const QString &version);
         ~FileDepend();
 
         QString name();
         QString version();
-        int8_t type();
-        int8_t op();
+        Type type();
+        Operation op();
 
     private:
         struct Private;
@@ -151,16 +151,16 @@ class FileFile : public PackageFile
          * @param path Chemin d'accès
          * @param flags Flags du fichier
          */
-        FileFile(PackageSystem *ps, const QString &path, int flags);
+        FileFile(PackageSystem *ps, const QString &path, Flag flags);
         ~FileFile();                    /*!< @brief Destructeur */
         
         QString path();                 /*!< @brief Chemin d'accès */
-        int flags();                    /*!< @brief Flags */
+        Flag flags();                    /*!< @brief Flags */
         uint installTime();             /*!< @brief Timestamp d'installation */
         Package *package();             /*!< @brief Paquet auquel appartient ce fichier */
         
-        void setFlags(int flags);       /*!< @brief Définit les flags de ce fichier et les sauvegarde dans installed_files.list */
-        void setFlagsNoSave(int flags); /*!< @brief Définit les flags de ce fichier sans les sauvegarder dans installed_files.list */
+        void setFlags(Flag flags);       /*!< @brief Définit les flags de ce fichier et les sauvegarde dans installed_files.list */
+        void setFlagsNoSave(Flag flags); /*!< @brief Définit les flags de ce fichier sans les sauvegarder dans installed_files.list */
         void setPath(const QString &path); /*!< @brief Définit le chemin d'accès du fichier */
         void setInstallTime(uint timestamp); /*!< @brief Définit le timestamp d'installation */
         

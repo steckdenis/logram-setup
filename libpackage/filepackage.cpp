@@ -81,7 +81,7 @@ struct FileFile::Private
     uint itime;
 };
 
-FileFile::FileFile(PackageSystem *ps, const QString &path, int flags) : PackageFile(ps)
+FileFile::FileFile(PackageSystem* ps, const QString& path, PackageFile::Flag flags) : PackageFile(ps)
 {
     d = new Private;
     d->path = path;
@@ -113,13 +113,13 @@ Package *FileFile::package()
     return 0;
 }
         
-void FileFile::setFlags(int flags)
+void FileFile::setFlags(PackageFile::Flag flags)
 {
     d->flags = flags;
     saveFile();
 }
 
-void FileFile::setFlagsNoSave(int flags)
+void FileFile::setFlagsNoSave(PackageFile::Flag flags)
 {
     d->flags = flags;
 }
@@ -655,7 +655,7 @@ QVector<Depend *> FilePackage::depends()
     return d->depends;
 }
 
-void FilePackage::registerState(int idate, int iby, int flags)
+void FilePackage::registerState(int idate, int iby, Package::Flag flags)
 {
     // TODO: Pas possible d'ajouter un élément dans la BDD. Peut-être déclencher un update()
     (void) idate;
@@ -676,7 +676,7 @@ struct FileDepend::Private
     QString name, version;
 };
 
-FileDepend::FileDepend(int8_t type, int8_t op, const QString &name, const QString &version)
+FileDepend::FileDepend(Depend::Type type, Op op, const QString& name, const QString& version)
 {
     d = new Private;
     

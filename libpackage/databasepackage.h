@@ -137,7 +137,7 @@ class DatabasePackage : public Package
         QString url(UrlType type = DatabasePackage::Binary);
         QByteArray packageHash();
         QByteArray metadataHash();
-        int flags();
+        Flag flags();
         
         /**
             @brief Définis les flags d'un paquet
@@ -151,7 +151,7 @@ class DatabasePackage : public Package
             @code
                 DatabasePackage *pkg = getPackage();
                 
-                int flag = PACKAGE_FLAG_DONTUPDATE;
+                int flag = Package::DontUpdate;
                 
                 pkg->setFlags(pkg->flags() | flag);
             @endcode
@@ -159,7 +159,7 @@ class DatabasePackage : public Package
             @param flags nouveau flags du paquet
             @sa flags
         */
-        void setFlags(int flags);
+        void setFlags(Flag flags);
         
         QDateTime installedDate();
         int installedBy();
@@ -177,7 +177,7 @@ class DatabasePackage : public Package
         bool fastVersionCompare(Package *other);
         bool fastNameVersionCompare(Package *other);
         
-        void registerState(int idate, int iby, int flags);
+        void registerState(int idate, int iby, Flag flags);
 
     signals:
         void downloaded(bool success);
@@ -203,8 +203,8 @@ class DatabaseDepend : public Depend
 
         QString name();
         QString version();
-        int8_t type();
-        int8_t op();
+        Type type();
+        Operation op();
 
     private:
         struct Private;

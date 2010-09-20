@@ -91,7 +91,7 @@ struct _File
 {
     int32_t parent_dir; /*!< @brief Index du _File représentant le dossier parent, -1 si racine */
     int32_t package;    /*!< @brief Index du paquet contenant le fichier, ignoré si dossier */
-    int32_t flags;      /*!< @brief Flags du fichier (voir PACKAGE_FILE_* dans package.h) */
+    int32_t flags;      /*!< @brief Flags du fichier */
     int32_t name_ptr;   /*!< @brief Pointeur du nom de ce fichier dans la zone de donnée de @b files */
     int32_t next_file_dir;  /*!< @brief Index du fichier suivant appartenant au même dossier, ou -1 */
     int32_t next_file_pkg;  /*!< @brief Index du fichier suivant appartenant au même paquet, ou -1 */

@@ -199,7 +199,7 @@ QString DatabasePackage::tlzFileName()
     return d->waitingDest;
 }
 
-void DatabasePackage::registerState(int idate, int iby, int flags)
+void DatabasePackage::registerState(int idate, int iby, Package::Flag flags)
 {
     d->dbpkg->idate = idate;
     d->dbpkg->iby = iby;
