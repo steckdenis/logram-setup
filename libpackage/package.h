@@ -44,9 +44,50 @@ class PackageMetaData;
 class Communication;
 class DatabaseReader;
 
-class Depend;
 class PackageFile;
 class DatabasePackage;
+
+/**
+ * @brief Dépendance d'un paquet
+ */
+class Depend
+{
+    public:
+        Depend();               /*!< @brief Constructeur */
+        virtual ~Depend() {}    /*!< @brief Destructeur */
+        
+        /** @brief Type de dépendance d'un paquet envers un autre */
+        enum Type
+        {
+            Invalid = 0,    /*!< @brief Invalide */
+            DependType = 1, /*!< @brief Le paquet dépend d'un autre */
+            Suggest = 2,    /*!< @brief Le paquet en suggère un autre */
+            Conflict = 3,   /*!< @brief Le paquet ne peut être installé sans l'autre */
+            Provide = 4,    /*!< @brief Le paquet fournit un autre (pas spécialement existant, bash fournit "shell" par exemple) */
+            Replace = 5,    /*!< @brief Le paquet fournit l'autre (conflit + fournit) */
+            RevDep = 6      /*!< @brief L'autre dépend de ce paquet (dépendance inverse, «est requis par»). 
+                              
+                              Dans ce cas, dans la base de donnée, Logram::_Package::name vaut l'index du
+                              paquet qui dépend de ce paquet, et version vaut 0. Op ignoré */
+        };
+        
+        /** @brief Opération de comparaison pour trouver la version des autres paquets concernés par la dépendance */
+        enum Operation
+        {
+            NoVersion = 0,      /*!< @brief Pas de version spécifiée */
+            Equal = 1,          /*!< @brief = */
+            GreaterOrEqual = 2, /*!< @brief >= */
+            Greater = 3,        /*!< @brief > */
+            LowerOrEqual = 4,   /*!< @brief <= */
+            Lower = 5,          /*!< @brief < */
+            NotEqual = 10       /*!< @brief != */
+        };
+        
+        virtual QString name() = 0;     /*!< @brief Nom du paquet */
+        virtual QString version() = 0;  /*!< @brief Version */
+        virtual Type type() = 0;      /*!< @brief Type de dépendance (DEPEND_TYPE*) */
+        virtual Operation op() = 0;        /*!< @brief Opération (DEPEND_OP*) */
+};
 
 /**
  * @brief Classe de base de la gestion des paquets
@@ -118,40 +159,20 @@ class Package : public QObject
             Database,   /*!< @brief Le paquet provient de la base de donnée */
             File        /*!< @brief Le paquet provient d'un fichier */
         };
-
-#if 0
-#define PACKAGE_FLAG_KDEINTEGRATION         0b000000000000011   /*!< @brief Intégration à KDE (0 à 3) */
-#define PACKAGE_FLAG_GUI                    0b000000000000100   /*!< @brief Paquet graphique */
-#define PACKAGE_FLAG_DONTUPDATE             0b000000000001000   /*!< @brief Ne pas mettre à jour */
-#define PACKAGE_FLAG_DONTINSTALL            0b000000000010000   /*!< @brief Ne pas installer */
-#define PACKAGE_FLAG_DONTREMOVE             0b000000000100000   /*!< @brief Ne pas supprimer */
-#define PACKAGE_FLAG_EULA                   0b000000001000000   /*!< @brief Nécessite l'approbation d'une licence */
-#define PACKAGE_FLAG_NEEDSREBOOT            0b000000010000000   /*!< @brief Nécessite un redémarrage */
-#define PACKAGE_FLAG_WANTED                 0b000000100000000   /*!< @brief Installé manuellement */
-#define PACKAGE_FLAG_INSTALLED              0b000001000000000   /*!< @brief Installé */
-#define PACKAGE_FLAG_REMOVED                0b000010000000000   /*!< @brief Supprimé */
-#define PACKAGE_FLAG_REBUILD                0b000100000000000   /*!< @brief Reconstruire (buildserver) */
-#define PACKAGE_FLAG_RECOMPILE              0b001000000000000   /*!< @brief Recompiler (buildserver, pas utilisé) */
-#define PACKAGE_FLAG_CONTINUOUSRECOMPILE    0b010000000000000   /*!< @brief Recompiler en continu */
-#define PACKAGE_FLAG_PRIMARY                0b100000000000000   /*!< @brief Paquet primaire (bash, pas bash-doc) */
-#endif
         
         enum Flag
         {
-            KDEIntegration =        0b000000000000011,  /*!< @brief Intégration à KDE (0 à 3) */
-            GUI =                   0b000000000000100,  /*!< @brief Paquet graphique */
-            DontUpdate =            0b000000000001000,  /*!< @brief Ne pas mettre à jour */
-            DontInstall =           0b000000000010000,  /*!< @brief Ne pas installer */
-            DontRemove =            0b000000000100000,  /*!< @brief Ne pas supprimer */
-            Eula =                  0b000000001000000,  /*!< @brief Nécessite l'approbation d'une licence */
-            NeedsReboot =           0b000000010000000,  /*!< @brief Nécessite un redémarrage */
-            Wanted =                0b000000100000000,  /*!< @brief Installé manuellement */
-            Installed =             0b000001000000000,  /*!< @brief Installé */
-            Removed =               0b000010000000000,  /*!< @brief Supprimé */
-            Rebuild =               0b000100000000000,  /*!< @brief Reconstruire (buildserver) */
-            Recompile =             0b001000000000000,  /*!< @brief Recompiler (buildserver, pas utilisé) */
-            ContinuousRecompile =   0b010000000000000,  /*!< @brief Recompiler en continu */
-            Primary =               0b100000000000000   /*!< @brief Paquet primaire (bash, pas bash-doc) */
+            KDEIntegration =        0b000000000011,  /*!< @brief Intégration à KDE (0 à 3) */
+            GUI =                   0b000000000100,  /*!< @brief Paquet graphique */
+            DontUpdate =            0b000000001000,  /*!< @brief Ne pas mettre à jour */
+            DontInstall =           0b000000010000,  /*!< @brief Ne pas installer */
+            DontRemove =            0b000000100000,  /*!< @brief Ne pas supprimer */
+            Eula =                  0b000001000000,  /*!< @brief Nécessite l'approbation d'une licence */
+            NeedsReboot =           0b000010000000,  /*!< @brief Nécessite un redémarrage */
+            Wanted =                0b000100000000,  /*!< @brief Installé manuellement */
+            Installed =             0b001000000000,  /*!< @brief Installé */
+            Removed =               0b010000000000,  /*!< @brief Supprimé */
+            Primary =               0b100000000000   /*!< @brief Paquet primaire (bash, pas bash-doc) */
         };
 
         // Interface
@@ -256,7 +277,7 @@ class Package : public QObject
          * @param iby : UID de l'utilisateur ayant installé le paquet
          * @param flags : Flags du paquet à enregistrer
          */
-        virtual void registerState(int idate, int iby, int flags) = 0;
+        virtual void registerState(int idate, int iby, Flag flags) = 0;
         
         // Commun à tous les types de paquets
         /**
@@ -326,7 +347,7 @@ class Package : public QObject
          * @code
          * Package *pkg = package();
          * 
-         * QString rs = Package::dependsToString(pkg->depends(), DEPEND_TYPE_CONFLICT);
+         * QString rs = Package::dependsToString(pkg->depends(), Depend::Conflict);
          * 
          * qDebug() << rs; // Affiche les conflits de pkg
          * @endcode
@@ -340,7 +361,7 @@ class Package : public QObject
          *             retenues dans la liste
          * @return liste des dépendances formattée.
          */
-        static QString dependsToString(const QVector<Depend *> &deps, int type);
+        static QString dependsToString(const QVector<Depend *> &deps, Depend::Type type);
         
         // Mise à jour
         /**
@@ -422,68 +443,6 @@ class Package : public QObject
 };
 
 /**
- * @brief Dépendance d'un paquet
- */
-class Depend
-{
-    public:
-        Depend();               /*!< @brief Constructeur */
-        virtual ~Depend() {}    /*!< @brief Destructeur */
-
-#if 0
-#define DEPEND_TYPE_INVALID  0
-#define DEPEND_TYPE_DEPEND   1
-#define DEPEND_TYPE_SUGGEST  2
-#define DEPEND_TYPE_CONFLICT 3
-#define DEPEND_TYPE_PROVIDE  4
-#define DEPEND_TYPE_REPLACE  5
-#define DEPEND_TYPE_REVDEP   6   // Dans ce cas, name = index du paquet dans packages, version = 0
-#endif
-        
-        /** @brief Type de dépendance d'un paquet envers un autre */
-        enum Type
-        {
-            Invalid = 0,    /*!< @brief Invalide */
-            Depend = 1,     /*!< @brief Le paquet dépend d'un autre */
-            Suggest = 2,    /*!< @brief Le paquet en suggère un autre */
-            Conflict = 3,   /*!< @brief Le paquet ne peut être installé sans l'autre */
-            Provide = 4,    /*!< @brief Le paquet fournit un autre (pas spécialement existant, bash fournit "shell" par exemple) */
-            Replace = 5,    /*!< @brief Le paquet fournit l'autre (conflit + fournit) */
-            RevDep = 6      /*!< @brief L'autre dépend de ce paquet (dépendance inverse, «est requis par»). 
-                              
-                              Dans ce cas, dans la base de donnée, Logram::_Package::name vaut l'index du
-                              paquet qui dépend de ce paquet, et version vaut 0. Op ignoré */
-        };
-        
-#if 0
-#define DEPEND_OP_NOVERSION  0   /*!< @brief Pas de version spécifiée */
-#define DEPEND_OP_EQ         1   /*!< @brief = */
-#define DEPEND_OP_GREQ       2   /*!< @brief >= */
-#define DEPEND_OP_GR         3   /*!< @brief > */
-#define DEPEND_OP_LOEQ       4   /*!< @brief <= */
-#define DEPEND_OP_LO         5   /*!< @brief < */
-#define DEPEND_OP_NE         6   /*!< @brief != */
-#endif
-        
-        /** @brief Opération de comparaison pour trouver la version des autres paquets concernés par la dépendance */
-        enum Operation
-        {
-            NoVersion = 0,      /*!< @brief Pas de version spécifiée */
-            Equal = 1,          /*!< @brief = */
-            GreaterOrEqual = 2, /*!< @brief >= */
-            Greater = 3,        /*!< @brief > */
-            LowerOrEqual = 4,   /*!< @brief <= */
-            Lower = 5,          /*!< @brief < */
-            NotEqual = 10       /*!< @brief != */
-        };
-        
-        virtual QString name() = 0;     /*!< @brief Nom du paquet */
-        virtual QString version() = 0;  /*!< @brief Version */
-        virtual Type type() = 0;      /*!< @brief Type de dépendance (DEPEND_TYPE*) */
-        virtual Operation op() = 0;        /*!< @brief Opération (DEPEND_OP*) */
-};
-
-/**
  * @brief Fichier d'un paquet
  */
 class PackageFile
@@ -495,17 +454,6 @@ class PackageFile
          */
         PackageFile(PackageSystem *ps);
         virtual ~PackageFile();             /*!< @brief Destructeur */
-        
-#if 0
-#define PACKAGE_FILE_INSTALLED              0b00000001
-#define PACKAGE_FILE_DIR                    0b00000010
-#define PACKAGE_FILE_DONTREMOVE             0b00000100
-#define PACKAGE_FILE_DONTPURGE              0b00001000
-#define PACKAGE_FILE_BACKUP                 0b00010000
-#define PACKAGE_FILE_OVERWRITE              0b00100000
-#define PACKAGE_FILE_VIRTUAL                0b01000000
-#define PACKAGE_FILE_CHECKBACKUP            0b10000000
-#endif
         
         enum Flag
         {
@@ -536,16 +484,5 @@ class PackageFile
 };
 
 } /* Namespace */
-
-// Constantes
-#define PACKAGE_FILE_INSTALLED              0b00000001
-#define PACKAGE_FILE_DIR                    0b00000010
-#define PACKAGE_FILE_DONTREMOVE             0b00000100
-#define PACKAGE_FILE_DONTPURGE              0b00001000
-#define PACKAGE_FILE_BACKUP                 0b00010000
-#define PACKAGE_FILE_OVERWRITE              0b00100000
-#define PACKAGE_FILE_VIRTUAL                0b01000000
-#define PACKAGE_FILE_CHECKBACKUP            0b10000000
-
 
 #endif

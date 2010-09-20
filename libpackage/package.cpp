@@ -215,8 +215,8 @@ void Package::processEnd()
     
     if (action() == Solver::Install)
     {
-        flgs = (flags() | PACKAGE_FLAG_INSTALLED | (wanted() ? PACKAGE_FLAG_WANTED : 0))
-                      & ~PACKAGE_FLAG_REMOVED;
+        flgs = (flags() | Package::Installed | (wanted() ? Package::Wanted : 0))
+                      & ~Package::Removed;
                       
         set->beginGroup(name());
         set->setValue("Name", name());
@@ -227,11 +227,11 @@ void Package::processEnd()
         set->setValue("Section", section());
         set->setValue("Distribution", distribution());
         set->setValue("License", license());
-        set->setValue("Depends", dependsToString(depends(), DEPEND_TYPE_DEPEND));
-        set->setValue("Provides", dependsToString(depends(), DEPEND_TYPE_PROVIDE));
-        set->setValue("Suggest", dependsToString(depends(), DEPEND_TYPE_SUGGEST));
-        set->setValue("Replaces", dependsToString(depends(), DEPEND_TYPE_REPLACE));
-        set->setValue("Conflicts", dependsToString(depends(), DEPEND_TYPE_CONFLICT));
+        set->setValue("Depends", dependsToString(depends(), Depend::DependType));
+        set->setValue("Provides", dependsToString(depends(), Depend::Provide));
+        set->setValue("Suggest", dependsToString(depends(), Depend::Suggest));
+        set->setValue("Replaces", dependsToString(depends(), Depend::Replace));
+        set->setValue("Conflicts", dependsToString(depends(), Depend::Conflict));
         set->setValue("DownloadSize", downloadSize());
         set->setValue("InstallSize", installSize());
         set->setValue("MetadataHash", metadataHash().constData());
@@ -249,12 +249,12 @@ void Package::processEnd()
         // Enregistrer les informations dans le paquet directement, puisqu'il est dans un fichier mappé
         registerState(QDateTime::currentDateTime().toTime_t(), 
                       QString(getenv("UID")).toInt(),
-                      flgs);
+                      (Flag) flgs);
     }
     else if (action() == Solver::Update)
     {
         Package *other = upgradePackage();
-        flgs = (other->flags() | PACKAGE_FLAG_INSTALLED) & ~PACKAGE_FLAG_REMOVED;
+        flgs = (other->flags() | Package::Installed) & ~Package::Removed;
         
         set->beginGroup(name());
         set->setValue("Name", name());
@@ -265,11 +265,11 @@ void Package::processEnd()
         set->setValue("Section", other->section());
         set->setValue("Distribution", other->distribution());
         set->setValue("License", other->license());
-        set->setValue("Depends", dependsToString(other->depends(), DEPEND_TYPE_DEPEND));
-        set->setValue("Provides", dependsToString(other->depends(), DEPEND_TYPE_PROVIDE));
-        set->setValue("Suggest", dependsToString(other->depends(), DEPEND_TYPE_SUGGEST));
-        set->setValue("Replaces", dependsToString(other->depends(), DEPEND_TYPE_REPLACE));
-        set->setValue("Conflicts", dependsToString(other->depends(), DEPEND_TYPE_CONFLICT));
+        set->setValue("Depends", dependsToString(other->depends(), Depend::DependType));
+        set->setValue("Provides", dependsToString(other->depends(), Depend::Provide));
+        set->setValue("Suggest", dependsToString(other->depends(), Depend::Suggest));
+        set->setValue("Replaces", dependsToString(other->depends(), Depend::Replace));
+        set->setValue("Conflicts", dependsToString(other->depends(), Depend::Conflict));
         set->setValue("DownloadSize", other->downloadSize());
         set->setValue("InstallSize", other->installSize());
         set->setValue("MetadataHash", other->metadataHash().constData());
@@ -287,19 +287,19 @@ void Package::processEnd()
         // Enregistrer l'état du nouveau paquet
         other->registerState(QDateTime::currentDateTime().toTime_t(), 
                              QString(getenv("UID")).toInt(),
-                             flgs);
+                             (Flag) flgs);
         
         // Également pour l'ancien paquet
-        flgs = (flags() | PACKAGE_FLAG_REMOVED) & ~PACKAGE_FLAG_INSTALLED;
+        flgs = (flags() | Package::Removed) & ~Package::Installed;
         
         registerState(QDateTime::currentDateTime().toTime_t(), 
                       QString(getenv("UID")).toInt(),
-                      flgs);
+                      (Flag) flgs);
     }
     else if (action() == Solver::Remove)
     {
         // Enregistrer le paquet comme supprimé
-        flgs = (flags() | PACKAGE_FLAG_REMOVED) & ~PACKAGE_FLAG_INSTALLED;
+        flgs = (flags() | Package::Removed) & ~Package::Installed;
         
         set->beginGroup(name());
         set->setValue("InstalledDate", QDateTime::currentDateTime().toTime_t());
@@ -310,7 +310,7 @@ void Package::processEnd()
         // Également dans la base de donnée binaire, avec l'heure et l'UID de celui qui a supprimé le paquet
         registerState(QDateTime::currentDateTime().toTime_t(), 
                       QString(getenv("UID")).toInt(),
-                      flgs);
+                      (Flag) flgs);
     }
     else if (action() == Solver::Purge)
     {
@@ -319,7 +319,7 @@ void Package::processEnd()
         
         registerState(0, 
                       0,
-                      flags() & ~(PACKAGE_FLAG_INSTALLED | PACKAGE_FLAG_REMOVED));
+                      (Flag)(flags() & ~(Package::Installed | Package::Removed)));
     }
 
     // Supprimer le thread
@@ -340,7 +340,7 @@ void Package::setAction(Solver::Action act)
     d->action = act;
 }
 
-QString Package::dependsToString(const QVector<Depend *> &deps, int type)
+QString Package::dependsToString(const QVector< Depend* >& deps, Depend::Type type)
 {
     QString rs;
     bool first = true;

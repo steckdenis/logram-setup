@@ -265,11 +265,11 @@ QWidget *Utils::choiceWidget(QWidget *parent,
     
     layout->addWidget(vline, c + 1, 1);
     
-    if (flags & PACKAGE_FLAG_NEEDSREBOOT || flags & PACKAGE_FLAG_EULA)
+    if (flags & Package::NeedsReboot || flags & Package::Eula)
     {
         layout->addWidget(lblShortDesc, c + 1, 2);
         
-        if (flags & PACKAGE_FLAG_NEEDSREBOOT)
+        if (flags & Package::NeedsReboot)
         {
             QLabel *lblRebootIcon = new QLabel(widget);
             QLabel *lblRebootString = new QLabel(widget);
@@ -284,7 +284,7 @@ QWidget *Utils::choiceWidget(QWidget *parent,
             layout->addWidget(lblRebootString, c + 1, 4, Qt::AlignTop);
         }
         
-        if (flags & PACKAGE_FLAG_EULA)
+        if (flags & Package::Eula)
         {
             QLabel *lblEulaIcon = new QLabel(widget);
             QLabel *lblEulaString = new QLabel(widget);

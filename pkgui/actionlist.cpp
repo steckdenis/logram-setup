@@ -121,9 +121,9 @@ DatabasePackage *MainWindow::duplicatePackage(PackageSystem *ps, DatabasePackage
 void MainWindow::actionsForPackage(DatabasePackage *pkg)
 {
     actDeselect->setEnabled(pkg->action() != Solver::None);
-    actInstallPackage->setEnabled((pkg->flags() & PACKAGE_FLAG_INSTALLED) == 0 && pkg->action() != Solver::Install);
-    actRemovePackage->setEnabled(pkg->flags() & PACKAGE_FLAG_INSTALLED && pkg->action() != Solver::Remove);
-    actPurge->setEnabled(pkg->flags() & PACKAGE_FLAG_INSTALLED && pkg->action() != Solver::Purge);
+    actInstallPackage->setEnabled((pkg->flags() & Package::Installed) == 0 && pkg->action() != Solver::Install);
+    actRemovePackage->setEnabled(pkg->flags() & Package::Installed && pkg->action() != Solver::Remove);
+    actPurge->setEnabled(pkg->flags() & Package::Installed && pkg->action() != Solver::Purge);
 }
 
 void MainWindow::installPackage()

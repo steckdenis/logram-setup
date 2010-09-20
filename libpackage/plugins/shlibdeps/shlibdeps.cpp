@@ -358,7 +358,7 @@ void ShLibDeps::processPackage(const QString& name, QStringList& files, bool isS
                     
                     // Le paquet est nécessairement installé puisqu'on s'en est servi pour compiler
                     // S'assurer que c'est cette version dont on dépend
-                    if ((pkg->flags() & PACKAGE_FLAG_INSTALLED) == 0)
+                    if ((pkg->flags() & Package::Installed) == 0)
                     {
                         delete file;
                         continue;

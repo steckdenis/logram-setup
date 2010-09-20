@@ -81,11 +81,11 @@ void App::find(const QString &pattern)
         
         sz = 20 - sz;
         
-        if (pkg->flags() & PACKAGE_FLAG_INSTALLED)
+        if (pkg->flags() & Package::Installed)
         {
             cout << COLOR("I ", "34");
         }
-        else if (pkg->flags() & PACKAGE_FLAG_REMOVED)
+        else if (pkg->flags() & Package::Removed)
         {
             cout << COLOR("R ", "31");
         }
@@ -112,14 +112,14 @@ static void outFlags(int flags)
         
     cout << "\033[1m\033[33m";  // Fonction utilisée seulement en couleur, donc ok
     
-    OUT_FLAG(PACKAGE_FILE_DIR, 'd')
-    OUT_FLAG(PACKAGE_FILE_INSTALLED, 'i')
-    OUT_FLAG(PACKAGE_FILE_DONTREMOVE, 'r')
-    OUT_FLAG(PACKAGE_FILE_DONTPURGE, 'p')
-    OUT_FLAG(PACKAGE_FILE_BACKUP, 'b')
-    OUT_FLAG(PACKAGE_FILE_CHECKBACKUP, 'c')
-    OUT_FLAG(PACKAGE_FILE_OVERWRITE, 'o')
-    OUT_FLAG(PACKAGE_FILE_VIRTUAL, 'v')
+    OUT_FLAG(PackageFile::Directory, 'd')
+    OUT_FLAG(PackageFile::Installed, 'i')
+    OUT_FLAG(PackageFile::DontRemove, 'r')
+    OUT_FLAG(PackageFile::DontPurge, 'p')
+    OUT_FLAG(PackageFile::Backup, 'b')
+    OUT_FLAG(PackageFile::CheckBackup, 'c')
+    OUT_FLAG(PackageFile::Overwrite, 'o')
+    OUT_FLAG(PackageFile::Virtual, 'v')
     
     cout << "\033[0m";
         
@@ -163,7 +163,7 @@ static void displayFile(PackageFile *file, bool colored)
     cout << '~' << COLOR(file->package()->version(), "33");
     
     // Si le paquet est installé, afficher «(installé)» en rouge
-    if (file->package()->flags() & PACKAGE_FLAG_INSTALLED)
+    if (file->package()->flags() & Package::Installed)
     {
         cout << COLOR(App::tr(" (installé)"), "31");
     }
@@ -265,7 +265,7 @@ void App::showFiles(const QString &packageName)
         int level2 = level;
         for (int i=level; i<parts.count(); ++i)
         {
-            outFlags(i != parts.count()-1 ? PACKAGE_FILE_DIR : file->flags());
+            outFlags(i != parts.count()-1 ? PackageFile::Directory : file->flags());
             
             for (int j=0; j<level2; ++j)
             {
@@ -375,23 +375,23 @@ void App::tagFile(const QString &fileName, const QString &tag)
         
         if (t == "dontremove")
         {
-            flag = PACKAGE_FILE_DONTREMOVE;
+            flag = PackageFile::DontRemove;
         }
         else if (t == "dontpurge")
         {
-            flag = PACKAGE_FILE_DONTPURGE;
+            flag = PackageFile::DontPurge;
         }
         else if (t == "backup")
         {
-            flag = PACKAGE_FILE_BACKUP;
+            flag = PackageFile::Backup;
         }
         else if (t == "overwrite")
         {
-            flag = PACKAGE_FILE_OVERWRITE;
+            flag = PackageFile::Overwrite;
         }
         else if (t == "checkbackup")
         {
-            flag = PACKAGE_FILE_CHECKBACKUP;
+            flag = PackageFile::CheckBackup;
         }
         else
         {
@@ -410,11 +410,11 @@ void App::tagFile(const QString &fileName, const QString &tag)
         if (remove)
         {
             // Supprimer le tag
-            file->setFlags(file->flags() & ~flag);
+            file->setFlags((PackageFile::Flag)(file->flags() & ~flag));
         }
         else
         {
-            file->setFlags(file->flags() | flag);
+            file->setFlags((PackageFile::Flag)(file->flags() | flag));
         }
     }
     
@@ -426,7 +426,7 @@ void App::tagPackage(const QString &packageName, const QString &tag)
     DatabasePackage *pkg;
     QVector<int> pkgs;
     QByteArray n, v;
-    int op;
+    Depend::Operation op;
     
     // Parser le nom du paquet
     op = ps->parseVersion(packageName.toUtf8(), n, v);
@@ -467,19 +467,19 @@ void App::tagPackage(const QString &packageName, const QString &tag)
         
         if (t == "dontupdate")
         {
-            flag = PACKAGE_FLAG_DONTUPDATE;
+            flag = Package::DontUpdate;
         }
         else if (t == "dontinstall")
         {
-            flag = PACKAGE_FLAG_DONTINSTALL;
+            flag = Package::DontInstall;
         }
         else if (t == "dontremove")
         {
-            flag = PACKAGE_FLAG_DONTREMOVE;
+            flag = Package::DontRemove;
         }
         else if (t == "wanted")
         {
-            flag = PACKAGE_FLAG_WANTED;
+            flag = Package::Wanted;
         }
         else
         {
@@ -497,11 +497,11 @@ void App::tagPackage(const QString &packageName, const QString &tag)
         if (remove)
         {
             // Supprimer le tag
-            pkg->setFlags(pkg->flags() & ~flag);
+            pkg->setFlags((Package::Flag)(pkg->flags() & ~flag));
         }
         else
         {
-            pkg->setFlags(pkg->flags() | flag);
+            pkg->setFlags((Package::Flag)(pkg->flags() | flag));
         }
     }
     
@@ -515,7 +515,7 @@ QStringList App::pkgFlags(Package *pkg)
     int flags = pkg->flags();
     
     // Intégration KDE
-    int kdeintegration = (flags & PACKAGE_FLAG_KDEINTEGRATION);
+    int kdeintegration = (flags & Package::KDEIntegration);
     
     tmp = App::tr("Intégration à KDE        : ");
     
@@ -546,28 +546,28 @@ QStringList App::pkgFlags(Package *pkg)
     QString sno = App::tr("Non");
     
     // Graphique
-    YESNO(PACKAGE_FLAG_GUI,         App::tr("Paquet graphique         : "))
+    YESNO(Package::GUI,         App::tr("Paquet graphique         : "))
     
     // Principal
-    YESNO(PACKAGE_FLAG_PRIMARY,     App::tr("Paquet principal         : "))
+    YESNO(Package::Primary,     App::tr("Paquet principal         : "))
     
     // Ne pas mettre à jour
-    YESNO(PACKAGE_FLAG_DONTUPDATE,  App::tr("Ne pas mettre à jour     : "))
+    YESNO(Package::DontUpdate,  App::tr("Ne pas mettre à jour     : "))
     
     // Ne pas installer
-    YESNO(PACKAGE_FLAG_DONTINSTALL, App::tr("Ne pas installer         : "))
+    YESNO(Package::DontInstall, App::tr("Ne pas installer         : "))
     
     // Ne pas supprimer
-    YESNO(PACKAGE_FLAG_DONTREMOVE,  App::tr("Ne pas supprimer         : "))
+    YESNO(Package::DontRemove,  App::tr("Ne pas supprimer         : "))
     
     // Nécessite une CLUF
-    YESNO(PACKAGE_FLAG_EULA,        App::tr("Licence à approuver      : "))
+    YESNO(Package::Eula,        App::tr("Licence à approuver      : "))
     
     // Nécessite un redémarrage
-    YESNO(PACKAGE_FLAG_NEEDSREBOOT, App::tr("Nécessite un redémarrage : "))
+    YESNO(Package::NeedsReboot, App::tr("Nécessite un redémarrage : "))
     
     // Ne pas être supprimé par dépendances auto
-    YESNO(PACKAGE_FLAG_WANTED,      App::tr("Installé manuellement    : "))
+    YESNO(Package::Wanted,      App::tr("Installé manuellement    : "))
     
     return rs;
 }
@@ -606,11 +606,11 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     // Status du paquet
     QString status;
 
-    if (pkg->flags() & PACKAGE_FLAG_REMOVED)
+    if (pkg->flags() & Package::Removed)
     {
         status = tr("Supprimé");
     }
-    else if (pkg->flags() & PACKAGE_FLAG_INSTALLED)
+    else if (pkg->flags() & Package::Installed)
     {
         status = tr("Installé");
     }
@@ -651,12 +651,12 @@ void App::showpkg(const QString &name, bool changelog, bool license)
     cout << COLOR(tr("Status              : "), "33") << qPrintable(status) << endl;
     cout << COLOR(tr("Utilisé par         : "), "33") << qPrintable(tr("%n paquet(s)", "", pkg->used())) << endl;
     
-    if (pkg->flags() & PACKAGE_FLAG_INSTALLED)
+    if (pkg->flags() & Package::Installed)
     {
         cout << COLOR(tr("Date d'installation : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
         // TODO: Uid vers nom d'utilisateur
     }
-    else if (pkg->flags() & PACKAGE_FLAG_REMOVED)
+    else if (pkg->flags() & Package::Removed)
     {
         cout << COLOR(tr("Date de suppression : "), "33") << qPrintable(pkg->installedDate().toString(Qt::DefaultLocaleLongDate)) << endl;
         // TODO: Uid vers nom d'utilisateur
@@ -699,53 +699,57 @@ void App::showpkg(const QString &name, bool changelog, bool license)
 
             switch (dep->type())
             {
-                case DEPEND_TYPE_DEPEND:
+                case Depend::DependType:
                     cout << " D: ";
                     cout << COLOR(dep->name(), "31");
                     break;
-                case DEPEND_TYPE_SUGGEST:
+                case Depend::Suggest:
                     cout << " S: ";
                     cout << COLOR(dep->name(), "32");
                     break;
-                case DEPEND_TYPE_CONFLICT:
+                case Depend::Conflict:
                     cout << " C: ";
                     cout << COLOR(dep->name(), "33");
                     break;
-                case DEPEND_TYPE_PROVIDE:
+                case Depend::Provide:
                     cout << " P: ";
                     cout << COLOR(dep->name(), "34");
                     break;
-                case DEPEND_TYPE_REPLACE:
+                case Depend::Replace:
                     cout << " R: ";
                     cout << COLOR(dep->name(), "35");
                     break;
-                case DEPEND_TYPE_REVDEP:
+                case Depend::RevDep:
                     cout << " N: ";
                     cout << COLOR(dep->name(), "37");
                     break;
+                default:
+                    break;
             }
 
-            if (dep->op() != DEPEND_OP_NOVERSION)
+            if (dep->op() != Depend::NoVersion)
             {
                 switch (dep->op())
                 {
-                    case DEPEND_OP_EQ:
+                    case Depend::Equal:
                         cout << " (= ";
                         break;
-                    case DEPEND_OP_GREQ:
+                    case Depend::GreaterOrEqual:
                         cout << " (>= ";
                         break;
-                    case DEPEND_OP_GR:
+                    case Depend::Greater:
                         cout << " (> ";
                         break;
-                    case DEPEND_OP_LOEQ:
+                    case Depend::LowerOrEqual:
                         cout << " (<= ";
                         break;
-                    case DEPEND_OP_LO:
+                    case Depend::Lower:
                         cout << " (< ";
                         break;
-                    case DEPEND_OP_NE:
+                    case Depend::NotEqual:
                         cout << " (!= ";
+                        break;
+                    default:
                         break;
                 }
 
@@ -768,11 +772,11 @@ void App::showpkg(const QString &name, bool changelog, bool license)
 
         foreach(DatabasePackage *ver, vers)
         {
-            if (ver->flags() & PACKAGE_FLAG_INSTALLED)
+            if (ver->flags() & Package::Installed)
             {
                 cout << COLORC("  I ", "34");
             }
-            else if (ver->flags() & PACKAGE_FLAG_REMOVED)
+            else if (ver->flags() & Package::Removed)
             {
                 cout << COLORC("  R ", "31");
             }
@@ -843,7 +847,7 @@ void App::showpkg(const QString &name, bool changelog, bool license)
         qDeleteAll(entries);
     }
     
-    if (license && (pkg->flags() & PACKAGE_FLAG_EULA) && metadata)
+    if (license && (pkg->flags() & Package::Eula) && metadata)
     {
         cout <<  COLOR(tr("Texte de la licence : "), "35") << endl << endl;
         printIndented(metadata->packageEula().toUtf8(), 4);

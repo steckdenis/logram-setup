@@ -32,6 +32,8 @@
 #include <QByteArray>
 #include <QVector>
 
+#include <package.h>
+
 namespace Logram
 {
     class Depend;
@@ -66,7 +68,7 @@ class PackageDataProviderInterface
         virtual QString version() const = 0;            /*!< @brief Version du paquet */
         
         virtual int flags() const = 0;                  /*!< @brief Flags (PACKAGE_FLAG_*) */
-        virtual void setFlags(int flags) = 0;           /*!< @brief Définit les flags */
+        virtual void setFlags(Logram::Package::Flag flags) = 0; /*!< @brief Définit les flags */
         virtual bool flagsEditable() const = 0;         /*!< @brief Permet de savoir s'il est possible de modifier les flags avec setFlags() */
         
         virtual QString website() const = 0;            /*!< @brief Site web de l'auteur du paquet */

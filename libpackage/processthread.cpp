@@ -255,17 +255,17 @@ bool ProcessThread::Private::install_files()
             {
                 PackageFile *file = files.at(i);
                 
-                if (file->flags() & PACKAGE_FILE_INSTALLED)
+                if (file->flags() & PackageFile::Installed)
                 {
                     if (file->package()->name() == pkg->name())
                     {
-                        if (file->flags() & PACKAGE_FILE_BACKUP)
+                        if (file->flags() & PackageFile::Backup)
                         {
                             // Fichier au paquet, normalement on ne sauvegarde pas, mais ici on le fait
                             // Par exemple, fichier de configuration. On garde celui de l'utilisateur, on installe un .new
                             filePath = new_file_name(filePath);
                         }
-                        else if (file->flags() & PACKAGE_FILE_CHECKBACKUP)
+                        else if (file->flags() & PackageFile::CheckBackup)
                         {
                             // Vérifier que ce fichier a été modifié depuis
                             QFileInfo fi(filePath);
@@ -278,7 +278,7 @@ bool ProcessThread::Private::install_files()
                     }
                     else
                     {
-                        if (!(file->flags() & PACKAGE_FILE_OVERWRITE))
+                        if (!(file->flags() & PackageFile::Overwrite))
                         {
                             // Fichier d'un autre paquet, on sauvegarde sauf si OVERWRITE est utilisé
                             // Comme ce paquet ne peut pas être cassé, il faut installer son fichier et bouger celui de l'autre
@@ -334,7 +334,7 @@ bool ProcessThread::Private::install_files()
     {
         PackageFile *file = files.at(i);
         
-        file->setFlags(file->flags() | PACKAGE_FILE_INSTALLED);
+        file->setFlags((PackageFile::Flag)(file->flags() | PackageFile::Installed));
         file->setInstallTime(itime);
         
         delete file;
@@ -360,8 +360,8 @@ bool ProcessThread::Private::remove_files()
         
         // Ne pas supprimer un fichier dontpurge ou dontremove
         if (
-            (file->flags() & PACKAGE_FILE_DONTPURGE) ||
-            (oldpkg->action() == Solver::Remove && (file->flags() & PACKAGE_FILE_DONTREMOVE))
+            (file->flags() & PackageFile::DontPurge) ||
+            (oldpkg->action() == Solver::Remove && (file->flags() & PackageFile::DontRemove))
         )
         {
             // Ne pas supprimer ce fichier
@@ -373,7 +373,7 @@ bool ProcessThread::Private::remove_files()
             QFile::remove(instroot + file->path());
             
             // Ne plus le déclarer comme installé
-            file->setFlags(file->flags() & ~PACKAGE_FILE_INSTALLED);
+            file->setFlags((PackageFile::Flag)(file->flags() & ~PackageFile::Installed));
         }
     }
     

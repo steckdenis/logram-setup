@@ -43,6 +43,8 @@
     #endif
 #endif
 
+#include "package.h"
+
 class QNetworkReply;
 class QSettings;
 
@@ -306,7 +308,7 @@ class PackageSystem : public QObject
          * @return Liste des paquets correspondant
          * @sa parseVersion
          */
-        QVector<int> packagesByVString(const QString &name, const QString &version, int op);
+        QVector<int> packagesByVString(const QString &name, const QString &version, Depend::Operation op);
         
         /**
          * @brief Trouve un paquet ayant un nom est une version exacts
@@ -452,19 +454,19 @@ class PackageSystem : public QObject
          * @return True si l'opération est vérifiée
          * @sa parseVersion
          */
-        static bool matchVersion(const QByteArray &v1, const QByteArray &v2, int op);
+        static bool matchVersion(const QByteArray &v1, const QByteArray &v2, Depend::Operation op);
         
         /**
          * @brief Transforme une chaîne lisible par un humain en une description de version
          * 
-         * Transforme une chaîne comme "foo>=1.2" en "foo", DEPEND_OP_GREQ, "1.2"
+         * Transforme une chaîne comme "foo>=1.2" en "foo", Depend::GreaterOrEqual, "1.2"
          * 
          * @param verStr Chaîne source
          * @param name Nom du paquet
          * @param version Version de comparaison, QString() si pas de comparaison
          * @return Opération qui doit être vérifiée.
          */
-        static int parseVersion(const QByteArray &verStr, QByteArray &name, QByteArray &version);
+        static Depend::Operation parseVersion(const QByteArray &verStr, QByteArray &name, QByteArray &version);
         
         /**
          * @brief Chaîne lisible par un humain pour une taille en octets
@@ -484,14 +486,14 @@ class PackageSystem : public QObject
         /**
          * @brief Inverse de parseVersion
          * 
-         * Transforme "foo", DEPEND_OP_GREQ, "1.2" en "foo>=1.2"
+         * Transforme "foo", Depend::GreaterOrEqual, "1.2" en "foo>=1.2"
          * 
          * @param name Nom du paquet
          * @param version Version, si nécessaire
          * @param op Opération
          * @return Chaîne formattée aux normes LPM
          */
-        static QString dependString(const QString &name, const QString &version, int op);
+        static QString dependString(const QString &name, const QString &version, Depend::Operation op);
 
         // API utilisée par des éléments de liblpackages
         /**

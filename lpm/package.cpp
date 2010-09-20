@@ -145,27 +145,27 @@ void App::getsource(const QString &name)
     {
         switch (dep->type)
         {
-            case DEPEND_TYPE_DEPEND:
+            case Depend::DependType:
                 cout << " D: ";
                 cout << COLOR(dep->string, "31");
                 break;
-            case DEPEND_TYPE_SUGGEST:
+            case Depend::Suggest:
                 cout << " S: ";
                 cout << COLOR(dep->string, "32");
                 break;
-            case DEPEND_TYPE_CONFLICT:
+            case Depend::Conflict:
                 cout << " C: ";
                 cout << COLOR(dep->string, "33");
                 break;
-            case DEPEND_TYPE_PROVIDE:
+            case Depend::Provide:
                 cout << " P: ";
                 cout << COLOR(dep->string, "34");
                 break;
-            case DEPEND_TYPE_REPLACE:
+            case Depend::Replace:
                 cout << " R: ";
                 cout << COLOR(dep->string, "35");
                 break;
-            case DEPEND_TYPE_REVDEP:
+            case Depend::RevDep:
                 cout << " N: ";
                 cout << COLOR(dep->string, "37");
                 break;
@@ -490,12 +490,12 @@ void App::displayPackage(Package* pkg, int i, int &instSize, int &dlSize, bool s
     }
     
     // Afficher les flags importants du paquet (eula et reboot)
-    if (pkg->flags() & PACKAGE_FLAG_EULA)
+    if (pkg->flags() & Package::Eula)
     {
         cout << ' ' << COLOR(tr("(licence à accepter)"), "31");
     }
     
-    if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
+    if (pkg->flags() & Package::NeedsReboot)
     {
         cout << ' ' << COLOR(tr("(redémarrage)"), "31");
     }
@@ -939,7 +939,7 @@ void App::manageResults(Solver *solver)
         {
             Package *p = packages->at(i);
             
-            if (p->flags() & PACKAGE_FLAG_EULA)
+            if (p->flags() & Package::Eula)
             {
                 cout << endl
                      << COLOR(tr("License du paquet %1").arg(p->name()), "35")

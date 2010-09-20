@@ -229,11 +229,11 @@ class DatabaseFile : public PackageFile
         ~DatabaseFile();    /*!< @brief Destructeur */
         
         QString path();     /*!< @brief Chemin d'accès */
-        int flags();        /*!< @brief Flags */
+        Flag flags();       /*!< @brief Flags */
         uint installTime(); /*!< @brief Timestamp d'installation */
         Package *package(); /*!< @brief Paquet auquel appartient ce fichier */
         
-        void setFlags(int flags);               /*!< @brief Définit les flags du paquet et les enregistre dans installed_files.list */
+        void setFlags(Flag flags);               /*!< @brief Définit les flags du paquet et les enregistre dans installed_files.list */
         void setInstallTime(uint timestamp);    /*!< @brief Définit la date d'installation */
         void setPackageBinded(bool binded);     /*!< @brief Définit si le destructeur doit supprimer le paquet de ce fichier */
         

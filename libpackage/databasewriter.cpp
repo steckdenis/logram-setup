@@ -301,14 +301,14 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
         dep = _dep.trimmed();
         
         QByteArray name, version;
-        int op = parent->parseVersion(dep, name, version);
+        Depend::Operation op = parent->parseVersion(dep, name, version);
 
-        if (op == DEPEND_OP_NOVERSION)
+        if (op == Depend::NoVersion)
         {
             // Dépendance non-versionnée
             depend = new _Depend;
             depend->type = type;
-            depend->op = DEPEND_OP_NOVERSION;
+            depend->op = Depend::NoVersion;
             depend->pkgname = stringIndex(dep, 0, false, false);
             depend->pkgver = 0;
 
@@ -316,16 +316,16 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
             depends[pkg->deps].append(depend);
 
             // Gérer les dépendances inverses
-            if (type == DEPEND_TYPE_DEPEND || type == DEPEND_TYPE_CONFLICT)
+            if (type == Depend::DependType || type == Depend::Conflict)
             {
-                int tp = DEPEND_TYPE_CONFLICT;
+                int tp = Depend::Conflict;
                 
-                if (type == DEPEND_TYPE_DEPEND)
+                if (type == Depend::DependType)
                 {
-                    tp = DEPEND_TYPE_REVDEP;
+                    tp = Depend::RevDep;
                 }
                 
-                revdep(pkg, dep, QByteArray(), DEPEND_OP_NOVERSION, tp);
+                revdep(pkg, dep, QByteArray(), Depend::NoVersion, tp);
             }
         }
         else
@@ -340,13 +340,13 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
             depends[pkg->deps].append(depend);
 
             // Gérer les dépendances inverses
-            if (type == DEPEND_TYPE_DEPEND || type == DEPEND_TYPE_CONFLICT || DEPEND_TYPE_REPLACE)
+            if (type == Depend::DependType || type == Depend::Conflict || Depend::Replace)
             {
-                int tp = DEPEND_TYPE_CONFLICT;
+                int tp = Depend::Conflict;
 
-                if (type == DEPEND_TYPE_DEPEND)
+                if (type == Depend::DependType)
                 {
-                    tp = DEPEND_TYPE_REVDEP;
+                    tp = Depend::RevDep;
                 }
                 
                 revdep(pkg, name, version, op, tp);
@@ -355,7 +355,7 @@ void DatabaseWriter::setDepends(_Package *pkg, const QByteArray &str, int type)
     }
 }
 
-void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, int op, int type)
+void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteArray &version, Depend::Operation op, int type)
 {
     // Explorer tous les paquets connus
     const QVector<knownEntry *> &entries = knownPackages.value(name);
@@ -365,13 +365,13 @@ void DatabaseWriter::revdep(_Package *pkg, const QByteArray &name, const QByteAr
     {
         // Si on ne précise pas d'opérateur, ou si la version correspond, ajouter une reverse dependency
         
-        if (op == DEPEND_OP_NOVERSION || PackageSystem::matchVersion(entry->version, version, op))
+        if (op == Depend::NoVersion || PackageSystem::matchVersion(entry->version, version, op))
         {
             depend = new _Depend;
             depend->type = type;
-            depend->op = DEPEND_OP_EQ;
+            depend->op = Depend::Equal;
             
-            if (type == DEPEND_TYPE_REVDEP)
+            if (type == Depend::RevDep)
             {
                 depend->pkgname = pkg->index;
                 depend->pkgver = 0;
@@ -967,7 +967,7 @@ bool DatabaseWriter::rebuild()
                                 }
                                 
                                 while (file != 0 && 
-                                    (file->name_index != name_index || file->flags != PACKAGE_FILE_DIR)
+                                    (file->name_index != name_index || file->flags != PackageFile::Directory)
                                     ) // NOTE: != et pas !( & ), car un dossier n'a que ça comme flags
                                 {
                                     file = file->next;
@@ -983,7 +983,7 @@ bool DatabaseWriter::rebuild()
                                     file->parent = currentDir;
                                     file->package_index = 0;
                                     file->name_index = name_index;
-                                    file->flags = PACKAGE_FILE_DIR;
+                                    file->flags = PackageFile::Directory;
                                     file->package_next = 0;
                                     file->first_child = 0;
                                     
@@ -1081,7 +1081,7 @@ bool DatabaseWriter::rebuild()
                                 else
                                 {
                                     // Le bon paquet est forcément celui qui est installé
-                                    if (entry->pkg->flags & PACKAGE_FLAG_INSTALLED)
+                                    if (entry->pkg->flags & Package::Installed)
                                     {
                                         index = entry->index;
                                         break;
@@ -1202,25 +1202,25 @@ bool DatabaseWriter::rebuild()
                         }
                         if (key == "Depends")
                         {
-                            setDepends(pkg, value, DEPEND_TYPE_DEPEND);
+                            setDepends(pkg, value, Depend::DependType);
                         }
                         else if (key == "Suggest")
                         {
-                            setDepends(pkg, value, DEPEND_TYPE_SUGGEST);
+                            setDepends(pkg, value, Depend::Suggest);
                         }
                         else if (key == "Conflicts")
                         {
-                            setDepends(pkg, value, DEPEND_TYPE_CONFLICT);
+                            setDepends(pkg, value, Depend::Conflict);
                         }
                         else if (key == "Provides" || key == "Replaces")
                         {
                             // Quand on remplace un paquet, on le fournit
-                            setDepends(pkg, value, DEPEND_TYPE_PROVIDE);
+                            setDepends(pkg, value, Depend::Provide);
                             
                             if (key == "Replaces")
                             {
                                 // Pour info et pour le solveur
-                                setDepends(pkg, value, DEPEND_TYPE_REPLACE);
+                                setDepends(pkg, value, Depend::Replace);
                             }
 
                             // Parser la chaîne

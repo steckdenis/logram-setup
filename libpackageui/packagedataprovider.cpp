@@ -65,7 +65,7 @@ int PackageDataProvider::flags() const
     return pkg->flags();
 }
 
-void PackageDataProvider::setFlags(int flags)
+void PackageDataProvider::setFlags(Package::Flag flags)
 {
     if (pkg->origin() == Package::Database)
     {

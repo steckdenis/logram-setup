@@ -118,9 +118,9 @@ QString DatabaseFile::path()
     return d->path;
 }
 
-int DatabaseFile::flags()
+PackageFile::Flag DatabaseFile::flags()
 {
-    return d->file->flags;
+    return (Flag)d->file->flags;
 }
 
 uint DatabaseFile::installTime()
@@ -138,7 +138,7 @@ void DatabaseFile::setPackageBinded(bool binded)
     d->packagebinded = binded;
 }
         
-void DatabaseFile::setFlags(int flags)
+void DatabaseFile::setFlags(PackageFile::Flag flags)
 {
     d->file->flags = flags;
     saveFile();
@@ -329,7 +329,7 @@ int DatabasePackage::index() const
 
 QVector<DatabasePackage *> DatabasePackage::versions()
 {
-    QVector<int> pkgs = d->psd->packagesOfString(0, d->dbpkg->name, DEPEND_OP_NOVERSION);
+    QVector<int> pkgs = d->psd->packagesOfString(0, d->dbpkg->name, Depend::NoVersion);
     QVector<DatabasePackage *> rs;
 
     foreach(int pkg, pkgs)
@@ -536,12 +536,12 @@ QString DatabasePackage::url(UrlType type)
     }
 }
 
-void DatabasePackage::setFlags(int flags)
+void DatabasePackage::setFlags(Flag flags)
 {
     QSettings *set = d->ps->installedPackagesList();
     
     // Enregistrer les nouveaux flags dans le fichier de sauvegarde
-    if (!(this->flags() & (PACKAGE_FLAG_INSTALLED | PACKAGE_FLAG_REMOVED)))
+    if (!(this->flags() & (Package::Installed | Package::Removed)))
     {
         // Paquet pas dans installed_packages.list, utiliser une sauvegarde annexe
         set->beginGroup(name() + "_" + version());
@@ -552,7 +552,7 @@ void DatabasePackage::setFlags(int flags)
     {
         set->beginGroup(name());
     }
-    set->setValue("Flags", flags);
+    set->setValue("Flags", (int)flags);
     set->endGroup();
     
     // Enregistrer également dans la base de donnée binaire
@@ -561,13 +561,13 @@ void DatabasePackage::setFlags(int flags)
     pkg->flags = flags;
 }
 
-int DatabasePackage::flags()
+Package::Flag DatabasePackage::flags()
 {
     _Package *pkg = d->psd->package(d->index);
     
-    if (pkg == 0) return 0;
+    if (pkg == 0) return (Flag)0;
     
-    return pkg->flags;
+    return (Flag)pkg->flags;
 }
 
 int DatabasePackage::downloadSize()
@@ -636,7 +636,7 @@ DatabaseDepend::~DatabaseDepend()
 
 QString DatabaseDepend::name()
 {
-    if (d->dep->type != DEPEND_TYPE_REVDEP)
+    if (d->dep->type != Depend::RevDep)
     {
         return d->psd->string(false, d->dep->pkgname);
     }
@@ -650,7 +650,7 @@ QString DatabaseDepend::name()
 
 QString DatabaseDepend::version()
 {
-    if (d->dep->type != DEPEND_TYPE_REVDEP)
+    if (d->dep->type != Depend::RevDep)
     {
         return d->psd->string(false, d->dep->pkgver);
     }
@@ -661,14 +661,14 @@ QString DatabaseDepend::version()
     }
 }
 
-int8_t DatabaseDepend::type()
+Depend::Type DatabaseDepend::type()
 {
-    return d->dep->type;
+    return (Type)d->dep->type;
 }
 
-int8_t DatabaseDepend::op()
+Depend::Operation DatabaseDepend::op()
 {
-    return d->dep->op;
+    return (Operation)d->dep->op;
 }
 
 #include "databasepackage.moc"

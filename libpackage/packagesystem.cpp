@@ -421,7 +421,7 @@ bool Logram::PackageSystem::packagesByName(const QRegExp &regex, QVector<int> &r
     return d->dr->packagesByName(regex, rs);
 }
 
-QVector<int> Logram::PackageSystem::packagesByVString(const QString &name, const QString &version, int op)
+QVector<int> Logram::PackageSystem::packagesByVString(const QString &name, const QString &version, Depend::Operation op)
 {
     return d->dr->packagesByVString(name, version, op);
 }
@@ -729,11 +729,12 @@ PackageError *Logram::PackageSystem::lastError()
 
 /* Utilitaires */
 
-int Logram::PackageSystem::parseVersion(const QByteArray &verStr, QByteArray &name, QByteArray &version)
+Depend::Operation Logram::PackageSystem::parseVersion(const QByteArray &verStr, QByteArray &name, QByteArray &version)
 {
     const char *s = verStr.constData();
     char c = 0, c2;
-    int namesize = 0, versionsize = 0, op = DEPEND_OP_NOVERSION, pos = 0, len = verStr.size();
+    Depend::Operation op = Depend::NoVersion;
+    int namesize = 0, versionsize = 0, pos = 0, len = verStr.size();
     const char *n = 0, *v = 0;
     
     // Le nom
@@ -782,16 +783,16 @@ int Logram::PackageSystem::parseVersion(const QByteArray &verStr, QByteArray &na
     switch (c)
     {
         case '>':
-            op = (c2 == '=' ? DEPEND_OP_GREQ : DEPEND_OP_GR);
+            op = (c2 == '=' ? Depend::GreaterOrEqual : Depend::Greater);
             break;
         case '<':
-            op = (c2 == '=' ? DEPEND_OP_LOEQ : DEPEND_OP_LO);
+            op = (c2 == '=' ? Depend::LowerOrEqual : Depend::Lower);
             break;
         case '!':
-            op = DEPEND_OP_NE;  // a!=b ou a!b est pris, side effect
+            op = Depend::NotEqual;  // a!=b ou a!b est pris, side effect
             break;
         case '=':
-            op = DEPEND_OP_EQ;  // a=b ou a==b est pris, side effect
+            op = Depend::Equal;  // a=b ou a==b est pris, side effect
             break;
     }
     
@@ -811,7 +812,7 @@ int Logram::PackageSystem::parseVersion(const QByteArray &verStr, QByteArray &na
     return op;
 }
 
-bool Logram::PackageSystem::matchVersion(const QByteArray &v1, const QByteArray &v2, int op)
+bool Logram::PackageSystem::matchVersion(const QByteArray& v1, const QByteArray& v2, Depend::Operation op)
 {
     // Comparer les versions
     int rs = compareVersions(v1, v2);
@@ -819,17 +820,19 @@ bool Logram::PackageSystem::matchVersion(const QByteArray &v1, const QByteArray 
     // Retourner en fonction de l'opérateur
     switch (op)
     {
-        case DEPEND_OP_EQ:
+        case Depend::NoVersion:
+            return true;
+        case Depend::Equal:
             return (rs == 0);
-        case DEPEND_OP_GREQ:
+        case Depend::GreaterOrEqual:
             return ( (rs == 0) || (rs == 1) );
-        case DEPEND_OP_GR:
+        case Depend::Greater:
             return (rs == 1);
-        case DEPEND_OP_LOEQ:
+        case Depend::LowerOrEqual:
             return ( (rs == 0) || (rs == -1) );
-        case DEPEND_OP_LO:
+        case Depend::Lower:
             return (rs == -1);
-        case DEPEND_OP_NE:
+        case Depend::NotEqual:
             return (rs != 0);
     }
 
@@ -958,31 +961,33 @@ QString Logram::PackageSystem::fileSizeFormat(int size)
     return rs;
 }
 
-QString Logram::PackageSystem::dependString(const QString &name, const QString &version, int op)
+QString Logram::PackageSystem::dependString(const QString& name, const QString& version, Depend::Operation op)
 {
     QString rs(name);
 
-    if (op != DEPEND_OP_NOVERSION)
+    if (op != Depend::NoVersion)
     {
         switch (op)
         {
-            case DEPEND_OP_EQ:
+            case Depend::Equal:
                 rs += "=";
                 break;
-            case DEPEND_OP_GREQ:
+            case Depend::GreaterOrEqual:
                 rs += ">=";
                 break;
-            case DEPEND_OP_GR:
+            case Depend::Greater:
                 rs += ">";
                 break;
-            case DEPEND_OP_LOEQ:
+            case Depend::LowerOrEqual:
                 rs += "<=";
                 break;
-            case DEPEND_OP_LO:
+            case Depend::Lower:
                 rs += "<";
                 break;
-            case DEPEND_OP_NE:
+            case Depend::NotEqual:
                 rs += "!=";
+                break;
+            default:
                 break;
         }
         

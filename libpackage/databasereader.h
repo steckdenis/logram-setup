@@ -35,6 +35,7 @@
 #include <QRegExp>
 
 #include "databaseformat.h"
+#include "package.h"
 
 class QFile;
 class QNetworkAccessManager;
@@ -239,7 +240,7 @@ class DatabaseReader
             @param op Opération (=, >=, <=, >>, !=, etc)
             @return Liste des paquets qui correspondent
         */
-        QVector<int> packagesByVString(const QString &name, const QString &version, int op);
+        QVector<int> packagesByVString(const QString &name, const QString &version, Depend::Operation op);
         
         /**
             @brief Retourne les fichier correspondant au nom name
@@ -331,7 +332,7 @@ class DatabaseReader
             @param op Opération de comparaison
             @return Liste des paquets qui correspondent
         */
-        QVector<int> packagesOfString(int stringIndex, int nameIndex, int op);
+        QVector<int> packagesOfString(int stringIndex, int nameIndex, Depend::Operation op);
         
         /**
             @brief Liste des paquets dont la version installée est différente de la version du dépôt

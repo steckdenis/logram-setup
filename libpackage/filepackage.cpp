@@ -69,7 +69,7 @@ struct FilePackage::Private
     
     QVector<Depend *> depends;
     
-    void addDeps(const QByteArray &str, int8_t type);
+    void addDeps(const QByteArray& str, Depend::Type type);
 };
 
 /**** FileFile ****/
@@ -81,7 +81,7 @@ struct FileFile::Private
     uint itime;
 };
 
-FileFile::FileFile(PackageSystem* ps, const QString& path, PackageFile::Flag flags) : PackageFile(ps)
+FileFile::FileFile(PackageSystem* ps, const QString& path, Flag flags) : PackageFile(ps)
 {
     d = new Private;
     d->path = path;
@@ -98,9 +98,9 @@ QString FileFile::path()
     return d->path;
 }
 
-int FileFile::flags()
+PackageFile::Flag FileFile::flags()
 {
-    return d->flags;
+    return (Flag)d->flags;
 }
 
 uint FileFile::installTime()
@@ -214,11 +214,11 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
             }
             
             path.remove(0, 5);
-            FileFile *file = new FileFile(d->ps, path, 0);
+            FileFile *file = new FileFile(d->ps, path, (PackageFile::Flag)0);
             
             if (path.startsWith("etc"))
             {
-                file->setFlagsNoSave(PACKAGE_FILE_CHECKBACKUP);
+                file->setFlagsNoSave(PackageFile::CheckBackup);
             }
             
             d->files.append(file);
@@ -262,7 +262,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     
     if (doc.primaryPackages().contains(d->name))
     {
-        d->flags |= PACKAGE_FLAG_PRIMARY;
+        d->flags |= Package::Primary;
     }
     
     // Attributs du paquet
@@ -284,28 +284,24 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                 if (el.tagName() == "depend")
                 {
                     // Dépendance
-                    int8_t type = DEPEND_TYPE_DEPEND;
+                    Depend::Type type = Depend::DependType;
                     QString stype = el.attribute("type", "depend");
                     
-                    if (stype == "depend")
+                    if (stype == "suggest")
                     {
-                        type = DEPEND_TYPE_DEPEND;
-                    }
-                    else if (stype == "suggest")
-                    {
-                        type = DEPEND_TYPE_SUGGEST;
+                        type = Depend::Suggest;
                     }
                     else if (stype == "conflict")
                     {
-                        type = DEPEND_TYPE_CONFLICT;
+                        type = Depend::Conflict;
                     }
                     else if (stype == "provide")
                     {
-                        type = DEPEND_TYPE_PROVIDE;
+                        type = Depend::Provide;
                     }
                     else if (stype == "replace")
                     {
-                        type = DEPEND_TYPE_REPLACE;
+                        type = Depend::Replace;
                     }
                     
                     d->addDeps(tpl.templateString(el.attribute("string")).toUtf8(), type);
@@ -359,8 +355,8 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                     if (file == 0)
                     {
                         // On n'a pas trouvé le fichier
-                        flags |= PACKAGE_FILE_VIRTUAL;
-                        file = new FileFile(d->ps, path, flags);
+                        flags |= PackageFile::Virtual;
+                        file = new FileFile(d->ps, path, (PackageFile::Flag)flags);
                         d->files.append(file);
                         
                         // NOTE: On fait tout ceci avant de parser les éléments <flag>
@@ -381,30 +377,30 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
                         
                         if (name == "backup")
                         {
-                            APPLY_FLAG(PACKAGE_FILE_BACKUP)
+                            APPLY_FLAG(PackageFile::Backup)
                         }
                         else if (name == "checkbackup")
                         {
-                            APPLY_FLAG(PACKAGE_FILE_CHECKBACKUP)
+                            APPLY_FLAG(PackageFile::CheckBackup)
                         }
                         else if (name == "dontremove")
                         {
-                            APPLY_FLAG(PACKAGE_FILE_DONTREMOVE)
+                            APPLY_FLAG(PackageFile::DontRemove)
                         }
                         else if (name == "dontpurge")
                         {
-                            APPLY_FLAG(PACKAGE_FILE_DONTPURGE)
+                            APPLY_FLAG(PackageFile::DontPurge)
                         }
                         else if (name == "overwrite")
                         {
-                            APPLY_FLAG(PACKAGE_FILE_OVERWRITE)
+                            APPLY_FLAG(PackageFile::Overwrite)
                         }
                         
                         flag = flag.nextSiblingElement("flag");
                     }
                     
                     // Placer les flags dans l'enregistrement
-                    file->setFlagsNoSave(flags);
+                    file->setFlagsNoSave((PackageFile::Flag)flags);
                 }
                 
                 el = el.nextSiblingElement();
@@ -475,7 +471,7 @@ FilePackage::~FilePackage()
     delete d;
 }
 
-void FilePackage::Private::addDeps(const QByteArray &str, int8_t type)
+void FilePackage::Private::addDeps(const QByteArray &str, Depend::Type type)
 {
     if (str.isEmpty())
     {
@@ -492,12 +488,12 @@ void FilePackage::Private::addDeps(const QByteArray &str, int8_t type)
         dep = _dep.trimmed();
         
         QByteArray name, version;
-        int op = ps->parseVersion(dep, name, version);
+        Depend::Operation op = ps->parseVersion(dep, name, version);
 
-        if (op == DEPEND_OP_NOVERSION)
+        if (op == Depend::NoVersion)
         {
             // Dépendance non-versionnée
-            depend = new FileDepend(type, DEPEND_OP_NOVERSION, dep, QString());
+            depend = new FileDepend(type, Depend::NoVersion, dep, QString());
 
             // Ajouter la dépendance
             depends.append(depend);
@@ -605,9 +601,9 @@ QByteArray FilePackage::metadataHash()
     return d->metadataHash;
 }
 
-int FilePackage::flags()
+Package::Flag FilePackage::flags()
 {
-    return d->flags;
+    return (Flag)d->flags;
 }
 
 QDateTime FilePackage::installedDate()
@@ -672,11 +668,12 @@ QByteArray FilePackage::metadataContents()
 
 struct FileDepend::Private
 {
-    int8_t type, op;
+    Depend::Type type;
+    Depend::Operation op;
     QString name, version;
 };
 
-FileDepend::FileDepend(Depend::Type type, Op op, const QString& name, const QString& version)
+FileDepend::FileDepend(Depend::Type type, Depend::Operation op, const QString& name, const QString& version)
 {
     d = new Private;
     
@@ -701,12 +698,12 @@ QString FileDepend::version()
     return d->version;
 }
 
-int8_t FileDepend::type()
+Depend::Type FileDepend::type()
 {
     return d->type;
 }
 
-int8_t FileDepend::op()
+Depend::Operation FileDepend::op()
 {
     return d->op;
 }

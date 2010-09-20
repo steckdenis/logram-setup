@@ -158,7 +158,7 @@ bool App::launch()
                 // Pas destiné à Logram
                 reject = true;
             }
-            else if (parts.count() >= 2 && !ps->matchVersion(VERSION, parts.at(1), DEPEND_OP_GREQ))
+            else if (parts.count() >= 2 && !ps->matchVersion(VERSION, parts.at(1), Depend::GreaterOrEqual))
             {
                 reject = true;
             }
@@ -183,7 +183,7 @@ bool App::launch()
             
             if (type == Packages)
             {
-                QVector<int> packages = ps->packagesByVString(QString::fromLatin1(element), QString(), DEPEND_OP_NOVERSION);
+                QVector<int> packages = ps->packagesByVString(QString::fromLatin1(element), QString(), Depend::NoVersion);
                 
                 if (packages.count() == 0)
                 {
@@ -197,7 +197,7 @@ bool App::launch()
                 {
                     DatabasePackage *p = ps->package(i);
                     
-                    if (p->flags() & PACKAGE_FLAG_INSTALLED)
+                    if (p->flags() & Package::Installed)
                     {
                         installedPackage = i;
                         break;
@@ -239,7 +239,7 @@ bool App::launch()
                 
                 // Traitement O(1) dans la base de donnée, peut être long
                 int str = dr->string(false, element);
-                QVector<int> packages = dr->packagesOfString(0, str, DEPEND_OP_NOVERSION);
+                QVector<int> packages = dr->packagesOfString(0, str, Depend::NoVersion);
                 
                 if (packages.count() == 0)
                 {

@@ -948,11 +948,11 @@ bool RepositoryManager::includePackage(const QString &fileName)
             .arg(e(md->primaryLang()))
             .arg(fpkg->downloadSize())
             .arg(fpkg->installSize())
-            .arg(e(DEPEND(DEPEND_TYPE_DEPEND)))
-            .arg(e(DEPEND(DEPEND_TYPE_SUGGEST)))
-            .arg(e(DEPEND(DEPEND_TYPE_CONFLICT)))
-            .arg(e(DEPEND(DEPEND_TYPE_PROVIDE)))
-            .arg(e(DEPEND(DEPEND_TYPE_REPLACE)))
+            .arg(e(DEPEND(Depend::DependType)))
+            .arg(e(DEPEND(Depend::Suggest)))
+            .arg(e(DEPEND(Depend::Conflict)))
+            .arg(e(DEPEND(Depend::Provide)))
+            .arg(e(DEPEND(Depend::Replace)))
             .arg(e(fpkg->source()))
             .arg(e(fpkg->license()))
             .arg(fpkg->flags())
@@ -1968,7 +1968,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                 pkgstream += rs;
                 
                 // Métadonnées du paquet extraites dans une liste
-                if (query.value(6).toInt() & PACKAGE_FLAG_PRIMARY)
+                if (query.value(6).toInt() & Package::Primary)
                 {
                     packageElement = metaDoc.createElement("package");
                     rootElement.appendChild(packageElement);
@@ -2009,7 +2009,7 @@ bool RepositoryManager::exp(const QStringList &distros)
                         const LangContent &l = trads.value(key);
                         trad = l.shortdesc;
                         
-                        if (query.value(6).toInt() & PACKAGE_FLAG_PRIMARY)
+                        if (query.value(6).toInt() & Package::Primary)
                         {
                             QDomElement langAttr = metaDoc.createElement(langs.at(i));
                             packageTitleElement.appendChild(langAttr);

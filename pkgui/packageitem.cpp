@@ -81,7 +81,7 @@ void PackageItem::updateIcon()
     {
         setIcon(0, QIcon(":/images/package.png"));
     }
-    else if (_pkg->flags() & PACKAGE_FLAG_INSTALLED)
+    else if (_pkg->flags() & Package::Installed)
     {
         setIcon(0, QIcon::fromTheme("user-online"));
     }

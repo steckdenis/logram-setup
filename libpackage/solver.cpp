@@ -956,7 +956,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     }
     
     // Vérifier que ce qu'on demande est bon
-    if (package && ((package->flags() & PACKAGE_FLAG_DONTINSTALL) != 0) && action == Solver::Install)
+    if (package && ((package->flags() & Package::DontInstall) != 0) && action == Solver::Install)
     {
         Solver::Error *err = new Solver::Error;
         err->type = Solver::Error::UninstallablePackageInstalled;
@@ -967,7 +967,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         
         return false;
     }
-    else if (package && ((package->flags() & PACKAGE_FLAG_DONTREMOVE) != 0) && (action == Solver::Remove || action == Solver::Purge))
+    else if (package && ((package->flags() & Package::DontRemove) != 0) && (action == Solver::Remove || action == Solver::Purge))
     {
         Solver::Error *err = new Solver::Error;
         err->type = Solver::Error::UnremovablePackageRemoved;
@@ -983,8 +983,8 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
     if (useInstalled && package && package->origin() == Package::Database)
     {
         if (
-            (((package->flags() & PACKAGE_FLAG_INSTALLED) != 0) && action == Solver::Install) ||
-            (((package->flags() & PACKAGE_FLAG_INSTALLED) == 0) && action != Solver::Install)
+            (((package->flags() & Package::Installed) != 0) && action == Solver::Install) ||
+            (((package->flags() & Package::Installed) == 0) && action != Solver::Install)
             )
         {
             node->flags &= ~Solver::Node::Wanted;
@@ -1004,7 +1004,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         _Package *mpkg = psd->package(pindex);
         
         // Explorer les autres versions
-        QVector<int> otherVersions = psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION);
+        QVector<int> otherVersions = psd->packagesOfString(0, mpkg->name, Depend::NoVersion);
         
         foreach(int otherVersion, otherVersions)
         {
@@ -1017,7 +1017,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             _Package *opkg = psd->package(otherVersion);
             
             // NOTE: le "&& opkg->name == mpkg->name" permet d'avoir deux paquets fournissant le même provide ensemble
-            if ((opkg->flags & PACKAGE_FLAG_INSTALLED) && opkg->version != mpkg->version && opkg->name == mpkg->name)
+            if ((opkg->flags & Package::Installed) && opkg->version != mpkg->version && opkg->name == mpkg->name)
             {
                 // Il va falloir supprimer ce paquet
                 bool ok = true;
@@ -1037,7 +1037,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                 }
                 
                 // Vérifier que nd est updatable
-                if (suppl->package && ((suppl->package->flags() & PACKAGE_FLAG_DONTUPDATE) != 0))
+                if (suppl->package && ((suppl->package->flags() & Package::DontUpdate) != 0))
                 {
                     Solver::Error *err = new Solver::Error;
                     err->type = Solver::Error::UnupdatablePackageUpdated;
@@ -1078,16 +1078,16 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         // Explorer ces dépendances pour savoir combien d'enfants il faut
         foreach (_Depend *dep, deps)
         {
-            if ((dep->type == DEPEND_TYPE_DEPEND && action == Solver::Install) ||
-                (dep->type == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
+            if ((dep->type == Depend::DependType && action == Solver::Install) ||
+                (dep->type == Depend::Suggest && action == Solver::Install && installSuggests))
             {
                 node->childcount++;
             }
-            else if ((dep->type == DEPEND_TYPE_CONFLICT || dep->type == DEPEND_TYPE_REPLACE) && action == Solver::Install)
+            else if ((dep->type == Depend::Conflict || dep->type == Depend::Replace) && action == Solver::Install)
             {
                 node->childcount++;
             }
-            else if (dep->type == DEPEND_TYPE_REVDEP && action == Solver::Remove)
+            else if (dep->type == Depend::RevDep && action == Solver::Remove)
             {
                 node->childcount++;
             }
@@ -1100,16 +1100,16 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
         
         foreach(Depend *dep, fdeps)
         {
-            if ((dep->type() == DEPEND_TYPE_DEPEND && action == Solver::Install) ||
-                (dep->type() == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
+            if ((dep->type() == Depend::DependType && action == Solver::Install) ||
+                (dep->type() == Depend::Suggest && action == Solver::Install && installSuggests))
             {
                 node->childcount++;
             }
-            else if ((dep->type() == DEPEND_TYPE_CONFLICT || dep->type() == DEPEND_TYPE_REPLACE) && action == Solver::Install)
+            else if ((dep->type() == Depend::Conflict || dep->type() == Depend::Replace) && action == Solver::Install)
             {
                 node->childcount++;
             }
-            else if (dep->type() == DEPEND_TYPE_REVDEP && action == Solver::Remove)
+            else if (dep->type() == Depend::RevDep && action == Solver::Remove)
             {
                 node->childcount++;
             }
@@ -1216,16 +1216,16 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             }
             
             // Trouver l'action
-            if ((dtype == DEPEND_TYPE_DEPEND && action == Solver::Install) ||
-                (dtype == DEPEND_TYPE_SUGGEST && action == Solver::Install && installSuggests))
+            if ((dtype == Depend::DependType && action == Solver::Install) ||
+                (dtype == Depend::Suggest && action == Solver::Install && installSuggests))
             {
                 act = Solver::Install;
             }
-            else if ((dtype == DEPEND_TYPE_CONFLICT || dtype == DEPEND_TYPE_REPLACE) && action == Solver::Install)
+            else if ((dtype == Depend::Conflict || dtype == Depend::Replace) && action == Solver::Install)
             {
                 act = Solver::Remove;
             }
-            else if (dtype == DEPEND_TYPE_REVDEP && action == Solver::Remove)
+            else if (dtype == Depend::RevDep && action == Solver::Remove)
             {
                 // Créer plusieurs noeuds pour cet enfant : un pour supprimer cette revdep, un pour chaque provide
                 // qu'on peut installer à la place.
@@ -1240,7 +1240,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                 _Package *mpkg = psd->package(pindex);
                 
                 // Ajouter à pkgIndexes les index des provides de ce paquet
-                foreach(int pkgIndex, psd->packagesOfString(0, mpkg->name, DEPEND_OP_NOVERSION))
+                foreach(int pkgIndex, psd->packagesOfString(0, mpkg->name, Depend::NoVersion))
                 {
                     if (pkgIndex != pindex)
                     {
@@ -1272,7 +1272,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
             // Trouver les indexes des paquets à installer en fonction de l'origine du paquet
             if (package->origin() == Package::Database)
             {
-                pkgIndexes = psd->packagesOfString(ddep->pkgver, ddep->pkgname, ddep->op);
+                pkgIndexes = psd->packagesOfString(ddep->pkgver, ddep->pkgname, (Depend::Operation)ddep->op);
             }
             else
             {
@@ -1289,7 +1289,7 @@ bool Solver::Private::addNode(Package *package, Solver::Node *node)
                                     PackageSystem::dependString(
                                     psd->string(false, ddep->pkgname),
                                     psd->string(false, ddep->pkgver),
-                                    ddep->op)
+                                    (Depend::Operation)ddep->op)
                                 :   PackageSystem::dependString(
                                     fdep->name(), 
                                     fdep->version(), 

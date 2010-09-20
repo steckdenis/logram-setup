@@ -408,33 +408,33 @@ App::App(int &argc, char **argv) : QCoreApplication(argc, argv)
         QByteArray name, version;
         
         op = ps->parseVersion("name", name, version);
-        CHECK_RESULT("name : name ~ <null> DEPEND_OP_NOVERSION", op == DEPEND_OP_NOVERSION && name == "name" && version.isNull())
+        CHECK_RESULT("name : name ~ <null> Depend::NoVersion", op == Depend::NoVersion && name == "name" && version.isNull())
         
         op = ps->parseVersion("name>version", name, version);
-        CHECK_RESULT("name>version : name ~ version DEPEND_OP_GR", name == "name" && version == "version" && op == DEPEND_OP_GR);
+        CHECK_RESULT("name>version : name ~ version Depend::Greater", name == "name" && version == "version" && op == Depend::Greater);
         
         op = ps->parseVersion("name>=version", name, version);
-        CHECK_RESULT("name>=version : name ~ version DEPEND_OP_GREQ", name == "name" && version == "version" && op == DEPEND_OP_GREQ);
+        CHECK_RESULT("name>=version : name ~ version Depend::GreaterOrEqual", name == "name" && version == "version" && op == Depend::GreaterOrEqual);
         
         op = ps->parseVersion("name<version", name, version);
-        CHECK_RESULT("name<version : name ~ version DEPEND_OP_LO", name == "name" && version == "version" && op == DEPEND_OP_LO);
+        CHECK_RESULT("name<version : name ~ version Depend::Lower", name == "name" && version == "version" && op == Depend::Lower);
         
         op = ps->parseVersion("name<=version", name, version);
-        CHECK_RESULT("name<=version : name ~ version DEPEND_OP_LOEQ", name == "name" && version == "version" && op == DEPEND_OP_LOEQ);
+        CHECK_RESULT("name<=version : name ~ version Depend::LowerOrEqual", name == "name" && version == "version" && op == Depend::LowerOrEqual);
         
         op = ps->parseVersion("name!=version", name, version);
-        CHECK_RESULT("name!=version : name ~ version DEPEND_OP_NE", name == "name" && version == "version" && op == DEPEND_OP_NE);
+        CHECK_RESULT("name!=version : name ~ version Depend::NotEqual", name == "name" && version == "version" && op == Depend::NotEqual);
         
         op = ps->parseVersion("name=version", name, version);
-        CHECK_RESULT("name=version : name ~ version DEPEND_OP_EQ", name == "name" && version == "version" && op == DEPEND_OP_EQ);
+        CHECK_RESULT("name=version : name ~ version Depend::Equal", name == "name" && version == "version" && op == Depend::Equal);
         
         // matchVersion
-        CHECK_RESULT("1.2.3>=0.1 : yes", ps->matchVersion("1.2.3", "0.1", DEPEND_OP_GREQ) == true)
-        CHECK_RESULT("2.1alpha8<=2.0alpha11 : no", ps->matchVersion("2.1alpha8", "2.0alpha11", DEPEND_OP_LOEQ) == false)
-        CHECK_RESULT("1debian2ubuntu1!=1ubuntu2debian1 : no", ps->matchVersion("1debian2ubuntu1", "1ubuntu2debian1", DEPEND_OP_NE) == false)
-        CHECK_RESULT("1.1<1.2 : yes", ps->matchVersion("1.1", "1.2", DEPEND_OP_LO) == true);
-        CHECK_RESULT("7.9+git20100404~3>=7.9+git20100313 : yes", ps->matchVersion("7.9+git20100404~3", "7.9+git20100313", DEPEND_OP_GREQ) == true);
-        CHECK_RESULT("2.8.3~2>=2.8.3 : yes", ps->matchVersion("2.8.3~2", "2.8.3", DEPEND_OP_GREQ) == true)
+        CHECK_RESULT("1.2.3>=0.1 : yes", ps->matchVersion("1.2.3", "0.1", Depend::GreaterOrEqual) == true)
+        CHECK_RESULT("2.1alpha8<=2.0alpha11 : no", ps->matchVersion("2.1alpha8", "2.0alpha11", Depend::LowerOrEqual) == false)
+        CHECK_RESULT("1debian2ubuntu1!=1ubuntu2debian1 : no", ps->matchVersion("1debian2ubuntu1", "1ubuntu2debian1", Depend::NotEqual) == false)
+        CHECK_RESULT("1.1<1.2 : yes", ps->matchVersion("1.1", "1.2", Depend::Lower) == true);
+        CHECK_RESULT("7.9+git20100404~3>=7.9+git20100313 : yes", ps->matchVersion("7.9+git20100404~3", "7.9+git20100313", Depend::GreaterOrEqual) == true);
+        CHECK_RESULT("2.8.3~2>=2.8.3 : yes", ps->matchVersion("2.8.3~2", "2.8.3", Depend::GreaterOrEqual) == true)
         
         // fileSizeFormat
         CHECK_RESULT("3 = 3 o", ps->fileSizeFormat(3) == "3 o");

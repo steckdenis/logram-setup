@@ -237,7 +237,7 @@ void MainWindow::itemSelected(int index)
 
 bool MainWindow::checkPackage(DatabasePackage* pkg)
 {
-    if ((pkg->flags() & PACKAGE_FLAG_PRIMARY) == 0)
+    if ((pkg->flags() & Package::Primary) == 0)
     {
         return false;
     }
@@ -343,11 +343,11 @@ QVector<DatabasePackage *> MainWindow::packages(bool &expandable)
             int index = ids.at(i);
             _Package *pkg = dr->package(index);
             
-            if (filter == FilterInterface::Installed && (pkg->flags & PACKAGE_FLAG_INSTALLED) != 0)
+            if (filter == FilterInterface::Installed && (pkg->flags & Package::Installed) != 0)
             {
                 newids.append(index);
             }
-            else if (filter == FilterInterface::NotInstalled && (pkg->flags & PACKAGE_FLAG_INSTALLED) == 0)
+            else if (filter == FilterInterface::NotInstalled && (pkg->flags & Package::Installed) == 0)
             {
                 newids.append(index);
             }
@@ -373,7 +373,7 @@ QVector<DatabasePackage *> MainWindow::packages(bool &expandable)
         
         // Trouver les paquets ayant le même nom, donc des versions différentes
         _Package *pkg = dr->package(index);
-        QVector<int> otherVersions = dr->packagesOfString(0, pkg->name, DEPEND_OP_NOVERSION);
+        QVector<int> otherVersions = dr->packagesOfString(0, pkg->name, Depend::NoVersion);
         
         for (int j=0; j<otherVersions.count(); ++j)
         {

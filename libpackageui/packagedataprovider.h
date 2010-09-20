@@ -28,11 +28,10 @@
  * @brief Fournisseur d'informations pour les paquets LPM
  */
 
-#include <packagedataproviderinterface.h>
+#include "packagedataproviderinterface.h"
 
 namespace Logram
 {
-    class Package;
     class PackageMetaData;
     class PackageSystem;
 }
@@ -45,7 +44,7 @@ namespace LogramUi
  * 
  * La classe PackageDataProviderInterface est virtuelle pure et ne sert que
  * d'interface. Sachant qu'il est très courant d'afficher des informations sur
- * les paquets en provenance de la base de donnée LPM, cette classe fournit
+ * les paquets en provenance dLogram::Package::Flag flags de donnée LPM, cette classe fournit
  * l'implémentation remplissant ce rôle.
  * 
  * @sa PackageDataProviderInterface
@@ -65,7 +64,7 @@ class PackageDataProvider : public PackageDataProviderInterface
         virtual QString version() const;
         
         virtual int flags() const;
-        virtual void setFlags(int flags);
+        virtual void setFlags(Logram::Package::Flag flags);
         virtual bool flagsEditable() const;
         
         virtual QString website() const;

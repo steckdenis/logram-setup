@@ -114,7 +114,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
         
         QListWidgetItem *mitem = new QListWidgetItem(version->version(), d->ui->listVersions);
         
-        if (version->flags() & PACKAGE_FLAG_INSTALLED)
+        if (version->flags() & Package::Installed)
         {
             mitem->setIcon(QIcon::fromTheme("user-online"));
         }
@@ -136,7 +136,7 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
     }
     
     // Intégration à KDE
-    int kdeintegration = data->flags() & PACKAGE_FLAG_KDEINTEGRATION;
+    int kdeintegration = data->flags() & Package::KDEIntegration;
     QPixmap starOn = QIcon::fromTheme("kde").pixmap(22, 22);
     QPixmap starOff = QIcon::fromTheme("kde").pixmap(22, 22, QIcon::Disabled);
     
@@ -166,23 +166,25 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
             
             switch (dep->type())
             {
-                case DEPEND_TYPE_DEPEND:
+                case Depend::DependType:
                     s = tr("Dépendances");
                     break;
-                case DEPEND_TYPE_CONFLICT:
+                case Depend::Conflict:
                     s = tr("Conflict");
                     break;
-                case DEPEND_TYPE_PROVIDE:
+                case Depend::Provide:
                     s = tr("Fournit");
                     break;
-                case DEPEND_TYPE_SUGGEST:
+                case Depend::Suggest:
                     s = tr("Suggère");
                     break;
-                case DEPEND_TYPE_REVDEP:
+                case Depend::RevDep:
                     s = tr("Requis par");
                     break;
-                case DEPEND_TYPE_REPLACE:
+                case Depend::Replace:
                     s = tr("Remplace");
+                    break;
+                default:
                     break;
             }
             
@@ -364,13 +366,13 @@ void InfoPane::displayData(PackageDataProviderInterface* data)
                         s += str; \
                     }
                 
-                OUT_FLAG(PACKAGE_FILE_INSTALLED, tr("Installé"))
-                OUT_FLAG(PACKAGE_FILE_DONTREMOVE, tr("Ne pas supprimer"))
-                OUT_FLAG(PACKAGE_FILE_DONTPURGE, tr("Ne pas purger"))
-                OUT_FLAG(PACKAGE_FILE_BACKUP, tr("Sauvegarder"))
-                OUT_FLAG(PACKAGE_FILE_CHECKBACKUP, tr("Sauvegarder si modifié"))
-                OUT_FLAG(PACKAGE_FILE_OVERWRITE, tr("Écraser"))
-                OUT_FLAG(PACKAGE_FILE_VIRTUAL, tr("Virtuel"))
+                OUT_FLAG(PackageFile::Installed, tr("Installé"))
+                OUT_FLAG(PackageFile::DontRemove, tr("Ne pas supprimer"))
+                OUT_FLAG(PackageFile::DontPurge, tr("Ne pas purger"))
+                OUT_FLAG(PackageFile::Backup, tr("Sauvegarder"))
+                OUT_FLAG(PackageFile::CheckBackup, tr("Sauvegarder si modifié"))
+                OUT_FLAG(PackageFile::Overwrite, tr("Écraser"))
+                OUT_FLAG(PackageFile::Virtual, tr("Virtuel"))
                 
                 titem->setText(1, s);
                 titem->setIcon(0, QIcon::fromTheme("file"));
@@ -406,7 +408,7 @@ void LogramUi::InfoPane::showFlags()
     QString s;
     int mflags = d->data->flags();
     
-    switch (mflags & PACKAGE_FLAG_KDEINTEGRATION)
+    switch (mflags & Package::KDEIntegration)
     {
         case 0:
             s = tr("Pas intégré");
@@ -424,16 +426,16 @@ void LogramUi::InfoPane::showFlags()
     
     flags.lblKDEIntegration->setText(s);
     
-    flags.chkDontInstall->setChecked(mflags & PACKAGE_FLAG_DONTINSTALL);
-    flags.chkDontRemove->setChecked(mflags & PACKAGE_FLAG_DONTREMOVE);
-    flags.chkDontUpdate->setChecked(mflags & PACKAGE_FLAG_DONTUPDATE);
-    flags.chkEULA->setChecked(mflags & PACKAGE_FLAG_EULA);
-    flags.chkGUI->setChecked(mflags & PACKAGE_FLAG_GUI);
-    flags.chkInstalled->setChecked(mflags & PACKAGE_FLAG_INSTALLED);
-    flags.chkReboot->setChecked(mflags & PACKAGE_FLAG_NEEDSREBOOT);
-    flags.chkRemoved->setChecked(mflags & PACKAGE_FLAG_REMOVED);
-    flags.chkWanted->setChecked(mflags & PACKAGE_FLAG_WANTED);
-    flags.chkPrimary->setChecked(mflags & PACKAGE_FLAG_PRIMARY);
+    flags.chkDontInstall->setChecked(mflags & Package::DontInstall);
+    flags.chkDontRemove->setChecked(mflags & Package::DontRemove);
+    flags.chkDontUpdate->setChecked(mflags & Package::DontUpdate);
+    flags.chkEULA->setChecked(mflags & Package::Eula);
+    flags.chkGUI->setChecked(mflags & Package::GUI);
+    flags.chkInstalled->setChecked(mflags & Package::Installed);
+    flags.chkReboot->setChecked(mflags & Package::NeedsReboot);
+    flags.chkRemoved->setChecked(mflags & Package::Removed);
+    flags.chkWanted->setChecked(mflags & Package::Wanted);
+    flags.chkPrimary->setChecked(mflags & Package::Primary);
     
     if (!d->data->flagsEditable())
     {
@@ -454,12 +456,12 @@ void LogramUi::InfoPane::showFlags()
             else \
                 mflags &= ~flag;
             
-        APPLY_FLAG(PACKAGE_FLAG_DONTINSTALL, flags.chkDontInstall)
-        APPLY_FLAG(PACKAGE_FLAG_DONTREMOVE, flags.chkDontRemove)
-        APPLY_FLAG(PACKAGE_FLAG_DONTUPDATE, flags.chkDontUpdate)
-        APPLY_FLAG(PACKAGE_FLAG_WANTED, flags.chkWanted)
+        APPLY_FLAG(Package::DontInstall, flags.chkDontInstall)
+        APPLY_FLAG(Package::DontRemove, flags.chkDontRemove)
+        APPLY_FLAG(Package::DontUpdate, flags.chkDontUpdate)
+        APPLY_FLAG(Package::Wanted, flags.chkWanted)
         
-        d->data->setFlags(mflags);
+        d->data->setFlags((Package::Flag)mflags);
     }
 }
 

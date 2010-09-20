@@ -59,7 +59,7 @@ void LicensePage::initializePage()
     {
         Package *pkg = list->at(i);
         
-        if ((pkg->flags() & PACKAGE_FLAG_EULA) == 0)
+        if ((pkg->flags() & Package::Eula) == 0)
         {
             continue;
         }

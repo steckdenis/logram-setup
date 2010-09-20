@@ -147,7 +147,7 @@ bool DatabaseReader::packagesByName(const QRegExp &regex, QVector<int> &rs)
     return true;
 }
 
-QVector<int> DatabaseReader::packagesByVString(const QString &name, const QString &version, int op)
+QVector<int> DatabaseReader::packagesByVString(const QString &name, const QString &version, Depend::Operation op)
 {
     QVector<int> rs;
     int32_t count = *(int32_t *)m_packages;
@@ -184,7 +184,7 @@ QVector<int> DatabaseReader::packagesByVString(const QString &verStr)
 {
     // Parser la version
     QByteArray name, version;
-    int op;
+    Depend::Operation op;
 
     op = PackageSystem::parseVersion(verStr.toUtf8(), name, version);
 
@@ -275,14 +275,14 @@ QVector<PackageFile *> DatabaseReader::files(const QString &name)
         if (fileName == parts.at(curPart))
         {
             // Nom correct. Si c'est un dossier, entrer dedans
-            if (fl->flags & PACKAGE_FILE_DIR && curPart != parts.count() - 1)
+            if (fl->flags & PackageFile::Directory && curPart != parts.count() - 1)
             {
                 // Dossier et pas dernière partie ==> ok, tout va bien
                 curPart++;
                 fl = file(fl->first_child);
                 continue;
             }
-            else if (!(fl->flags & PACKAGE_FILE_DIR) && curPart == parts.count() - 1)
+            else if (!(fl->flags & PackageFile::Directory) && curPart == parts.count() - 1)
             {
                 // Fichier, et dernière partie ==> ok, tout va bien
                 rs.append((PackageFile *)(new DatabaseFile(ps, this, fl, new DatabasePackage(0, fl->package, ps, this), true)));
@@ -331,13 +331,13 @@ QVector<_Depend *> DatabaseReader::depends(int pkgIndex)
     return rs;
 }
 
-QVector<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, int op)
+QVector<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, Depend::Operation op)
 {
     QVector<int> rs;
     QByteArray cmpVersion;
     
     // Vérifier l'index
-    if (op != DEPEND_OP_NOVERSION)
+    if (op != Depend::NoVersion)
     {
         if (stringIndex >= *(int *)m_strings)
         {
@@ -374,7 +374,7 @@ QVector<int> DatabaseReader::packagesOfString(int stringIndex, int nameIndex, in
     for (int i=0; i<count; ++i)
     {
         // Si on n'a pas précisé de version, c'est ok
-        if (op == DEPEND_OP_NOVERSION)
+        if (op == Depend::NoVersion)
         {
             rs.append( ((_StrPackage *)(sptr))->package );
         }
@@ -402,7 +402,7 @@ QVector<int> DatabaseReader::orphans()
         _Package *pkg = package(i);
         
         // Si le paquet est installé, n'est pas demandé par l'utilisateur, et a un used = 0, alors le prendre
-        if (pkg->flags & PACKAGE_FLAG_INSTALLED && (pkg->flags & PACKAGE_FLAG_WANTED) == 0 && pkg->used == 0)
+        if (pkg->flags & Package::Installed && (pkg->flags & Package::Wanted) == 0 && pkg->used == 0)
         {
             rs.append(i);
         }
@@ -424,10 +424,10 @@ QList<UpgradeInfo> DatabaseReader::upgradePackages()
         _Package *pkg = package(i);
         
         // Voir si le paquet est installé
-        if (pkg != 0 && pkg->flags & PACKAGE_FLAG_INSTALLED && !(pkg->flags & PACKAGE_FLAG_DONTUPDATE))
+        if (pkg != 0 && pkg->flags & Package::Installed && !(pkg->flags & Package::DontUpdate))
         {
             // Trouver les autres versions de ce paquet
-            otherVersions = packagesOfString(0, pkg->name, DEPEND_OP_NOVERSION);
+            otherVersions = packagesOfString(0, pkg->name, Depend::NoVersion);
             
             for (int j=0; j<otherVersions.count(); ++j)
             {

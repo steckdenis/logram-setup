@@ -176,7 +176,7 @@ void PackageMetaData::bindPackage(Package *pkg)
         loadData(fpkg->metadataContents());
         return;
     }
-    else if ((pkg->flags() & PACKAGE_FLAG_INSTALLED) && QFile::exists(fname))
+    else if ((pkg->flags() & Package::Installed) && QFile::exists(fname))
     {
         // Déjà téléchargé
         loadFile(fname, QByteArray(), false);
@@ -511,23 +511,23 @@ QVector<SourceDepend *> PackageMetaData::sourceDepends() const
         
         if (deptype == "depend")
         {
-            dep->type = DEPEND_TYPE_DEPEND;
+            dep->type = Depend::DependType;
         }
         else if (deptype == "suggest")
         {
-            dep->type = DEPEND_TYPE_SUGGEST;
+            dep->type = Depend::Suggest;
         }
         else if (deptype == "conflict")
         {
-            dep->type = DEPEND_TYPE_CONFLICT;
+            dep->type = Depend::Conflict;
         }
         else if (deptype == "provide")
         {
-            dep->type = DEPEND_TYPE_PROVIDE;
+            dep->type = Depend::Provide;
         }
         else if (deptype == "replace")
         {
-            dep->type = DEPEND_TYPE_REPLACE;
+            dep->type = Depend::Replace;
         }
         
         rs.append(dep);

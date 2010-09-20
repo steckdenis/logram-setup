@@ -126,7 +126,7 @@ class FilePackage : public Package
 class FileDepend : public Depend
 {
     public:
-        FileDepend(Type type, Op op, const QString &name, const QString &version);
+        FileDepend(Type type, Operation op, const QString &name, const QString &version);
         ~FileDepend();
 
         QString name();

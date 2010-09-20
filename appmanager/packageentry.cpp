@@ -184,8 +184,8 @@ void Entry::expand()
     more->btnUpdate->setIcon(QIcon(":/images/pkg-update.png"));
     
     // Afficher ou pas les boutons
-    more->btnInstall->setVisible((curpkg->flags() & PACKAGE_FLAG_INSTALLED) == 0);
-    more->btnRemove->setVisible((curpkg->flags() & PACKAGE_FLAG_INSTALLED) != 0);
+    more->btnInstall->setVisible((curpkg->flags() & Package::Installed) == 0);
+    more->btnRemove->setVisible((curpkg->flags() & Package::Installed) != 0);
     more->btnUpdate->setVisible(false); // TODO
     
     // Statut des boutons
@@ -286,7 +286,7 @@ void Entry::updateIcon()
         key = "lgr_emblemremove";
         filename = ":/images/pkg-update-emb.png";
     }
-    else if (curpkg->flags() & PACKAGE_FLAG_INSTALLED)
+    else if (curpkg->flags() & Package::Installed)
     {
         emblem = QIcon::fromTheme("user-online").pixmap(16, 16);
     }

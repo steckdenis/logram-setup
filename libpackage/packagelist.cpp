@@ -126,13 +126,13 @@ void PackageList::addPackage(Package *pkg)
     append(pkg);
     
     // Ce paquet nécessite-t-il un redémarrage ?
-    if (pkg->flags() & PACKAGE_FLAG_NEEDSREBOOT)
+    if (pkg->flags() & Package::NeedsReboot)
     {
         d->needsReboot = true;
     }
     
     // Ce paquet nécessite-t-il l'approbation d'une license ?
-    if (pkg->flags() & PACKAGE_FLAG_EULA && pkg->action() == Solver::Install)
+    if (pkg->flags() & Package::Eula && pkg->action() == Solver::Install)
     {
         d->numLicenses++;
     }
@@ -218,20 +218,20 @@ bool PackageList::process()
             
             foreach (_Depend *dep, deps)
             {
-                if (dep->type != DEPEND_TYPE_DEPEND && dep->type != DEPEND_TYPE_SUGGEST)
+                if (dep->type != Depend::DependType && dep->type != Depend::Suggest)
                 {
                     // On n'incrémente que les dépendances
                     continue;
                 }
                 
                 // Paquets qui correspondent
-                pkgs = dr->packagesOfString(dep->pkgver, dep->pkgname, dep->op);
+                pkgs = dr->packagesOfString(dep->pkgver, dep->pkgname, (Depend::Operation)dep->op);
                 
                 foreach (int p, pkgs)
                 {
                     _Package *pp = dr->package(p);
                     
-                    if (pp->flags & PACKAGE_FLAG_INSTALLED)
+                    if (pp->flags & Package::Installed)
                     {
                         if (pkg->action() == Solver::Install)
                         {
@@ -253,7 +253,7 @@ bool PackageList::process()
                             set->endGroup();
                             
                             // Si le paquet n'est plus utilisé par personne, le déclarer comme orphelin
-                            if (pp->used == 0 && (pp->flags & PACKAGE_FLAG_WANTED) == 0)
+                            if (pp->used == 0 && (pp->flags & Package::Wanted) == 0)
                             {
                                 d->orphans.append(p);
                             }
