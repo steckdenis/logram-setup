@@ -239,9 +239,10 @@ bool App::launch()
                 
                 // Traitement O(1) dans la base de donnée, peut être long
                 int str = dr->string(false, element);
-                QVector<int> packages = dr->packagesOfString(0, str, Depend::NoVersion);
+                QVector<int> packages;
                 
-                if (packages.count() == 0)
+                if (str == -1 || 
+                   (packages = dr->packagesOfString(0, str, Depend::NoVersion)).count() == 0)
                 {
                     QMessageBox::critical(0, tr("Impossible de trouver un paquet"), tr("Impossible de trouver le paquet fournissant %1").arg(QString::fromLatin1(element)));
                     return false;
