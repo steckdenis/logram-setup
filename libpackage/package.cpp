@@ -234,8 +234,8 @@ void Package::processEnd()
         set->setValue("Conflicts", dependsToString(depends(), Depend::Conflict));
         set->setValue("DownloadSize", downloadSize());
         set->setValue("InstallSize", installSize());
-        set->setValue("MetadataHash", metadataHash().constData());
-        set->setValue("PackageHash", packageHash().constData());
+        set->setValue("MetadataHash", metadataHash().toHex().constData());
+        set->setValue("PackageHash", packageHash().toHex().constData());
         set->setValue("Flags", flgs); 
 
         set->setValue("ShortDesc", QString(shortDesc().toUtf8().toBase64()));
@@ -272,8 +272,8 @@ void Package::processEnd()
         set->setValue("Conflicts", dependsToString(other->depends(), Depend::Conflict));
         set->setValue("DownloadSize", other->downloadSize());
         set->setValue("InstallSize", other->installSize());
-        set->setValue("MetadataHash", other->metadataHash().constData());
-        set->setValue("PackageHash", other->packageHash().constData());
+        set->setValue("MetadataHash", other->metadataHash().toHex().constData());
+        set->setValue("PackageHash", other->packageHash().toHex().constData());
         set->setValue("Flags", flgs);
 
         set->setValue("ShortDesc", QString(other->shortDesc().toUtf8().toBase64()));

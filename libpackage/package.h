@@ -238,8 +238,8 @@ class Package : public QObject
         virtual QString distribution() = 0; /*!< @brief Distribution du paquet (experimental, stable, old, testing) */
         virtual QString license() = 0;      /*!< @brief License du paquel (GPLv2, GPLv3, BSD, Apache, etc) */
         virtual QString arch() = 0;         /*!< @brief Architecture du paquet (i686, x86_64, all, src) */
-        virtual QByteArray metadataHash() = 0; /*!< @brief Hash SHA1 des métadonnées du paquet */
-        virtual QByteArray packageHash() = 0; /*!< @brief Hash SHA1 du fichier .tlz, pour vérifier son authenticité */
+        virtual QByteArray metadataHash() = 0; /*!< @brief Hash SHA1 des métadonnées du paquet, binaire */
+        virtual QByteArray packageHash() = 0; /*!< @brief Hash SHA1 du fichier .tlz, binaire */
         virtual Flag flags() = 0;            /*!< @brief Flags du paquet */
         virtual int used() = 0;             /*!< @brief Compteur d'utilisation (nombre de paquets en dépendant installés) */
         

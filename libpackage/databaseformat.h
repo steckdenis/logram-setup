@@ -70,8 +70,8 @@ struct _Package
     int32_t section;    /*!< @brief Section */
     int32_t distribution; /*!< @brief Distribution */
     int32_t license;    /*!< @brief Licence */
-    int32_t pkg_hash;   /*!< @brief Index de la chaîne représentant le hash sha1 du paquet .tlz */
-    int32_t mtd_hash;   /*!< @brief Index de la chaîne représentant le hash sha1 du fichier de métadonnées */
+    char pkg_hash[20];  /*!< @brief Hash sha1 du paquet .tlz */
+    char mtd_hash[20];  /*!< @brief Hash sha1 du fichier de métadonnées */
     int32_t flags;      /*!< @brief Flags */
     int32_t deps;       /*!< @brief Index du tableau de dépendances */
     int32_t isize;      /*!< @brief Taille de l'installation */

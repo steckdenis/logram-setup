@@ -168,7 +168,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     
     if (fl.open(QIODevice::ReadOnly))
     {
-        d->packageHash = QCryptographicHash::hash(fl.readAll(), QCryptographicHash::Sha1).toHex();
+        d->packageHash = QCryptographicHash::hash(fl.readAll(), QCryptographicHash::Sha1);
         
         fl.close();
     }
@@ -426,7 +426,7 @@ FilePackage::FilePackage(const QString &fileName, PackageSystem *ps, DatabaseRea
     }
     
     // Hash des métadonnées non-compressées
-    d->metadataHash = QCryptographicHash::hash(d->metadataContents, QCryptographicHash::Sha1).toHex();
+    d->metadataHash = QCryptographicHash::hash(d->metadataContents, QCryptographicHash::Sha1);
 }
 
 FilePackage::FilePackage(const FilePackage &other) : Package(other)

@@ -140,7 +140,7 @@ void PackageMetaData::loadFile(const QString &fileName, const QByteArray &sha1ha
     // Vérifier le hash
     if (!sha1hash.isNull())
     {
-        QByteArray fileSha1 = QCryptographicHash::hash(data, QCryptographicHash::Sha1).toHex();
+        QByteArray fileSha1 = QCryptographicHash::hash(data, QCryptographicHash::Sha1);
         
         if (fileSha1 != sha1hash)
         {

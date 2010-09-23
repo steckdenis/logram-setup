@@ -563,6 +563,7 @@ bool DatabaseWriter::rebuild()
             }
 
             QByteArray name, long_desc, pkgname, pkgver;
+            QByteArray binaryHash;
             _Package *pkg = 0;
             int index = -1;
             int linelength;
@@ -807,11 +808,15 @@ bool DatabaseWriter::rebuild()
                         }
                         else if (key == "PackageHash")
                         {
-                            pkg->pkg_hash = stringIndex(value, index, false, false);
+                            binaryHash = QByteArray::fromHex(value);
+                            Q_ASSERT(binaryHash.size() == 20);
+                            memcpy(&pkg->pkg_hash, binaryHash.data(), 20);
                         }
                         else if (key == "MetadataHash")
                         {
-                            pkg->mtd_hash = stringIndex(value, index, false, false);
+                            binaryHash = QByteArray::fromHex(value);
+                            Q_ASSERT(binaryHash.size() == 20);
+                            memcpy(&pkg->mtd_hash, binaryHash.data(), 20);
                         }
                         else if (key == "DownloadSize")
                         {

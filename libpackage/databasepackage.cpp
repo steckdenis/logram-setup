@@ -282,7 +282,7 @@ void DatabasePackage::downloadEnded(ManagedDownload *md)
         QByteArray contents = fl.readAll();
         fl.close();
         
-        QString sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1).toHex();
+        QString sha1sum = QCryptographicHash::hash(contents, QCryptographicHash::Sha1);
         
         // Comparer les hashs
         QString myHash;
@@ -432,12 +432,12 @@ QString DatabasePackage::arch()
 
 QByteArray DatabasePackage::packageHash()
 {
-    PKG_QBA_ATTR(false, pkg_hash)
+    return QByteArray::fromRawData((const char *)&d->dbpkg->pkg_hash, 20);
 }
 
 QByteArray DatabasePackage::metadataHash()
 {
-    PKG_QBA_ATTR(false, mtd_hash)
+    return QByteArray::fromRawData((const char *)&d->dbpkg->mtd_hash, 20);
 }
 
 bool DatabasePackage::fastNameCompare(Package *other)
