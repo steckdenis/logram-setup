@@ -6,9 +6,9 @@ include(FindPackageHandleStandardArgs)
 project(packagemanagement)
 
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 71)
-set(VERSION_PATCH 99)
-set(VERSION_NAME "Setup 1.0 pre-Alpha 2")
+set(VERSION_MINOR 72)
+set(VERSION_PATCH 0)
+set(VERSION_NAME "Setup 1.0 Alpha 2")
 set(VERSION_NUMBER "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} (${VERSION_NAME})")
 
