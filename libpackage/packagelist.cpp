@@ -262,8 +262,56 @@ bool PackageList::process()
                 }
             }
         }
-        // TODO : Même chose pour les paquets fichiers, sauf qu'on n'a pas un traitement O(1) dans la BDD pour
-        //        leurs dépendances
+        else
+        {
+            QVector<Depend *> depends = pkg->depends();
+            
+            foreach (Depend *depend, depends)
+            {
+                // Prendre la liste des paquets correspondant à la dépendance
+                if (depend->type() != Depend::DependType && depend->type() != Depend::Suggest)
+                {
+                    // On n'incrémente que les dépendances
+                    continue;
+                }
+                
+                pkgs = d->ps->packagesByVString(depend->name(), depend->version(), depend->op());
+                
+                foreach (int p, pkgs)
+                {
+                    _Package *pp = dr->package(p);
+                    
+                    if (pp->flags & Package::Installed)
+                    {
+                        if (pkg->action() == Solver::Install)
+                        {
+                            // On installe un paquet, ses dépendances recoivent un jeton
+                            pp->used++;
+                            
+                            // Enregistrer également l'information dans le fichier installed_packages
+                            set->beginGroup(dr->string(false, pp->name));
+                            set->setValue("Used", set->value("Used").toInt() + 1);
+                            set->endGroup();
+                        }
+                        else if (pkg->action() == Solver::Remove || pkg->action() == Solver::Purge)
+                        {
+                            // On supprime un paquet, ses dépendances perdent un jeton
+                            pp->used--;
+                            
+                            set->beginGroup(dr->string(false, pp->name));
+                            set->setValue("Used", set->value("Used").toInt() - 1);
+                            set->endGroup();
+                            
+                            // Si le paquet n'est plus utilisé par personne, le déclarer comme orphelin
+                            if (pp->used == 0 && (pp->flags & Package::Wanted) == 0)
+                            {
+                                d->orphans.append(p);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Nettoyage
